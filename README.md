@@ -9,6 +9,7 @@ See [docs/research.md](docs/research.md) for the background.
 ```
 .
 ├── tool/cpw_scraper.py   gentle, resumable scraper (Python 3.9+, stdlib only)
+├── tool/crawl_batches.sh crawl in batches, committing and pushing content/ after each
 ├── content/
 │   ├── LICENSE           CC BY-SA 3.0, which covers everything mirrored
 │   ├── site/             the mirror, laid out like the site's URL paths
@@ -24,6 +25,7 @@ python3 tool/cpw_scraper.py crawl                     # start, or resume where i
 python3 tool/cpw_scraper.py crawl --max-requests 50   # small batch
 python3 tool/cpw_scraper.py crawl --no-assets         # pages, CSS and JS only (no images)
 python3 tool/cpw_scraper.py status                    # progress summary
+BATCH=500 tool/crawl_batches.sh                       # crawl + commit + push to main, batch by batch
 ```
 
 ### Gentle
