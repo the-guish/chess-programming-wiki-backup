@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GPU - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">GPU</h1>
+<article class="prose max-w-none">
+<h3 id="amd-architectures">AMD architectures</h3>
+<p>My own conclusions are:</p>
+<ul>
+<li>TeraScale has VLIW design.</li>
+<li>GCN has 16 wide SIMD, executing a Wavefront of 64 threads over 4 cycles.</li>
+<li>RDNA has 32 wide SIMD, executing a Wavefront:32 over 1 cycle and Wavefront:64 over two cycles.</li>
+<li>CDNA is advanced GCN</li>
+</ul>
+<p><a href="/User:Smatovic">Smatovic</a> (<a href="/User_talk:Smatovic">talk</a>) 17:22, 14 January 2024 (CET)</p>
+<h3 id="nvidia-architectures">Nvidia architectures</h3>
+<p>Afaik Nvidia did never official mention SIMD in their papers as hardware architecture, with Tesla they only referred to as SIMT.</p>
+<p>Nevertheless, my own conclusions are:</p>
+<ul>
+<li>Tesla has 8 wide SIMD, executing a Warp of 32 threads over 4 cycles.</li>
+</ul>
+<!-- -->
+
+<ul>
+<li>Fermi has 16 wide SIMD, executing a Warp of 32 threads over 2 cycles.</li>
+</ul>
+<!-- -->
+
+<ul>
+<li>Kepler is somehow odd, not sure how the compute units are partitioned.</li>
+</ul>
+<!-- -->
+
+<ul>
+<li>Maxwell and Pascal have 32 wide SIMD, executing a Warp of 32 threads over 1 cycle.</li>
+</ul>
+<!-- -->
+
+<ul>
+<li>Volta and Turing seem to have 16 wide FPU SIMDs, but my own experiments show 32 wide VALU.</li>
+</ul>
+<p><a href="/User:Smatovic">Smatovic</a> (<a href="/User_talk:Smatovic">talk</a>) 10:17, 22 April 2021 (CEST)</p>
+<h3 id="simd--scalar-unit">SIMD + Scalar Unit</h3>
+<p>It seems every SIMD unit has one scalar unit on GPU architectures, executing control flow (branches, loops) or special functions the SIMD ALUs are not capable of.</p>
+<p><a href="/User:Smatovic">Smatovic</a> (<a href="/User_talk:Smatovic">talk</a>) 15:18, 4 January 2023 (CET)</p>
+<h3 id="embedded-cpu-controller">embedded CPU controller</h3>
+<p>It is not documented in the whitepapers, but it seems that every discrete GPU has an embedded CPU controller (e.g. Nvidia Falcon) who (speculation) launches the kernels.</p>
+<p><a href="/User:Smatovic">Smatovic</a> (<a href="/User_talk:Smatovic">talk</a>) 10:36, 22 April 2021 (CEST)</p>
+<h3 id="gpus-and-duncans-taxonomy">GPUs and Duncan's taxonomy</h3>
+<p>It is not clear to me how the underlying hardware of GPU SIMD units of architectures with unified shader architecture is realized by different vendors, there is the concept of bit-sliced ALUs, there is the concept of pipelined vector processors, there is the concept of SIMD units with fix bit-width ALUs. The white papers from different vendors leave room for speculation, the different instruction throughputs for higher precision and lower precision too, what is left to the programmer is to do microbenchmarking and make conclusions on their own.</p>
+<p><a href="https://en.wikipedia.org/wiki/Duncan%27s_taxonomy">https://en.wikipedia.org/wiki/Duncan%27s_taxonomy</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Flynn%27s_taxonomy">https://en.wikipedia.org/wiki/Flynn%27s_taxonomy</a></p>
+<p><a href="/User:Smatovic">Smatovic</a> (<a href="/User_talk:Smatovic">talk</a>) 13:58, 16 December 2021 (CET)</p>
+<h3 id="cpw-gpu-article">CPW GPU article</h3>
+<p>A suggestion of mine, keep this GPU article as an generalized overview of GPUs, with incremental updates for different frameworks and architectures. GPUs and GPGPU is a moving target with different platforms offering new feature sets, better open own articles for things like GPGPU, SIMT, CUDA, ROCm, oneAPI, Metal or simply link to Wikipedia containing the newest specs and infos.</p>
+<p><a href="/User:Smatovic">Smatovic</a> (<a href="/User_talk:Smatovic">talk</a>) 21:29, 27 April 2021 (CEST)</p>
+<h3 id="gpgpu-architectures">GPGPU architectures</h3>
+<p>Regarding GPGPU architectures or frameworks, a link to the architecture white paper, instruction set architecture, programming guide, and link to Wikipedia with a list of the concrete models with specs would be nice, if available.</p>
+<p><a href="/User:Smatovic">Smatovic</a> (<a href="/User_talk:Smatovic">talk</a>) 09:21, 25 October 2021 (CEST)</p>
+<h3 id="legacy-gpgpu">Legacy GPGPU</h3>
+<p>This article does not cover legacy, pre 2007, GPGPU methods, how to use pixel, vertex, geometry, tessellation and compute shaders via OpenGL or DirectX for GPGPU. I can imagine it is possible to backport a neural network Lc0 backend to a certain DirextX/OpenGL API, but I doubt it has real contemporary relevance (running Lc0 on an SGI Indy or alike).</p>
+<p><a href="/User:Smatovic">Smatovic</a> (<a href="/User_talk:Smatovic">talk</a>) 14:09, 14 November 2022 (CET)</p>
+<h3 id="alternative-architectures">Alternative Architectures</h3>
+<p>There was for example the IBM PowerXCell 8i, used in the IBM Roadrunner super-computer from 2008, the first heterogeneous petaFLOP, a smaller version ran in the PlayStation 3:</p>
+<p><a href="https://en.wikipedia.org/wiki/Cell_%28processor%29#PowerXCell_8i">https://en.wikipedia.org/wiki/Cell_%28processor%29#PowerXCell_8i</a></p>
+<p>There was the Intel Larrabee project, a lot of simple x64 cores with AVX-512 vector unit from 2010, later released as Xeon Phi accelerator:</p>
+<p><a href="https://en.wikipedia.org/wiki/Larrabee_%28microarchitecture%29">https://en.wikipedia.org/wiki/Larrabee_%28microarchitecture%29</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Xeon_Phi">https://en.wikipedia.org/wiki/Xeon_Phi</a></p>
+<p>There is still the NEC SX Aurora (&gt;=2017), a vector-processor on a PCIe card, descendant from the NEC SX super-computer series as used e.g. in the Earth Simulator super-computer:</p>
+<p><a href="https://en.wikipedia.org/wiki/NEC_SX-Aurora_TSUBASA">https://en.wikipedia.org/wiki/NEC_SX-Aurora_TSUBASA</a></p>
+<p>There is the Chinese Matrix 2000/3000 many-core accelerator (&gt;=2017), used in the Tianhe super-computer:</p>
+<p><a href="https://en.wikichip.org/wiki/nudt/matrix-2000">https://en.wikichip.org/wiki/nudt/matrix-2000</a></p>
+<p>AFAIK, none of the above was used to play computer chess....on the other side:</p>
+<p>IBM Deep Blue used ASICs: <a href="https://www.chessprogramming.org/Deep_Blue">https://www.chessprogramming.org/Deep_Blue</a></p>
+<p>Hydra used FPGAs: <a href="https://www.chessprogramming.org/Hydra">https://www.chessprogramming.org/Hydra</a></p>
+<p>AlphaZero used TPUs: <a href="https://www.chessprogramming.org/AlphaZero">https://www.chessprogramming.org/AlphaZero</a></p>
+<p><a href="/User:Smatovic">Smatovic</a> (<a href="/User_talk:Smatovic">talk</a>) 08:04, 22 September 2023 (CEST)</p>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Talk:GPU">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: Smatovic.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
