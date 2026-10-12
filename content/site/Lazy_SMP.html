@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lazy SMP - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Lazy SMP</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Search">Search</a> * <a href="/Parallel_Search">Parallel Search</a> * Lazy SMP</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b0/Our_living_world_%28Full_Page_Illustration%29_%286076989366%29.jpg" alt="Sloths traversing a tree 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Sloths traversing a tree <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://en.wikipedia.org/wiki/Three-toed_sloth">Three-toed sloth</a>, <a href="https://commons.wikimedia.org/wiki/File:Our_living_world_(Full_Page_Illustration)_(6076989366).jpg?uselang=en">Image</a> by <a href="https://en.wikipedia.org/wiki/Friedrich_Specht">Friedrich Specht</a> in <a href="https://en.wikipedia.org/wiki/Joseph_Bassett_Holder">Joseph Bassett Holder</a>, <a href="https://en.wikipedia.org/wiki/John_George_Wood">John George Wood</a> (<strong>1885</strong>). <em><a href="http://www.biodiversitylibrary.org/bibliography/49480#/summary">Our living world; an artistic edition of the Rev. J. G. Wood's Natural history of animate creation</a></em>. New York : Selmar Hess, <a href="https://en.wikipedia.org/wiki/Wikimedia_Commons">Wikimedia Commons</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Lazy SMP</strong>,<br />
+based on the <a href="/Shared_Hash_Table">shared hash table</a> approach of a parallel search to profit from probing hash entries written by other instances of the search, as already used by <a href="/Vincent_David">Vincent David's</a> αβ* <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. Multiple <a href="/Process">processes</a> or <a href="/Thread">threads</a> search the same <a href="/Root">root position</a>, but are launched with different <a href="/Depth">depths</a>, and/or varying <a href="/Move_Ordering">move ordering</a> at the root node, to statistically improve the gains from the effect of nondeterminism, otherwise depending on random timing fluctuations <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>. The term <strong>Lazy SMP</strong> was coined by <a href="/Julien_Marcel">Julien Marcel</a> end of 2012 <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> with further elaborations by <a href="/Daniel_Homan">Daniel Homan</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>, <a href="/Martin_Sedlak">Martin Sedlak</a> and others. Today, many chess programs use this easy to implement parallel search approach, which <a href="https://en.wikipedia.org/wiki/Scalability">scales</a> surprisingly well up to 8 cores and beyond <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>, not only in <a href="/Nodes_per_Second">nodes per second</a> (as expected), but in <a href="/Playing_Strength">playing strength</a>, while it seems worse than <a href="/Young_Brothers_Wait_Concept">YBW</a> in <a href="https://en.wikipedia.org/wiki/Speedup">speedup</a> concerning time to <a href="/Depth">depth</a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>. Notably <a href="/Stockfish">Stockfish 7</a>, released in January 2016, switched from YBW to lazy SMP <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a> <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#chengs-pseudo-code">Cheng's Pseudo Code</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#thread-voting">Thread Voting</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#berserks-implementation-of-thread-voting">Berserk's Implementation of Thread Voting</a></li>
+<li><a href="#voting-on-multiple-moves">Voting On Multiple Moves</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#selected-publications">Selected Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015">2015</a></li>
+<li><a href="#2016">2016</a></li>
+<li><a href="#2017">2017</a></li>
+<li><a href="#2018">2018</a></li>
+<li><a href="#2019">2019</a></li>
+<li><a href="#2020">2020</a></li>
+<li><a href="#2021-">2021 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="chengs-pseudo-code">Cheng's Pseudo Code</h2>
+<p><span id="Cheng"></span>Pseudo Code of Lazy SMP in <a href="/Cheng">Cheng</a> as given by its author <a href="/Martin_Sedlak">Martin Sedlak</a> <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a>:</p>
+<pre><code>IterativeDeepening:
+  synchronize smp threads (copy age, board, history, repetition list, multipv =&gt; helpers)
+  depth 1 with full width window on 1 thread
+  loop (depth=2 .. max)
+    AspirationLoop:
+      (as usual)
+      start helper threads( depth, alpha, beta )
+      root( depth, alpha, beta)
+      stop helper threads
+      (rest as usual)
+    end aspiration loop
+  end depth loop 
+
+starting helper threads:
+  clear smp abort flag
+  for each helper thread:
+    copy rootmoves and minimum qs depth =&gt; helper
+    signal helper to start root search at current depth (add 1 for each even helper 
+     assuming 0-based indexing)  with aspiration alpha, beta bounds and wait until 
+     helper starts searching 
+
+aborting helper threads:
+  set abort flag for each helper and wait for each to stop searching </code></pre>
+<h2 id="thread-voting">Thread Voting</h2>
+<p>Modern engines use a technique called Thread Voting to increase the accuracy from Lazy SMP searches. Every thread cast a "vote" on their own best move. The votes are weighed on certain criteria, most commonly, depth and difference from worst score.</p>
+<h3 id="berserks-implementation-of-thread-voting">Berserk's Implementation of Thread Voting</h3>
+<pre><code>int voteMap[64 * 64];
+int worstScore = UNKNOWN;
+
+for (int i = 0; i &lt; Threads.count; i++) {
+  ThreadData* thread                         = Threads.threads[i];
+  worstScore                                 = Min(worstScore, thread-&gt;rootMoves[0].score);
+  voteMap[FromTo(thread-&gt;rootMoves[0].move)] = 0;
+}
+
+for (int i = 0; i &lt; Threads.count; i++) {
+  ThreadData* thread = Threads.threads[i];
+  voteMap[FromTo(thread-&gt;rootMoves[0].move)] += ThreadValue(thread, worstScore);
+}
+
+ThreadData* bestThread = mainThread;
+Score bestScore        = bestThread-&gt;rootMoves[0].score;
+Score bestVoteScore    = voteMap[FromTo(bestThread-&gt;rootMoves[0].move)];
+
+for (int i = 1; i &lt; Threads.count; i++) {
+  ThreadData* curr    = Threads.threads[i];
+  Score currScore     = curr-&gt;rootMoves[0].score;
+  Score currVoteScore = voteMap[FromTo(curr-&gt;rootMoves[0].move)];
+
+  // Always choose the fastest mate or longest avoidance of mate
+  if (abs(bestScore) &gt;= TB_WIN_BOUND) {
+    if (currScore &gt; bestScore)
+      bestThread = curr, bestScore = currScore, bestVoteScore = currVoteScore;
+  }
+
+  // If this move avoids mate, choose it if:
+  //   It&#39;s strictly better in terms of voting
+  //   or if it&#39;s equal in voting and it&#39;s individual score is stronger
+  //   when considering if this move was a FH or FL in the window
+  //   This logic originates verbatim in SF ThreadPool::get_best_thread()
+  else if (currScore &gt; -TB_WIN_BOUND &amp;&amp;
+           (currVoteScore &gt; bestVoteScore ||
+            (currVoteScore == bestVoteScore &amp;&amp;
+             (ThreadValue(curr, worstScore) * (curr-&gt;rootMoves[0].pv.count &gt; 2)) &gt;
+               (ThreadValue(bestThread, worstScore) * (bestThread-&gt;rootMoves[0].pv.count &gt; 2)))))
+    bestThread = curr, bestScore = currScore, bestVoteScore = currVoteScore;
+}
+
+if (bestThread != mainThread) {
+  PrintUCI(bestThread, -CHECKMATE, CHECKMATE, board);
+
+  // / If a new thread is best, make it the main thread
+  mainThread-&gt;idx                  = bestThread-&gt;idx;
+  Threads.threads[mainThread-&gt;idx] = mainThread;
+
+  bestThread-&gt;idx    = 0;
+  Threads.threads[0] = bestThread;
+}
+
+bestThread-&gt;previousScore = bestThread-&gt;rootMoves[0].score;
+
+Move bestMove   = bestThread-&gt;rootMoves[0].move;</code></pre>
+<h3 id="voting-on-multiple-moves">Voting On Multiple Moves</h3>
+<p>A thread voting scheme introduced by Patrick Leonhardt in PlentyChess. Under this method, worker threads can vote on multiple best moves found in Iterative Deepening loop.</p>
+<pre><code>(inside search)
+if (rootNode &amp;&amp; (moveCount == 1 || value &gt; alpha)) {
+    rootMove-&gt;value = value;
+    rootMove-&gt;depth = searchData.rootDepth;
+}
+
+for (auto&amp; th : threadPool-&gt;threads) {
+    for (auto&amp; rm : th-&gt;rootMoves) {
+        if (rm.value == -EVAL_INFINITE)
+            break;
+        // Votes weighted by depth and difference to the minimum value
+        votes[rm.move] += (rm.value - minValue + 10) * std::max(1, rm.depth - (th-&gt;rootMoves[0].depth - rm.depth));
+    }
+}</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/ABDADA">ABDADA</a></li>
+<li><a href="/Dynamic_Tree_Splitting">Dynamic Tree Splitting</a></li>
+<li><a href="/EXchess">Lazy SMP</a> in <a href="/EXchess">EXchess</a></li>
+<li><a href="/Lazy_Evaluation">Lazy Evaluation</a></li>
+<li><a href="/Shared_Hash_Table">Shared Hash Table</a></li>
+<li><a href="/SMP">SMP</a></li>
+<li><a href="/NUMA">NUMA</a></li>
+<li><a href="/Young_Brothers_Wait_Concept">Young Brothers Wait Concept</a></li>
+</ul>
+<h2 id="selected-publications">Selected Publications</h2>
+<ul>
+<li><a href="/Vincent_David">Vincent David</a> (<strong>1993</strong>). <em><a href="http://cat.inist.fr/?aModele=afficheN&amp;cpsidt=161774">Algorithmique parallèle sur les arbres de décision et raisonnement en temps contraint. Etude et application au Minimax</a></em> = Parallel algorithm for heuristic tree searching and real-time reasoning. Study and application to the Minimax, Ph.D. Thesis, <a href="https://en.wikipedia.org/wiki/%C3%89cole_nationale_sup%C3%A9rieure_de_l%27a%C3%A9ronautique_et_de_l%27espace">École nationale supérieure de l'aéronautique et de l'espace</a>, <a href="https://en.wikipedia.org/wiki/Toulouse">Toulouse</a>, <a href="https://en.wikipedia.org/wiki/France">France</a></li>
+</ul>
+<p><strong>Abstract</strong>: <em>The method of parallelization is based on a suppression of control between the search processes, in favor of a speculative parallelism and full sharing of information achieved through a physically distributed but virtually shared memory. The contribution of our approach for real-time distributed systems and fault-tolerant is evaluated through experimental results</em>.</p>
+<ul>
+<li>Emil Fredrik Østensen (<strong>2016</strong>). <em>A Complete Chess Engine Parallelized Using Lazy SMP</em>. M.Sc. thesis, <a href="https://en.wikipedia.org/wiki/University_of_Oslo">University of Oslo</a>, <a href="https://www.duo.uio.no/bitstream/handle/10852/53769/master.pdf?sequence=1">pdf</a> » <a href="/Kholin">Kholin</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=36082">SMP speed up</a> by <a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a>, <a href="/CCC">CCC</a>, September 14, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46597">Lazy SMP</a> by <a href="/Julien_Marcel">Julien Marcel</a>, <a href="/CCC">CCC</a>, December 27, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46858">Lazy SMP, part 2</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, January 12, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47455">Lazy SMP, part 3</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, March 09, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47568">Shared hash table smp result</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, March 21, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47887">ABDADA speedup results</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, May 01, 2013 » <a href="/ABDADA">ABDADA</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48524">Measure of SMP scalability</a> by <a href="/Edsel_Apostol">Edsel Apostol</a>, <a href="/CCC">CCC</a>, July 03, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48536">Lazy SMP and Work Sharing</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, July 03, 2013 » <a href="/EXchess">Lazy SMP</a> in <a href="/EXchess">EXchess</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49443">cheng4 0.35</a> by <a href="/Martin_Sedlak">Martin Sedlak</a>, <a href="/CCC">CCC</a>, September 24, 2013 » <a href="/Cheng">Cheng</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51198">SMP and pondering</a> by <a href="/John_Merlino">John Merlino</a>, <a href="/CCC">CCC</a>, February 08, 2014 » <a href="/Myrddin">Myrddin</a>, <a href="/Pondering">Pondering</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54671">Nirvanachess 2.0 Release</a> by <a href="/Thomas_Kolarik">Thomas Kolarik</a>, <a href="/CCC">CCC</a>, December 17, 2014 » <a href="/Nirvanachess">Nirvanachess</a></li>
+</ul>
+<h3 id="2015">2015</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55047">SMP: on same branch instead splitting?</a> by Frank Ludwig, <a href="/CCC">CCC</a>, January 23, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55093">Myrddin 0.87 release</a> by <a href="/John_Merlino">John Merlino</a>, <a href="/CCC">CCC</a>, January 25, 2015 » <a href="/Myrddin">Myrddin</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55170">A new chess engine : m8 (comming not so soon)</a> by <a href="/Mathieu_Pagé">Mathieu Pagé</a>, <a href="/CCC">CCC</a>, February 01, 2015</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=55170&amp;start=3">Re: A new chess engine : m8 (comming not so soon)</a> by <a href="/Martin_Sedlak">Martin Sedlak</a>, <a href="/CCC">CCC</a>, February 01, 2015</p>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=55170&amp;start=11">Re: A new chess engine : m8 (comming not so soon)</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, February 01, 2015</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55188">Lazy SMP in Cheng</a> by <a href="/Martin_Sedlak">Martin Sedlak</a>, <a href="/CCC">CCC</a>, February 02, 2015 » <a href="/Cheng">Cheng</a></li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/VL4pEYZXuuM/wJSehP7SQlYJ">Lazy SMP scaling Cheng0.38</a> by Bertil, <a href="/Computer_Chess_Forums">FishCooking</a>, February 24, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55970">Trying to improve lazy smp</a> by <a href="/Daniel_José_Queraltó">Daniel José Queraltó</a>, <a href="/CCC">CCC</a>, April 11, 2015 » <a href="/Andscacs">Andscacs</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56019">Empirical results with Lazy SMP, YBWC, DTS</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, April 16, 2015 » <a href="/Lazy_SMP">Lazy SMP</a>, <a href="/Young_Brothers_Wait_Concept">YBWC</a>, <a href="/Dynamic_Tree_Splitting">DTS</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57572">lazy smp questions</a> by Lucas Braesch, <a href="/CCC">CCC</a>, September 09, 2015</li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/GVdyWSWEpQY/bZbeaJAbBgAJ">Lazy SMP</a> by <a href="/Mikael_Bäckman">Mikael</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, September 26, 2015 » <a href="/Stockfish">Stockfish</a></li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/vGgxv_W_LOI/SAQOxpFsBwAJ">Komodo, Lazy SMP, and the like :-)</a> by <a href="/Stephane_Nicolet">Stephane Nicolet</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, September 30, 2015 » <a href="/Komodo">Komodo</a>, <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58031">Lazy SMP Better than YBWC?</a> by <a href="/Steve_Maughan">Steve Maughan</a>, <a href="/CCC">CCC</a>, October 23, 2015 » <a href="/Young_Brothers_Wait_Concept">Young Brothers Wait Concept</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58056">New Stockfish with Lazy_SMP, but what about the TC bug ?</a> by Ernest Bonnem, <a href="/CCC">CCC</a>, October 26, 2015 » <a href="/Stockfish">Stockfish</a>, <a href="/TCEC_Season_8">TCEC Season 8</a></li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/Sq8HJ7Xq0Ww/rKbWeHASBQAJ">Helper Thread Depths in the Lazy SMP algorithm</a> by Rohan Ryan, <a href="/Computer_Chess_Forums">FishCooking</a>, November 14, 2015 » <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58645">lazy smp questions</a> by <a href="/Marco_Belli">Marco Belli</a>, <a href="/CCC">CCC</a>, December 21, 2015</li>
+</ul>
+<h3 id="2016">2016</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59389">Lazy SMP - how it works</a> by Kalyankumar Ramaseshan, <a href="/CCC">CCC</a>, February 29, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59732">Pedone 1.4</a> by <a href="/Fabio_Gobbato">Fabio Gobbato</a>, <a href="/CCC">CCC</a>, April 03, 2016 » <a href="/Pedone">Pedone</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60155">stockfish threading model</a> by <a href="/Folkert_van_Heusden">Folkert van Heusden</a>, <a href="/CCC">CCC</a>, May 13, 2016</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=60155&amp;start=1">Re: stockfish threading model</a> by <a href="/Dann_Corbit">Dann Corbit</a>, <a href="/CCC">CCC</a>, May 13, 2016</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60271">parallel search speed measurement</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, May 24, 2016</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=60271&amp;start=9">Re: parallel search speed measurement</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, May 26, 2016</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60537">Crazy SMP</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, June 19, 2016</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=60537&amp;start=2">Re: Crazy SMP</a> by <a href="/Stan_Arts">Stan Arts</a>, <a href="/CCC">CCC</a>, June 20, 2016</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60979">lazy smp using ms vs2015 c++11 std::async</a> by Edward Yu, <a href="/CCC">CCC</a>, July 29, 2016 » <a href="/Thread">Thread</a> <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61131">Time to depth concerns</a> by Carl Bicknell, <a href="/CCC">CCC</a>, August 15, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61408">Some hyperthreading results</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, September 12, 2016 » <a href="/Thread">Thread</a>, <a href="/Young_Brothers_Wait_Concept">YBW</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62146">Stockfish 8 - Double time control vs. 2 threads</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, November 15, 2016 » <a href="/Match_Statistics">Doubling TC</a>, <a href="/Depth">Diminishing Returns</a>, <a href="/Playing_Strength">Playing Strength</a>, <a href="/Stockfish">Stockfish</a></li>
+</ul>
+<h3 id="2017">2017</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63454">How to find SMP bugs ?</a> by Lucas Braesch, <a href="/CCC">CCC</a>, March 15, 2017</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=3097">Ideas to improve SMP scaling</a> by lucasart, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, April 03, 2017</li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/Cbm5y4dpeEE/wYmQokNfAAAJ">Some data about LazySMP</a> by <a href="/Stephane_Nicolet">Stephane Nicolet</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, April 08, 2017 » <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63903">Symmetric multiprocessing (SMP) scaling - SF8 and K10.4</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, May 05, 2017 » <a href="/Komodo">Komodo</a>, <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63955">Symmetric multiprocessing (SMP) scaling - K10.4 Contempt=0</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, May 11, 2017 » <a href="/SMP">SMP</a>, <a href="/Komodo">Komodo</a>, <a href="/Contempt_Factor">Contempt Factor</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63967">Symmetric multiprocessing (SMP) scaling - SF8 Contempt=10</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, May 13, 2017 » <a href="/SMP">SMP</a>, <a href="/Stockfish">Stockfish</a>, <a href="/Contempt_Factor">Contempt Factor</a></li>
+<li><span id="LazyCluster"></span><a href="http://www.talkchess.com/forum/viewtopic.php?t=64824">Lazy SMP and "lazy cluster" experiments</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, August 06, 2017</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=64824&amp;start=1">Lazy SMP and lazy cluster algorithm</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, August 06, 2017</p>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=64824&amp;start=2">SMP NPS measurements</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, August 06, 2017 » <a href="/Nodes_per_Second">Nodes per Second</a></p>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=64824&amp;start=3">ELO measurements</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, August 06, 2017 » <a href="/Playing_Strength">Playing Strength</a></p>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=64824&amp;start=4">Possible improvements</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, August 06, 2017</p>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=64824&amp;start=43">Approximate ABDADA</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, August 23, 2017 » <a href="/ABDADA">ABDADA</a></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64850">lazysmp (again)</a> by <a href="/Folkert_van_Heusden">Folkert van Heusden</a>, <a href="/CCC">CCC</a>, August 09, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65844">Lazy SMP &gt;4 Thread Slowdown</a> by Can Cetin, <a href="/CCC">CCC</a>, November 29, 2017 » <a href="/Thread">Thread</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=65844&amp;start=4">Re: Lazy SMP &gt;4 Thread Slowdown</a> by <a href="/Ronald_de_Man">Ronald de Man</a>, <a href="/CCC">CCC</a>, November 29, 2017</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66044">Parallel search/LazySMP question</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, December 17, 2017</li>
+</ul>
+<h3 id="2018">2018</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=68154">Lazy SMP and 44 cores</a> by Sander Maassen vd Brink, <a href="/CCC">CCC</a>, August 07, 2018</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=68154&amp;start=7">Re: Lazy SMP and 44 cores</a> by <a href="/John_Stanback">John Stanback</a>, <a href="/CCC">CCC</a>, August 08, 2018 » <a href="/Wasp">Wasp</a></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=68278">Lazy SMP ideas</a> by <a href="/Edsel_Apostol">Edsel Apostol</a>, <a href="/CCC">CCC</a>, August 22, 2018</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=68278&amp;start=2">Lazy SMP ideas</a> by <a href="/Pawel_Koziol">Pawel Koziol</a>, <a href="/CCC">CCC</a>, August 23, 2018</p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=68278&amp;start=16">Re: Lazy SMP ideas</a> by <a href="/Folkert_van_Heusden">Folkert van Heusden</a>, <a href="/CCC">CCC</a>, October 03, 2018 » <a href="/Aspiration_Windows">Aspiration Windows</a></p>
+<h3 id="2019">2019</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69481">Simplest way to implement quick and dirty lazy smp</a> by <a href="/Tom_King">Tom King</a>, <a href="/CCC">CCC</a>, January 04, 2019</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69507">What's the best Lazy SMP logic?</a> by Daniel Bennett, <a href="/CCC">CCC</a>, January 06, 2019 » <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70919">strategies for finding slowdows in lazy smp</a> by <a href="/Folkert_van_Heusden">Folkert van Heusden</a>, <a href="/CCC">CCC</a>, June 04, 2019 » <a href="/Nodes_per_Second">Nodes per Second</a>, <a href="/Thread">Thread</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72684">RMO - Randomized Move Order - yet another Lazy SMP derivate</a> by <a href="/Srdja_Matovic">Srdja Matovic</a>, <a href="/CCC">CCC</a>, December 30, 2019</li>
+</ul>
+<h3 id="2020">2020</h3>
+<ul>
+<li><a href="https://groups.google.com/d/msg/fishcooking/9X3lDH83tlk/DtRtuFMOCAAJ">lazy smp behaviour of stockfish</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, January 05, 2020 » <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74793">Laziest Lazy SMP</a> by Ian Mitchell, <a href="/CCC">CCC</a>, August 15, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75088">SMP, first shot at implementation</a> by <a href="/Chris_Whittington">Chris Whittington</a>, <a href="/CCC">CCC</a>, September 12, 2020 » <a href="/Thread">Thread</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75151">Very Lazy SMP and worker threads</a> by <a href="/Chris_Whittington">Chris Whittington</a>, <a href="/CCC">CCC</a>, September 18, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76190">Dispelling the Myth of NNUE with LazySMP: An Analysis</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, December 30, 2020 » <a href="/NNUE">NNUE</a></li>
+</ul>
+<h3 id="2021-">2021 ...</h3>
+<ul>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79588">Stockfish search</a> by Werewolf, <a href="/CCC">CCC</a>, March 26, 2022 » <a href="/Stockfish">Stockfish</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wiktionary.org/wiki/lazy">lazy - Wiktionary</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Lazy">Lazy from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Laziness">Laziness from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Sloth_(deadly_sin)">Sloth (deadly sin) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Symmetric_multiprocessing">Symmetric multiprocessing (SMP) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Lazy_evaluation">Lazy evaluation from Wikipedia</a></li>
+<li><a href="/Category:Small_Faces">Small Faces</a> - <a href="https://en.wikipedia.org/wiki/Lazy_Sunday_(Small_Faces_song)">Lazy Sunday</a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/zXeRB-3nDR8" title="YouTube video zXeRB-3nDR8" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=zXeRB-3nDR8">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Parallel_Search">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Vincent_David">Vincent David</a> (<strong>1993</strong>). <em><a href="http://cat.inist.fr/?aModele=afficheN&amp;cpsidt=161774">Algorithmique parallèle sur les arbres de décision et raisonnement en temps contraint. Etude et application au Minimax</a></em> = Parallel algorithm for heuristic tree searching and real-time reasoning. Study and application to the Minimax, Ph.D. Thesis, <a href="https://en.wikipedia.org/wiki/%C3%89cole_nationale_sup%C3%A9rieure_de_l%27a%C3%A9ronautique_et_de_l%27espace">École nationale supérieure de l'aéronautique et de l'espace</a>, <a href="https://en.wikipedia.org/wiki/Toulouse">Toulouse</a>, <a href="https://en.wikipedia.org/wiki/France">France</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=59389&amp;start=5">Re: Lazy SMP - how it works</a> by <a href="/Evert_Glebbeek">Evert Glebbeek</a>, <a href="/CCC">CCC</a>, October 19, 2016<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=46597">Lazy SMP</a> by <a href="/Julien_Marcel">Julien Marcel</a>, <a href="/CCC">CCC</a>, December 27, 2012<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=46858">Lazy SMP, part 2</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, January 12, 2013<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=48536">Lazy SMP and Work Sharing</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, July 03, 2013<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=55170&amp;start=11">Re: A new chess engine : m8 (comming not so soon)</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, February 01, 2015<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=61131">Time to depth concerns</a> by Carl Bicknell, <a href="/CCC">CCC</a>, August 15, 2016<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=58779">Stockfish 7</a> by <a href="/Joona_Kiiski">Joona Kiiski</a>, <a href="/CCC">CCC</a>, January 02, 2016<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=58887">Threads test incl. Stockfish 7</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, January 11, 2016<a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=58935">Stockfish 7 progress</a> by Carl Lumma, <a href="/CCC">CCC</a>, January 16, 2016<a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=55188">Lazy SMP in Cheng</a> by <a href="/Martin_Sedlak">Martin Sedlak</a>, <a href="/CCC">CCC</a>, February 02, 2015 » <a href="/Cheng">Cheng</a><a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="http://en.cppreference.com/w/cpp/thread/async">std::async - cppreference.com</a><a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Small_Faces">Small Faces</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Lazy_SMP">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, ShawnXu.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

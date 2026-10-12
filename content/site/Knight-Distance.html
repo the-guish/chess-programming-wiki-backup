@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Knight-Distance - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Knight-Distance</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Chess">Chess</a> * <a href="/Squares">Squares</a> * Knight-Distance</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="http://chgs.elevator.umn.edu/asset/viewAsset/57f3b6787d58ae5f74bf8ba9#57f3b6d67d58ae5574bf8baa" target="_blank" rel="noopener noreferrer"><img src="/assets/SamuelBakAcross.jpg" alt="Samuel Bak - Across 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Samuel_Bak">Samuel Bak</a> - Across <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://chgs.elevator.umn.edu/asset/viewAsset/57f3b6787d58ae5f74bf8ba9#57f3b6d67d58ae5574bf8baa">Chess in the Art of Samuel Bak</a>, <a href="http://www.chgs.umn.edu/">Center for Holocaust &amp; Genocide Studies</a>, <a href="/University_of_Minnesota">University of Minnesota</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p>The <strong>Knight-Distance</strong> between two squares determines the minimal number of moves a <a href="/Knight">Knight</a> needs, to reach one square from the other on the otherwise empty board. Due to its move geometry, the knight changes its <a href="/Color_of_a_Square">square-color</a>, each times it moves. Thus, if squares have different color, the number of moves is odd, otherwise with same square color, even. Smaller <a href="/Distance">distance</a> does not generally imply smaller KnightDistance. <span id="KnightFill"></span></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#knight-fill">Knight Fill</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#lookups">Lookups</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#by-64-x-64-lookup">By 64 x 64 Lookup</a></li>
+<li><a href="#by-0x88-square-relations">By 0x88 Square Relations</a></li>
+<li><a href="#by-absolute-rank-file-distance">By Absolute Rank-File Distance</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="knight-fill">Knight Fill</h2>
+<p>With <a href="/Bitboards">bitboards</a>, one may use <a href="/Fill_Algorithms">fill algorithms</a>, to calculate the knight distance by counting the number of fill-cycles until a target set becomes subset of the consecutively expanded <a href="/Knight_Pattern">knight attacks</a>.</p>
+<pre><code>U64 getKnightAttacks(U64 bb) {
+   U64 l1 = (bb &gt;&gt; 1) &amp; C64(0x7f7f7f7f7f7f7f7f);
+   U64 l2 = (bb &gt;&gt; 2) &amp; C64(0x3f3f3f3f3f3f3f3f);
+   U64 r1 = (bb &lt;&lt; 1) &amp; C64(0xfefefefefefefefe);
+   U64 r2 = (bb &lt;&lt; 2) &amp; C64(0xfcfcfcfcfcfcfcfc);
+   U64 h1 = l1 | r1;
+   U64 h2 = l2 | r2;
+   return (h1&lt;&lt;16) | (h1&gt;&gt;16) | (h2&lt;&lt;8) | (h2&gt;&gt;8);
+}
+
+// no set should be empty -&gt; assert (b1 != 0 &amp;&amp; b2 != 0 )
+int calcKnightDistance(U64 b1, U64 b2) {
+   int d = 0;
+   while ((b1 &amp; b2) == 0) {
+      b1 = getKnightAttacks(b1); // as long as sets are disjoint
+      d++; // increment distance
+   }
+   return d;
+}
+
+int knightDistance(int a, int b) {
+   return calcKnightDistance(C64(1) &lt;&lt; a, C64(1) &lt;&lt; b);
+}</code></pre>
+<h2 id="lookups">Lookups</h2>
+<p>One may use this fill-approach to initialize lookup-tables.</p>
+<h3 id="by-64-x-64-lookup">By 64 x 64 Lookup</h3>
+<p>The obvious and likely fastest solution is to go with a 64 times 64 <a href="/Array">array</a>, which takes 4 KByte containing all possible knight-distances which are in the 0..6 range on a 8 times 8 board.</p>
+<pre><code>char arrKnightDistance[64][64]; // 4 KByte, requires some initialization code
+
+int knightDistance(int a, int b) {
+   return arrKnightDistance[a][b];
+}</code></pre>
+<h3 id="by-0x88-square-relations">By 0x88 Square Relations</h3>
+<p>Similar to <a href="/Distance">distance</a> or <a href="/Manhattan-Distance">Manhattan-distance</a>, we may use the <a href="/0x88">0x88 square relation</a> approach for a denser 240 sized <a href="/Array">array</a> - but there is one minor issue to consider according to <a href="/Diagonals">diagonal</a> (or <a href="/Anti-Diagonals">anti-diagonal</a>) neighbored squares. Those squares have usually a knight distance of two, but a distance of four from (or to) the four corner squares. Those extra cases have to be considered by some extra conditions.</p>
+<h3 id="by-absolute-rank-file-distance">By Absolute Rank-File Distance</h3>
+<p>Another alternative is based on a lookup of two 64 element arrays, one is indexed by some absolute 8 x <a href="/Ranks">Rank-Distance</a> plus absolute <a href="/Files">File-Distance</a>, where diagonal neighbors have a unique distance of 9.</p>
+<pre><code>const int ndis[64] = { // char
+   //  knight-distance
+   0, 3, 2, 3, 2, 3, 4, 5,
+   3, 2, 1, 2, 3, 4, 3, 4,
+   2, 1, 4, 3, 2, 3, 4, 5,
+   3, 2, 3, 2, 3, 4, 3, 4,
+   2, 3, 2, 3, 4, 3, 4, 5,
+   3, 4, 3, 4, 3, 4, 5, 4,
+   4, 3, 4, 3, 4, 5, 4, 5,
+   5, 4, 5, 4, 5, 4, 5, 6
+};
+
+const int corner[64] = { // char
+   1, 0, 0, 0, 0, 0, 0, 1,
+   0, 0, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0, 0, 0, 0,
+   1, 0, 0, 0, 0, 0, 0, 1
+};
+
+int absRankFileDiff(int a, int b) {
+   int rd = (a|7) - (b|7);
+   int fd = (a&amp;7) - (b&amp;7);
+   return abs(rd) + abs(fd);
+}
+
+int knightDistance(int a, int b) {
+   int c = absRankFileDiff(a,b);
+   int d = ndis[c];
+   if (c == 9) d += 2*(corner[a] ^ corner[b]);
+   return d;
+}</code></pre>
+<p>Or without a condition:</p>
+<pre><code>int knightDistance(int a, int b) {
+   int c = absRankFileDiff(a,b);
+   int d = ndis[c] + 2*((c == 9) &amp; (corner[a] ^ corner[b]));
+   return d;
+}</code></pre>
+<p>To avoid further conditions, with the risk of branch miss-predictions up and then, <a href="/Avoiding_Branches">abs</a> as intrinsic is likely implemented based on following code snippet ...</p>
+<pre><code>int abs(int a) {
+   int s = a &gt;&gt; 31; // cdq, signed shift, -1 if negative, else 0
+   a ^= s;  // ones&#39; complement if negative
+   a -= s;  // plus one if negative -&gt; two&#39;s complement if negative
+   return a;
+}</code></pre>
+<p>... by compilers, on <a href="/X86">x86</a> a sequence three instructions: {cdq, xor, sub} or {cdq, add, xor}.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Distance">Distance</a></li>
+<li><a href="/Manhattan-Distance">Manhattan-Distance</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Squares">Up one Level</a></strong></p>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Samuel_Bak">Samuel Bak</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Knight-Distance">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

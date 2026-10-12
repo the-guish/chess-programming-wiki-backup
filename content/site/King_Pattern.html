@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>King Pattern - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">King Pattern</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * King Pattern</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="https://en.wikipedia.org/wiki/File:Moore_d.gif" target="_blank" rel="noopener noreferrer"><img src="/assets/Moore_d.gif" alt="Moore neighborhood 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Moore neighborhood <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://en.wikipedia.org/wiki/Moore_neighborhood">Moore neighborhood from Wikipedia</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>King pattern</strong> are about <strong>king attacks</strong>, some <a href="/King_Safety">king safety</a> issues and <a href="/Pawn_Endgame">pawn endgame</a> related stuff. There is exactly one king per side - the whole game. Not a big issue, but even if white and black kings are member of the <a href="/Bitboard_Board-Definition">standard bitboard definition</a> one may avoid <a href="/BitScan">bitscanning</a> whole the time. Even without explicit <a href="/Piece-Lists">piece-lists</a> , one may consider to keep the redundant king-squares <a href="/Incremental_Updates">incrementally updated</a> during <a href="/Make_Move">make</a>/<a href="/Unmake_Move">unmake</a>. <span id="KingAttacks"></span></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#king-attacks">King Attacks</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#by-lookup">by Lookup</a></li>
+<li><a href="#by-calculation">by Calculation</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#king-safety">King Safety</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#pawn-shield-pattern">Pawn-Shield Pattern</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#vulnerable-on-distant-checks">Vulnerable on distant Checks</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#branchless">Branchless</a></li>
+<li><a href="#sse4">SSE4</a></li>
+</ol>
+</details></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#king-and-pawns">King and Pawns</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#set-wise-rule-of-the-square">Set-wise Rule of the Square</a></li>
+<li><a href="#flood-fill-algorithms">Flood Fill Algorithms</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="king-attacks">King Attacks</h2>
+<p>The King <a href="/Attacks">attacks</a> all squares in <a href="https://en.wikipedia.org/wiki/Moore_neighborhood">Moore neighborhood</a>, that is squares with a <a href="/Distance">Chebyshev distance</a> of one.</p>
+<h3 id="by-lookup">by Lookup</h3>
+<p>Likely we have a the square-index handy, to access a table of precalculated king-attacks.</p>
+<pre><code>U64 arrKingAttacks[64];
+
+U64 kingAttacks(enumSquare sq) {return arrKingAttacks[sq];}</code></pre>
+<p>For instance a king on g2:</p>
+<pre><code>. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . 1 1 1
+. . . . . 1 . 1
+. . . . . 1 1 1</code></pre>
+<p><span id="byCalculation"></span></p>
+<h3 id="by-calculation">by Calculation</h3>
+<p>To calculate all eight <a href="/Direction">directions</a>, one can actually do some simple <a href="/Parallel_Prefix_Algorithms">parallel prefix stuff</a>. Rather than to do a union of all eight <a href="/General_Setwise_Operations">direction-steps</a>, one first applies the <a href="/General_Setwise_Operations">horizontal attacks</a> considering file-wraps. Those up to two bits are then shifted up and down, together with the king-bitboard itself, to get all the other direction bits:</p>
+<pre><code>U64 kingAttacks(U64 kingSet) {
+   U64 attacks = eastOne(kingSet) | westOne(kingSet);
+   kingSet    |= attacks;
+   attacks    |= nortOne(kingSet) | soutOne(kingSet);
+   return attacks;
+}</code></pre>
+<p>The routine is handy to initialize the kingAttacks <a href="/Array">arrays</a>:</p>
+<pre><code>U64 sqBB = 1;
+for (int sq = 0; sq &lt; 64; sq++, sqBB &lt;&lt;= 1)
+   arrKingAttacks[sq] = kingAttacks(sqBB);</code></pre>
+<p>It must not necessarily called with single-populated bitboards, and is base of <a href="/King_Pattern">king path fill algorithms</a>. <span id="KingSafety"></span></p>
+<h2 id="king-safety">King Safety</h2>
+<p><a href="/King_Safety">King Safety</a> is an important evaluation topic. Some bitboard pattern are about to recognize king safety related features. To evaluate those features is a complete other story.</p>
+<h3 id="pawn-shield-pattern">Pawn-Shield Pattern</h3>
+<p>During the <a href="/Middlegame">middlegame</a>, the king is encouraged to hide behind own pawn shields. Beside Considering open and half-open files on king's and adjacent files, one idea is to mask potential pawn shield pattern per wing of the king file - and to hash it to an appropriate index range to access tables with precalculated stuff. This mask might be used for kings on f1-h1 or f1-h2:</p>
+<pre><code>. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . 1 1 1
+. . . . . 1 1 1
+. . . . . . . .</code></pre>
+<p><span id="VulnerableOnDistantChecks"></span></p>
+<h3 id="vulnerable-on-distant-checks">Vulnerable on distant Checks</h3>
+<p>Assuming we are aware of all taboo squares of the king. That is the union of own pieces with all opposite attacks, then we can simply calculate a move target set by relative complement of the king attacks.</p>
+<pre><code>moveTargets = arrKingAttacks[sq] &amp; ~taboo;</code></pre>
+<p>If moveTargets is empty - the king has no move. The king might be vulnerable on distant checks from any <a href="/Sliding_Pieces">sliding piece</a> <a href="/Direction">direction</a>, due to lack of any escape. Otherwise, the king might be vulnerable on distant checks, if escape squares are on one line only - either rank, file, diagonal or anti-diagonal:</p>
+<pre><code>if ( moveTargets == 0 )
+{
+   dirSet = 15; // vulnerable on all lines
+}
+else
+{
+   dirSet = 0;
+   pattern = moveTargets | sqBBofKing;
+   if ( pattern &amp; rankBits[sq] == pattern )
+      dirSet =  1; // vulnerable on rank, e.g. base rank
+   else if ( pattern &amp; fileBits[sq] == pattern )
+      dirSet =  2; // vulnerable on file
+   else if ( pattern &amp; diagBits[sq] == pattern )
+      dirSet =  4; // vulnerable on diagonal
+   else if ( pattern &amp; antiBits[sq] == pattern )
+      dirSet =  8; // vulnerable on antidiagonal
+}</code></pre>
+<h4 id="branchless">Branchless</h4>
+<p>Branchless in C - since boolean compare result is treated 0 or 1 arithmetically:</p>
+<pre><code>pattern = moveTargets | sqBBofKing;
+dirSet  = ( pattern &amp; rankBits[sq] == pattern ) * 1;
+dirSet += ( pattern &amp; fileBits[sq] == pattern ) * 2;
+dirSet += ( pattern &amp; diagBits[sq] == pattern ) * 4;
+dirSet += ( pattern &amp; antiBits[sq] == pattern ) * 8;</code></pre>
+<p>to possibly test later</p>
+<pre><code>if ( dirSet ) evaluate and look for possible distant mates</code></pre>
+<p><span id="SSE4"></span></p>
+<h4 id="sse4">SSE4</h4>
+<p>Using the <a href="/SSE4">SSE4.1</a> PCMPEQQ <a href="/Quad_Word">Quadword</a> compare for equality instruction via <a href="http://msdn.microsoft.com/en-us/library/bb513998.aspx">_mm_cmpeq_epi64</a> intrinsic, following otherwise <a href="/SSE2">SSE2</a> approach might be applied:</p>
+<pre><code>struct SKingBits {
+    U64 rankBits;
+    U64 fileBits;
+    U64 diagBits;
+    U64 antiBits;
+} XMM_ALIGN kingBits[64];
+
+int dirSet(U64 pattern, int sq)
+{
+   static const U64 XMM_ALIGN weights[4] = {
+     C64(0x0000000000000001),
+     C64(0x0000000000000002),
+     C64(0x0000000000000004),
+     C64(0x0000000000000008)
+   };
+   __m128i x0, x1, x2;
+   const __m128i* pKB = (__m128i*)(kingBits + sq);
+   const __m128i* pW  = (__m128i*) weights;
+   x2 = _mm_cvtsi64x_si128 (pattern);
+   x2 = _mm_unpacklo_epi64 (x2, x2);
+   x0 = _mm_and_si128   (x2, pKB[0]);
+   x1 = _mm_and_si128   (x2, pKB[1]);
+   x0 = _mm_cmpeq_epi64 (x0, x2);
+   x1 = _mm_cmpeq_epi64 (x1, x2);
+   x0 = _mm_and_si128   (x0, pW[0]);
+   x1 = _mm_and_si128   (x1, pW[1]);
+   x0 = _mm_or_si128    (x0, x1);
+   x1 = _mm_unpackhi_epi64 (x0, x0);
+   x0 = _mm_or_si128    (x0, x1);
+   return _mm_cvtsi128_si32(x0);
+}</code></pre>
+<p><span id="KingAndPawns"></span></p>
+<h2 id="king-and-pawns">King and Pawns</h2>
+<p>Some <a href="/Pawn_Endgame">pawn endgame</a> issues. A set-wise <a href="/Rule_of_the_Square">rule of the square</a> from king's point of view. Or does a king have a connected path along safe and empty squares to a certain square? <span id="SetwiseRuleoftheSquare"></span></p>
+<h3 id="set-wise-rule-of-the-square">Set-wise Rule of the Square</h3>
+<p>Assuming a black-king on g5 - white to move. What is the set of squares, where a king can never catch a white <a href="/Passed_Pawn">passer</a>? Or the inverse, where can passers might be caught, considering the <a href="/Rule_of_the_Square">rule of the square</a>? In this inverse case, where passers may be close enough, there are other aspects to consider like two distant passers, or passer supported by own king - here it is only about races between passers and opponent king. It is about a set-wise view, where the distance to promotion is greater or equal than the distance of the king. We need to consider <strong>double pushes</strong> from the initial rank though.</p>
+<pre><code>black king on g5    white passers         double pawn push, need
+wtm                 possibly caught       to copy 3rd to 2nd rank
+. . . . . . . .      . . . . . . . .      . . . . . . . .
+. . . . . . . .      . . . . . . . .      . . . . . . . .
+. . . . . . . .      . . . . . . . .      . . . . . . . .
+. . . . . . K .      . . . 1 1 1 K 1      . . . 1 1 1 K 1
+. . . . . . . .      . . 1 1 1 1 1 1      . . 1 1 1 1 1 1
+. . . . . . . .      . 1 1 1 1 1 1 1      . 1 1 1 1 1 1 1
+. . . . . . . .      1 1 1 1 1 1 1 1      . 1 1 1 1 1 1 1
+. . . . . . . .      1 1 1 1 1 1 1 1      1 1 1 1 1 1 1 1</code></pre>
+<p><em>Of course we may even mask off the base ranks since pawns can not exist there - but since we intersect with passers anyway, it don't cares.</em></p>
+<p>We need to consider <a href="/Tempo">tempo</a>, if black to move, the area of caught grows accordantly:</p>
+<pre><code>black king on g5    white passers
+btm                 possibly caught
+. . . . . . . .      . . . . . . . .
+. . . . . . . .      . . . . . . . .
+. . . . . K K K      . . . 1 1 1 1 1
+. . . . . K K K      . . 1 1 1 1 K 1
+. . . . . K K K      . 1 1 1 1 1 1 1
+. . . . . . . .      1 1 1 1 1 1 1 1
+. . . . . . . .      1 1 1 1 1 1 1 1
+. . . . . . . .      1 1 1 1 1 1 1 1</code></pre>
+<p>We can now pre-initialize an <a href="/Array">array</a> of <strong>caught pawn area</strong> for each king square, for both black and white king as well as <a href="/Side_to_move">side to move</a>:</p>
+<pre><code>U64 arrCaughtableArea[2][2][64];  // [color of king][side to move][square]
+
+unCaughtable = whitePassers &amp; ~arrCaughtableArea[black][white][squareOfBlackKing];</code></pre>
+<p>How can the array be initialized, how can we calculate it? That is already some special fill approach. For the mentioned black king, wtm case, we use the rank-distance of the black king to the 8th rank.</p>
+<pre><code>distance = rank(kingSquare) ^ 7; // 7 - rank
+
+. . . . 3 . . .
+. . . . 2 . . .
+. . . . 1 . . .
+. . . . K . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .</code></pre>
+<p>One solution is first expand the king-set distance (3) times, in east and west direction along the rank:</p>
+<pre><code>caughtable = kingBB;
+for (i = 0; i &lt; distance; i++)
+   caughtable |= westOne(caughtable) | eastOne(caughtable);
+
+. . . . . . . .     . . . . . . . .      . . . . . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .
+. . . . . 1 1 1     . . . . 1 1 1 1      . . . 1 1 1 1 1
+. . . . . . . .     . . . . . . . .      . . . . . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .</code></pre>
+<p>Now it is about filling south-west and south-east rank(kingSquare) times, which finally results in the desired set of catchable passers. Special handling is required for the doubles pushes <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>:</p>
+<pre><code>for (i = 0; i &lt; rank(kingSquare)-2; i++)
+   caughtable |= soutOne(westOne(caughtable) | caughtable | eastOne(caughtable) );
+caughtable |= soutOne(caughtable) | 0xff;
+
+. . . . . . . .     . . . . . . . .      . . . . . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .
+. . . 1 1 1 1 1     . . . 1 1 1 1 1      . . . 1 1 1 1 1
+. . 1 1 1 1 1 1     . . 1 1 1 1 1 1      . . 1 1 1 1 1 1
+. . . . . . . .     . 1 1 1 1 1 1 1   |  . 1 1 1 1 1 1 1
+. . . . . . . .     . . . . . . . .   |  . 1 1 1 1 1 1 1
+. . . . . . . .     . . . . . . . .   v  1 1 1 1 1 1 1 1</code></pre>
+<p>To initialize black to move and white king arrays should not that difficult either - and is left to the ambitious reader.</p>
+<p><span id="FloodFillAlgorithms"></span></p>
+<h3 id="flood-fill-algorithms">Flood Fill Algorithms</h3>
+<p>Answering questions like can a king on a1 reach h8 along this path?</p>
+<pre><code>. . . . . . 1 T
+. . 1 1 1 1 . .
+. 1 . . . . . .
+. . 1 1 1 1 . .
+. . . . . . 1 .
+. . . . . . . 1
+. . . . . . 1 .
+F 1 1 1 1 1 . .</code></pre>
+<p>The <strong>squaresAreConnected</strong> flood-fill <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> algorithm was introduced by <a href="/Steffan_Westcott">Steffan Westcott</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>.</p>
+<p>A flood fill algorithm, like the one below, starting at the "from" square and stopping if the fill hits the to" square or the fill can't make any more progress. The fill progresses in all directions at once, so should return an answer within a few iterations. Each iteration is pretty fast too, as it just a bunch of shifting and logic operations. And no lookup tables either.</p>
+<pre><code>/////////////////////////////////////////////////////////////////////////
+//
+// Returns true if a path of set bits in &#39;path&#39; exists that 8-way connect
+// any set bit in sq1 to any set bit of sq2
+
+bool squaresAreConnected(U64 sq1, U64 sq2, U64 path)
+{
+   // With bitboard sq1, do an 8-way flood fill, masking off bits not in
+   // path at every step. Stop when fill reaches any set bit in sq2, or
+   // fill cannot progress any further
+
+   if (!(sq1 &amp;= path) || !(sq2 &amp;= path)) return false;
+                      // Drop bits not in path
+                      // Early exit if sq1 or sq2 not on any path
+
+   while(!(sq1 &amp; sq2))
+   {
+      U64 temp = sq1;
+      sq1 |= eastOne(sq1) | westOne(sq1);    // Set all 8 neighbours
+      sq1 |= soutOne(sq1) | nortOne(sq1);
+      sq1 &amp;= path;                           // Drop bits not in path
+      if (sq1 == temp) return false;         // Fill has stopped
+   }
+   return true;                              // Found a good path
+}</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/All_Shortest_Paths">All shortest Paths</a></li>
+<li><a href="/Fill_Algorithms">Fill Algorithms</a></li>
+<li><a href="/Mate_at_a_Glance">Mate at a Glance</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Checkmate_pattern">Checkmate pattern from Wikipedia</a></li>
+<li><a href="/Category:Amon_Düül_II">Amon Düül II</a> - Archangel Thunderbird (1971), <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/XzSi1qPxBIQ" title="YouTube video XzSi1qPxBIQ" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=XzSi1qPxBIQ">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Bitboards">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Thanks to Thomas Herges for pointing out a bug if kings are on the eighth rank<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://en.wikipedia.org/wiki/Flood_fill">Flood Fill from Wikipedia</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>[<a href="https://www.stmintz.com/ccc/index.php?id=251180">https://www.stmintz.com/ccc/index.php?id=251180</a>. Re: algorithm question] answer by <a href="/Steffan_Westcott">Steffan Westcott</a> in <a href="/CCC">CCC</a> September 09, 2002<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Amon_Düül_II">Amon Düül II</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/King_Pattern">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

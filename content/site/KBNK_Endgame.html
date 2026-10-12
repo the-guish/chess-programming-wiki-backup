@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KBNK Endgame - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">KBNK Endgame</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Evaluation">Evaluation</a> * <a href="/Endgame">Endgame</a> * KBNK</strong></p>
+<p>A <a href="/Checkmate">checkmate</a> with a <a href="/Bishop">bishop</a> and a <a href="/Knight">knight</a> against a lone <a href="/King">king</a> is delivered in the corner that can be covered by a bishop of the attacking side. For that reason a program ought to use a separate <a href="/Piece-Square_Tables">piece-square table</a> for the position of the opponent king in order to drive it to the correct corner. <a href="/Draw">Draw</a> cases due to tactical loss of one of the pieces <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> or the <a href="/Stalemate">stalemate</a> trap are left to the <a href="/Search">search</a> routine.</p>
+<p><span id="CornerDistance"></span></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#corner-distance">Corner-Distance</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1997-">1997 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="corner-distance">Corner-Distance</h2>
+<p>Alternatively, following <a href="/Bit-Twiddling">Bit-twiddling</a> determines the <a href="/Manhattan-Distance">Manhattan-Distance</a> to the closest corner square of the bishop <a href="/Color_of_a_Square">square color</a>, which might be used as a bonus for the lonesome king. First, the <a href="/Color_of_a_Square">color of the bishop square</a> is determined by a multiplication based on 9, to find whether its <a href="/Files">file</a> and <a href="/Ranks">rank</a> sum is odd or even. It is done that way, that an odd sum results in the sign-bit set, to build a mask by shifting arithmetically right and to conditionally <a href="/Flipping_Mirroring_and_Rotating">flip the file</a> of the king square, so that squares 0 and 63 become the relevant corner squares. The king's Corner Manhattan-distance is then simply the sum of its <a href="/Ranks">rank</a> and <a href="/Files">file</a> indices, if it exceeds 7 the difference to 14 is taken to force the symmetry, mirrored along the <a href="/Diagonals">diagonal</a> or <a href="/Anti-Diagonals">anti-diagonal</a>.</p>
+<pre><code> 0 1 2 3 4 5 6 7     7 6 5 4 3 2 1 0
+ 1 2 3 4 5 6 7 6     6 7 6 5 4 3 2 1
+ 2 3 4 5 6 7 6 5     5 6 7 6 5 4 3 2
+ 3 4 5 6 7 6 5 4     4 5 6 7 6 5 4 3
+ 4 5 6 7 6 5 4 3     3 4 5 6 7 6 5 4
+ 5 6 7 6 5 4 3 2     2 3 4 5 6 7 6 5
+ 6 7 6 5 4 3 2 1     1 2 3 4 5 6 7 6
+ 7 6 5 4 3 2 1 0     0 1 2 3 4 5 6 7
+
+/**
+ * manhattanDistance2ClosestCornerOfBishopSquareColor
+ *   for KBNK purpose
+ * @author Gerd Isenberg
+ * @param b bishop square (to determine its square color)
+ * @param k opponent king square (0..63)
+ * @return manhattanDistance to the closest corner square
+ *         of the bishop square color
+ */
+int manhattanDistance2ClosestCornerOfBishopSquareColor(int b, int k)
+{
+   b =  -1879048192*b &gt;&gt; 31; // 0 | -1 to mirror
+   k = (k&gt;&gt;3) + ((k^b) &amp; 7); // rank + (mirrored) file
+   k = (15*(k&gt;&gt;3)^k)-(k&gt;&gt;3); // if (k &gt; 7) k = 14 - k
+   return k;
+}</code></pre>
+<p>which results in following <a href="/X86">x86</a> <a href="/Assembly">Assembly</a>:</p>
+<pre><code>?manhattanDistance2ClosestCornerOfBishopSquareColor PROC NEAR
+; _b$ = ecx
+; _k$ = edx
+  00000 69 c9 00 00 00 90 imul ecx, 90000000H
+  00006 c1 f9 1f          sar  ecx, 31
+  00009 33 ca             xor  ecx, edx
+  0000b c1 fa 03          sar  edx, 3
+  0000e 83 e1 07          and  ecx, 7
+  00011 03 ca             add  ecx, edx
+  00013 8b d1             mov  edx, ecx
+  00015 c1 fa 03          sar  edx, 3
+  00018 8b c2             mov  eax, edx
+  0001a 6b c0 0f          imul eax, 15
+  0001d 33 c1             xor  eax, ecx
+  0001f 2b c2             sub  eax, edx
+  00021 c3                ret  0</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Avoiding_Branches">Avoiding Branches</a></li>
+<li><a href="/Center_Manhattan-Distance">Center Manhattan-Distance</a></li>
+<li><a href="/Color_of_a_Square">Color of a Square</a></li>
+<li><a href="/Huberman">Huberman's program</a></li>
+<li><a href="/Manhattan-Distance">Manhattan-Distance</a></li>
+<li><a href="/Mop-up_Evaluation">Mop-up Evaluation</a></li>
+<li><a href="/Piece-Square_Tables">Piece-Square Tables</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>1983</strong>). <em><a href="https://www.semanticscholar.org/paper/Representation-of-Experts&#39;-Knowledge-in-a-Subdomain-Herik/5f29c029a69f2d69980da4b35402050203421ed4">Representation of Experts' Knowledge in a Subdomain of Chess Intelligence</a></em>. <a href="/Conferences">IJCAI 1983</a></li>
+<li><a href="/Hans_Zellner">Hans Zellner</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Bob_Herschberg">Bob Herschberg</a> (<strong>1987</strong>). <em>Corrections and Substantiations to KBNK</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 10, No. 3</a></li>
+<li><a href="/Matej_Guid">Matej Guid</a>, <a href="/Martin_Možina">Martin Možina</a>, <a href="/Aleksander_Sadikov">Aleksander Sadikov</a>, <a href="/Ivan_Bratko">Ivan Bratko</a> (<strong>2010</strong>). <em><a href="http://www.springerlink.com/content/um0l155681087p7h">Deriving Concepts and Strategies from Chess Tablebases</a></em>. <a href="/Advances_in_Computer_Games_12">Advances in Computer Games 12</a>, <a href="http://www.ailab.si/matej/doc/Deriving_Concepts_and_Strategies_from_Chess_Tablebases.pdf">pdf</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1997-">1997 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/d25a7b108d1332a5/">How to get chess program to solve KBN mate?</a> by Paul Pedriana, <a href="/Computer_Chess_Forums">rgcc</a>, September 17, 1997</li>
+</ul>
+<p><a href="https://groups.google.com/group/rec.games.chess.computer/msg/ba9febc300f8698f">Re: How to get chess program to solve KBN mate?</a> by <a href="/David_Blackman">David John Blackman</a>, <a href="/Computer_Chess_Forums">rgcc</a>, September 18, 1997 » <a href="/KnightCap">KnightCap</a></p>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=110681">Caution K v KBN and lazy eval or futility</a> by <a href="/Brian_Richardson">Brian Richardson</a>, <a href="/CCC">CCC</a>, May 14, 2000 » <a href="/Lazy_Evaluation">Lazy Evaluation</a>, <a href="/Futility_Pruning">Futility Pruning</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=350837">Symbolic: The KBNK recognizer</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, February 23, 2004 » <a href="/Symbolic">Symbolic</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=351153">Symbolic: KBNK merit sample code</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, February 24, 2004</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=45009&amp;start=5">Re: Search with bitbase</a> by <a href="/Joona_Kiiski">Joona Kiiski</a>, <a href="/CCC">CCC</a>, September 05, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48826&amp;start=22">Re: Best was to Recognize Know Endgames?</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, August 03, 2013 » <a href="/Interior_Node_Recognizer">Interior Node Recognizer</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51133">Scorpio &amp; egbb issue (OSX)</a> by Max May, <a href="/CCC">CCC</a>, February 01, 2014 » <a href="/Scorpio_Bitbases">Scorpio Bitbases</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54023">KBNK</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, October 11, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58965">Improved corner painting</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, January 18, 2016 » <a href="/Fairy-Max">Fairy-Max</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62257">Simple method for simple mates for programs without TBs</a> by J. Wesley Cleveland, <a href="/CCC">CCC</a>, November 25, 2016 » <a href="/Center_Manhattan-Distance">Center Manhattan-Distance</a>, <a href="/Mop-up_Evaluation">Mop-up Evaluation</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77249">knbk DTM</a> by <a href="/Martin_Sedlak">Martin Sedlak</a>, <a href="/CCC">CCC</a>, May 05, 2021 » <a href="/Endgame_Tablebases">DTM</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77249&amp;start=4">Re: knbk DTM</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, May 05, 2021 » <a href="/Marcel_van_Kervinck">Marcel van Kervinck's</a> pretty fast kbnk generator</p>
+<h2 id="external-links">External links</h2>
+<ul>
+<li><a href="http://www.gilith.com/chess/endgames/kbn_k.html">Longest mate in King, Bishop and Knight versus King endgame</a> by <a href="/Joe_Leslie-Hurd">Joe Leslie-Hurd</a>, February 16, 2005</li>
+<li><a href="https://en.wikipedia.org/wiki/Bishop_and_knight_checkmate">Bishop and knight checkmate from Wikipedia</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Endgame">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=45009&amp;start=5">Re: Search with bitbase</a> by <a href="/Joona_Kiiski">Joona Kiiski</a>, <a href="/CCC">CCC</a>, September 05, 2012<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/KBNK_Endgame">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Knight Pattern - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Knight Pattern</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * Knight Pattern</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:232px"><a href="http://www.mcescher.com/Shopmain/ShopEU/facsilimeprints/prints.html" target="_blank" rel="noopener noreferrer"><img src="/assets/EschersHorseman.jpg" alt="M. C. Escher, Horseman 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:M._C._Escher">M. C. Escher</a>, Horseman <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://www.mcescher.com/Shopmain/ShopEU/facsilimeprints/prints.html">View facsimile print</a> from <a href="http://www.mcescher.com/Shopmain/ShopEU/facsilimeprints/">M.C. Escher - 16 Facsimile Prints</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Knight Pattern</strong> with Bitboards covers <a href="/Knight">knight</a> <a href="/Attacks">attacks</a> of single or multiple knights, either by indexed pre-calculated tables or direct bitboard calculation, and the set wise determination of <a href="https://en.wikipedia.org/wiki/Fork_%28chess%29">Knight fork</a> target squares.</p>
+<p><span id="KnightAttacks"></span></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#knight-attacks">Knight Attacks</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#by-lookup">by Lookup</a></li>
+<li><a href="#by-calculation">by Calculation</a></li>
+</ol>
+</details></li>
+<li><a href="#multiple-knight-attacks">Multiple Knight Attacks</a></li>
+<li><a href="#knight-fill">Knight Fill</a></li>
+<li><a href="#knight-forks">Knight Forks</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#selected-publications">Selected Publications</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="knight-attacks">Knight Attacks</h2>
+<p>The <a href="/Knight">Knight</a> attacks the <a href="/Target_Square">target squares</a> independently from other pieces around. The compass rose of all eight attacking <a href="/Direction">directions</a> associated with the to - from square differences from an <a href="/8x8_Board">8x8 board</a>:</p>
+<pre><code>        noNoWe    noNoEa
+            +15  +17
+
+noWeWe  +6 __|     |__+10  noEaEa
+              \   /
+               &gt;0&lt;
+           __ /   \ __
+soWeWe -10   |     |   -6  soEaEa
+
+            -17  -15
+        soSoWe    soSoEa</code></pre>
+<p><span id="ByLookup"></span></p>
+<h3 id="by-lookup">by Lookup</h3>
+<p>The knight is specified by square index, likely from a <a href="/BitScan">bitscan</a> of a piece-wise <a href="/Bitboard_Serialization">bitboard serialization</a> of a knight bitboard from a <a href="/Bitboard_Board-Definition">standard board-definition</a>, to index a table of pre-calculated knight-attacks:</p>
+<pre><code>U64 arrKnightAttacks[64];
+
+U64 knightAttacks(enumSquare sq) {return arrKnightAttacks[sq];}</code></pre>
+<p>For instance a knight on d4</p>
+<pre><code>arrKnightAttacks[d4]
+ . . . . . . . .
+ . . . . . . . .
+ . . 1 . 1 . . .
+ . 1 . . . 1 . .
+ . . . . . . . .
+ . 1 . . . 1 . .
+ . . 1 . 1 . . .
+ . . . . . . . .</code></pre>
+<p><span id="Calculation"></span></p>
+<h3 id="by-calculation">by Calculation</h3>
+<p>Similar to <a href="/General_Setwise_Operations">one step only</a> of the four orthogonal and four diagonal directions,each of the eight knight directions is calculated by left or right shift with appropriate pre- or post shift mask, to avoid A- H-file wraps or vice versa. See also <a href="/AVX2">AVX2 Knight Attacks</a>.</p>
+<pre><code>U64 noNoEa(U64 b) {return (b &lt;&lt; 17) &amp; notAFile ;}
+U64 noEaEa(U64 b) {return (b &lt;&lt; 10) &amp; notABFile;}
+U64 soEaEa(U64 b) {return (b &gt;&gt;  6) &amp; notABFile;}
+U64 soSoEa(U64 b) {return (b &gt;&gt; 15) &amp; notAFile ;}
+U64 noNoWe(U64 b) {return (b &lt;&lt; 15) &amp; notHFile ;}
+U64 noWeWe(U64 b) {return (b &lt;&lt;  6) &amp; notGHFile;}
+U64 soWeWe(U64 b) {return (b &gt;&gt; 10) &amp; notGHFile;}
+U64 soSoWe(U64 b) {return (b &gt;&gt; 17) &amp; notHFile ;}
+
+U64 noNoEa(U64 b) {return (b &amp; notHFile ) &lt;&lt; 17;}
+U64 noEaEa(U64 b) {return (b &amp; notGHFile) &lt;&lt; 10;}
+U64 soEaEa(U64 b) {return (b &amp; notGHFile) &gt;&gt;  6;}
+U64 soSoEa(U64 b) {return (b &amp; notHFile ) &gt;&gt; 15;}
+U64 noNoWe(U64 b) {return (b &amp; notAFile ) &lt;&lt; 15;}
+U64 noWeWe(U64 b) {return (b &amp; notABFile) &lt;&lt;  6;}
+U64 soWeWe(U64 b) {return (b &amp; notABFile) &gt;&gt; 10;}
+U64 soSoWe(U64 b) {return (b &amp; notAFile ) &gt;&gt; 17;}</code></pre>
+<p>In almost the same manner as the three pawn directions, there is a unique source-target relationship. The difference is - we have up to eight pawns, but likely not more than two knights per side. Keeping eight disjoint knight directions is consistent to direction-wise <a href="/Fill_Algorithms">fill approaches</a> of other pieces with unique <a href="/Target_Square">target</a>-<a href="/Origin_Square">source</a> relationship - but disjoint direction-wise knight targets are sparse populated and usually contain only up to two bits. <span id="MultipleKnightAttacks"></span></p>
+<h2 id="multiple-knight-attacks">Multiple Knight Attacks</h2>
+<p>To initialize the KnightAttacks <a href="/Array">array</a> one may use a routine with some kind of <a href="/Parallel_Prefix_Algorithms">parallel prefix</a> calculations, rather than the union of all eight directions:</p>
+<pre><code>U64 knightAttacks(U64 knights) {
+   U64 west, east, attacks;
+   east     = eastOne (knights);
+   west     = westOne (knights);
+   attacks  = (east|west) &lt;&lt; 16;
+   attacks |= (east|west) &gt;&gt; 16;
+   east     = eastOne (east);
+   west     = westOne (west);
+   attacks |= (east|west) &lt;&lt;  8;
+   attacks |= (east|west) &gt;&gt;  8;
+   return attacks;
+}</code></pre>
+<p>or to possibly gain some more parallelism:</p>
+<pre><code>U64 knightAttacks(U64 knights) {
+   U64 l1 = (knights &gt;&gt; 1) &amp; C64(0x7f7f7f7f7f7f7f7f);
+   U64 l2 = (knights &gt;&gt; 2) &amp; C64(0x3f3f3f3f3f3f3f3f);
+   U64 r1 = (knights &lt;&lt; 1) &amp; C64(0xfefefefefefefefe);
+   U64 r2 = (knights &lt;&lt; 2) &amp; C64(0xfcfcfcfcfcfcfcfc);
+   U64 h1 = l1 | r1;
+   U64 h2 = l2 | r2;
+   return (h1&lt;&lt;16) | (h1&gt;&gt;16) | (h2&lt;&lt;8) | (h2&gt;&gt;8);
+}</code></pre>
+<p>If we pass multiple knights set-wise, attacks of some squares may be caused by different knights. Feeding back (safe) target sets, the routine may used to get sets of squares, knights may reach in two or more moves. For instance in late pawn-knight endings whether a knight may catch a passer. <span id="KnightFill"></span></p>
+<h2 id="knight-fill">Knight Fill</h2>
+<p>A fill cycle for a <a href="/Fill_Algorithms">fill algorithm</a> is the <a href="/General_Setwise_Operations">union</a> of the attack set with the knights itself:</p>
+<pre><code>U64 knightFill(U64 knights) {return knightAttacks(knights) | knights;}</code></pre>
+<p>for instance applied six times on the otherwise empty board:</p>
+<pre><code>                  1. Fill            2. Fill            3. Fill
+. . . . . . . .   . . . . . . . .   . . . . . . . .   . . . . . . . .
+. . . . . . . .   . . . . . . . .   . . . . . . . .   . 1 . 1 . . . .
+. . . . . . . .   . . . . . . . .   . . . . . . . .   1 . 1 . 1 . . .
+. . . . . . . .   . . . . . . . .   1 . 1 . . . . .   1 1 1 1 . 1 . .
+. . . . . . . .   . . . . . . . .   . 1 . 1 . . . .   1 1 1 1 1 . 1 .
+. . . . . . . .   . 1 . . . . . .   1 1 . . 1 . . .   1 1 . 1 1 1 . .
+. . . . . . . .   . . 1 . . . . .   . . 1 1 . . . .   1 . 1 1 1 . 1 .
+1 . . . . . . .   1 . . . . . . .   1 . 1 . 1 . . .   1 1 1 1 1 1 . .
+
+                  4. Fill            5. Fill            6. Fill
+                  . 1 . 1 . 1 . .   1 1 1 1 1 1 1 .   1 1 1 1 1 1 1 1
+                  1 1 1 1 1 . 1 .   1 1 1 1 1 1 1 1   1 1 1 1 1 1 1 1
+                  1 1 1 1 1 1 . 1   1 1 1 1 1 1 1 1   1 1 1 1 1 1 1 1
+                  1 1 1 1 1 1 1 .   1 1 1 1 1 1 1 1   1 1 1 1 1 1 1 1
+                  1 1 1 1 1 1 1 1   1 1 1 1 1 1 1 1   1 1 1 1 1 1 1 1
+                  1 1 1 1 1 1 1 .   1 1 1 1 1 1 1 1   1 1 1 1 1 1 1 1
+                  1 1 1 1 1 1 1 1   1 1 1 1 1 1 1 1   1 1 1 1 1 1 1 1
+                  1 1 1 1 1 1 1 .   1 1 1 1 1 1 1 1   1 1 1 1 1 1 1 1</code></pre>
+<p><span id="KnightForks"></span></p>
+<h2 id="knight-forks">Knight Forks</h2>
+<p>A common knight pattern is the knight fork. Targets are heavy pieces - king, queen and rooks, <a href="/Hanging_Piece">hanging pieces</a>, or even undefended pawns. A royal knight fork or "family" check, winning the queen is most important. Otherwise one may loop over all possible pieces, to get the knight-attacks by lookup and to intersect all combinations of attack-squares. A loop- and branch-less solution to get potential fork-attack squares is to union all intersections of all direction attacks, as explained in <a href="/General_Setwise_Operations">greater one sets</a>:</p>
+<pre><code>U64 forkTargetSquare(U64 targets) {
+   U64 west, east, attak, forks;
+   east   = eastOne (targets);
+   west   = westOne (targets);
+   attak  =  east &lt;&lt; 16;
+   forks  = (west &lt;&lt; 16) &amp; attak;
+   attak |=  west &lt;&lt; 16;
+   forks |= (east &gt;&gt; 16) &amp; attak;
+   attak |=  east &gt;&gt; 16;
+   forks |= (west &gt;&gt; 16) &amp; attak;
+   attak |=  west &gt;&gt; 16;
+   east   = eastOne (east);
+   west   = westOne (west);
+   forks |= (east &lt;&lt;  8) &amp; attak;
+   attak |=  east &lt;&lt;  8;
+   forks |= (west &lt;&lt;  8) &amp; attak;
+   attak |=  west &lt;&lt;  8;
+   forks |= (east &gt;&gt;  8) &amp; attak;
+   attak |=  east &gt;&gt;  8;
+   forks |= (west &gt;&gt;  8) &amp; attak;
+   return forks;
+}</code></pre>
+<p>The intersection of those targets with squares not occupied by own pieces or attacked by opponent pawns and knights, but attacked by own knight(s) leaves a move target set with some forced properties.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/AVX2">AVX2 Knight Attacks</a></li>
+<li><a href="/Fill_Algorithms">Fill Algorithms</a></li>
+<li><a href="/Knight-Distance">Knight-Distance</a></li>
+</ul>
+<h2 id="selected-publications">Selected Publications</h2>
+<ul>
+<li><a href="/Martin_Gardner">Martin Gardner</a> (<strong>1967</strong>). <em>Problems that are Built on the Knight's Tour in Chess</em>. <a href="/Scientific_American">Scientific American</a>, Vol. 130</li>
+<li><a href="/Noam_Elkies">Noam D. Elkies</a>, <a href="/Mathematician">Richard P. Stanley</a> (<strong>2003</strong>). <em>The Mathematical Knight</em>. <a href="https://en.wikipedia.org/wiki/The_Mathematical_Intelligencer">The Mathematical Intelligencer</a>, Vol. 25, No. 1, <a href="http://www.math.harvard.edu/%7Eelkies/knight.pdf">pdf</a></li>
+<li>Ben Hill (<strong>2004</strong>). <em>Knight’s Tours</em>. <a href="http://faculty.olin.edu/~sadams/DM/ktpaper.pdf">pdf</a></li>
+<li><a href="https://scholar.google.com/citations?user=QNcGZdQAAAAJ&amp;hl=en">Philip Hingston</a>, <a href="/Graham_Kendall">Graham Kendall</a> (<strong>2005</strong>). <em><a href="https://link.springer.com/chapter/10.1007/978-3-540-30549-1_125">Ant Colonies Discover Knight's Tours</a></em>. <a href="https://link.springer.com/book/10.1007/b104336">AI 2004</a>, <a href="https://en.wikipedia.org/wiki/Lecture_Notes_in_Computer_Science">Lecture Notes in Computer Science</a>, Vol. 3339</li>
+<li><a href="https://scholar.google.com/citations?user=QNcGZdQAAAAJ&amp;hl=en">Philip Hingston</a>, <a href="/Graham_Kendall">Graham Kendall</a> (<strong>2005</strong>). <em>Enumerating Knight’s Tours using an Ant Colony Algorithm</em>. <a href="https://dblp.uni-trier.de/db/conf/cec/cec2005.html">CEC 2005</a>, <a href="http://www.cs.nott.ac.uk/~pszgxk/papers/cec05knights.pdf">pdf</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=354355">Symbolic: From bitboards to ideas</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, March 13, 2004 » <a href="/Symbolic">Symbolic</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=41542">Problem with bitboard knight attack generator</a> by <a href="/Matthew_R._Brades">ZirconiumX</a>, <a href="/CCC">CCC</a>, December 21, 2011</li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/_qtvakyb_yM/FYOlNteY0N0J">Knight fork threats</a> by <a href="/Stefan_Geschwentner">Stefan Geschwentner</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, November 17, 2014 » <a href="/Knight_Pattern">Knight Forks</a>, <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55118">knight's multiple atacks</a> by <a href="/Daniel_Anulliero">Daniel Anulliero</a>, <a href="/CCC">CCC</a>, January 27, 2015</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Knight%27s_tour">Knight's tour from Wikipedia</a></li>
+<li><a href="http://www.mayhematics.com/t/t.htm">Knight's Tour Notes compiled by George Jelliss</a></li>
+<li><a href="http://mathworld.wolfram.com/KnightsTour.html">Knight's Tour - from Wolfram MathWorld</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Longest_uncrossed_knight%27s_path">Longest uncrossed knight's path from Wikipedia</a></li>
+<li><a href="/László_Lindner">László Lindner's</a> <a href="http://archive.is/bHju8">knight wheel</a> by <a href="/Frederic_Friedel">Frederic Friedel</a> from <a href="/ChessBase">ChessBase Puzzle</a></li>
+<li><a href="http://graham-kendall.com/blog/2014/01/knights-tours/">Knight's Tour</a> from <a href="http://graham-kendall.com/blog/">Research Reflections</a> by <a href="/Graham_Kendall">Graham Kendall</a>, January 18, 2014</li>
+<li>Knight's Tour - <a href="http://www.numberphile.com/">Numberphile</a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/ab_dY3dZFHM" title="YouTube video ab_dY3dZFHM" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=ab_dY3dZFHM">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Bitboards">Up one Level</a></strong></p>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:M._C._Escher">M. C. Escher</a> · <a href="/Category:Videos">Videos</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Knight_Pattern">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kindergarten Bitboards - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Kindergarten Bitboards</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * <a href="/Sliding_Piece_Attacks">Sliding Piece Attacks</a> * Kindergarten Bitboards</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="http://www.imj.org.il/imagine/collections/item.asp?itemNum=194576" target="_blank" rel="noopener noreferrer"><img src="/assets/Group_of_Masks.jpg" alt="Paul Klee - Group of Masks, 1939 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Paul_Klee">Paul Klee</a> - Group of Masks, 1939 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://www.imj.org.il/en/collections/194576?itemNum=194576">Paul Klee - Group of Masks</a>, from the <a href="https://en.wikipedia.org/wiki/Israel_Museum">Israel Museum</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Kindergarten</strong> bitboards <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>,<br />
+was a kind of interactive forum development <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> with a lot of meanders <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> . There were two issues involved - first to calculate the <a href="/Occupancy_of_any_Line">occupancy of any line</a> from the <a href="/Occupancy">occupied bitboard</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> - and second, compact and dense lookup tables. As a quintessence <a href="/Gerd_Isenberg">Gerd Isenberg</a> came up with this nomination. It relies on fast 64-bit multiplication, but is otherwise quite resource friendly and a compromise between calculation and table-size.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#ranks-and-diagonals">Ranks and Diagonals</a></li>
+<li><a href="#file-attacks">File-Attacks</a></li>
+<li><a href="#shared-rank-lookup">Shared Rank Lookup</a></li>
+<li><a href="#32-bit-versions">32-bit Versions</a></li>
+<li><a href="#magic-compression">Magic Compression</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="ranks-and-diagonals">Ranks and Diagonals</h2>
+<p><a href="/Ranks">Ranks</a> and <a href="/Diagonals">diagonals</a> - that is their appropriate <a href="/On_an_empty_Board">line-mask</a> by square-index - are first intersected by the occupancy of the whole board. Doesn't matter whether the slider itself is cleared or not - it is redundant anyway, considered by the pre-calculated lookup-table.</p>
+<p>Since there is only up to one bit per file, the <a href="/General_Setwise_Operations">north-fill multiplication</a> by the A-file maps the diagonal to the 8th rank. Or - since we only need the <a href="/First_Rank_Attacks">inner six bits</a>, we combine the required shift left one by multiplying with the B-file. Shifting right the product by 58 (64-6) leaves the six-bit occupancy-index in the 0..63 range. For instance the diagonal-attacks of a bishop on d4. 'A'-'H' represent the masked occupied bits along this diagonal, which are either zero or one.</p>
+<table>
+<tbody>
+<tr>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6" style="--wiki-img-w:220px"><a href="/Square_Mapping_Considerations"><img src="/assets/Cpwmappinghint.JPG" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></a></span></td>
+<td><p><em>Code samples and bitboard diagrams rely on <a href="/Square_Mapping_Considerations">Little endian file and rank mapping</a></em>.</p></td>
+</tr>
+</tbody>
+</table>
+
+<p>We need 'B'-'G' as six bit number:</p>
+<pre><code>masked line      *  B-File           =  B-G upper six       occupancy 6 bit
+. . . . . . . H     . 1 . . . . . .     . A[B C . E F G]    . . . . . . . .
+. . . . . . G .     . 1 . . . . . .     . A B C . E F G     . . . . . . . .
+. . . . . F . .     . 1 . . . . . .     . A B C . E F .     . . . . . . . .
+. . . . E . . .     . 1 . . . . . .     . A B C . E . .  &gt;&gt; . . . . . . . .
+. . . . . . . .  *  . 1 . . . . . .  =  . A B C . . . .  58 . . . . . . . .
+. . C . . . . .     . 1 . . . . . .     . A B C . . . .     . . . . . . . .
+. B . . . . . .     . 1 . . . . . .     . A B . . . . .     . . . . . . . .
+A . . . . . . .     . 1 . . . . . .     . A . . . . . .    [B C . E F G]. .</code></pre>
+<p>The pre-calculated lookup-table contains the <a href="/First_Rank_Attacks">attacks of the first rank</a> - but eight copies in each <a href="/Ranks">rank</a> or <a href="/Byte">byte</a>. It is indexed by the six bit occupied-state ('B'-'G') and the <a href="/Files">file</a> of the slider's <a href="/Squares">square</a>. It needs to be intersected with the same line-mask as formerly the occupancy - to map the first rank attack bits to the appropriate line - that's all. Appropriate pre-calculated attack bits are represented by 'a'-'h':</p>
+<pre><code>8 copies of rank      the attack set
+attacks &amp; l-mask  -&gt;  of this line
+a b c . e f g h       . . . . . . . h
+a b c . e f g h       . . . . . . g .
+a b c . e f g h       . . . . . f . .
+a b c . e f g h       . . . . e . . .
+a b c . e f g h       . . . . . . . .
+a b c . e f g h       . . c . . . . .
+a b c . e f g h       . b . . . . . .
+a b c . e f g h       a . . . . . . .</code></pre>
+<p>Since all <a href="/Ranks">ranks</a>, <a href="/Diagonals">diagonals</a> and <a href="/Anti-Diagonals">anti-diagonals</a> are properly file-aligned, it works perfectly with some redundant occupied bits for shorter diagonals as well, like here the outer bit 'B':</p>
+<pre><code>masked line      *  B-File           =  B-G upper six       occupancy 6 bit
+. . . . . . . .     . 1 . . . . . .     H .[B C . E F G]    . . . . . . . .
+. . . . . . . H     . 1 . . . . . .     . . B C . E F G     . . . . . . . .
+. . . . . . G .     . 1 . . . . . .     . . B C . E F G     . . . . . . . .
+. . . . . F . .     . 1 . . . . . .     . . B C . E F .  &gt;&gt; . . . . . . . .
+. . . . E . . .  *  . 1 . . . . . .  =  . . B C . E . .  58 . . . . . . . .
+. . . . . . . .     . 1 . . . . . .     . . B C . . . .     . . . . . . . .
+. . C . . . . .     . 1 . . . . . .     . . B C . . . .     . . . . . . . .
+. B . . . . . .     . 1 . . . . . .     . . B . . . . .    [B C . E F G]. .</code></pre>
+<p>Appropriate pre-calculated attack bits are represented by 'b'-'h' here:</p>
+<pre><code>8 copies of rank      the attack set   or  the attack set
+attacks &amp; l-mask  -&gt;  of this line     -&gt;  of the shorter diagonal
+a b c . e f g h       . . . . . . . h      . . . . . . . .
+a b c . e f g h       . . . . . . g .      . . . . . . . h
+a b c . e f g h       . . . . . f . .      . . . . . . g .
+a b c . e f g h       . . . . e . . .      . . . . . f . .
+a b c . e f g h       . . . . . . . .      . . . . e . . .
+a b c . e f g h       . . c . . . . .      . . . . . . . .
+a b c . e f g h       . b . . . . . .      . . c . . . . .
+a b c . e f g h       a . . . . . . .      . b . . . . . .</code></pre>
+<p>Wasn't that simple? That is why it is called <strong>kindergarten</strong> bitboards!</p>
+<p>The trick is to share one 4KByte table by three line-directions by re-using the mask for a final intersection. Of course one may use the calculated occupied state to index <a href="/Rotated_Bitboards">rotated bitboards</a> like tables of 32KByte each. But dividing the table size by 3*8 on the cost of that additional 'and' (and keeping the mask inside a register) is tempting. Of course - like always with computation versus memory issues - it depends on the cache- and memory using and footprint inside a particular chess program and the hardware architecture, which solution is preferable. So far L1 <a href="https://en.wikipedia.org/wiki/Cache">Cache</a> is a rare resource, <a href="https://en.wikipedia.org/wiki/Translation_Lookaside_Buffer">Translation Lookaside Buffer</a> als well.</p>
+<p>Like other none rotated approaches, namely <a href="/Magic_Bitboards">magic bitboards</a> or <a href="/Hyperbola_Quintessence">hyperbola quintessence</a>, the nice thing is that one can <a href="/Hiding_the_Implementation">hide the implementation details</a> behind a stateless interface. In <a href="/C">C</a> /<a href="/Cpp">C++</a> one may use <a href="https://en.wikipedia.org/wiki/Header_file">header files</a> with exclusive, conditional compiled inlined routines, as combinations and variations of the mentioned approaches.</p>
+<p>The three routines only differ by the line-mask applied. As pointed out by <a href="/Aleks_Peshkov">Aleks Peshkov</a>, it is smarter to index by file, occupancy, since fillUpAttacks[sq&amp;7] may be shared by two (bishop) or three (queen) line-attack getters.</p>
+<pre><code>U64 fillUpAttacks[8][64];  // 4 KByte
+
+U64 diagonalAttacks(U64 occ, enumSquare sq) {
+   const U64 bFile = C64(0x0202020202020202);
+   occ = (diagonalMaskEx[sq] &amp; occ) * bFile &gt;&gt; 58;
+   return diagonalMaskEx[sq] &amp; fillUpAttacks[sq&amp;7][occ];
+}
+
+U64 antiDiagAttacks(U64 occ, enumSquare sq) {
+   const U64 bFile = C64(0x0202020202020202);
+   occ = (antidiagMaskEx[sq] &amp; occ) * bFile &gt;&gt; 58;
+   return antidiagMaskEx[sq] &amp; fillUpAttacks[sq&amp;7][occ];
+}
+
+U64 rankAttacks(U64 occ, enumSquare sq) {
+   const U64 bFile = C64(0x0202020202020202);
+   occ = (rankMaskEx[sq] &amp; occ) * bFile &gt;&gt; 58;
+   return rankMaskEx[sq] &amp; fillUpAttacks[sq&amp;7][occ];
+}</code></pre>
+<p>One may use similar structs for the line-masks than the <a href="/Hyperbola_Quintessence">hyperbola quintessence</a>.</p>
+<p><span id="FileAttacks"></span></p>
+<h2 id="file-attacks">File-Attacks</h2>
+<p><a href="/Files">Files</a> need tad more work. Shift the board left (arithmetical right!) to the A-file to mask it. To get the inner six bits, a <a href="/Flipping_Mirroring_and_Rotating">flip-multiplication</a> by the c2-h7 diagonal is applied with further shift right 58. The lookup-table contains the A-file attacks, which are shifted "back" to the original file.</p>
+<pre><code>U64 aFileAttacks [8][64];  // 4 KByte
+
+U64 fileAttacks(U64 occ, enumSquare sq) {
+   const U64 aFile   = C64(0x0101010101010101);
+   const U64 diac2h7 = C64(0x0080402010080400);
+   occ = aFile  &amp; (occ &gt;&gt; (sq&amp;7));
+   occ = (diac2h7 *  occ ) &gt;&gt; 58;
+   return aFileAttacks[sq&gt;&gt;3][occ] &lt;&lt; (sq&amp;7);
+}</code></pre>
+<p>This is how it works:</p>
+<pre><code>masked A-file    *  c2-h7 Diagonal    =  occupancy
+H . . . . . . .     . . . . . . . .     . .[G F E D C B]    . . . . . . . .
+G . . . . . . .     . . . . . . . 1     . . F E D C B A     . . . . . . . .
+F . . . . . . .     . . . . . . 1 .     . . E D C B A .     . . . . . . . .
+E . . . . . . .     . . . . . 1 . .     . . D C B A . .  &gt;&gt; . . . . . . . .
+D . . . . . . .  *  . . . . 1 . . .  =  . . C B A . . .  58 . . . . . . . .
+C . . . . . . .     . . . 1 . . . .     . . B A . . . .     . . . . . . . .
+B . . . . . . .     . . 1 . . . . .     . . A . . . . .     . . . . . . . .
+A . . . . . . .     . . . . . . . .     . . . . . . . .    [G F E D C B]. .</code></pre>
+<p>Note that the six inner bit occupancy is reversed - considered in the pre-calculated aFileAttacks <a href="/Array">array</a>. This reversed lookup was justified to share first rank-attacks by all directions - with a dense lookup of 512 Byte. But the 4KByte tables outperform the additional multiplications and shift of the dense version - and one may alternatively multiply with the flipped diagonal, the c7-h2 anti-diagonal:</p>
+<pre><code>masked A-file    *  c7-h2 AntiDiag   =  occupancy
+H . . . . . . .     . . . . . . . .     . .[B C D E F G]    . . . . . . . .
+G . . . . . . .     . . 1 . . . . .     . . A B C D E F     . . . . . . . .
+F . . . . . . .     . . . 1 . . . .     . . . A B C D E     . . . . . . . .
+E . . . . . . .     . . . . 1 . . .     . . . . A B C D  &gt;&gt; . . . . . . . .
+D . . . . . . .  *  . . . . . 1 . .  =  . . . . . A B C  58 . . . . . . . .
+C . . . . . . .     . . . . . . 1 .     . . . . . . A B     . . . . . . . .
+B . . . . . . .     . . . . . . . 1     . . . . . . . A     . . . . . . . .
+A . . . . . . .     . . . . . . . .     . . . . . . . .    [B C D E F G]. .</code></pre>
+<h2 id="shared-rank-lookup">Shared Rank Lookup</h2>
+<p>As often, <a href="/Space-Time_Tradeoff">computation versus memory size</a>. One may share a 512Byte Lookup of the first rank by all lines with some trailing computation. Multiplying with the A-file (fill north) for ranks and diagonals, and multiplying with the diagonal for the file. Likely the additional multiplication don't pays off.</p>
+<pre><code>const BYTE firstRankAttacks[8][64];
+
+U64 fileAttacks(U64 occ, enumSquare sq) {
+   const U64 aFile   = C64(0x0101010101010101);
+   const U64 hFile   = C64(0x8080808080808080);
+   const U64 diaa1h8 = C64(0x8040201008040201);
+   const U64 diac2h7 = C64(0x0080402010080400);
+
+   unsigned int f = sq &amp; 7;
+   occ =   aFile   &amp; (occ   &gt;&gt;  f);
+   occ = ( diac2h7 *  occ ) &gt;&gt; 58;
+   occ =   diaa1h8 * firstRankAttacks[(sq^56)&gt;&gt;3][occ];
+   return ( hFile  &amp;  occ ) &gt;&gt; (f^7);
+}
+
+U64 diagonalAttacks(U64 occ, enumSquare sq) {
+   const U64 aFile = C64(0x0101010101010101);
+   const U64 bFile = C64(0x0202020202020202);
+
+   unsigned int f = sq &amp; 7;
+   occ  =  diagonalMaskEx[sq] &amp; occ;
+   occ  = (bFile * occ ) &gt;&gt; 58;
+   occ  =  aFile *  firstRankAttacks[f][occ];
+   return  diagonalMaskEx[sq] &amp; occ;
+}</code></pre>
+<h2 id="32-bit-versions">32-bit Versions</h2>
+<p>One other variation of the memory versus computation theme was encouraged by 32-bit mode. 64-bit multiplication is quite expensive in 32-bit mode - a call using three imuls. Thus, it is more efficient to use shift-or plus 32-bit multiplication, which might in fact be used in 64-bit mode as well. <a href="/Piotr_Cichy">Piotr Cichy</a> proposed a multiplication less <a href="/Parallel_Prefix_Algorithms">parallel prefix shift</a> approach similar to <a href="/Occupancy_of_any_Line">Occupancy of any Line</a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> , which is a good alternative for processors with slow multiplication.</p>
+<p>An efficient and tricky file-approach was introduced by <a href="/Zach_Wegner">Zach Wegner</a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>, using a 32KByte, <a href="/Rotated_Bitboards">rotated like</a> lookup-table: It is quite strange, yes, but it is an out of order mapping. There are only 5 bits because each bit in the factor maps more than one bit. The trick here is the odd shift 29, so that the multiply does not overflow individual bits. I have since found that 25 and 27 will work with the same magic:</p>
+<pre><code>occ
+. . . . . . . .
+a . . . . . . .
+b . . . . . . .    occ | occ &gt;&gt; 29    * 0x01041041 with the index bracketed
+c . . . . . . .    ...\               ...\               ...\
+d . . . . . . .    d . . . . . . .    1 . . . . . . .    d a[f c e b d a]
+e . . . . . . .    e . . a . . . .    . . 1 . . . . .    e b . a f c e b
+f . . . . . . .    f . . b . . . .    . . . . 1 . . .    f c . b . . f c
+. . . . . . . .    . . . c . . . .    1 . . . . . 1 .    . . . c . . . .</code></pre>
+<p>The interesting thing is that this works for any masked file. In fact if it was shifted to the a-file, you could get away with the 3-bit factor 0x00041040 (but using a shift of 23).</p>
+<pre><code>U64 arrFileAttacks[64][64]; // [sq][occ64] 32KByte
+
+U64 fileAttacks(U64 occ, enumSquare sq) {
+   occ &amp;= fileMask[sq];
+   U32 fold  = (U32)occ | (U32)(occ &gt;&gt; 29);
+   U32 occ64 = fold * 0x01041041 &gt;&gt; 26;
+   return arrFileAttacks[sq][occ64];
+}</code></pre>
+<p>Ranks and diagonals are trivial, this version favors rotated like memory size for less computation and same operations than file-attacks. One may therefor generalize the routine by a line-direction parameter:</p>
+<pre><code>U64 arrDiagonalAttacks[64][64]; // [sq][occ64] 32KByte
+
+U64 diagonalAttacks(U64 occ, enumSquare sq) {
+   occ &amp;= diagonalMaskEx[sq];
+   U32 fold  = (U32)occ | (U32)(occ &gt;&gt; 32);
+   U32 occ64 = fold * 0x02020202 &gt;&gt; 26;
+   return arrDiagonalAttacks[sq][occ64];
+}</code></pre>
+<p>A similar approach was proposed by <a href="/Andrew_Fan">Andrew Fan</a> in 2009, been active in his <a href="/FireFly">own engine</a> for a few years (2006 earliest recorded file time) <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>. <span id="MagicCompression"></span></p>
+<h2 id="magic-compression">Magic Compression</h2>
+<p>So far Kindergarten bitboards performs a <a href="/Hash_Table">perfect hashing</a> of the up to six relevant and scattered occupied bits of any line to a six-bit index - which is a bijective mapping of 64 different occupancies per line to 64 indices for the precalculated attack sets.</p>
+<p>If we have a closer look to the attack sets, say of a rook on the a-file, we enumerate far less disjoint sets. A rook on a1 (a8) has seven different attack-sets on that file, depending on the occupancy of a2-a7. On a2 (a7) there is even one attack set less, on a3 (a6) 2 times 5 and on a4 (a5) 3 times 4 attack-sets. Thus, there are {7, 6, 10, 12, 12, 10, 6, 7} disjoint attack-sets per square on line, or 70 in total over all eight squares.</p>
+<p>While kindergarten bitboards apply a minimal perfect mapping of scattered bits to a six-bit index, the mapping of the attack-sets is surjective, since each of the 64 occupancies maps only up to 12 distinct sets. Of course that is because occupancies "behind" the first blocker are redundant and map the same attack.</p>
+<p><a href="/Grant_Osborne">Grant Osborne</a> came up with the idea, derived from <a href="/Magic_Bitboards">magic bitboards</a> - to use different "magic" factors per square (rank), where multiplication may produce carries and enough so called constructive collisions to gain only five or even four bit indices and therefor denser tables. Since different squares may have different table sizes (16 or 32 entries), a Java-like <a href="/Array">array</a> is used for the attacks, in C implemented as array of pointers to the arbitrary sized attack tables. The variable right shift by either 60 or 59 is encoded inside the otherwise redundant upper six bits of the magic factor, as mentioned in <a href="/Magic_Bitboards">incorporating the shift</a> of magic bitboards.</p>
+<p>Grant's proposal, so far with {5,4,4,5,5,4,4,5} bit ranges for the lookups per square for vertical rook attacks, results in a 1.5 KByte array instead the 4KByte of the initial Kindergarten file attack getter <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> . Whether the effort of the rank-indexed magic-factor plus additional pointer indirection pays off the memory saving is another question, and should be tried inside a concrete chess program with its individual cache- and memory footprint.</p>
+<pre><code>U64 aFileAttacks[4*32+4*16]; // 1.5KByte
+U64 aPtrFileAttacks[8]; // points to appropriate aFileAttacks
+U64 fileMagic[8] = {
+   0xEFFFA39DB01B23A3, // 5-bit
+   0xF024691A3227FF42, // 4-bit
+   0xF2808817CAD6FF0C, // 4-bit see below
+   0xED6EDFBE467977D5, // 5-bit
+   0xEC87CB0D961EC43A, // 5-bit
+   0xF2FF594E14D8801C, // 4-bit
+   0xF2FF5D69D4E3E7D6, // 4-bit
+   0xEE404B349599FF88  // 5-bit
+};
+
+U64 fileAttacks(U64 occ, enumSquare sq) {
+   unsigned int file = sq &amp;  7;
+   unsigned int rank = sq &gt;&gt; 3;
+
+   occ =  0x0001010101010100 &amp; (occ &gt;&gt; file);
+   occ = (fileMagic[rank] * occ) &gt;&gt; (fileMagic[rank] &gt;&gt; 58);  // four&amp;five bit index
+   return *(aPtrFileAttacks[rank] + occ) &lt;&lt; file;
+}</code></pre>
+<p>The table demonstrates how it works for file-attack of the a3 rook with a four bit range only five relevant occupied bits, since a3 is member of the inner six bits. The empirical determined factor is 0xF2808817CAD6FF0C, six upper bits contain the right shift for the product, for this square shift 60:</p>
+<table>
+<thead>
+<tr>
+<th><p>occupancy (A-File)</p></th>
+<th><p>product</p></th>
+<th><p>index 0..15</p></th>
+<th><p>attack set</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>o - outer squares don't care<br />
+x - empty or any piece<br />
+. - empty<br />
+b - Blocker - any piece<br />
+R - Rook<br />
+</p></td>
+<td style="text-align:right;"><p>occupancy * <code>0xF2808817CAD6FF0C</code></p></td>
+<td style="text-align:center;"><p>upper<br />
+<a href="/Nibble">nibble</a><br />
+in<br />
+product<br />
+</p></td>
+<td><p>1 attacked<br />
+. not attacked</p></td>
+</tr>
+<tr>
+<td><p>o<br />
+x<br />
+x<br />
+x<br />
+b<br />
+R<br />
+b<br />
+o</p></td>
+<td style="text-align:center;"><p>1. attack-set</p></td>
+<td></td>
+<td><p>.<br />
+.<br />
+.<br />
+.<br />
+1<br />
+.<br />
+1<br />
+.</p></td>
+</tr>
+<tr>
+<td><p><code>0x0000010101000100</code></p></td>
+<td style="text-align:right;"><p><code>0x3A28F9D5E2FF0C00</code></p></td>
+<td style="text-align:center;"><p>3</p></td>
+<td><p><code>0x0000000001000100</code></p></td>
+</tr>
+<tr>
+<td><p><code>0x0001010101000100</code></p></td>
+<td style="text-align:right;"><p><code>0x3934F9D5E2FF0C00</code></p></td>
+<td style="text-align:center;"><p>3</p></td>
+<td><p><code>0x0000000001000100</code></p></td>
+</tr>
+<tr>
+<td><p><code>0x0000000101000100</code></p></td>
+<td style="text-align:right;"><p><code>0x6329EDD5E2FF0C00</code></p></td>
+<td style="text-align:center;"><p>6</p></td>
+<td><p><code>0x0000000001000100</code></p></td>
+</tr>
+<tr>
+<td><p><code>0x0000010001000100</code></p></td>
+<td style="text-align:right;"><p><code>0x6F51FAC9E2FF0C00</code></p></td>
+<td style="text-align:center;"><p>6</p></td>
+<td><p><code>0x0000000001000100</code></p></td>
+</tr>
+<tr>
+<td><p><code>0x0001000101000100</code></p></td>
+<td style="text-align:right;"><p><code>0x6235EDD5E2FF0C00</code></p></td>
+<td style="text-align:center;"><p>6</p></td>
+<td><p><code>0x0000000001000100</code></p></td>
+</tr>
+<tr>
+<td><p><code>0x0001010001000100</code></p></td>
+<td style="text-align:right;"><p><code>0x6E5DFAC9E2FF0C00</code></p></td>
+<td style="text-align:center;"><p>6</p></td>
+<td><p><code>0x0000000001000100</code></p></td>
+</tr>
+<tr>
+<td><p><code>0x0000000001000100</code></p></td>
+<td style="text-align:right;"><p><code>0x9852EEC9E2FF0C00</code></p></td>
+<td style="text-align:center;"><p>9</p></td>
+<td><p><code>0x0000000001000100</code></p></td>
+</tr>
+<tr>
+<td><p><code>0x0001000001000100</code></p></td>
+<td style="text-align:right;"><p><code>0x975EEEC9E2FF0C00</code></p></td>
+<td style="text-align:center;"><p>9</p></td>
+<td><p><code>0x0000000001000100</code></p></td>
+</tr>
+<tr>
+<td><p>o<br />
+x<br />
+x<br />
+x<br />
+b<br />
+R<br />
+.<br />
+o</p></td>
+<td style="text-align:center;"><p>2. attack set</p></td>
+<td></td>
+<td><p>.<br />
+.<br />
+.<br />
+.<br />
+1<br />
+.<br />
+1<br />
+1</p></td>
+</tr>
+<tr>
+<td><p><code>0x0000000001000000</code></p></td>
+<td style="text-align:right;"><p><code>0x17CAD6FF0C000000</code></p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td><p><code>0x0000000001000101</code></p></td>
+</tr>
+<tr>
+<td><p><code>0x0001000001000000</code></p></td>
+<td style="text-align:right;"><p><code>0x16D6D6FF0C000000</code></p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td><p><code>0x0000000001000101</code></p></td>
+</tr>
+<tr>
+<td><p><code>0x0000010101000000</code></p></td>
+<td style="text-align:right;"><p><code>0xB9A0E20B0C000000</code></p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td><p><code>0x0000000001000101</code></p></td>
+</tr>
+<tr>
+<td><p><code>0x0001010101000000</code></p></td>
+<td style="text-align:right;"><p><code>0xB8ACE20B0C000000</code></p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td><p><code>0x0000000001000101</code></p></td>
+</tr>
+<tr>
+<td><p><code>0x0000000101000000</code></p></td>
+<td style="text-align:right;"><p><code>0xE2A1D60B0C000000</code></p></td>
+<td style="text-align:center;"><p>14</p></td>
+<td><p><code>0x0000000001000101</code></p></td>
+</tr>
+<tr>
+<td><p><code>0x0000010001000000</code></p></td>
+<td style="text-align:right;"><p><code>0xEEC9E2FF0C000000</code></p></td>
+<td style="text-align:center;"><p>14</p></td>
+<td><p><code>0x0000000001000101</code></p></td>
+</tr>
+<tr>
+<td><p><code>0x0001000101000000</code></p></td>
+<td style="text-align:right;"><p><code>0xE1ADD60B0C000000</code></p></td>
+<td style="text-align:center;"><p>14</p></td>
+<td><p><code>0x0000000001000101</code></p></td>
+</tr>
+<tr>
+<td><p><code>0x0001010001000000</code></p></td>
+<td style="text-align:right;"><p><code>0xEDD5E2FF0C000000</code></p></td>
+<td style="text-align:center;"><p>14</p></td>
+<td><p><code>0x0000000001000101</code></p></td>
+</tr>
+<tr>
+<td><p>o<br />
+x<br />
+x<br />
+b<br />
+.<br />
+R<br />
+b<br />
+o</p></td>
+<td style="text-align:center;"><p>3. attack set</p></td>
+<td></td>
+<td><p>.<br />
+.<br />
+.<br />
+1<br />
+1<br />
+.<br />
+1<br />
+.</p></td>
+</tr>
+<tr>
+<td><p><code>0x0001010100000100</code></p></td>
+<td style="text-align:right;"><p><code>0x216A22D6D6FF0C00</code></p></td>
+<td style="text-align:center;"><p>2</p></td>
+<td><p><code>0x0000000101000100</code></p></td>
+</tr>
+<tr>
+<td><p><code>0x0000010100000100</code></p></td>
+<td style="text-align:right;"><p><code>0x225E22D6D6FF0C00</code></p></td>
+<td style="text-align:center;"><p>2</p></td>
+<td><p><code>0x0000000101000100</code></p></td>
+</tr>
+<tr>
+<td><p><code>0x0000000100000100</code></p></td>
+<td style="text-align:right;"><p><code>0x4B5F16D6D6FF0C00</code></p></td>
+<td style="text-align:center;"><p>4</p></td>
+<td><p><code>0x0000000101000100</code></p></td>
+</tr>
+<tr>
+<td><p><code>0x0001000100000100</code></p></td>
+<td style="text-align:right;"><p><code>0x4A6B16D6D6FF0C00</code></p></td>
+<td style="text-align:center;"><p>4</p></td>
+<td><p><code>0x0000000101000100</code></p></td>
+</tr>
+<tr>
+<td><p>o<br />
+x<br />
+x<br />
+b<br />
+.<br />
+R<br />
+.<br />
+o</p></td>
+<td style="text-align:center;"><p>4. attack set</p></td>
+<td></td>
+<td><p>.<br />
+.<br />
+.<br />
+1<br />
+1<br />
+.<br />
+1<br />
+1</p></td>
+</tr>
+<tr>
+<td><p><code>0x0000010100000000</code></p></td>
+<td style="text-align:right;"><p><code>0xA1D60B0C00000000</code></p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td><p><code>0x0000000101000101</code></p></td>
+</tr>
+<tr>
+<td><p><code>0x0001010100000000</code></p></td>
+<td style="text-align:right;"><p><code>0xA0E20B0C00000000</code></p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td><p><code>0x0000000101000101</code></p></td>
+</tr>
+<tr>
+<td><p><code>0x0000000100000000</code></p></td>
+<td style="text-align:right;"><p><code>0xCAD6FF0C00000000</code></p></td>
+<td style="text-align:center;"><p>12</p></td>
+<td><p><code>0x0000000101000101</code></p></td>
+</tr>
+<tr>
+<td><p><code>0x0001000100000000</code></p></td>
+<td style="text-align:right;"><p><code>0xC9E2FF0C00000000</code></p></td>
+<td style="text-align:center;"><p>12</p></td>
+<td><p><code>0x0000000101000101</code></p></td>
+</tr>
+<tr>
+<td><p>o<br />
+x<br />
+b<br />
+.<br />
+.<br />
+R<br />
+b<br />
+o</p></td>
+<td style="text-align:center;"><p>5. attack set</p></td>
+<td></td>
+<td><p>.<br />
+.<br />
+1<br />
+1<br />
+1<br />
+.<br />
+1<br />
+.</p></td>
+</tr>
+<tr>
+<td><p><code>0x0000010000000100</code></p></td>
+<td style="text-align:right;"><p><code>0x578723CAD6FF0C00</code></p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td><p><code>0x0000010101000100</code></p></td>
+</tr>
+<tr>
+<td><p><code>0x0001010000000100</code></p></td>
+<td style="text-align:right;"><p><code>0x569323CAD6FF0C00</code></p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td><p><code>0x0000010101000100</code></p></td>
+</tr>
+<tr>
+<td><p>o<br />
+x<br />
+b<br />
+.<br />
+.<br />
+R<br />
+.<br />
+o</p></td>
+<td style="text-align:center;"><p>6. attack set</p></td>
+<td></td>
+<td><p>.<br />
+.<br />
+1<br />
+1<br />
+1<br />
+.<br />
+1<br />
+1</p></td>
+</tr>
+<tr>
+<td><p><code>0x0000010000000000</code></p></td>
+<td style="text-align:right;"><p><code>0xD6FF0C0000000000</code></p></td>
+<td style="text-align:center;"><p>13</p></td>
+<td><p><code>0x0000010101000101</code></p></td>
+</tr>
+<tr>
+<td><p><code>0x0001010000000000</code></p></td>
+<td style="text-align:right;"><p><code>0xD60B0C0000000000</code></p></td>
+<td style="text-align:center;"><p>13</p></td>
+<td><p><code>0x0000010101000101</code></p></td>
+</tr>
+<tr>
+<td><p>o<br />
+b<br />
+.<br />
+.<br />
+.<br />
+R<br />
+b<br />
+o</p></td>
+<td style="text-align:center;"><p>7. attack set</p></td>
+<td></td>
+<td><p>.<br />
+1<br />
+1<br />
+1<br />
+1<br />
+.<br />
+1<br />
+.</p></td>
+</tr>
+<tr>
+<td><p><code>0x0001000000000100</code></p></td>
+<td style="text-align:right;"><p><code>0x7F9417CAD6FF0C00</code></p></td>
+<td style="text-align:center;"><p>7</p></td>
+<td><p><code>0x0001010101000100</code></p></td>
+</tr>
+<tr>
+<td><p>o<br />
+b<br />
+.<br />
+.<br />
+.<br />
+<br />
+R<br />
+.<br />
+o</p></td>
+<td style="text-align:center;"><p>8. attack set</p></td>
+<td></td>
+<td><p>.<br />
+1<br />
+1<br />
+1<br />
+1<br />
+.<br />
+1<br />
+1</p></td>
+</tr>
+<tr>
+<td><p><code>0x0001000000000000</code></p></td>
+<td style="text-align:right;"><p><code>0xFF0C000000000000</code></p></td>
+<td style="text-align:center;"><p>15</p></td>
+<td><p><code>0x0001010101000101</code></p></td>
+</tr>
+<tr>
+<td><p>o<br />
+.<br />
+.<br />
+.<br />
+.<br />
+R<br />
+b<br />
+o</p></td>
+<td style="text-align:center;"><p>9. attack set</p></td>
+<td></td>
+<td><p>1<br />
+1<br />
+1<br />
+1<br />
+1<br />
+.<br />
+1<br />
+.</p></td>
+</tr>
+<tr>
+<td><p><code>0x0000000000000100</code></p></td>
+<td style="text-align:right;"><p><code>0x808817CAD6FF0C00</code></p></td>
+<td style="text-align:center;"><p>8</p></td>
+<td><p><code>0x0101010101000100</code></p></td>
+</tr>
+<tr>
+<td><p>o<br />
+.<br />
+.<br />
+.<br />
+.<br />
+R<br />
+.<br />
+o</p></td>
+<td style="text-align:center;"><p>10. attack set, no blocker</p></td>
+<td></td>
+<td><p>1<br />
+1<br />
+1<br />
+1<br />
+1<br />
+.<br />
+1<br />
+1</p></td>
+</tr>
+<tr>
+<td><p><code>0x0000000000000000</code></p></td>
+<td style="text-align:right;"><p><code>0x0000000000000000</code></p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td><p><code>0x0101010101000101</code></p></td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Flipping_Mirroring_and_Rotating">Flipping, Mirroring and Rotating of Rank, File and Diagonal</a></li>
+<li><a href="/Magic_Bitboards">Magic Bitboards</a></li>
+<li><a href="/Occupancy_of_any_Line">Occupancy of any Line</a></li>
+<li><a href="/Rotated_Bitboards">Rotated Bitboards</a></li>
+<li><a href="/OliThink">Sliding Piece Attacks in OliThink</a></li>
+<li><a href="/Winglet">Sliding Piece Attacks in Winglet</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/YvFagyuVogw/2vNJw_qT8IYJ">Re: Rotated bitboards</a> by <a href="/Urban_Koistinen">Urban Koistinen</a>, <a href="/Computer_Chess_Forums">rgcc</a>, October 31, 1997 » <a href="/Occupancy_of_any_Line">Collapsed files</a>, <a href="/Occupancy_of_any_Line">Collapsed ranks</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=489834">rotated bitboards obsolete?</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/CCC">CCC</a>, February 26, <a href="/Timeline">2006</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=491079">Re: Some thoughts on Dann Corbit's rotated alternative</a> by <a href="/Steffan_Westcott">Steffan Westcott</a>, <a href="/CCC">CCC</a>, March 03, 2006</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?t=4523">Compact Bitboard Attacks</a> by <a href="/Tom_Likens">Tom Likens</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, March 14, <a href="/Timeline">2006</a></li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?topic_view=threads&amp;p=26851&amp;t=4523">Zach's tricky 32-bit approach</a> by <a href="/Zach_Wegner">Zach Wegner</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, August 22, <a href="/Timeline">2006</a></li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=5958">Magic Bitboards Explained!</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, December 04, 2006</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=24724">Kindergarten Bitboard Approach by Gerd Isenberg</a> by <a href="/Edsel_Apostol">Edsel Apostol</a>, <a href="/CCC">CCC</a>, November 05, 2008 » <a href="/OliThink">OliThink</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=29296">Kindergarten bitboards without multiplying</a> by <a href="/Piotr_Cichy">Piotr Cichy</a>, <a href="/CCC">CCC</a>, August 07, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=30742">Kindergarten Bitboard help</a> by <a href="/Gregory_Strong">Gregory Strong</a>, <a href="/CCC">CCC</a>, November 22, 2009</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=50616&amp;p=192200">32-bit Magic experiments</a> by <a href="/Andrew_Fan">Andrew Fan</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, December 03, 2009 » <a href="/Magic_Bitboards">Magic Bitboards</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=31348">Kindergarten bitboards and Xiangqi move genaration?</a> by Han Chengye, <a href="/CCC">CCC</a>, December 30, 2009 » <a href="/Chinese_Chess">Chinese Chess</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=77339&amp;start=44">Re: OliThink 5.9.5 is very small</a> by <a href="/Oliver_Brausch">Oliver Brausch</a>, <a href="/CCC">CCC</a>, June 06, 2021 » <a href="/OliThink">OliThink</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Kindergarten">Kindergarten from Wikipedia</a></li>
+<li><a href="/Category:George_Benson">George Benson</a> - <a href="https://en.wikipedia.org/wiki/This_Masquerade">This Masquerade</a>, 1976, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/T8eXCdjdSHE" title="YouTube video T8eXCdjdSHE" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=T8eXCdjdSHE">Watch on YouTube</a></p>
+<ul>
+<li><a href="/Category:Pat_Metheny">Pat Metheny</a> and friends - <a href="https://en.wikipedia.org/wiki/This_Masquerade">This Masquerade</a>, <a href="https://en.wikipedia.org/wiki/Jazz_Baltica">Jazz Baltica</a>, July 6, 2003, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/Nils_Landgren_%28musician%29">Nils Landgren</a>, <a href="/Category:Lars_Danielsson">Lars Danielsson</a>, <a href="https://en.wikipedia.org/wiki/Wolfgang_Haffner">Wolfgang Haffner</a>, <a href="https://en.wikipedia.org/wiki/Esbj%C3%B6rn_Svensson">Esbjörn Svensson</a>, <a href="/Category:Pat_Metheny">Pat Metheny</a>, <a href="/Category:Michael_Brecker">Michael Brecker</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/Lzrp7H4j8TE" title="YouTube video Lzrp7H4j8TE" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=Lzrp7H4j8TE">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Sliding_Piece_Attacks">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=5958">Magic Bitboards Explained!</a> by <a href="/Michael_Sherwin">Michael Sherwin</a> and reply by <a href="/Gerd_Isenberg">Gerd Isenberg</a> to call it Kindergarten Bitboards, <a href="/Computer_Chess_Forums">Winboard Forum</a>, December 4, <a href="/Timeline">2006</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.open-aurec.com/wbforum/viewtopic.php?t=4523">Compact Bitboard Attacks</a> by <a href="/Tom_Likens">Tom Likens</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, March 14, <a href="/Timeline">2006</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://www.stmintz.com/ccc/index.php?id=489834">rotated bitboards obsolete?</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/CCC">CCC</a>, February 26, <a href="/Timeline">2006</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://www.stmintz.com/ccc/index.php?id=491079">Re: Some thoughts on Dann Corbit's rotated alternative</a> by <a href="/Steffan_Westcott">Steffan Westcott</a>, <a href="/CCC">CCC</a>, March 03, 2006<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=29296">Kindergarten bitboards without multiplying</a> by <a href="/Piotr_Cichy">Piotr Cichy</a>, <a href="/CCC">CCC</a>, August 07, 2009<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="http://www.open-aurec.com/wbforum/viewtopic.php?topic_view=threads&amp;p=26851&amp;t=4523">Zach's tricky 32-bit approach</a> by <a href="/Zach_Wegner">Zach Wegner</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, August 22, 2006<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=50616&amp;p=192200">32-bit Magic experiments</a> by <a href="/Andrew_Fan">Andrew Fan</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, December 03, 2009<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=198660&amp;t=21329">Re: How to reduce the "bits" used in a magic number</a> by <a href="/Grant_Osborne">Grant Osborne</a>, <a href="/CCC">CCC</a>, July 04, 2008<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Paul_Klee">Paul Klee</a> · <a href="/Category:George_Benson">George Benson</a> · <a href="/Category:Michael_Brecker">Michael Brecker</a> · <a href="/Category:Lars_Danielsson">Lars Danielsson</a> · <a href="/Category:Pat_Metheny">Pat Metheny</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Kindergarten_Bitboards">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

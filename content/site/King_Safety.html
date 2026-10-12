@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>King Safety - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">King Safety</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Evaluation">Evaluation</a> * King Safety</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="http://chgs.elevator.umn.edu/asset/viewAsset/57f3b6787d58ae5f74bf8ba9#57f3b6d77d58ae5574bf8bb0" target="_blank" rel="noopener noreferrer"><img src="/assets/SamuelBak_King.jpg" alt="Samuel Bak - King 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Samuel_Bak">Samuel Bak</a> - King <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://chgs.elevator.umn.edu/asset/viewAsset/57f3b6787d58ae5f74bf8ba9#57f3b6d77d58ae5574bf8bb0">Chess in the Art of Samuel Bak</a>, <a href="http://www.chgs.umn.edu/">Center for Holocaust &amp; Genocide Studies</a>, <a href="/University_of_Minnesota">University of Minnesota</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p>Good evaluation of the <strong>king safety</strong> is one of the most challenging tasks in writing an evaluation function, but also the most rewarding. The subjects are placed here in order of approximate (implementation) difficulty. If this page grows, it might be worthwhile to create a sub-page for each term. <span id="PawnShield"></span></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#pawn-shield">Pawn Shield</a></li>
+<li><a href="#pawn-storm">Pawn Storm</a></li>
+<li><a href="#king-tropism">King Tropism</a></li>
+<li><a href="#virtual-mobility">Virtual Mobility</a></li>
+<li><a href="#scaling">Scaling</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#attacking-king-zone">Attacking King Zone</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#square-control">Square Control</a></li>
+<li><a href="#attack-units">Attack Units</a></li>
+</ol>
+</details></li>
+<li><a href="#patterns">Patterns</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forums-posts">Forums Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1998-">1998 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="pawn-shield">Pawn Shield</h2>
+<p>When the king has castled, it is important to preserve pawns next to it, in order to protect it against the assault. Generally speaking, it is best to keep the pawns unmoved or possibly moved up one square. The lack of a shielding pawn deserves a penalty, even more so if there is an <a href="/Open_File">open file</a> next to the king. <span id="PawnStorm"></span></p>
+<h2 id="pawn-storm">Pawn Storm</h2>
+<p>If the enemy pawns are near to the king, there might be a threat of opening a file, even if the pawn shield is intact. Penalties for storming enemy pawns must be lower than penalties for (semi)open files, otherwise the pawn storm might backfire, resulting in a blockage. <span id="KingTropism"></span></p>
+<h2 id="king-tropism">King Tropism</h2>
+<p>King <a href="https://en.wikipedia.org/wiki/Tropism">tropism</a> is a simplified form of king safety evaluation. It takes into account the <a href="/Distance">distance</a> between the King and the attacking pieces, possibly weighted against <a href="/Point_Value">piece value</a>. For example, one may double the distance value for a queen, and halve it for bishops and rooks. This kind of evaluation acts in a probabilistic way - it is by no means certain that being close to the king helps in attacking it. For example, if white castles short, black rook on h8 gets a higher tropism value regardless whether it stands on an open file. Nevertheless, using this kind of crude evaluation term increases a probability of building up an attack.</p>
+<p>This kind of algorithm is used by <a href="/Crafty">Crafty</a>. Another, perhaps more basic example is the <a href="/CPW-Engine">CPW-Engine</a> as implemented in <a href="/CPW-Engine_eval">CPW-Engine_eval</a>, and the one demonstrated in the <a href="/Evaluation_Function_Draft">Evaluation Function Draft</a>. <span id="VMOB"></span></p>
+<h2 id="virtual-mobility">Virtual Mobility</h2>
+<p>Another heuristic is to temporary replace the king by a <a href="/Queen">queen</a>, to use her virtual <a href="/Mobility">mobility</a> as a measure of opponent's <a href="/Sliding_Pieces">sliding piece</a> <a href="/Sliding_Piece_Attacks">attacking</a> chances and therefore an unsafe king. One may even temporary modify the <a href="/Occupancy">occupancy</a> to improve this virtual mobility, e.g by removing mobile opponent pieces. <span id="Scaling"></span></p>
+<h2 id="scaling">Scaling</h2>
+<p>Usually king safety value is scaled one way or the other. Even <a href="/TSCP">TSCP</a> uses the pawn shield and pawn storm score, scaled by the opponent's material. This way, whenever the engine finds itself with a broken pawn shield, it tends to exchange pieces in order to alleviate the danger. <a href="/Fruit">Fruit</a> uses a more elaborate scheme, counting the bonuses for attacking the squares near to the enemy king, and then multiplying their sum by the constant derived from the number of attackers. For an approximation of such approach, see <a href="/CPW_King">CPW_King</a> evaluation function. <span id="Attacking"></span></p>
+<h2 id="attacking-king-zone">Attacking King Zone</h2>
+<p><em>sample specification</em> King zone is usually defined as squares to which enemy King can move plus two or three additional squares facing enemy position. Basic King safety function, similar to the one described in <a href="/Toga_Log">Toga log user manual</a>, can work as follows: we have two variables, <strong>attackingPiecesCount</strong> and <strong>valueOfAttacks</strong>, zeroed at startup. If a piece attacks enemy king zone, we increase attackingPiecesCount by one, and count how many squares within enemy King zone are attacked. We multpily the number of attacked squares by a constant: 20 for a knight, 20 for a bishop, 40 for a rook and 80 for a queen. The result of multiplication is added to valueOfAttacks. After finding all attacks, we look at attackingPiecesCount, use it as an index to the table given below, and our king attack score is<br />
+<strong>valueOfAttacks * attackWeight[attackingPiecesCount] / 100</strong>.</p>
+<table>
+<thead>
+<tr>
+<th><p>Nr of<br />
+Attackers</p></th>
+<th><p>Attack<br />
+weight</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:right;"><p>0</p></td>
+</tr>
+<tr>
+<td style="text-align:center;"><p>2</p></td>
+<td style="text-align:right;"><p>50</p></td>
+</tr>
+<tr>
+<td style="text-align:center;"><p>3</p></td>
+<td style="text-align:right;"><p>75</p></td>
+</tr>
+<tr>
+<td style="text-align:center;"><p>4</p></td>
+<td style="text-align:right;"><p>88</p></td>
+</tr>
+<tr>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"><p>94</p></td>
+</tr>
+<tr>
+<td style="text-align:center;"><p>6</p></td>
+<td style="text-align:right;"><p>97</p></td>
+</tr>
+<tr>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:right;"><p>99</p></td>
+</tr>
+</tbody>
+</table>
+
+<p><span id="SquareControl"></span></p>
+<h3 id="square-control">Square Control</h3>
+<p>The most elaborate king safety evaluation schemes gather information about <a href="/Square_Control">control of the squares</a> near the enemy king. A good explanation of such an algorithm might be found on <a href="/Ed_Schroder">Ed Schröder's</a> <a href="/Rebel">Programmer Corner</a>. If a program, unlike <a href="/Rebel">Rebel</a>, does not keep <a href="/Incremental_Updates">incrementally updated</a> <a href="/Attack_and_Defend_Maps">attack tables</a>, this knowledge is likely to be uncovered while calculating <a href="/Mobility">mobility</a>.</p>
+<h3 id="attack-units">Attack Units</h3>
+<p><a href="/Rebel">Rebel</a> (as we know from its description) and <a href="/Stockfish">Stockfish</a> (as we know from its code) use attack counter as an index to a table holding king attack scores. Stockfish counts each minor piece attack on a king zone (defined as squares that enemy king can reach + three more forward squares facing enemy position) as 2 attack units, rook attack on king zone as 3 attack units and a queen attack as 5 attack units. The virtue of such approach is twofold. <strong>(1)</strong> other factors beside these attacks can be counted. For example, Stockfish adds 6 attack units for a safe queen contact check and a couple attack units for a safe rook contact check. <strong>(2)</strong> the values held in the table may reflect attitude that "the whole is greater than the sum of parts". Typical curve is S-shaped: it raises slowly at first, then it goes up faster, becoming almost flat at the end.</p>
+<p>This is the table from <a href="/Glaurung">Glaurung</a> 1.2:</p>
+<pre><code>static const int SafetyTable[100] = {
+   0,   0,   0,   1,   1,   2,   3,   4,   5,   6,
+   8,  10,  13,  16,  20,  25,  30,  36,  42,  48,
+  55,  62,  70,  80,  90, 100, 110, 120, 130, 140,
+ 150, 160, 170, 180, 190, 200, 210, 220, 230, 240,
+ 250, 260, 270, 280, 290, 300, 310, 320, 330, 340,
+ 350, 360, 370, 380, 390, 400, 410, 420, 430, 440,
+ 450, 460, 470, 480, 490, 500, 510, 520, 530, 540,
+ 550, 560, 570, 580, 590, 600, 610, 620, 630, 640,
+ 650, 650, 650, 650, 650, 650, 650, 650, 650, 650,
+ 650, 650, 650, 650, 650, 650, 650, 650, 650, 650
+};</code></pre>
+<p>This is the table generated using a formula from <a href="/Stockfish">Stockfish</a>, rescaled to <a href="/Centipawns">centipawns</a> :</p>
+<pre><code>static const int SafetyTable[100] = {
+    0,  0,   1,   2,   3,   5,   7,   9,  12,  15,
+  18,  22,  26,  30,  35,  39,  44,  50,  56,  62,
+  68,  75,  82,  85,  89,  97, 105, 113, 122, 131,
+ 140, 150, 169, 180, 191, 202, 213, 225, 237, 248,
+ 260, 272, 283, 295, 307, 319, 330, 342, 354, 366,
+ 377, 389, 401, 412, 424, 436, 448, 459, 471, 483,
+ 494, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+ 500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+ 500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+ 500, 500, 500, 500, 500, 500, 500, 500, 500, 500
+};</code></pre>
+<p>Using such tables, it is advisable not to evaluate king attack if only two pieces are attacking. <span id="Patterns"></span></p>
+<h2 id="patterns">Patterns</h2>
+<p>There are positions that tend to be notoriously difficult for the chess programs. One of them is a sacrifice of a minor piece on g5/g4, when it is simultaneously attacked and protected by the "h" pawns. Another one occurs after a standard Bxh7 sacrifice: White knight stands unchallenged on g5, white queen on h5, black King on g8 (positions with Kg6 are best left to the search). Hard-coding such patterns raises program's tactical awareness.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Castling_Rights">Castling Rights</a></li>
+<li><a href="/Pawn_Chain">Pawn Chain Direction</a></li>
+<li><a href="/Evaluation_Function_Draft">Evaluation Function Draft</a></li>
+<li><a href="/Evaluation_Patterns">Evaluation Patterns</a></li>
+<li><a href="/King_Pattern">King Safety</a> in <a href="/King_Pattern">King Pattern</a> with <a href="/Bitboards">Bitboards</a></li>
+<li><a href="/Mate_at_a_Glance">Mate at a Glance</a></li>
+</ul>
+<h2 id="forums-posts">Forums Posts</h2>
+<h3 id="1998-">1998 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=17373">King Safety</a> by <a href="/Stuart_Cracraft">Stuart Cracraft</a>, <a href="/CCC">CCC</a>, April 22, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=19415">King safety evaluation</a> by <a href="/Roberto_Waldteufel">Roberto Waldteufel</a>, <a href="/CCC">CCC</a>, May 28, 1998</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/462b49226d1f1dfe#">Asymetric king safety</a> by <a href="/Tom_King">Tom King</a>, <a href="/Computer_Chess_Forums">rgcc</a>, March 13, 1999</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=192418">What is Piece´s tropism?</a> by carlos, <a href="/CCC">CCC</a>, October 08, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=235856">Bishop tropism?</a> by <a href="/Pham_Hong_Nguyen">Pham Hong Nguyen</a>, <a href="/CCC">CCC</a>, June 17, 2002</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=17546">king safety</a> by <a href="/Charles_Roberson">Charles Roberson</a>, <a href="/CCC">CCC</a>, November 02, 2007</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=31571">Distance to King</a> by <a href="/Adam_Berent">Adam Berent</a>, <a href="/CCC">CCC</a>, January 08, 2010</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=38756">About king safety</a> by <a href="/Fermin_Serrano">Fermin Serrano</a>, <a href="/CCC">CCC</a>, April 15, 2011 » <a href="/Rodin">Rodin</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=39102">value of king tropism in eval function</a> by <a href="/Tom_King">Tom King</a>, <a href="/CCC">CCC</a>, May 17, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=42065">Approaches to king safety?</a> by Mike Robinson, <a href="/CCC">CCC</a>, January 19, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=44849">For Ed Schroeder: Rebel's Pawn Shield and Pawn Storm Eval</a> by Marcel Fournier, <a href="/CCC">CCC</a>, August 21, 2012</li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/lIjQUH3dsYg/4VEtHUkrdBsJ">Pinned pieces in king safety</a> by <a href="/Stefan_Geschwentner">Stefan Geschwentner</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, March 28, 2014 » <a href="/Pin">Pin</a>, <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52774">King shelter x-ray attacks</a> by <a href="/Lyudmil_Tsvetkov">Lyudmil Tsvetkov</a>, <a href="/CCC">CCC</a>, June 27, 2014 » <a href="/X-ray_Attacks_%28Bitboards%29">X-ray Attacks (Bitboards)</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52779">Heavy piece shelter</a> by <a href="/Lyudmil_Tsvetkov">Lyudmil Tsvetkov</a>, <a href="/CCC">CCC</a>, June 27, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53508">King safety refinements</a> by <a href="/Lyudmil_Tsvetkov">Lyudmil Tsvetkov</a>, <a href="/CCC">CCC</a>, August 31, 2014</li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57403">about king attack</a> by <a href="/Daniel_Anulliero">Daniel Anulliero</a>, <a href="/CCC">CCC</a>, August 27, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59583">king shelter - when and how?</a> by <a href="/Alexandru_Mosoi">Alexandru Mosoi</a>, <a href="/CCC">CCC</a>, March 21, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59647">king safety: hard positions for zurichess</a> by <a href="/Alexandru_Mosoi">Alexandru Mosoi</a>, <a href="/CCC">CCC</a>, March 27, 2016 » <a href="/Zurichess">Zurichess</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61014">Castling Evaluation</a> by <a href="/Dennis_Sceviour">Dennis Sceviour</a>, <a href="/CCC">CCC</a>, August 02, 2016 » <a href="/Castling">Castling</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65338">enemy edge pawn as part of own king shelter</a> by Bram Mourik, <a href="/CCC">CCC</a>, September 30, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66599">Pawn Storm - Theory</a> by <a href="/Dennis_Sceviour">Dennis Sceviour</a>, <a href="/CCC">CCC</a>, February 14, 2018 » <a href="/King_Safety">Pawn Storm</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72981">Pruning / reduction depending on king safety</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, February 02, 2020 » <a href="/Pruning">Pruning</a>, <a href="/Reductions">Reductions</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73877">Positional evaluation of your engine on this?</a> by <a href="/Tom_King">Tom King</a>, <a href="/CCC">CCC</a>, May 09, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76976">King safety evaluation</a> by <a href="/Niels_Abildskov">Niels Abildskov</a>, <a href="/CCC">CCC</a>, March 29, 2021</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="http://www.mark-weeks.com/aboutcom/aa03e17.htm">Middle game - King safety</a> from <a href="http://www.mark-weeks.com/aboutcom/aa02j19.htm">Chess Tutorial : Improve Your Middle Game</a> by <a href="/Mark_Weeks">Mark Weeks</a></li>
+<li><a href="https://en.wikibooks.org/wiki/Chess_Strategy/The_positions_of_the_kings">Chess Strategy/The positions of the kings - Wikibooks</a></li>
+<li><a href="/Category:The_Rolling_Stones">The Rolling Stones</a> - <a href="https://en.wikipedia.org/wiki/Gimme_Shelter">Gimme Shelter</a> (1998 promotion video), <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/Bridges_to_Babylon_Tour_%2797%E2%80%9398">Bridges to Babylon Tour</a> feat. <a href="https://en.wikipedia.org/wiki/Lisa_Fischer">Lisa Fischer</a> and <a href="/Category:Darryl_Jones">Darryl Jones</a>, et al., December 12 1997, <a href="https://en.wikipedia.org/wiki/The_Dome_at_America%27s_Center">Trans World Dome</a>, <a href="https://en.wikipedia.org/wiki/St._Louis">St. Louis</a> <a href="https://en.wikipedia.org/wiki/Missouri">Missouri</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/8kl6q_9qZOs" title="YouTube video 8kl6q_9qZOs" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=8kl6q_9qZOs">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Evaluation">Up one Level</a></strong></p>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Samuel_Bak">Samuel Bak</a> · <a href="/Category:Darryl_Jones">Darryl Jones</a> · <a href="/Category:The_Rolling_Stones">The Rolling Stones</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/King_Safety">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

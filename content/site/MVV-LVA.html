@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MVV-LVA - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">MVV-LVA</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Search">Search</a> * <a href="/Move_Ordering">Move Ordering</a> * MVV-LVA</strong></p>
+<p><strong>MVV-LVA</strong> (<strong>M</strong>ost <strong>V</strong>aluable <strong>V</strong>ictim - <strong>L</strong>east <strong>V</strong>aluable <strong>A</strong>ggressor),<br />
+is a simple heuristic to <a href="/Move_Generation">generate</a> or sort <a href="/Captures">capture moves</a> in a reasonable order. Inside a so called find-victim cycle, one first look up the potential victim of all <a href="/Attacks">attacked</a> opponent pieces, in the order of the most valuable first, thus <a href="/Queen">queen</a>, <a href="/Rook">rook</a>, <a href="/Bishop">bishop</a>, <a href="/Knight">knight</a> and <a href="/Pawn">pawn</a>. After the most valuable victim is found, the find-aggressor cycle loops over the potential aggressors that may capture the victim in inverse order, from pawn, knight, bishop, rook, queen to <a href="/King">king</a>. The heuristic is easy to implement and covers a lot of simple cases, such as PxR before BxP. It is used in various move generators build in hardware, such a <a href="/Belle">Belle</a> and more recently in <a href="/FPGA">FPGA</a> approaches such as <a href="/Brutus">Brutus</a> and <a href="/MBChess">MBChess</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. However the heuristic may fail, if victims attacked by more valuable attackers are defended, in such cases most programs rely on <a href="/Attack_and_Defend_Maps">attack tables</a>, set-wise <a href="/Pawn_Attacks_%28Bitboards%29">pawn attacks</a> (defends) on the fly to perform a <a href="/Static_Exchange_Evaluation">static exchange evaluation</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Belle">Belle | Hardware Move Generation</a></li>
+<li><a href="/Mater">Mater</a></li>
+<li><a href="/Move_Generation">Move Generation</a></li>
+<li><a href="/Quiescence_Search">Quiescence Search</a></li>
+<li><a href="/SEE_-_The_Swap_Algorithm">SEE - The Swap Algorithm</a> with <a href="/Bitboards">Bitboards</a></li>
+<li><a href="/Static_Exchange_Evaluation">Static Exchange Evaluation</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/1fa5e36362f5dde4">mvv/lva vs SEE capture ordering test results</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Computer_Chess_Forums">rgcc</a>, August 10, 1995</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/645f44f84102e450">MVV/LVA vs SEE move ordering - more test results</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Computer_Chess_Forums">rgcc</a>, August 25, 1995</li>
+</ul>
+<p><a href="https://groups.google.com/group/rec.games.chess.computer/msg/1951744da404fc33">Re: MVV/LVA vs SEE move ordering - more test results</a> by <a href="/Brian_Sheppard">Brian Sheppard</a>, <a href="/Computer_Chess_Forums">rgcc</a>, August 27, 1995</p>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/5byhl_6Jmc8/D1QAR146VLIJ">MVV/LVA and SEE - what do they mean?</a> by <a href="/Peter_Kappler">Peter Kappler</a>, <a href="/Computer_Chess_Forums">rgcc</a>, August 28, 1995</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=45655">MVA/LVA sorting order</a> by Jan Willem de Kort, <a href="/CCC">CCC</a>, March 12, 1999</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=109588">Fast BB move generation</a> by <a href="/Bas_Hamstra">Bas Hamstra</a>, <a href="/CCC">CCC</a>, May 08, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=141813">MVV/LVA or SEE - liability?</a> by <a href="/Severi_Salminen">Severi Salminen</a>, <a href="/CCC">CCC</a>, November 29, 2000 » <a href="/Static_Exchange_Evaluation">Static Exchange Evaluation</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=253151">MVVLVA sorting does not help for move ordering</a> by <a href="/Scott_Farrell">Scott Farrell</a>, <a href="/CCC">CCC</a>, September 21, 2002</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=22755">Sorting captures</a> by <a href="/Pablo_Vazquez">Pablo Vazquez</a>, <a href="/CCC">CCC</a>, August 02, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=23727">Effect of MVV/LVA</a> by <a href="/Mathieu_Pagé">Mathieu Pagé</a>, <a href="/CCC">CCC</a>, Sepember 14, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=27254">MVV/LVA. Or should it be LVV/MVA?</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, March 31, 2009</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=395213">LVA MVV with relative Pin</a> by Clemens Pruell, <a href="/CCC">CCC</a>, February 16, 2011 » <a href="/Pin">Pin</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48202">MVV/LVA sorting</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, June 05, 2013</li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56114">DarkThought sorts MVV/LVA without looking at any moves?</a> by Rob Williamson, <a href="/CCC">CCC</a>, April 25, 2015 » <a href="/DarkThought">DarkThought</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57813">MVV/LVA</a> by <a href="/Folkert_van_Heusden">Folkert van Heusden</a>, <a href="/CCC">CCC</a>, October 02, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61021">Sorting Captures</a> by David Cimbalista, <a href="/CCC">CCC</a>, August 03, 2016</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=3058">A smarter MVV/LVA</a> by thevinenator, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, December 28, 2016</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=67873">MVV LVA</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, July 01, 2018</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70918">is LVA as in MVV-LVA useless ?</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, June 04, 2019</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70936">correct way to score promotions using MVV-LVA</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, June 06, 2019 » <a href="/Promotions">Promotions</a></li>
+</ul>
+<h2 id="external-links">External links</h2>
+<ul>
+<li><a href="http://web.archive.org/web/20040427014440/brucemo.com/compchess/programming/quiescent.htm#MVVLVA">MVV/LVA</a> from <a href="/Bruce_Moreland">Bruce Moreland's</a> <a href="http://web.archive.org/web/20040403211728/brucemo.com/compchess/programming/index.htm">Programming Topics</a></li>
+<li><a href="http://home.hccnet.nl/h.g.muller/mvv.html">Micro-Max 4: Quiescence Search</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a></li>
+<li><a href="/Category:The_Dorf">The Dorf</a> feat. <a href="https://en.wikipedia.org/wiki/F.M._Einheit">FM Einheit</a> und <a href="https://en.wikipedia.org/wiki/Caspar_Br%C3%B6tzmann">Caspar Brötzmann</a> - <a href="https://en.wikipedia.org/wiki/Home_(Caspar_Br%C3%B6tzmann_Massaker_album)">Massaker</a>, <a href="http://www.grammatikoff.de/">Grammatikoff</a>, <a href="https://en.wikipedia.org/wiki/Duisburg">Duisburg</a>, May 17, 2014, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/MJVohz5k5_U" title="YouTube video MJVohz5k5_U" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=MJVohz5k5_U">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Move_Ordering">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Marc_Boulé">Marc Boulé</a> (<strong>2002</strong>). <em>An FPGA Move Generator for the Game of Chess</em>. Masters thesis, <a href="/McGill_University">McGill University</a>, (Supervisor: <a href="/Zeljko_Zilic">Zeljko Zilic</a>, Co-Supervisor: <a href="/Monroe_Newborn">Monty Newborn</a>), <a href="http://www.iml.ece.mcgill.ca/%7Emboule/files/mbthesis02.pdf">pdf</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:The_Dorf">The Dorf</a> · <a href="/Category:Jan_Klare">Jan Klare</a> · <a href="/Category:Achim_Zepezauer">Achim Zepezauer</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/MVV-LVA">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

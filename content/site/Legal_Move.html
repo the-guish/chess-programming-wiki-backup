@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Legal Move - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Legal Move</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Chess">Chess</a> * <a href="/Moves">Moves</a> * Legal Move</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="https://fineartamerica.com/featured/the-king-can-never-be-captured-marina-kalinovsky.html" target="_blank" rel="noopener noreferrer"><img src="/assets/The_King_Can_Never_Be_Captured.jpg" alt="Marina Kalinovsky - The King can never be Captured 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Marina_Kalinovsky">Marina Kalinovsky</a> - The King can never be Captured <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://fineartamerica.com/featured/the-king-can-never-be-captured-marina-kalinovsky.html">The King can never be Captured by Marina Kalinovsky, Artwork for Sale - Brooklyn, NY - United States</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p>A <strong>Legal Move</strong> is a <a href="/Pseudo-Legal_Move">pseudo-legal move</a> which does not leave its own <a href="/King">king</a> in <a href="/Check">check</a>. If not in check, most programs delay the legality test to the child node, after <a href="/Incremental_Updates">incremental updates</a> <a href="/Attack_and_Defend_Maps">attack and defend maps</a> or an explicit <a href="/Square_Attacked_By">square attacked test</a> direct after <a href="/Make_Move">make move</a>. Earlier programs were even more "lazy", to determine illegal moves after an illegal king capture, while many programs consider <a href="/Pin">absolutely pinned</a> pieces in <a href="/Move_Generation">move generation</a> and also for <a href="/Evaluation">evaluation</a> purpose, or even perform a strictly legal generation to demand searching legal positions. If in check, most programs apply a special move generator to omit the majority of illegal moves. <span id="LegalityTest"></span></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#legality-test">Legality Test</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#not-in-check">Not in Check</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#king-in-check">King in Check</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#double-check">Double Check</a></li>
+<li><a href="#single-check">Single Check</a></li>
+</ol>
+</details></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="legality-test">Legality Test</h2>
+<p>Beside the pseudo-legal condition which might already be sufficient for a subset of chess programs, there are several conditions to test, dependent whether the king is in check or not.</p>
+<h3 id="not-in-check">Not in Check</h3>
+<ul>
+<li>The moving piece is not <a href="/Pin">absolutely pinned</a> on its <a href="/Direction">move direction</a></li>
+<li><a href="/En_passant">En passant</a> requires special horizontal pin test of both involved pawns, which disappear from the same <a href="/Ranks">rank</a></li>
+<li>While <a href="/Castling">castling</a>, <a href="/Rook">rook</a> is not pinned horizontally in <a href="/Chess960">Chess960</a></li>
+</ul>
+<h3 id="king-in-check">King in Check</h3>
+<h4 id="double-check"><a href="/Double_Check">Double Check</a></h4>
+<ul>
+<li>Only king moves to non attacked squares, sliding check x-rays the king</li>
+</ul>
+<h4 id="single-check"><a href="/Check">Single Check</a></h4>
+<ul>
+<li>Capture of checking piece. The capturing piece is not <a href="/Pin">absolutely pinned</a></li>
+<li>King moves to non attacked squares, sliding check x-rays the king</li>
+<li>Interposing moves in case of distant sliding check. The moving piece is not absolutely pinned.</li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/DirGolem">DirGolem</a></li>
+<li><a href="/Hash_Move">Hash Move</a></li>
+<li><a href="/Killer_Move">Killer Move</a></li>
+<li><a href="/Mate_Killers">Mate Killers</a></li>
+<li><a href="/Move_Generation">Move Generation</a></li>
+<li><a href="/Pseudo-Legal_Move">Pseudo-Legal Move</a></li>
+<li><a href="/Square_Attacked_By">Pseudo Legality Test</a> with <a href="/Bitboards">Bitboards</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=53063">Question about testing legality of moves</a> by ambrooks1, <a href="/Computer_Chess_Forums">Winboard Forum</a>, February 07, 2014</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2697">En-passant legality test</a> by tetra, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, August 07, 2014 » <a href="/En_passant">En passant</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63090">TTMove legality checking ? &amp; Killers Move Format?</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, February 08, 2017 » <a href="/Hash_Move">Hash Move</a>, <a href="/Killer_Move">Killer Move</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73479">I just discovered a design flaw in my engine</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/CCC">CCC</a>, March 27, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77671">Efficiently Generated Legal moves question</a> by Pedro Duran, <a href="/CCC">CCC</a>, July 08, 2021 » <a href="/Move_Generation">Move Generation</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://peterellisjones.com/posts/generating-legal-chess-moves-efficiently/">Generating Legal Chess Moves Efficiently</a> by Peter Ellis Jones, February 09, 2017</li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Moves">Up one Level</a></strong></p>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Marina_Kalinovsky">Marina Kalinovsky</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Legal_Move">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
