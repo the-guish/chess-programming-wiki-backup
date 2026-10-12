@@ -55,7 +55,12 @@ ASSET_EXTS = {
 # Characters kept verbatim in on-disk names; everything else is %-escaped so
 # names are portable (e.g. "Category:Pioneer" -> "Category%3APioneer.html").
 FS_SAFE = "/-_.()~,!'+@"
-RETRYABLE = {429, 500, 502, 503, 504}
+# 52x are Cloudflare's "origin unreachable" family: transient, never a real answer.
+RETRYABLE = {429, 500, 502, 503, 504, 520, 521, 522, 523, 524, 525, 526, 530}
+# Give up the run (exit code EXIT_SITE_DOWN) after this many URLs in a row
+# exhaust their retries: the site is down, not the URLs.
+MAX_CONSECUTIVE_FAILURES = 3
+EXIT_SITE_DOWN = 75
 
 log = logging.getLogger("cpw")
 
@@ -190,7 +195,10 @@ class State:
 
     def requeue(self, statuses) -> int:
         q = ",".join("?" * len(statuses))
-        cur = self.db.execute(f"UPDATE urls SET status='pending' WHERE status IN ({q})", statuses)
+        cur = self.db.execute(
+            f"UPDATE urls SET status='pending' WHERE status IN ({q})"
+            " OR (status='missing' AND http_status >= 500)",  # server errors are never final
+            statuses)
         self.db.commit()
         return cur.rowcount
 
@@ -273,10 +281,11 @@ def crawl(args) -> int:
         requeue.append("skipped")
     if args.refresh:
         requeue += ["done", "missing"]
-    if requeue and (n := state.requeue(requeue)):
+    if (n := state.requeue(requeue)):
         log.info("re-queued %d URLs (%s)", n, ", ".join(requeue))
     fetcher = Fetcher(args.delay, args.jitter, args.max_retries, args.timeout)
     processed = 0
+    consecutive_failures = 0
 
     try:
         while (path := state.next_pending()) is not None:
@@ -297,7 +306,14 @@ def crawl(args) -> int:
                     status, final_url, ctype, data = fetcher.get(path)
                 except RuntimeError as e:
                     state.mark(path, "failed", error=str(e), attempts=args.max_retries)
+                    consecutive_failures += 1
+                    if consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
+                        state.requeue(["failed"])  # not their fault; try them again next run
+                        log.error("%d URLs in a row failed (last: %s); the site looks down, "
+                                  "stopping. Run again later to resume.", consecutive_failures, e)
+                        return EXIT_SITE_DOWN
                     continue
+                consecutive_failures = 0
                 if status != 200:
                     log.info("%s -> HTTP %s", path, status)
                     state.mark(path, "missing", http_status=status)

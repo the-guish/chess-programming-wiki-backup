@@ -31,6 +31,7 @@ BATCH=500 tool/crawl_batches.sh                       # crawl + commit + push to
 ### Gentle
 - Sends one request at a time, waiting 1.5 s plus 0–1 s of random jitter between requests (`--delay`, `--jitter`).
 - Honours `Retry-After` and backs off exponentially on 429/5xx and network errors (`--max-retries`).
+- If 3 URLs in a row exhaust their retries, the site is assumed to be down. The run stops with exit code 75 and nothing is lost: those URLs, and any page that got a 5xx answer, are retried on the next run. `crawl_batches.sh` commits what it has and stops too.
 - Sends an identifying `User-Agent`. Never follows off-site links or URLs with query strings.
 
 ### Idempotent and resumable

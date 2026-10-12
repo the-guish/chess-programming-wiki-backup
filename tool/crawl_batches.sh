@@ -33,11 +33,18 @@ commit_batch() {
 }
 
 # Main passes skip earlier failures so the loop always drains; one final pass retries them.
-while :; do
-    python3 tool/cpw_scraper.py crawl --max-requests "$BATCH" --no-retry-failed "$@"
+# Exit code 75 from the scraper means the site looks down: keep what we have and stop.
+run() {
+    local rc=0
+    python3 tool/cpw_scraper.py crawl "$@" || rc=$?
     commit_batch
+    if [ "$rc" -eq 75 ]; then echo "site looks down; batch committed, run again later" >&2; exit 75; fi
+    [ "$rc" -eq 0 ] || exit "$rc"
+}
+
+while :; do
+    run --max-requests "$BATCH" --no-retry-failed "$@"
     [ "$(pending)" = "" ] && break
 done
-python3 tool/cpw_scraper.py crawl "$@"
-commit_batch
+run "$@"
 python3 tool/cpw_scraper.py status
