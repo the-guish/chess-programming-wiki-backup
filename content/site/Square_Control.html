@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Square Control - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Square Control</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Chess">Chess</a> * <a href="/Squares">Squares</a> * Control</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/Piet_Program.gif" alt="Piet 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Piet <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1">Program in the <a href="https://en.wikipedia.org/wiki/Esoteric_programming_language#Piet">Piet programming language</a>, printing "Piet", by <a href="https://commons.wikimedia.org/wiki/User:Mosmas">Thomas Schoch</a>, February 26, 2006, see <a href="http://www.retas.de/thomas/computer/programs/useless/piet/Piet/index.html">Obfuscated Programming – Piet</a>, Piet was named after the Dutch painter <a href="/Category:Piet_Mondrian">Piet Mondrian</a>, <a href="http://www.dangermouse.net/esoteric/piet.html">DM's Esoteric Programming Languages - Piet</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Square Control</strong>,<br />
+refers to which and how many pieces <a href="/Attacks">attack</a> or defend a particular square, independently from its <a href="/Occupancy">occupancy</a> state. Squares diagonally <a href="/Pawn_Attacks_%28Bitboards%29">controlled</a> by a pawn are usually taboo for opponent pieces, but the <a href="/Stop_Square">stop</a> and possible <a href="/Pawn_Push">pawn push</a> <a href="/Target_Square">target square</a> is not controlled by the pawn itself, and could be <a href="/Blockade">blocked</a>. If the square under investigation is occupied, the question arises whether the piece is <a href="/Hanging_Piece">hanging</a> (if controlled exclusively by the opponent side) or <a href="/En_prise">en prise</a>, which is topic of <a href="/Static_Exchange_Evaluation">SEE</a> and <a href="/Quiescence_Search">quiescence search</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#in-evaluation">In Evaluation</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="in-evaluation">In Evaluation</h2>
+<p>Square control is considered in <a href="/Evaluation">evaluating</a> piece <a href="/Mobility">mobility</a> and <a href="/Connectivity">connectivity</a>, <a href="/King_Safety">controls of squares around the king</a> are matter of <a href="/King_Safety">king safety</a> evaluation, and <a href="/Center_Control">center control</a> might be considered as evaluation term in the <a href="/Opening">opening</a> or <a href="/Middlegame">middlegame</a>. Control of <a href="/Pawn_Spans">stop and telestop</a> squares of <a href="/Passed_Pawn">passers</a> is another evaluation topic. Some programs calculate a square control balance as difference of the sums of <a href="/Point_Value">reciprocal piece values</a> of both sides, and further aggregate the controls over all squares, possibly already considering <a href="/Center">center</a>, king areas and passed pawn <a href="/Pawn_Spans">front spans</a> by a weight matrix.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Attack_and_Defend_Maps">Attack and Defend Maps</a></li>
+<li><a href="/Attacks">Attacks</a></li>
+<li><a href="/Center_Control">Center Control</a></li>
+<li><a href="/Color_Weakness">Color Weakness</a></li>
+<li><a href="/Connectivity">Connectivity</a></li>
+<li><a href="/Control_of_Stop_and_Telestop">Control of Stop and Telestop</a></li>
+<li><a href="/En_prise">En prise</a></li>
+<li><a href="/Guard_Heuristic">Guard Heuristic</a></li>
+<li><a href="/Hanging_Piece">Hanging Piece</a></li>
+<li><a href="/Mobility">Mobility</a></li>
+<li><a href="/Piece-Square_Tables">Piece-Square Tables</a></li>
+<li><a href="/Quiescence_Search">Quiescence Search</a></li>
+<li><a href="/Square_Attacked_By">Square Attacked By</a></li>
+<li><a href="/King_Safety">Square Control in King Safety</a></li>
+<li><a href="/SOMA">Square Control in SOMA</a></li>
+<li><a href="/Static_Exchange_Evaluation">Static Exchange Evaluation</a></li>
+<li><a href="/Strategic_Test_Suite">Strategic Test Suite</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Chrilly_Donninger">Chrilly Donninger</a> (<strong>2006</strong>). <em>Plättchen zählen</em>. <a href="https://brigitte-godot.com/wp-content/uploads/2018/03/PlaettchenZaehlen.pdf">pdf</a> (German) » <a href="/Mobility">Mobility</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55214">Binders</a> by <a href="/Lyudmil_Tsvetkov">Lyudmil Tsvetkov</a>, <a href="/CCC">CCC</a>, February 04, 2015 » <a href="/Pawn_Structure">Pawn Structure</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55342">Empty!</a> by <a href="/Lyudmil_Tsvetkov">Lyudmil Tsvetkov</a>, <a href="/CCC">CCC</a>, February 14, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55380">Pawn defence</a> by <a href="/Lyudmil_Tsvetkov">Lyudmil Tsvetkov</a>, <a href="/CCC">CCC</a>, February 18, 2015</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77674">Identifying weak squares</a> by Jon12345, <a href="/CCC">CCC</a>, July 08, 2021</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Chess_strategy#Control_of_the_center">Control of the center | Chess strategy from Wikipedia</a></li>
+<li><a href="http://www.janklare.de/klare/wordpress/?page_id=1078">RKeTZ</a> - Ground Control, <a href="http://www.lokal-harmonie.de/">Lokal Harmonie</a>, <a href="https://en.wikipedia.org/wiki/Ruhrort">Duisburg Ruhrort</a>, April 2016, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p><a href="/Category:Jan_Klare">Jan Klare</a>, <a href="https://nl.wikipedia.org/wiki/Luc_Ex">Luc Ex</a>, <a href="https://de.wikipedia.org/wiki/Michael_Vatcher">Michael Vatcher</a>, <a href="/Category:Achim_Zepezauer">Achim Zepezauer</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/ByzGLlp9sJU" title="YouTube video ByzGLlp9sJU" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=ByzGLlp9sJU">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Squares">Up one Level</a></strong></p>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Piet_Mondrian">Piet Mondrian</a> · <a href="/Category:Jan_Klare">Jan Klare</a> · <a href="/Category:Achim_Zepezauer">Achim Zepezauer</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Square_Control">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

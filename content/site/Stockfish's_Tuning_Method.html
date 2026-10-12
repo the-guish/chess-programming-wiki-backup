@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stockfish's Tuning Method - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Stockfish's Tuning Method</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Automated_Tuning">Automated Tuning</a> * Stockfish's Tuning Method</strong></p>
+<p><strong>Stockfish's Tuning Method</strong> by <a href="/Joona_Kiiski">Joona Kiiski</a>, October 2011 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#introduction">Introduction</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#step-1-single-variable">Step 1. Single variable</a></li>
+<li><a href="#step-2-varying-delta">Step 2. Varying delta</a></li>
+<li><a href="#step-3-multiple-variables">Step 3. Multiple variables</a></li>
+</ol>
+</details></li>
+<li><a href="#pros-and-cons">Pros and Cons</a></li>
+<li><a href="#variable-selection">Variable Selection</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="introduction">Introduction</h2>
+<p>The following tuning method was used to significantly improve <a href="/Stockfish">Stockfish's</a> <a href="/Playing_Strength">playing strength</a> (40-70 ELO points). The method is a practical approach and not mathematically very sound. Because algorithm is very simple, it's very likely already invented a long time ago. No pseudo- or source-code is given, just an idea behind the algorithm.</p>
+<h3 id="step-1-single-variable">Step 1. Single variable</h3>
+<p>Let's assume that we have a single variable x which we want to tune. Current value for x is 100. We assume that this value is quite good (because we already have a strong engine), but not perfect. Next we need to choose delta for x. Delta must be big enough that <span style="background-color: #ececec;">engine(x = 100 - delta)</span> and <span style="background-color: #ececec;">engine(x = 100 + delta)</span> has at least a 1-3 ELO point difference. However delta must not to be too big, because then asymmetries start to play a big role. One just need to use his intuition here. Let's choose delta = 20.</p>
+<p>Now we match engines <span style="background-color: #ececec;">engine(80)</span> and <span style="background-color: #ececec;">engine(120)</span> [self-play]. If engine 120 wins, we tune x slightly upwards. In our tuning sessions We successfully used apply_factor = 0.002. So in that case new value for x would be.</p>
+<p><code>x = 100 + (120 - 100) * 0.002 = 100.04 </code></p>
+<p>Next match would be <span style="background-color: #ececec;">engine(80.004)</span> vs. <span style="background-color: #ececec;">engine(120.04)</span></p>
+<p>In our tuning session we used 30000-100000 super-fast games, before reading final result.</p>
+<h3 id="step-2-varying-delta">Step 2. Varying delta</h3>
+<p>Instead of fixing delta, we fixed <a href="https://en.wikipedia.org/wiki/Standard_deviation">standard deviation</a> of <a href="https://en.wikipedia.org/wiki/Normal_distribution">Gaussian distribution</a> and calculated a <a href="/Pseudorandom_Number_Generator">random value</a> for delta for each iteration. But again one needs to use his intuition to pick a suitable value for standard deviation.</p>
+<h3 id="step-3-multiple-variables">Step 3. Multiple variables</h3>
+<p>Doing this for only one variable at a time would be a way too slow. Instead we used to tune 7-35 variables at the same time. As an example let's say that we have three variables:</p>
+<pre><code> x = 100
+ y = 100 
+ z = 100</code></pre>
+<p>We would then calculate a random delta with sign for each of these variables based on Gaussian distribution. Let's say we get</p>
+<pre><code> x_delta = +15
+ y_delta = -10
+ z_delta = +12</code></pre>
+<p>We then match <span style="background-color: #ececec;">engine(x=115, y=90, z=112)</span> vs. <span style="background-color: #ececec;">engine(x=85, x=110, x=88)</span>. If first engine wins and apply_factor = 0.002 is used, new values are:</p>
+<pre><code> x = 100 + (115 - 100) * 0.002
+ y = 100 + ( 90 - 100) * 0.002
+ z = 100 + (112 - 100) * 0.002</code></pre>
+<p>With 30000-100000 super-fast games, we usually got some improvement compared to only by hand tuned values.</p>
+<h2 id="pros-and-cons">Pros and Cons</h2>
+<p>What actually happens with multiple variables is that most important variables shall dominate and they shall approach their optimal values, while less important variables take "a random walk". In the beginning this increases strength. But after a while important variables stop approaching optimal values and "random walk" takes over and the strength starts to decrease. So the method doesn't converge and it needs to be stopped at "suitable moment". This is a big problem as well as manual selection of deltas (or standard deviation of delta).</p>
+<p>Most other tuning algorithms start "from scratch". Although we know a value which is very close to optimal, they make no use of it. They start matching <span style="background-color: #ececec;">engine(x=0)</span> vs. pool of other engines and <span style="background-color: #ececec;">engine(x=200)</span> vs. pool of other engines. And it takes tens of thousands or hundreds of thousands iteration before they can even reach the current level (x=100) and only after that we can get some improvement. Instead method described in here starts from that "very good" value and attempts to improve it slightly.</p>
+<h2 id="variable-selection">Variable Selection</h2>
+<p>Variable selection is extremely important. for example if you tune each piece-square table value separately, you are doomed the fail, because changing only one value is going to change the strength of the program only very little. So in tuning we end up doing only random walk and the strength of the program only goes slightly downhill.</p>
+<p>But instead using ampli-bias knobs for tables proved to be very successful approach for us. Each value for the table is adjusted using these two knobs like (Here we optimize variables var_bias and var_amplitude):</p>
+<pre><code> new_value = orig_value + var_bias + orig_value * var_amplitude / 100</code></pre>
+<p>Each chess engine is full of different kind of tables and if we can give even "a slight push" for each of these tables, it'll result in considerable increase in the end.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/CLOP">CLOP</a></li>
+<li><a href="/SPSA">SPSA</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/James_C._Spall">James C. Spall</a> (<strong>1998</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/login.jsp?tp=&amp;arnumber=705889&amp;url=http%3A%2F%2Fieeexplore.ieee.org%2Fxpls%2Fabs_all.jsp%3Farnumber%3D705889">Implementation of the Simultaneous Perturbation Algorithm for Stochastic Optimization</a></em>. <a href="/IEEE">IEEE Transactions on Aerospace and Electronic Systems</a>, <a href="http://www.jhuapl.edu/spsa/PDF-SPSA/Spall_Implementation_of_the_Simultaneous.PDF">pdf</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40662">Stockfish's tuning method</a> by <a href="/Joona_Kiiski">Joona Kiiski</a>, <a href="/CCC">CCC</a>, October 07, 2011</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?start=0&amp;t=40662&amp;start=6">Re: Stockfish's tuning method</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/CCC">CCC</a>, October 07, 2011</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54545&amp;start=2">Re: Eval tuning - any open source engines with GA or PBIL?</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, December 06, 2014 <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://github.com/zamar/spsa">SPSA Tuner for Stockfish Chess Engine</a> by <a href="/Joona_Kiiski">Joona Kiiski</a></li>
+<li><a href="http://www.jhuapl.edu/spsa/">SPSA Algorithm</a></li>
+<li><a href="https://hxim.github.io/Stockfish-Evaluation-Guide/">Stockfish Evaluation Guide</a> » <a href="/Evaluation">Evaluation</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Automated_Tuning">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Following text is released under <a href="https://en.wikipedia.org/wiki/Public_domain">public domain</a> and can be freely distributed<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=40662">Stockfish's tuning method</a> by <a href="/Joona_Kiiski">Joona Kiiski</a>, <a href="/CCC">CCC</a>, October 07, 2011<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://github.com/zamar/spsa">SPSA Tuner for Stockfish Chess Engine</a> by <a href="/Joona_Kiiski">Joona Kiiski</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://github.com/zamar/spsa">SPSA Tuner for Stockfish Chess Engine</a> by <a href="/Joona_Kiiski">Joona Kiiski</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="https://www.gerad.ca/nomad/Project/Home.html">NOMAD - A blackbox optimization software</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Stockfish's_Tuning_Method">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

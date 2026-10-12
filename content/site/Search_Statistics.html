@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Search Statistics - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Search Statistics</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Engine_Testing">Engine Testing</a> * Search Statistics</strong></p>
+<p><strong>Search statistics</strong> refers to counting various appearances of interest inside the <a href="/Search">search</a> or <a href="/Evaluation">evaluation</a> routines and to analyze their relationships to eventually spot <a href="/Engine_Testing">bugs</a> or unfavorable conditions in <a href="/Move_Ordering">move ordering</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#node-statistics">Node Statistics</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#cutoffs">Cutoffs</a></li>
+<li><a href="#re-searches">Re-Searches</a></li>
+<li><a href="#root-statistics">Root Statistics</a></li>
+<li><a href="#selectivity">Selectivity</a></li>
+</ol>
+</details></li>
+<li><a href="#tt-statistics">TT Statistics</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1994-">1994 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+</ol>
+</details></li>
+</ol>
+</details><h2 id="node-statistics">Node Statistics</h2>
+<p>Of interest is the appearance of searched <a href="/Node">nodes</a> inside an <a href="/Iterative_Deepening">iterative deepening framework</a> and the ratio of <a href="/Quiescent_Node">quiescent nodes</a>, per <a href="/Depth">depth</a> and/or aggregated, in conjunction with <a href="/Branching_Factor">effective branching factor</a> (EBF) and of course <a href="/Nodes_per_Second">nodes per second</a>.</p>
+<h3 id="cutoffs">Cutoffs</h3>
+<p>Inside <a href="/Alpha-Beta">Alpha-beta</a>- or <a href="/Principal_Variation_Search">PV-search</a> it is of particular interest to count how often a node <a href="/Fail-High">failes high</a> or not, in relation to its <a href="/Node_Types">node types</a>, that is expected <a href="/Node_Types">cut-Nodes</a> or expected <a href="/Node_Types">All-nodes</a>. If a fail-high occurs, it is illuminative to know whether the fail-high move it was tried first, early or late and what <a href="/Move_Ordering">move ordering</a> classification like move from the <a href="/Transposition_Table">transposition table</a>, <a href="/Captures">winning captures</a>, <a href="/Killer_Move">killer moves</a>, etc. was applied.</p>
+<h3 id="re-searches">Re-Searches</h3>
+<p>At <a href="/Node_Types">PV-nodes</a> inside a <a href="/Alpha-Beta">alpha-beta</a>- or <a href="/Principal_Variation_Search">PV-search</a> the number of re-searches does concern, and how often a re-search does improve alpha (or even performs a cutoff) or not.</p>
+<h3 id="root-statistics">Root Statistics</h3>
+<p>The <a href="/Root">Root</a> as distinguished PV-node specially with <a href="/Aspiration_Windows">aspiration window</a> often has its own statistics related to how much relative time (nodes) of the whole <a href="/Iteration">iteration</a> is performed per each root-move, and how often another best move was found. In conjunction with static move properties, score graph by searched depth so far, etc., these statistic based informations may be considered in <a href="/Time_Management">time management</a> to possibly decide about a new iteration.</p>
+<h3 id="selectivity">Selectivity</h3>
+<p>Counting the various <a href="/Extensions">extensions</a>, <a href="/Reductions">reductions</a> and <a href="/Pruning">forward pruning</a> decisions in relation with <a href="/Branching_Factor">effective branching factor</a> might also spot some deficiency inside the search. <span id="TTStatistics"></span></p>
+<h2 id="tt-statistics">TT Statistics</h2>
+<p>Statistics of the <a href="/Transposition_Table">transposition table</a> covers number of probes and stores, fill level, and number of probe hits, likely differentiated by sufficient <a href="/Depth">draft</a> and <a href="/Node_Types">type of stored node</a>.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li>Profiling</li>
+<li><a href="/Match_Statistics">Match Statistics</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Hermann_Kaindl">Hermann Kaindl</a> (<strong>1988</strong>). <em>Useful Statistics from Tournament Programs</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 11, No. 4</a> » <a href="/Merlin">Merlin</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1994-">1994 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.chess/browse_frm/thread/32af80f05abdc805">COMPUTER CHESS: statistics</a> by <a href="/Deniz_Yuret">Deniz Yuret</a>, <a href="/Computer_Chess_Forums">rgcc</a>, October 27, 1994</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=13052">Cutoff Statistics</a> by <a href="/Roland_Pfister">Roland Pfister</a>, <a href="/CCC">CCC</a>, December, 18, 1997</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=92156">A matter of statistics</a> by Tijs van Dam, <a href="/CCC">CCC</a>, January 26, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=115020">Re: The Scalable Search Test / Results of "Der Bringer"</a> by <a href="/Gerrit_Reubold">Gerrit Reubold</a>, <a href="/CCC">CCC</a>, June 18, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=129504">Faster, deeper and more of such...</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, September 14, 2000 » <a href="/Depth">Diminishing Returns</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=143022">Hash table efficiency</a> by <a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a>, <a href="/CCC">CCC</a>, December 05, 2000 » <a href="/Gaviota">Gaviota</a>, <a href="/Transposition_Table">Transposition Table</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=359148">Hash table statistics</a> by Andrew Wagner, <a href="/CCC">CCC</a>, April 08, 2004</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=20562">What is the Ideal Output for Understanding a Chess Engine?</a> by Rick Fadden, <a href="/CCC">CCC</a>, April 07, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=27737">Search statistics</a> by henkf, <a href="/CCC">CCC</a>, May 04, 2009</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=42665">make and unmake stadistics</a> by <a href="/Fermin_Serrano">Fermin Serrano</a>, <a href="/CCC">CCC</a>, February 28, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=45264">Probabilistic approach to optimize search tree</a> by <a href="/Sergei_Markoff">Sergei S. Markoff</a>, <a href="/CCC">CCC</a>, September 22, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49871">Search statistics</a> by <a href="/Robert_Pope">Robert Pope</a>, <a href="/CCC">CCC</a>, October 30, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51075">pruning statistics</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, January 27, 2014 » <a href="/Pruning">Pruning</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61401">Best move statistics</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, September 12, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63280">Move ordering statistics</a> by Sander Maassen vd Brink, <a href="/CCC">CCC</a>, February 26, 2017 » <a href="/Move_Ordering">Move Ordering</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63555">Testing for Move Ordering Improvements</a> by Cheney Nattress, <a href="/CCC">CCC</a>, March 25, 2017 » <a href="/Move_Ordering">Move Ordering</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66335">Komodo 11.2.2 - Initial position until depth 54</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, January 15, 2018 » <a href="/Komodo">Komodo</a>, <a href="/Initial_Position">Initial Position</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66340">Stockfish 8 - Initial position until depth 59</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, January 16, 2018 » <a href="/Stockfish">Stockfish</a></li>
+</ul>
+<p><strong><a href="/Engine_Testing">Up one level</a></strong></p>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Search_Statistics">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

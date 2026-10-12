@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sequential Probability Ratio Test - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Sequential Probability Ratio Test</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Engine_Testing">Engine Testing</a> * Sequential Probability Ratio Test</strong></p>
+<p><strong>Sequential Probability Ratio Test</strong>, or <strong>SPRT</strong>, is a sequential hypothesis testing method. Generally regarded as the most important process in modern engine development, it is used by virtually all top engines today, including <a href="/Stockfish">Stockfish</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#advantages">Advantages</a></li>
+<li><a href="#disadvantages">Disadvantages</a></li>
+<li><a href="#testing-methodology">Testing Methodology</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#performing-an-sprt-test">Performing an SPRT Test</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#preparing-an-sprt-test">Preparing an SPRT Test</a></li>
+<li><a href="#performing-an-sprt-test-with-gainer-bounds">Performing an SPRT Test With Gainer Bounds</a></li>
+<li><a href="#performing-an-sprt-test-with-non-regression-bounds">Performing an SPRT Test With Non-regression Bounds</a></li>
+<li><a href="#common-bounds">Common Bounds</a></li>
+</ol>
+</details></li>
+<li><a href="#minimum-uci-requirements">Minimum UCI Requirements</a></li>
+<li><a href="#external-links">External Links</a></li>
+</ol>
+</details><h2 id="advantages">Advantages</h2>
+<p>Compared to fixed games:</p>
+<ul>
+<li>SPRT guarantees that the end result is statistically significant, and therefore can be trusted</li>
+<li>SPRT does not require prior knowledge of how large the sample size should be</li>
+</ul>
+<p>Compared to test positions:</p>
+<ul>
+<li>SPRT simulates real game play</li>
+<li>SPRT allows for statistical certainty that a patch gains strength</li>
+<li>SPRT provides a large sample size and low uncertainty</li>
+<li>SPRT allows time management testing</li>
+<li>SPRT is proven to work</li>
+</ul>
+<h2 id="disadvantages">Disadvantages</h2>
+<ul>
+<li>No local GUI support (Refer to <a href="/OpenBench">OpenBench</a> for self-hosted web application)</li>
+</ul>
+<h2 id="testing-methodology">Testing Methodology</h2>
+<p>Generally, SPRT is performed on every proposed functional change. Some non-functional speedup changes can also be performed using SPRT, although a speedup script may take less resources than a SPRT test.</p>
+<p>In order to perform an SPRT test, four parameters are generally provided:</p>
+<ul>
+<li><strong>Elo_0</strong> - This represents our null hypothesis that the elo difference is exactly <strong>Elo_0</strong>.</li>
+<li><strong>Elo_1</strong> - This represents our alternative hypothesis that the elo difference is exactly <strong>Elo_1</strong>.</li>
+<li><strong>alpha</strong> - This represents our tolerated type I (false positive) error rate.</li>
+<li><strong>beta</strong> - This represents our tolerated type II (false negative) error rate.</li>
+</ul>
+<p>First, two <strong>LLR (Log Likelihood Ratio)</strong> bounds are calculated from alpha and beta. The log likelihood ratio is the logarithmic value of <span style="background-color: #e0e0e0;">(likelihood that Elo = Elo_1) / (likelihood that Elo = Elo_0)</span>. When the log likelihood ratio is positive, then the likelihood that Elo=Elo_1 is higher than that of Elo=Elo_0, and vice versa. As more games are played, the LLR is updated continuously. The SPRT test will keep going until the LLR value reaches either bound. At which point, the test can guarantee, within the specified degree of confidence, whether or not a feature is more likely to change the strength of the by engine Elo_1 Elo than it is to change the strength of the engine by Elo_0 Elo. The choice of Elo_0 and Elo_1 is important as it both influences the number of tests to be run on, and the Elo gain needed for a patch to pass a SPRT test.</p>
+<p>Note that the idea of using SPRTs to test changes is to be able stop the test when a statistically significant result is obtained, so when applicable some very large number of games (say, 999999) should be specified to avoid the test stopping prematurely.</p>
+<p>There are many tools one can use to perform SPRT tests, the most popular ones are <a href="/OpenBench">OpenBench</a>, <a href="/Cutechess-cli">cutechess-cli</a>, and <a href="/Fast-chess">fast-chess</a>.</p>
+<h2 id="performing-an-sprt-test">Performing an SPRT Test</h2>
+<p>The following sections describe the procedure for local SPRT testing. For distributed SPRT testing, refer to <a href="/OpenBench">OpenBench</a>.</p>
+<h3 id="preparing-an-sprt-test">Preparing an SPRT Test</h3>
+<p>In order to perform an SPRT test on the command line, there some programs and resources you would need.</p>
+<ul>
+<li>A <a href="/Tournament_Manager">Tournament Manager</a> that supports SPRT testing. <a href="/Fast-chess">fast-chess</a> is recommended as it supports pentanomial statistics, which can make tests finish faster.</li>
+<li>An opening book (.pgn or .epd, <strong>not</strong> .bin). Some opening books can be found in the <a href="https://github.com/official-stockfish/books">Stockfish opening books repository</a>. Balanced books such as <a href="https://github.com/official-stockfish/books/blob/master/8moves_v3.pgn.zip">8moves_v3.pgn</a> are recommended for weaker engines, while more biased books such as <a href="https://github.com/official-stockfish/books/blob/master/UHO_Lichess_4852_v1.epd.zip">UHO_Lichess_4852_v1.epd</a> and <a href="https://github.com/AndyGrant/openbench-books/blob/master/Pohl.epd.zip">Pohl.epd</a> are recommended with stronger engines to reduce draw rate.</li>
+</ul>
+<h3 id="performing-an-sprt-test-with-gainer-bounds">Performing an SPRT Test With Gainer Bounds</h3>
+<p>Say you want to introduce <a href="/Late_Move_Reductions">LMR</a> to your <a href="/UCI">UCI</a> engine. Build a binary of your engine with LMR added, and a binary of your base engine (without LMR). We'll call the two binaries engine_LMR and engine_BASE respectively.</p>
+<p>In your shell, run the following command</p>
+<pre><code>.\fast-chess -engine cmd=[Path to engine_LMR] name=engine_LMR -engine cmd=[Path to engine_BASE] name=engine_BASE -each tc=8+0.08 -rounds 15000 -repeat -concurrency [Number of Available Threads] -recover -randomseed -openings file=[Path to Opening Book] format=[Opening book format (pgn or epd)] -sprt elo0=0 elo1=5 alpha=0.05 beta=0.05</code></pre>
+<p>Here, elo0 and elo1 represent the test bounds, while alpha and beta represent the expected alpha and beta errors of the test. The test verifies if the elo difference with the proposed changes is closer to 0 elo or 5 elo. Therefore, if the test passes, we can be reasonably certain that it brings more than 0 elo.</p>
+<h3 id="performing-an-sprt-test-with-non-regression-bounds">Performing an SPRT Test With Non-regression Bounds</h3>
+<p>Say you want to remove <a href="/Countermove_Heuristic">Countermove Heuristic</a> from your <a href="/UCI">UCI</a> engine, as it takes a large amount of code and does not necessarily gain elo. To verify that the removal doesn't lose elo below an accepted amount, a non-regression test is performed. Build a binary of your engine with Countermove Heuristic removed, and a binary of your base engine (without removal of Countermove Heuristic). We'll call the two binaries engine_NOCM and engine_BASE respectively.</p>
+<pre><code>.\fast-chess -engine cmd=[Path to engine_NOCM] name=engine_NOCM -engine cmd=[Path to engine_BASE] name=engine_BASE -each tc=8+0.08 -rounds 15000 -repeat -concurrency [Number of Available Threads] -recover -randomseed -openings file=[Path to Opening Book] format=[Opening book format (pgn or epd)] -sprt elo0=-5 elo1=0 alpha=0.05 beta=0.05</code></pre>
+<p>Here, the bounds [-5, 0] are a flipped version of the gainer bounds. This is equivalent to testing engine_BASE against engine_NOCM (notice the reverse order) with [0, 5] bounds. If the test fails, it means that Counter Moves is still worth more than an acceptable amount of elo, therefore it should not be simplified.</p>
+<h3 id="common-bounds">Common Bounds</h3>
+<p>A good choice of bounds balances the expected number of games and the lowest elo gain needed for passing. Due to a variety of factors, including elo compression, bounds are generally looser for weaker engines and tighter for stronger engines.</p>
+<table>
+<thead>
+<tr>
+<th>Gainer Bounds</th>
+<th>Non-regression Bounds</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[0.5, 2.5]</td>
+<td>[-1.75, 0.25]</td>
+<td>Stockfish LTC</td>
+</tr>
+<tr>
+<td>[0, 2]</td>
+<td>[-1.75, 0.25]</td>
+<td>Stockfish STC</td>
+</tr>
+<tr>
+<td>[0, 3]</td>
+<td>[-3, 1]</td>
+<td>Top 30 engines</td>
+</tr>
+<tr>
+<td>[0, 5]</td>
+<td>[-5, 0]</td>
+<td>Top 200 engines</td>
+</tr>
+<tr>
+<td>[0, 10]</td>
+<td>[-10, 0]</td>
+<td>All other engines</td>
+</tr>
+</tbody>
+</table>
+<h2 id="minimum-uci-requirements">Minimum UCI Requirements</h2>
+<p>For SPRT testing platforms such as <a href="/Cutechess-cli">cutechess-cli</a>, <a href="/Fast-chess">fast-chess</a> and <a href="/OpenBench">OpenBench</a>, the minimum UCI requirements are as follows.</p>
+<p>Commands to support:</p>
+<pre><code>go wtime &lt;&gt; btime &lt;&gt; winc &lt;&gt; binc &lt;&gt;
+position startpos [moves &lt;moves...&gt;]
+position fen &lt;fen&gt; [moves &lt;moves...&gt;]
+quit
+uci
+ucinewgame
+isready</code></pre>
+<h2 id="external-links">External Links</h2>
+<p><a href="https://tests.stockfishchess.org/sprt_calc">Chess SPRT Calculator</a> » <a href="/Stockfish">Fishtest</a></p>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Sequential_Probability_Ratio_Test">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: ShawnXu, Ciekce.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

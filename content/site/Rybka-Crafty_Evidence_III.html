@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rybka-Crafty Evidence III - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Rybka-Crafty Evidence III</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Organizations">Organizations</a> * <a href="/ICGA">ICGA</a> * <a href="/ICGA_Investigations">Investigations</a> * <a href="/Rybka_Controversy">Rybka Controversy</a> * <a href="/Pre-Fruit_Rybka_and_Crafty">Pre-Fruit Rybka and Crafty</a> * Repeated zeroing of a Byte when clearing Pawn Hash</strong></p>
+<p><strong><a href="/Rybka-Crafty_Evidence_II">&lt; Prev</a> <a href="/Rybka-Crafty_Evidence_IV">Next &gt;</a></strong></p>
+<p>by <a href="/Mark_Watkins">Mark Watkins</a></p>
+<p>The <a href="/Crafty">Crafty</a> code varies over time, particularly with the data structure. The code appears in three places in Crafty, in init.c, in option.c, and in utility.c. The bug in question was fixed in init.c for 19.1 and in option.c for 19.16 (and never in utility.c until the nomenclature was re-done in 22.0). The pre-Beta Rybka executable also has three instances of such clearings, of which two contain the repeated zeroing of a specific byte. Note that the pre-Beta Rybka code has many distinctions from that of Crafty, not only in the byte-structure, but also in that not all structure fields are zeroed.</p>
+<p>See also: <a href="https://icga.wikispaces.com/message/view/pre-fruit+Rybka+and+Crafty/35312878">Why wouldn't the compiler remove the duplicate write?</a></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#example-crafty-code">Example Crafty code</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#code-from-pre-beta-rybka-executable">Code from pre-Beta Rybka executable</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#first-instance">First Instance</a></li>
+<li><a href="#second-instance">Second Instance</a></li>
+<li><a href="#third-instance">Third Instance</a></li>
+</ol>
+</details></li>
+</ol>
+</details><h2 id="example-crafty-code">Example Crafty code</h2>
+<p>(19.0 from option.c)</p>
+<pre><code>      pawn_hash_mask=(1&lt;&lt;log_pawn_hash)-1;
+      for (i=0;i&lt;pawn_hash_table_size;i++) {
+        (pawn_hash_table+i)-&gt;key=0;
+        (pawn_hash_table+i)-&gt;p_score=0;
+        (pawn_hash_table+i)-&gt;protected=0;
+        (pawn_hash_table+i)-&gt;black_defects_k=0;
+        (pawn_hash_table+i)-&gt;black_defects_q=0;
+        (pawn_hash_table+i)-&gt;white_defects_k=0;
+        (pawn_hash_table+i)-&gt;white_defects_q=0;
+        (pawn_hash_table+i)-&gt;passed_w=0;
+        (pawn_hash_table+i)-&gt;passed_w=0;            // repeated zeroing
+        (pawn_hash_table+i)-&gt;outside=0;
+        (pawn_hash_table+i)-&gt;candidates_w=0;
+        (pawn_hash_table+i)-&gt;candidates_b=0;
+      }</code></pre>
+<h2 id="code-from-pre-beta-rybka-executable">Code from pre-Beta Rybka executable</h2>
+<h3 id="first-instance">First Instance</h3>
+<pre><code>0x00446dc7:     xor    %ebx,%ebx               # set ebx to zero -- this will be stored everywhere
+[...]
+0x00446e6d:     mov    0x6b897c,%ecx           # load log_pawn_hash
+0x00446e73:     mov    $0x1,%eax
+0x00446e78:     shl    %cl,%eax                # (1 &lt;&lt; log_pawn_hash)
+0x00446e7a:     xor    %ecx,%ecx
+0x00446e7c:     dec    %eax                    # subtract 1 from it
+0x00446e7d:     mov    %eax,0x6b8994
+0x00446e82:     cmp    %ebx,0x6b8990           # setup loop
+0x00446e88:     jle    0x446ef8
+0x00446e8a:     xor    %eax,%eax
+0x00446e8c:     jmp    0x446ea0
+0x00446e8e:     mov    0x6b8998,%edx
+0x00446e94:     jmp    0x446ea0
+0x00446e96:     lea    0x0(%esp),%esp
+0x00446e9d:     lea    0x0(%ecx),%ecx
+0x00446ea0:     mov    %ebx,(%eax,%edx,1)     # 4 bytes @ 0x0
+0x00446ea3:     mov    0x6b8998,%edx
+0x00446ea9:     mov    %ebx,0x4(%eax,%edx,1)  # 4 bytes @ 0x4 [might be part of 8-byte struct with above]
+0x00446ead:     mov    0x6b8998,%edx
+0x00446eb3:     mov    %bx,0x8(%eax,%edx,1)   # 2 bytes @ 0x8
+0x00446eb8:     mov    0x6b8998,%edx
+0x00446ebe:     mov    %bl,0xf(%eax,%edx,1)   # 1 byte @ 0xf
+0x00446ec2:     mov    0x6b8998,%edx
+0x00446ec8:     mov    %bl,0xf(%eax,%edx,1)   # repeated clearance of byte 0xf
+0x00446ecc:     mov    0x6b8998,%edx
+0x00446ed2:     mov    %bl,0xa(%eax,%edx,1)   # 1 byte @ 0xa
+0x00446ed6:     mov    0x6b8998,%edx
+0x00446edc:     mov    %bl,0x11(%eax,%edx,1)  # 1 byte @ 0x11
+0x00446ee0:     mov    0x6b8998,%edx
+0x00446ee6:     mov    %bl,0x10(%eax,%edx,1)  # 1 byte @ 0x10
+0x00446eea:     mov    0x6b8990,%edx
+0x00446ef0:     inc    %ecx
+0x00446ef1:     add    $0x18,%eax             # struct has 24 bytes
+0x00446ef4:     cmp    %edx,%ecx
+0x00446ef6:     jl     0x446e8e
+0x00446ef8:     pop    %ebx
+0x00446ef9:     pop    %esi
+0x00446efa:     ret    $0x4
+0x00446efd:     int3   </code></pre>
+<h3 id="second-instance">Second Instance</h3>
+<pre><code>0x00451fe5:     xor    %ecx,%ecx                  # ecx is zero, will set all bytes to this
+[...]
+0x004520e8:     xor    %eax,%eax                  # set up loop
+0x004520ea:     lea    0x0(%ebx),%ebx
+0x004520f0:     mov    0x6b8998,%esi
+0x004520f6:     mov    %ecx,(%eax,%esi,1)         # 4 bytes @ 0x0
+0x004520f9:     mov    0x6b8998,%esi
+0x004520ff:     mov    %ecx,0x4(%eax,%esi,1)      # 4 bytes @ 0x4
+0x00452103:     mov    0x6b8998,%esi
+0x00452109:     mov    %cx,0x8(%eax,%esi,1)       # 2 bytes @ 0x8
+0x0045210e:     mov    0x6b8998,%esi
+0x00452114:     mov    %cl,0xf(%eax,%esi,1)       # 1 byte @ 0xf
+0x00452118:     mov    0x6b8998,%esi
+0x0045211e:     mov    %cl,0xe(%eax,%esi,1)       # 1 byte @ 0xe [not a repeat of 0xf]
+0x00452122:     mov    0x6b8998,%esi
+0x00452128:     mov    %cl,0xa(%eax,%esi,1)       # 1 byte @ 0xa
+0x0045212c:     mov    0x6b8998,%esi
+0x00452132:     mov    %cl,0x11(%eax,%esi,1)      # 1 byte @ 0x11
+0x00452136:     mov    0x6b8998,%esi
+0x0045213c:     mov    %cl,0x10(%eax,%esi,1)      # 1 byte @ 0x10
+0x00452140:     mov    0x6b8990,%esi
+0x00452146:     inc    %edx
+0x00452147:     add    $0x18,%eax                 # struct has 24 bytes
+0x0045214a:     cmp    %esi,%edx
+0x0045214c:     jl     0x4520f0
+0x0045214e:     pop    %esi
+0x0045214f:     ret    </code></pre>
+<p>Prior to this in the pre-Beta Rybka code there is a clearing of the general hash table, and similarly in Crafty's init.c there is a clearing of such a table preceding the pawn hash clearance. However, this pre-Beta Rybka has 24 byte entries in the general hash rather than the 16 bytes of Crafty, so there is some distinction.</p>
+<h3 id="third-instance">Third Instance</h3>
+<pre><code>0x0045c8b5:     xor    %ecx,%ecx                       # ecx set to 0, will store in all bytes
+[...]
+0x0045c9a7:     xor    %eax,%eax
+0x0045c9a9:     lea    0x0(%esp),%esp                  # loop start
+0x0045c9b0:     mov    0x6b8998,%esi
+0x0045c9b6:     mov    %ecx,(%eax,%esi,1)              # 4 bytes @ 0x0
+0x0045c9b9:     mov    0x6b8998,%esi
+0x0045c9bf:     mov    %ecx,0x4(%eax,%esi,1)           # 4 bytes @ 0x4
+0x0045c9c3:     mov    0x6b8998,%esi
+0x0045c9c9:     mov    %cx,0x8(%eax,%esi,1)            # 2 bytes @ 0x8
+0x0045c9ce:     mov    0x6b8998,%esi
+0x0045c9d4:     mov    %cl,0xf(%eax,%esi,1)            # 1 byte @ 0xf
+0x0045c9d8:     mov    0x6b8998,%esi
+0x0045c9de:     mov    %cl,0xf(%eax,%esi,1)            # 1 byte @ 0xf, repeating the previous
+0x0045c9e2:     mov    0x6b8998,%esi
+0x0045c9e8:     mov    %cl,0xa(%eax,%esi,1)            # 1 byte @ 0xa
+0x0045c9ec:     mov    0x6b8998,%esi
+0x0045c9f2:     mov    %cl,0x11(%eax,%esi,1)           # 1 byte @ 0x11
+0x0045c9f6:     mov    0x6b8998,%esi
+0x0045c9fc:     mov    %cl,0x10(%eax,%esi,1)           # 1 byte @ 0x10
+0x0045ca00:     mov    0x6b8990,%esi
+0x0045ca06:     inc    %edx
+0x0045ca07:     add    $0x18,%eax                      # struct has 18 bytes
+0x0045ca0a:     cmp    %esi,%edx
+0x0045ca0c:     jl     0x45c9b0                        # END LOOP
+0x0045ca0e:     mov    0x6b8d10,%eax                   # stores 0 in an 8-byte struct
+0x0045ca13:     mov    %ecx,0xe28(%eax)                # possibly this corresponds
+0x0045ca19:     mov    0x6b8d10,%edx                   # to &quot;local[0]-&gt;pawn_score.key=0;&quot;
+0x0045ca1f:     mov    %ecx,0xe2c(%edx)                # in Crafty&#39;s utility.c
+0x0045ca25:     pop    %esi                            
+0x0045ca26:     ret    </code></pre>
+<p><strong><a href="/Pre-Fruit_Rybka_and_Crafty">Up one level</a></strong></p>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Rybka-Crafty_Evidence_III">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

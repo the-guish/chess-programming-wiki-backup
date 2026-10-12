@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SISSY Bitboards - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">SISSY Bitboards</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * <a href="/Sliding_Piece_Attacks">Sliding Piece Attacks</a> * SISSY Bitboards</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6c/Paul_Klee%2C_Hauptweg_und_Nebenwege%2C_1929%2C_%C3%96l_auf_Leinwand%2C_83%2C7_x_67%2C5_cm%2C_Museum_Ludwig_1976.jpg" alt="Paul Klee - Hauptweg und Nebenwege, 1929 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Paul_Klee">Paul Klee</a> - Hauptweg und Nebenwege, 1929 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="/Category:Paul_Klee">Paul Klee</a> - <a href="https://commons.wikimedia.org/wiki/File:Paul_Klee,_Hauptweg_und_Nebenwege,_1929,_%C3%96l_auf_Leinwand,_83,7_x_67,5_cm,_Museum_Ludwig_1976.jpg">Hauptweg und Nebenwege</a>, 1929, <a href="https://en.wikipedia.org/wiki/Wikimedia_Commons">Wikimedia Commons</a>, <a href="https://en.wikipedia.org/wiki/Museum_Ludwig">Museum Ludwig</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>SISSY Bitboards</strong> (Split Index Super Set Yielding),<br />
+a new and interesting approach to determine sliding piece attacks devised by <a href="/Michael_Sherwin">Michael Sherwin</a>, introduced and discussed in <a href="/CCC">CCC</a> in February 2020 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> as an improvement of his <a href="/Sherwin_Bitboards">Sherwin Bitboards</a>. SISSY bitboards apply the occupancy lookup <a href="/Ranks">rank</a> by rank to <a href="/General_Setwise_Operations">intersect</a> supersets of the attack bitboards from the same square considering blocking pieces on that particular rank only. While using eight lookups to intersect sounds expensive on the first glance, SISSY Bitboards yields up to eight <a href="/Direction">ray-directions</a> of a queen in one run with cheap instructions and high <a href="https://en.wikipedia.org/wiki/Instructions_per_cycle">IPC</a> potential, and thus may be an alternative for <a href="/Magic_Bitboards">magic bitboards</a> on architectures with slow 64-bit multiplication, in particular for the queen.</p>
+<table>
+<tbody>
+<tr>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6" style="--wiki-img-w:220px"><a href="/Square_Mapping_Considerations"><img src="/assets/Cpwmappinghint.JPG" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></a></span></td>
+<td><p><em>Code samples and bitboard diagrams rely on <a href="/Square_Mapping_Considerations">Little endian file and rank mapping</a></em>.</p></td>
+</tr>
+</tbody>
+</table>
+
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#queen-attacks">Queen Attacks</a></li>
+<li><a href="#union-bitboard">Union Bitboard</a></li>
+<li><a href="#bishop-attacks">Bishop Attacks</a></li>
+<li><a href="#rook-attacks">Rook Attacks</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="queen-attacks">Queen Attacks</h2>
+<p>The general SISSY attack getter requires a 3-dimensional 1MByte lookup table, with pre-initialized attack bitboards indexed by 3-bit rank index, 6-bit square, 8-bit rank occupancy.</p>
+<pre><code>U64 qss[8][64][256]; 
+
+U64 queenAttacks(U64 occ, enumSquare sq) {  
+  return                             
+    qss[0][sq][ occ        &amp; 255] &amp;  
+    qss[1][sq][(occ &gt;&gt;  8) &amp; 255] &amp;  
+    qss[2][sq][(occ &gt;&gt; 16) &amp; 255] &amp;  
+    qss[3][sq][(occ &gt;&gt; 24) &amp; 255] &amp;  
+    qss[4][sq][(occ &gt;&gt; 32) &amp; 255] &amp;  
+    qss[5][sq][(occ &gt;&gt; 40) &amp; 255] &amp;  
+    qss[6][sq][(occ &gt;&gt; 48) &amp; 255] &amp;  
+    qss[7][sq][(occ &gt;&gt; 56) &amp; 255] ;  
+}</code></pre>
+<p>The following sample demonstrates how to determine queen attacks. The intersection of the eight split index addressed attack bitboards yields the desired queen attack bitboard (red squares attacked by queen, blue reset due to blocker): <span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:267px"><a href="http://www.carinajorgensen.com/Chess/queensstar.php" target="_blank" rel="noopener noreferrer"><img src="/assets/Queen's_Star.jpg" alt="Carina Jørgensen, Queen&amp;#39;s Star" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Carina Jørgensen, Queen's Star</span></span> <div class="chess-fen" data-fen="...\[.\]...{k}/{q}..\[.\]..{p}./.{p}.\[.\].\[p\].p/..\[n..\].../\[...\](Q)\[.N\]{..}/P.\[P..\].../.{P}.\[K\].\[.\]P./{.}..{.}..\[.\]."><code>...[.]...{k}/{q}..[.]..{p}./.{p}.[.].[p].p/..[n..].../[...](Q)[.N]{..}/P.[P..].../.{P}.[K].[.]P./{.}..{.}..[.].</code></div></p>
+<p><code>7k/q5p1/1p3p1p/2n5/3Q1N2/P1P5/1P1K2P1/8 w - - </code><br />
+<code>occ = 0x8041A20428054A00</code></p>
+<pre><code>    [7][d4][0x80]     [6][d4][0x41]     [5][d4][0xA2]     [4][d4][0x04]  
+   . . . 1 . . . 1*  . . . 1 . . . 0   . . . 1 . . . 0   . . . 1 . . . 1
+   1 . . 1 . . 1 .   1 . . 1 . . 1 .*  0 . . 1 . . 0 .   0 . . 1 . . 1 .
+   . 1 . 1 . 1 . .   . 1 . 1 . 1 . .   . 1 . 1 . 1 . .*  . 0 . 1 . 1 . .
+   . . 1 1 1 . . . &amp; . . 1 1 1 . . . &amp; . . 1 1 1 . . . &amp; . . 1 1 1 . . .* 
+   1 1 1 Q 1 1 1 1   1 1 1 Q 1 1 1 1   1 1 1 Q 1 1 1 1   1 1 1 Q 1 1 1 1
+   . . 1 1 1 . . .   . . 1 1 1 . . .   . . 1 1 1 . . .   . . 1 1 1 . . .
+   . 1 . 1 . 1 . .   . 1 . 1 . 1 . .   . 1 . 1 . 1 . .   . 1 . 1 . 1 . .
+   1 . . 1 . . 1 .   1 . . 1 . . 1 .   1 . . 1 . . 1 .   1 . . 1 . . 1 .
+
+    [3][d4][0x28]     [2][d4][0x05]     [1][d4][0x4a]     [0][d4][0x00] 
+   . . . 1 . . . 1   . . . 1 . . . 1   . . . 1 . . . 1   . . . 1 . . . 1
+   1 . . 1 . . 1 .   1 . . 1 . . 1 .   1 . . 1 . . 1 .   1 . . 1 . . 1 .
+   . 1 . 1 . 1 . .   . 1 . 1 . 1 . .   . 1 . 1 . 1 . .   . 1 . 1 . 1 . .
+ &amp; . . 1 1 1 . . . &amp; . . 1 1 1 . . . &amp; . . 1 1 1 . . . &amp; . . 1 1 1 . . .
+   1 1 1 Q 1 1 0 0*  1 1 1 Q 1 1 1 1   1 1 1 Q 1 1 1 1   1 1 1 Q 1 1 1 1
+   . . 1 1 1 . . .   . . 1 1 1 . . .*  . . 1 1 1 . . .   . . 1 1 1 . . .
+   . 1 . 1 . 1 . .   . 0 . 1 . 1 . .   . 1 . 1 . 1 . .*  . 1 . 1 . 1 . .
+   1 . . 1 . . 1 .   0 . . 1 . . 1 .   0 . . 0 . . 1 .   1 . . 1 . . 1 .*
+  
+   . . . 1 . . . 0 
+   0 . . 1 . . 0 . 
+   . 0 . 1 . 1 . . 
+ = . . 1 1 1 . . . 
+   1 1 1 Q 1 1 0 0 
+   . . 1 1 1 . . . 
+   . 0 . 1 . 1 . . 
+   0 . . 0 . . 1 . </code></pre>
+<p>Since queens may appear on file A and H with attacks on that outer files, a reduction of the occupancy index range due to the <a href="/First_Rank_Attacks">inner six bits</a> is not possible for queens. We will elaborate on reducing occupancy index range possibilities for bishops and rooks later. However, for queens, one may skip the outer ranks if combined with a <a href="/First_Rank_Attacks">general rank lookup</a>.</p>
+<h2 id="union-bitboard">Union Bitboard</h2>
+<p>Rather then using shift/and instructions to get the rank-wise occupancies, and similar to <a href="/Sherwin_Bitboards">Sherwin Bitboards</a>, one may use a <a href="/C">union</a> of a bitboard and a struct or array of eight <a href="/Byte">bytes</a> (Portability concerning <a href="/Endianness">endianness</a> is an issue), to appear the code looking simpler.</p>
+<pre><code>typedef unsigned char U08;
+struct bb8 {U08 r1; U08 r2; U08 r3; U08 r4; U08 r5; U08 r6; U08 r7; U08 r8;};
+union bbu {U64 b64; bb8 b08;};
+
+U64 qss[8][64][256]; // 1M
+
+U64 queenAttacks(U64 occ, enumSquare sq) {
+  bbu o; o.b64 = occ;
+  return 
+    qss[0][sq][o.b08.r1] &amp;
+    qss[1][sq][o.b08.r2] &amp;
+    qss[2][sq][o.b08.r3] &amp;
+    qss[3][sq][o.b08.r4] &amp;
+    qss[4][sq][o.b08.r5] &amp;
+    qss[5][sq][o.b08.r6] &amp;
+    qss[6][sq][o.b08.r7] &amp;
+    qss[7][sq][o.b08.r8];
+}</code></pre>
+<p>Targeting <a href="/X86-64">X86-64</a>, the generated <a href="/Assembly">assembly</a> is likely similar to the above shift/and255 code <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>.</p>
+<pre><code>queenAttacks(unsigned long long, int):                     # @queenAttacks(unsigned long long, int)
+        mov     rdx, rdi
+        mov     rcx, rdi
+        shr     rcx, 56
+        movsxd  rsi, esi
+        movzx   edi, dl
+        shl     rsi, 11
+        movzx   eax, dh
+        mov     rax, qword ptr [rsi + 8*rax + qss+131072]
+        and     rax, qword ptr [rsi + 8*rdi + qss]
+        mov     rdi, rdx
+        shr     rdi, 13
+        and     edi, 2040
+        and     rax, qword ptr [rsi + rdi + qss+262144]
+        mov     rdi, rdx
+        shr     rdi, 21
+        and     edi, 2040
+        and     rax, qword ptr [rsi + rdi + qss+393216]
+        mov     rdi, rdx
+        shr     rdi, 29
+        and     edi, 2040
+        and     rax, qword ptr [rsi + rdi + qss+524288]
+        mov     rdi, rdx
+        shr     rdi, 37
+        and     edi, 2040
+        and     rax, qword ptr [rsi + rdi + qss+655360]
+        shr     rdx, 45
+        and     edx, 2040
+        and     rax, qword ptr [rsi + rdx + qss+786432]
+        and     rax, qword ptr [rsi + 8*rcx + qss+917504]
+        ret</code></pre>
+<h2 id="bishop-attacks">Bishop Attacks</h2>
+<p>Taking advantage of the <a href="/First_Rank_Attacks">inner six bits</a> optimization for SISSY bishop attacks, but still much memory and computation compared to other techniques:</p>
+<pre><code>U64 bss[6][64][64]; // 192 K
+
+U64 bishopAttacks(U64 occ, enumSquare sq) {
+  return
+    bss[0][sq][(occ &gt;&gt;  9) &amp; 63] &amp;  // 2nd rank
+    bss[1][sq][(occ &gt;&gt; 17) &amp; 63] &amp;  
+    bss[2][sq][(occ &gt;&gt; 25) &amp; 63] &amp;  
+    bss[3][sq][(occ &gt;&gt; 33) &amp; 63] &amp;  
+    bss[4][sq][(occ &gt;&gt; 41) &amp; 63] &amp;  
+    bss[5][sq][(occ &gt;&gt; 49) &amp; 63] ;  // 7th rank
+}    </code></pre>
+<p>There is a more recent attempt to half the number of lookups by <a href="/Martin_Sedlak">Martin Sedlak</a> but using much larger tables <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>.</p>
+<h2 id="rook-attacks">Rook Attacks</h2>
+<p>If combined with the <a href="/First_Rank_Attacks">rank lookup</a> for SISSY fileAttacks only, one can dense the occupy index range to 2, considering only blockers on the same file.</p>
+<pre><code>U64 rss[6][64][2];  // 6K
+
+U64 fileAttacks(U64 occ, enumSquare sq) { 
+  occ &gt;&gt;= (sq &amp; 7); // shift occupancy to A file
+  return
+    rss[0][sq][(occ &gt;&gt;  8) &amp; 1] &amp;  // 2nd rank
+    rss[1][sq][(occ &gt;&gt; 16) &amp; 1] &amp;  
+    rss[2][sq][(occ &gt;&gt; 24) &amp; 1] &amp;  
+    rss[3][sq][(occ &gt;&gt; 32) &amp; 1] &amp;  
+    rss[4][sq][(occ &gt;&gt; 40) &amp; 1] &amp;  
+    rss[5][sq][(occ &gt;&gt; 48) &amp; 1] ;  // 7th rank
+}    </code></pre>
+<p>One may try some more index trickery for instance considering 3 ranks each, for an upper and lower half,</p>
+<pre><code>U64 rss[2][64][8];  // 8K
+
+U64 fileAttacks(U64 occ, enumSquare sq) { 
+  occ &gt;&gt;= (sq &amp; 7); // shift occupancy to A file
+  return
+    rss[0][sq][((occ&gt;&gt;22)&amp;4) | ((occ&gt;&gt;15)&amp;2) | ((occ&gt;&gt; 8)&amp;1)] &amp;  // rank 4,3,2
+    rss[1][sq][((occ&gt;&gt;46)&amp;4) | ((occ&gt;&gt;39)&amp;2) | ((occ&gt;&gt;32)&amp;1)];   // rank 7,6,5
+}</code></pre>
+<p>One step further, to combine the occupancy to one six-bit index is already quite similar to <a href="/Kindergarten_Bitboards">Kindergarten File Attacks</a>, in particular <a href="/Zach_Wegner">Zach Wegner's</a> <a href="/Kindergarten_Bitboards">32-bit Version</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a></p>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73063">New RookAttacks() - possibly</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/CCC">CCC</a>, February 12, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73083">Split Index Super Set Yielding (SISSY) Bitboards</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/CCC">CCC</a>, February 13, 2020</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73083&amp;start=46">Re: Split Index Super Set Yielding (SISSY) Bitboards</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/CCC">CCC</a>, February 13, 2021</p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73083&amp;start=55">Re: Split Index Super Set Yielding (SISSY) Bitboards</a> by <a href="/Martin_Sedlak">Martin Sedlak</a>, <a href="/CCC">CCC</a>, February 14, 2021</p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Sliding_Piece_Attacks">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73083">Split Index Super Set Yielding (SISSY) Bitboards</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/CCC">CCC</a>, February 13, 2020<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://godbolt.org/">Compiler Explorer</a> with x86-64 clang (experimental - Wlifetime), -O3<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73083&amp;start=55">Re: Split Index Super Set Yielding (SISSY) Bitboards</a> by <a href="/Martin_Sedlak">Martin Sedlak</a>, <a href="/CCC">CCC</a>, February 14, 2021<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.open-aurec.com/wbforum/viewtopic.php?topic_view=threads&amp;p=26851&amp;t=4523">Zach's tricky 32-bit approach</a> by <a href="/Zach_Wegner">Zach Wegner</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, August 22, 2006<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Paul_Klee">Paul Klee</a> · <a href="/Category:Carina_Jørgensen">Carina Jørgensen</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/SISSY_Bitboards">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

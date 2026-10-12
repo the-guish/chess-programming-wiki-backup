@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SPSA - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">SPSA</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Programming">Programming</a> * <a href="/Algorithms">Algorithms</a> * SPSA</strong></p>
+<p><strong>SPSA</strong>, (Simultaneous Perturbation Stochastic Approximation)<br />
+a <a href="https://en.wikipedia.org/wiki/Stochastic_approximation">stochastic approximation</a> algorithm devised in the late 80s <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> and 90s by <a href="/James_C._Spall">James C. Spall</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>. It is an extension of the Finite Difference Stochastic Approximation (<strong>FDSA</strong>) algorithm aka <a href="https://en.wikipedia.org/wiki/Stochastic_approximation#Kiefer-Wolfowitz_algorithm">Kiefer-Wolfowitz algorithm</a> introduced in 1952 by <a href="/Mathematician">Jack Kiefer</a> and <a href="/Mathematician">Jacob Wolfowitz</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>, on the other hand motivated by the publication of the <a href="https://en.wikipedia.org/wiki/Stochastic_approximation#Robbins.E2.80.93Monro_algorithm">Robbins-Monro algorithm</a> in 1951 <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>.</p>
+<p>The SPSA algorithm is suited for high-dimensional <a href="https://en.wikipedia.org/wiki/Optimization_problem">optimization problems</a> giving an <a href="https://en.wikipedia.org/wiki/Loss_function">objective function</a> of a <a href="https://en.wikipedia.org/wiki/Dimension">p-dimensional</a> vector of adjustable weights, <a href="https://en.wikipedia.org/wiki/Theta">Theta</a> or Θ, using a <a href="https://en.wikipedia.org/wiki/Gradient">gradient</a> <a href="https://en.wikipedia.org/wiki/Approximation">approximation</a> that requires only N+1 or 2N objective function measurements over all N <a href="/Iteration">iterations</a> regardless of the dimension of the optimization problem - opposed to FDSA, which needs p + 1 objective function measurements or simulations per step. At each iteration, a simultaneous <a href="https://en.wikipedia.org/wiki/Perturbation_theory">perturbation</a> vector with mutually independent zero-mean <a href="/Pseudorandom_Number_Generator">random variables</a> is generated, a good choice for each delta is the <a href="https://en.wikipedia.org/wiki/Rademacher_distribution">Rademacher distribution</a> with <a href="https://en.wikipedia.org/wiki/Probability">probability</a> ½ of being either +1 or -1. Two feature vectors Θ+ and Θ- are calculated by adding and subtracting the delta vector scaled by gain sequence ck to/from the current feature vector Θ, to compare their objective function measurements. Dependent on the outcome and scaled by gain sequences ak and ck, the current feature vector is approximated accordantly. The gain sequences decrease with increasing iterations, converging to 0. The theory pertains to both local optimization and global optimization in the face of multiple local optima <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#automated-tuning">Automated Tuning</a></li>
+<li><a href="#rspsa">RSPSA</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#selected-publications">Selected Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1987-">1987 ...</a></li>
+<li><a href="#1990-">1990 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2010--1">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="automated-tuning">Automated Tuning</h2>
+<pre><code>α = 0.602; γ = 0.101;
+for (k=0; k &lt; N; k++) {
+  ak = a / (k + 1 + A)^α;
+  ck = c / (k + 1)^γ;
+  for each p 
+    Δp = 2 * round ( rand() / (RAND_MAX + 1.0) ) - 1.0;
+  Θ+ = Θ + ck*Δ;
+  Θ- = Θ - ck*Δ;
+  Θ +=  ak * match(Θ+, Θ-) / (ck*Δ);
+}</code></pre>
+<p>In computer chess or games, where the objective function reflects the <a href="/Playing_Strength">playing strength</a> to maximize, SPSA can be used in <a href="/Automated_Tuning">automated tuning</a> of <a href="/Evaluation">evaluation</a> parameters as well as <a href="/Search">search</a> parameters. A prominent SPSA instance is devised from Stockfish's tuning method as introduced by <a href="/Joona_Kiiski">Joona Kiiski</a> in 2011 <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>, where the objective function is measured once per iteration by playing a pair of games with Θ+ versus Θ-, the function "match" returning a ±2 range, see pseudo code. The selection of the coefficients A, a, c, α and γ determine the initial values and time decay of the gain sequences ak and ck, is critical to the performance of SPSA. Spall recommends using α = 0.602 and γ = 0.101, which are the lowest possible values which theoretically guarantees convergence, further see the practical suggestions in Spall's 1998 SPSA implementation paper <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>. <span id="RSPSA"></span></p>
+<h2 id="rspsa">RSPSA</h2>
+<p>Already at the <a href="/Advances_in_Computer_Games_11">Advances in Computer Games 11</a> conference at <a href="https://en.wikipedia.org/wiki/Academia_Sinica">Academia Sinica</a>, <a href="https://en.wikipedia.org/wiki/Taipei">Taipei</a>, <a href="https://en.wikipedia.org/wiki/Taiwan">Taiwan</a> in 2005, <a href="/Levente_Kocsis">Levente Kocsis</a>, <a href="/Csaba_Szepesvári">Csaba Szepesvári</a>, and <a href="/Mark_Winands">Mark Winands</a> introduced SPSA for the game programming community and discussed several methods that can be used to enhance its performance, including the use of <a href="https://en.wikipedia.org/wiki/Variance_reduction">common random numbers</a> and <a href="https://en.wikipedia.org/wiki/Antithetic_variates">antithetic variates</a>, a combination of SPSA with <a href="https://en.wikipedia.org/wiki/Rprop">RPROP</a> (resilient backpropagation), and the reuse of samples of previous performance evaluations. RPROP, though it was originally worked out for the training of <a href="/Neural_Networks">neural networks</a>, is applicable to any optimization task where the gradient can be computed or approximated <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a>. The described <strong>RSPSA</strong> (Resilient SPSA) was successfully applied in parameter tuning in the domains of Poker and <a href="/Lines_of_Action">Lines of Action</a> <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a>.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Automated_Tuning">Automated Tuning</a></li>
+<li><a href="/CLOP">CLOP</a></li>
+<li><a href="/Genetic_Programming">Genetic Algorithms</a></li>
+<li><a href="/Genetic_Programming">PBIL</a></li>
+<li><a href="/Simulated_Annealing">Simulated Annealing</a></li>
+<li>Stockfish's Tuning Method</li>
+</ul>
+<h2 id="selected-publications">Selected Publications</h2>
+<h3 id="1987-">1987 ...</h3>
+<ul>
+<li><a href="/James_C._Spall">James C. Spall</a> (<strong>1987</strong>). <em>A Stochastic Approximation Technique for Generating Maximum Likelihood Parameter Estimates</em>. <a href="http://ieeexplore.ieee.org/xpl/mostRecentIssue.jsp?punumber=4789283">Proceedings of the American Control Conference</a>, <a href="https://en.wikipedia.org/wiki/Minneapolis">Minneapolis, MN</a>, <a href="http://www.jhuapl.edu/spsa/PDF-SPSA/Spall_A_Stochastic_Approximation.PDF">pdf reprint</a></li>
+</ul>
+<h3 id="1990-">1990 ...</h3>
+<ul>
+<li><a href="/James_C._Spall">James C. Spall</a> (<strong>1992</strong>). <em>Multivariate Stochastic Approximation Using a Simultaneous Perturbation Gradient Approximation</em>. <a href="/IEEE">IEEE Transactions on Automatic Control</a>, Vol. 37, No. 3, <a href="http://www.jhuapl.edu/spsa/PDF-SPSA/Spall_TAC92.pdf">pdf</a></li>
+<li><a href="/James_C._Spall">James C. Spall</a> (<strong>1997</strong>). <em>A one-measurement form of SPSA</em>. <a href="http://www.journals.elsevier.com/automatica">Automatica</a>, Vol. 33, No. 1, <a href="http://www.jhuapl.edu/spsa/PDF-SPSA/automatica97_one_measSPSA.pdf">pdf</a></li>
+<li><a href="https://www.linkedin.com/in/payman-sadegh-493b372">Payman Sadegh</a> (<strong>1997</strong>). <em>Constrained Optimization via Stochastic Approximation with a Simultaneous Perturbation Gradient Approximation</em>. <a href="http://www.journals.elsevier.com/automatica">Automatica</a>, Vol. 33, No. 5, <a href="http://www.jhuapl.edu/spsa/PDF-SPSA/Sadegh_Constrained_Optimization.PDF">pdf</a></li>
+<li><a href="/James_C._Spall">James C. Spall</a> (<strong>1998</strong>). <em>An Overview of the Simultaneous Perturbation Method for Efficient Optimization</em>. <a href="http://www.jhuapl.edu/techdigest/">Johns Hopkins APL Technical Digest</a>, Vol. 19, No. 4, <a href="http://www.jhuapl.edu/spsa/PDF-SPSA/Spall_An_Overview.PDF">pdf</a></li>
+<li><a href="/James_C._Spall">James C. Spall</a> (<strong>1998</strong>). <em>Implementation of the Simultaneous Perturbation Algorithm for Stochastic Optimization</em>. <a href="/IEEE">IEEE Transactions on Aerospace and Electronic Systems</a>, Vol. 34, No. 3, <a href="http://www.jhuapl.edu/spsa/PDF-SPSA/Spall_Implementation_of_the_Simultaneous.PDF">pdf</a></li>
+<li><a href="/James_C._Spall">James C. Spall</a> (<strong>1999</strong>). <em>Stochastic Optimization: Stochastic Approximation and Simulated Annealing</em>. in <a href="https://en.wikipedia.org/wiki/John_G._Webster">John G. Webster</a> (ed.) (<strong>1999</strong>). <a href="http://onlinelibrary.wiley.com/book/10.1002/047134608X">Encyclopedia of Electrical and Electronics Engineering</a>, Vol. 20, <a href="https://en.wikipedia.org/wiki/John_Wiley_%26_Sons">John Wiley &amp; Sons</a>, <a href="http://www.jhuapl.edu/spsa/PDF-SPSA/Spall_Stochastic_Optimization.PDF">pdf</a></li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="/James_C._Spall">James C. Spall</a> (<strong>2000</strong>). <em>Adaptive Stochastic Approximation by the Simultaneous Perturbation Method</em>. <a href="/IEEE">IEEE Transactions on Automatic Control</a>, Vol. 45, No. 10, <a href="http://www.jhuapl.edu/spsa/PDF-SPSA/Spall_TAC00.pdf">pdf</a></li>
+<li><a href="https://www.genealogy.math.ndsu.nodak.edu/id.php?id=197469">László Gerencsé</a>, <a href="http://www.math.buffalo.edu/mad/PEEPS/hill_stacy.html">Stacy D. Hill</a>, <a href="https://itk.ppke.hu/karunkrol/oktatoink-sajat-weboldalai/gerencserne-dr-vago-zsuzsanna-bfd51">Zsuzsanna Vágó</a>, Zoltán Vincze (<strong>2004</strong>). <em>Discrete optimization, SPSA and Markov Chain Monte Carlo methods</em>. Proceeding of the 2004 American Control Conference, <a href="http://www.jhuapl.edu/spsa/PDF-SPSA/Gerencser_ACC04.pdf">pdf</a></li>
+<li><a href="http://www.math.buffalo.edu/mad/PEEPS/hill_stacy.html">Stacy D. Hill</a> (<strong>2005</strong>). <em>Discrete Stochastic Approximation with Application to Resource Allocation</em>. <a href="http://www.jhuapl.edu/techdigest/">Johns Hopkins APL Technical Digest</a>, Vol. 26, No. 1, <a href="http://www.jhuapl.edu/spsa/PDF-SPSA/Hill_TechDig05.pdf">pdf</a></li>
+<li><a href="/Levente_Kocsis">Levente Kocsis</a>, <a href="/Csaba_Szepesvári">Csaba Szepesvári</a>, <a href="/Mark_Winands">Mark Winands</a> (<strong>2005</strong>). <em><a href="http://link.springer.com/chapter/10.1007/11922155_4">RSPSA: Enhanced Parameter Optimization in Games</a></em>. <a href="/Advances_in_Computer_Games_11">Advances in Computer Games 11</a>, <a href="http://www.sztaki.hu/~szcsaba/papers/rspsa_acg.pdf">pdf</a>, <a href="https://dke.maastrichtuniversity.nl/m.winands/documents/RSPSA.pdf">pdf</a></li>
+<li><a href="/Levente_Kocsis">Levente Kocsis</a>, <a href="/Csaba_Szepesvári">Csaba Szepesvári</a> (<strong>2006</strong>). <em><a href="http://link.springer.com/article/10.1007/s10994-006-6888-8">Universal Parameter Optimisation in Games Based on SPSA</a></em>. <a href="https://en.wikipedia.org/wiki/Machine_Learning_%28journal%29">Machine Learning</a>, Special Issue on Machine Learning and Games, Vol. 63, No. 3, <a href="http://www.sztaki.hu/~szcsaba/papers/kocsis_acg05.pdf">pdf</a></li>
+<li><a href="https://dblp.org/pid/70/382.html">Mohammed Shahid Abdulla</a>, <a href="/Shalabh_Bhatnagar">Shalabh Bhatnagar</a> (<strong>2007</strong>). <em><a href="https://link.springer.com/article/10.1007/s10626-006-0003-y">Reinforcement Learning Based Algorithms for Average Cost Markov Decision Processes</a></em>. <a href="https://www.springer.com/journal/10626">Discrete Event Dynamic Systems</a>, Vol.17, No.1</li>
+<li><a href="http://dblp.uni-trier.de/pers/hd/m/Maryak:John_L=">John L. Maryak</a>, <a href="http://dblp.uni-trier.de/pers/hd/c/Chin:Daniel_C=">Daniel C. Chin</a> (<strong>2008</strong>). <em>Global Random Optimization by Simultaneous Perturbation Stochastic Approximation</em>. <a href="/IEEE">IEEE Transactions on Automatic Control</a>, Vol. 53, No. 3, <a href="http://www.jhuapl.edu/spsa/PDF-SPSA/Maryak_Chin_IEEETAC08.pdf">pdf</a></li>
+<li><a href="http://dblp.uni-trier.de/pers/hd/s/Song_0001:Qing">Qing Song</a>, <a href="/James_C._Spall">James C. Spall</a>, <a href="http://dblp.uni-trier.de/pers/hd/s/Soh:Yeng_Chai">Yeng Chai Soh</a>, <a href="http://dblp.uni-trier.de/pers/hd/n/Ni:Jie">Jie Ni</a> (<strong>2008</strong>). <em>Robust Neural Network Tracking Controller Using Simultaneous Perturbation Stochastic Approximation</em>. <a href="/IEEE">IEEE Transactions on Neural Networks</a>, Vol. 19, No. 5, <a href="https://pdfs.semanticscholar.org/3f2a/4d69ca8adbbc072d82af58b3c750621d36ab.pdf">2003 pdf</a> » <a href="/Neural_Networks">Neural Networks</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="/Shalabh_Bhatnagar">Shalabh Bhatnagar</a>, <a href="https://dblp.org/pid/31/10493.html">H.L. Prasad</a>, <a href="https://scholar.google.co.in/citations?user=Q1YXWpoAAAAJ&amp;hl=en">L.A. Prashanth</a> (<strong>2013</strong>). <em><a href="https://link.springer.com/book/10.1007/978-1-4471-4285-0">Stochastic Recursive Algorithms for Optimization: Simultaneous Perturbation Methods</a></em>. <a href="https://www.springer.com/series/642">Lecture Notes in Control and Information Sciences</a>, Vol. 434, <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a></li>
+<li>Qi Wang (<strong>2013</strong>). <em><a href="https://jscholarship.library.jhu.edu/handle/1774.2/36955">Optimization with Discrete Simultaneous Perturbation Stochastic Approximation Using Noisy Loss Function Measurements</a></em>. Ph.D. thesis, <a href="https://en.wikipedia.org/wiki/Johns_Hopkins_University">Johns Hopkins University</a>, advisor <a href="/James_C._Spall">James C. Spall</a></li>
+<li><a href="https://scholar.google.com/citations?user=nqDASHMAAAAJ">Pushpendre Rastogi</a>, <a href="http://dblp.uni-trier.de/pers/hd/z/Zhu:Jingyi">Jingyi Zhu</a>, <a href="/James_C._Spall">James C. Spall</a> (<strong>2016</strong>). <em>Efficient implementation of Enhanced Adaptive Simultaneous Perturbation Algorithms</em>. <a href="http://dblp.uni-trier.de/db/conf/ciss/ciss2016.html#RastogiZS16">CISS 2016</a>, <a href="http://www.cs.jhu.edu/~prastog3/res/rastogi2016efficient.pdf">pdf</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2010--1">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?start=0&amp;t=40662">Stockfish's tuning method</a> by <a href="/Joona_Kiiski">Joona Kiiski</a>, <a href="/CCC">CCC</a>, October 07, 2011 » Stockfish's Tuning Method</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?start=0&amp;t=40662&amp;start=6">Re: Stockfish's tuning method</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/CCC">CCC</a>, October 07, 2011</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40964">Tuning again</a> by <a href="/Ed_Schroder">Ed Schroder</a>, <a href="/CCC">CCC</a>, November 01, 2011</li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/WNrxeXAJ6VI/ZkCnRv4I_qEJ">Goodbye CLOP, hello SPSA</a> by <a href="/Gary_Linscott">Gary Linscott</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, May 17, 2014 » <a href="/CLOP">CLOP</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54545&amp;start=2">Re: Eval tuning - any open source engines with GA or PBIL?</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, December 06, 2014 » <a href="/Genetic_Programming">PBIL</a> <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55925&amp;start=10">Re: A plea to someone</a> by <a href="/Lyudmil_Antonov">Lyudmil Antonov</a>, <a href="/CCC">CCC</a>, April 07, 2015</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=55925&amp;start=21">Re: A plea to someone</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, April 08, 2015</p>
+<ul>
+<li><a href="https://groups.google.com/d/msg/fishcooking/1FSprH10MpM/bU1bMkqKtaUJ">Automatic Criterion for stopping SPSA?</a> by tsa..., <a href="/Computer_Chess_Forums">FishCooking</a>, May 29, 2015</li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/mbnctfDdcqM/S_rUOa7177AJ">Re: SPSA Tuner</a> by <a href="/Lyudmil_Antonov">Lyudmil Antonov</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, July 20, 2015</li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/Np13OpEO1_w/xhYulilABgAJ">Too small number of games in SPSA</a> by <a href="/Lyudmil_Antonov">Lyudmil Antonov</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, April 22, 2016</li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/iyAFOdVx4RE/d4mnJ8lqDgAJ">Self-correcting SPSA tuner for chess engines</a> Ivan Ivec, <a href="/Computer_Chess_Forums">FishCooking</a>, January 04, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63632">SPSA problems</a> by Ralf Müller, <a href="/CCC">CCC</a>, April 02, 2017</li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/ERsAux5TU6Q/RU2xnF3bDQAJ">SPSA and search.cpp?</a> by <a href="/Nick_Pelling">Nick Pelling</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, January 06, 2019 » <a href="/Stockfish">Stockfish</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77420">A hybrid of SPSA and local optimization</a> by <a href="/Niels_Abildskov">Niels Abildskov</a>, <a href="/CCC">CCC</a>, June 01, 2021 » Texel's Tuning Method</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://www.jhuapl.edu/spsa/">SPSA Algorithm</a> by <a href="/James_C._Spall">James C. Spall</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Simultaneous_perturbation_stochastic_approximation">Simultaneous perturbation stochastic approximation - Wikipedia</a></li>
+<li><a href="https://github.com/zamar/spsa">SPSA Tuner for Stockfish Chess Engine</a> by <a href="/Joona_Kiiski">Joona Kiiski</a> » <a href="/Stockfish">Stockfish</a></li>
+<li><a href="https://github.com/lantonov/SPSA">GitHub - lantonov/spsa: Modifications of SPSA</a> by <a href="/Lyudmil_Antonov">Lyudmil Antonov</a> » <a href="/Stockfish">Stockfish</a></li>
+<li><a href="https://github.com/jgomezdans/spsa">GitHub - jgomezdans/spsa: Simultaneous perturbation stochastic approximation Python code</a></li>
+<li><a href="https://gist.github.com/yanatan16/5420795">Simultaneous Perturbation Stochastic Approximation code in python · GitHub</a></li>
+<li><a href="https://youtu.be/kVJQkmYU2VA">NIPS 2012 Tutoral - Stochastic Search and Optimization</a>, <a href="/James_C._Spall">Video Lecture</a> by <a href="/James_C._Spall">James C. Spall</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Hr-Bigband">hr-Bigband</a> feat. <a href="/Category:Richard_Bona">Richard Bona</a> - Kalabancoro, October, 2019, <a href="https://en.wikipedia.org/wiki/Hessischer_Rundfunk">Hessischer Rundfunk</a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/L3WxMJVI28g" title="YouTube video L3WxMJVI28g" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=L3WxMJVI28g">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Algorithms">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/James_C._Spall">James C. Spall</a> (<strong>1987</strong>). <em>A Stochastic Approximation Technique for Generating Maximum Likelihood Parameter Estimates</em>. <a href="http://ieeexplore.ieee.org/xpl/mostRecentIssue.jsp?punumber=4789283">Proceedings of the American Control Conference</a>, <a href="https://en.wikipedia.org/wiki/Minneapolis">Minneapolis, MN</a>, <a href="http://www.jhuapl.edu/spsa/PDF-SPSA/Spall_A_Stochastic_Approximation.PDF">pdf reprint</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/James_C._Spall">James C. Spall</a> (<strong>1992</strong>). <em>Multivariate Stochastic Approximation Using a Simultaneous Perturbation Gradient Approximation</em>. <a href="/IEEE">IEEE Transactions on Automatic Control</a>, Vol. 37, No. 3<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="/Mathematician">Jack Kiefer</a>, <a href="/Mathematician">Jacob Wolfowitz</a> (<strong>1952</strong>). <em><a href="https://projecteuclid.org/euclid.aoms/1177729392">Stochastic Estimation of the Maximum of a Regression Function</a></em>. <a href="https://en.wikipedia.org/wiki/Annals_of_Mathematical_Statistics">The Annals of Mathematical Statistics</a>, Vol. 23, No. 3<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="/Mathematician">Herbert Robbins</a>, <a href="http://articles.mcall.com/1995-03-07/news/3017569_1_burlington-korean-war-memorial-services">Sutton Monro</a> (<strong>1951</strong>). <em><a href="https://projecteuclid.org/euclid.aoms/1177729586">A Stochastic Approximation Method</a></em>. <a href="https://en.wikipedia.org/wiki/Annals_of_Mathematical_Statistics">The Annals of Mathematical Statistics</a>, Vol. 22, No. 3<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://dblp.uni-trier.de/pers/hd/m/Maryak:John_L=">John L. Maryak</a>, <a href="http://dblp.uni-trier.de/pers/hd/c/Chin:Daniel_C=">Daniel C. Chin</a> (<strong>2008</strong>). <em>Global Random Optimization by Simultaneous Perturbation Stochastic Approximation</em>. <a href="/IEEE">IEEE Transactions on Automatic Control</a>, Vol. 53, No. 3, <a href="http://www.jhuapl.edu/spsa/PDF-SPSA/Maryak_Chin_IEEETAC08.pdf">pdf</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="http://www.talkchess.com/forum/viewtopic.php?start=0&amp;t=40662">Stockfish's tuning method</a> by <a href="/Joona_Kiiski">Joona Kiiski</a>, <a href="/CCC">CCC</a>, October 07, 2011<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="/James_C._Spall">James C. Spall</a> (<strong>1998</strong>). <em>Implementation of the Simultaneous Perturbation Algorithm for Stochastic Optimization</em>. <a href="/IEEE">IEEE Transactions on Aerospace and Electronic Systems</a>, Vol. 34, No. 3, <a href="http://www.jhuapl.edu/spsa/PDF-SPSA/Spall_Implementation_of_the_Simultaneous.PDF">pdf</a><a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p>Martin Riedmiller, Heinrich Braun (<strong>1993</strong>). <em>A direct adaptive method for faster backpropagation learning: The RPROP algorithm</em>. <a href="http://ieeexplore.ieee.org/xpl/mostRecentIssue.jsp?punumber=1059">IEEE International Conference On Neural Networks</a>, <a href="http://paginas.fe.up.pt/~ee02162/dissertacao/RPROP%20paper.pdf">pdf</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="/Levente_Kocsis">Levente Kocsis</a>, <a href="/Csaba_Szepesvári">Csaba Szepesvári</a>, <a href="/Mark_Winands">Mark Winands</a> (<strong>2005</strong>). <em><a href="http://link.springer.com/chapter/10.1007/11922155_4">RSPSA: Enhanced Parameter Optimization in Games</a></em>. <a href="/Advances_in_Computer_Games_11">Advances in Computer Games 11</a>, <a href="http://www.sztaki.hu/~szcsaba/papers/rspsa_acg.pdf">pdf</a>, <a href="https://dke.maastrichtuniversity.nl/m.winands/documents/RSPSA.pdf">pdf</a><a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="https://www.gerad.ca/nomad/Project/Home.html">NOMAD - A blackbox optimization software</a><a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Richard_Bona">Richard Bona</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/SPSA">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

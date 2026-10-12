@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rybka-Crafty Evidence - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Rybka-Crafty Evidence</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Organizations">Organizations</a> * <a href="/ICGA">ICGA</a> * <a href="/ICGA_Investigations">Investigations</a> * <a href="/Rybka_Controversy">Rybka Controversy</a> * <a href="/Pre-Fruit_Rybka_and_Crafty">Pre-Fruit Rybka and Crafty</a> * Rybka-Crafty Evidence</strong></p>
+<p><strong><a href="/Rybka-Crafty_Evidence_II">Next &gt;</a></strong></p>
+<p>by <a href="/Mark_Watkins">Mark Watkins</a></p>
+<p>Code to avoid en passant when using obsolete Edwards tablebases.</p>
+<p><a href="/Crafty">Crafty</a> 19.0 __iterate.c__</p>
+<pre><code>  TB_use_ok=1;
+  if (TotalWhitePawns &amp;&amp; TotalBlackPawns) {
+    wpawn=FirstOne(WhitePawns);
+    bpawn=FirstOne(BlackPawns);
+    if (FileDistance(wpawn,bpawn) == 1) {
+      if(((Rank(wpawn)==RANK2) &amp;&amp; (Rank(bpawn)&gt;RANK3)) ||
+         ((Rank(bpawn)==RANK7) &amp;&amp; (Rank(wpawn)&lt;RANK6)) ||
+         EnPassant(1)) TB_use_ok=0;
+    }
+  }</code></pre>
+<p>Note that the above code is quite particular to KP vs KP (it will fail for KPP vs KP due to FirstOne usage) and avoiding <em>en passant</em> troubles.</p>
+<p>Here is disassembly from a pre-Beta Rybka by Mark Watkins, as a <embed src="/assets/RYBKA16.EdwardsTBep.txt" title="text file" /> or here directly:</p>
+<pre><code>0x0044cad2:  mov    0x6b8d54,%eax     # global pointer
+0x0044cad7:  mov    0xb10(%eax),%cl   # load TotalWhitePawns
+0x0044cadd:  add    $0x4,%esp
+0x0044cae2*  movl   $0x1,-0x1c(%ebp)  # set TB_use_OK to 1
+0x0044cae0:  test   %cl,%cl           # if TotalWhitePawns
+0x0044cae9:  je     0x44cbab
+0x0044caef:  mov    0xb11(%eax),%cl   #    &amp;&amp; TotalBlackPawns
+0x0044caf5:  test   %cl,%cl
+0x0044caf7:  je     0x44cbab
+0x0044cafd:  mov    0xa78(%eax),%edx    # load WhitePawns (32 bits)
+0x0044cb03:  mov    0xa7c(%eax),%eax    # load WhitePawns (other 32)
+0x0044cb09:  mov    %edx,-0x8(%ebp)
+0x0044cb0c:  mov    %eax,-0x4(%ebp)
+0x0044cb0f:  bsf    -0x8(%ebp),%edx     # FirstOne for WhitePawns
+0x0044cb13:  mov    $0x0,%eax
+0x0044cb18:  jne    0x44cb2a
+0x0044cb1a:  bsf    -0x4(%ebp),%edx
+0x0044cb1e:  mov    $0x20,%eax
+0x0044cb23:  jne    0x44cb2a
+0x0044cb25:  mov    $0x20,%edx
+0x0044cb2a:  add    %edx,%eax
+0x0044cb2c:  mov    %eax,%ebx           # store FirstOne in ebx (wpawn)
+0x0044cb2e:  mov    0x6b8d54,%eax       # reload global pointer
+0x0044cb33:  mov    0xa80(%eax),%ecx    # load Black Pawns (32 bits)
+0x0044cb39:  mov    0xa84(%eax),%edx    # load Black Pawns (other 32)
+0x0044cb3f:  mov    %ecx,-0x8(%ebp)
+0x0044cb42:  mov    %edx,-0x4(%ebp)
+0x0044cb45:  bsf    -0x8(%ebp),%edx     # FirstOne for BlackPawns
+0x0044cb49:  mov    $0x0,%eax
+0x0044cb4e:  jne    0x44cb60
+0x0044cb50:  bsf    -0x4(%ebp),%edx
+0x0044cb54:  mov    $0x20,%eax
+0x0044cb59:  jne    0x44cb60
+0x0044cb5b:  mov    $0x20,%edx
+0x0044cb60:  add    %edx,%eax
+0x0044cb62:  mov    %eax,%ecx           # store FirstOne in ecx (bpawn)
+0x0044cb64:  mov    %ecx,%edx
+0x0044cb66:  and    $0x7,%edx           # file of bpawn
+0x0044cb69:  mov    %ebx,%eax
+0x0044cb6b:  and    $0x7,%eax           # file of wpawn
+0x0044cb6e:  sub    %edx,%eax           # compute distance
+0x0044cb70:  cltd
+0x0044cb71:  xor    %edx,%eax
+0x0044cb73:  sub    %edx,%eax           # absolute value of distance
+0x0044cb75:  cmp    $0x1,%eax           # if FileDistance is 1
+0x0044cb78:  mov    0x6b8d54,%eax [rereload global pointer]
+0x0044cb7d:  jne    0x44cbab
+0x0044cb7f:  sar    $0x3,%ebx           # get Rank of wpawn
+0x0044cb82:  cmp    $0x1,%ebx           # if rank is RANK2
+0x0044cb85:  jne    0x44cb91
+0x0044cb87:  mov    %ecx,%edx           # copy bpawn to edx
+0x0044cb89:  and    $0xfffffff8,%edx    # get the rank of it
+0x0044cb8c:  cmp    $0x10,%edx          # if the rank exceeds RANK3
+0x0044cb8f:  jg     0x44cba8            # set TB_use_ok = 0 (@0x44cba8)
+0x0044cb91:  and    $0xfffffff8,%ecx    # get Rank of bpawn
+0x0044cb94:  cmp    $0x30,%ecx          # if rank is RANK7
+0x0044cb97:  jne    0x44cb9e
+0x0044cb99:  cmp    $0x5,%ebx           # and Rank(wpawn) is &lt; RANK6
+0x0044cb9c:  jl     0x44cba8            # set TB_use_ok = 0 (@0x44cba8)
+0x0044cb9e:  mov    0x10b(%eax),%cl     # load EnPassant(1) [1 is the ply]
+0x0044cba4:  test   %cl,%cl             # if there is no ep target
+0x0044cba6:  je     0x44cbab            # skip the next instruction
+0x0044cba8:  mov    %esi,-0x1c(%ebp)    # [sets TB_use_ok = 0]
+0x0044cbab:  mov    0x6b0951,%cl</code></pre>
+<p><strong><a href="/Pre-Fruit_Rybka_and_Crafty">Up one level</a></strong></p>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Rybka-Crafty_Evidence">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

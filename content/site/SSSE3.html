@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SSSE3 - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">SSSE3</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Hardware">Hardware</a> * <a href="/X86">x86</a> * SSSE3</strong></p>
+<p><strong>SSSE3</strong> (Supplemental Streaming SIMD Extension 3) is <a href="/Intel">Intel's</a> name for the <a href="/SSE">SSE</a> instruction set's fourth iteration. 16 new instructions, also available as <a href="/MMX">MMX</a>-extension with _m64 intrinsic datatype. SSSE3 was introduced in <a href="https://en.wikipedia.org/wiki/Intel_Core_microarchitecture">Intel's Core Microarchitecture</a>. SSSE3-intrinsic functions are available in <a href="https://en.wikipedia.org/wiki/Visual_C%2B%2B">Visual C</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> or <a href="https://en.wikipedia.org/wiki/Intel_C%2B%2B_Compiler">Intel-C</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> .</p>
+<p>SSSE3 instructions are not available for <a href="/AMD">AMD</a> processors until Bulldozer, which also implements <a href="/SSE4">SSE4</a> and <a href="/AVX">AVX</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#instructions">Instructions</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#phaddsubw">PH(ADD/SUB)W</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#intrinsic">Intrinsic</a></li>
+<li><a href="#pseudocode">Pseudocode</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#pmaddubsw">PMADDUBSW</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#intrinsic-1">Intrinsic</a></li>
+<li><a href="#pseudocode-1">Pseudocode</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#pmulhrsw">PMULHRSW</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#intrinsic-2">Intrinsic</a></li>
+<li><a href="#pseudocode-2">Pseudocode</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#pshufb">PSHUFB</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#intrinsic-3">Intrinsic</a></li>
+<li><a href="#pseudocode-3">Pseudocode</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#psign">PSIGN</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#intrinsic-4">Intrinsic</a></li>
+<li><a href="#pseudocode-4">Pseudocode</a></li>
+</ol>
+</details></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#applications">Applications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#sse3-population-count">SSE3 Population Count</a></li>
+<li><a href="#byte-wise-dot-product">Byte-wise Dot-Product</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#ssse3-hyperbola-quintessence">SSSE3 Hyperbola Quintessence</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#intrinsic-version">Intrinsic Version</a></li>
+<li><a href="#peshkovs-optimization">Peshkov's Optimization</a></li>
+</ol>
+</details></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="instructions">Instructions</h2>
+<p>Some of the new instructions are quite interesting for computer chess, with applications in <a href="/Evaluation">evaluation</a> and byte shuffling of <a href="/Bitboards">bitboards</a>. <span id="PHADDSW"></span></p>
+<h3 id="phaddsubw">PH(ADD/SUB)W</h3>
+<p>Packed Horizontal Add/Subtract Words. Each of the eight shorts integers is the sum/difference between adjacent pairs of elements in the input parameters. Saturating versions, PHADDSW and PHSUBSW, are also available.</p>
+<p>The primary downside of these instructions is that they tend to be very slow multiple-uop instructions on most CPUs, resulting in alternate instruction sequences almost always being faster.</p>
+<h4 id="intrinsic">Intrinsic</h4>
+<p>_m128i <a href="http://msdn.microsoft.com/en-us/library/bb514049%28v=vs.100%29.aspx">_mm_hadd_epi16</a> (_m128i a, _m128i b);</p>
+<h4 id="pseudocode">Pseudocode</h4>
+<pre><code>signed short a[ 8]; // input a
+signed short b[ 8]; // input b
+signed short r[ 8]; // output r
+
+for (i=0; i &lt; 4; i++) {
+   r[  i] = a[2i] + a[2i+1];
+   r[4+i] = b[2i] + b[2i+1];
+}</code></pre>
+<p><span id="PMADDUBSW"></span></p>
+<h3 id="pmaddubsw">PMADDUBSW</h3>
+<p>Packed Multiply and Add a vector of 16 unsigned bytes (char) with a vector of 16 signed bytes (not <a href="https://en.wikipedia.org/wiki/Commutative">commutative</a>! <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> ). Two consecutive products are added and the saturated signed 16-bit results are stored as vector of eight signed shorts.</p>
+<h4 id="intrinsic-1">Intrinsic</h4>
+<p>_m128i <a href="http://msdn.microsoft.com/en-us/library/bb514017%28v=vs.100%29.aspx">_mm_maddubs_epi16</a> (_m128i a, _m128i b);</p>
+<h4 id="pseudocode-1">Pseudocode</h4>
+<pre><code>unsigned char  a[16]; // input a
+signed   char  b[16]; // input b
+signed   short r[ 8]; // output r
+
+for (i=0; i &lt; 8; i++)
+   r[i] = SATURATE_16(a[2i]*b[2i] + a[2i+1] * b[2i+1]);</code></pre>
+<p><span id="PMULHRSW"></span></p>
+<h3 id="pmulhrsw">PMULHRSW</h3>
+<p>Packed Multiply High with Round and Scale is an instruction designed for fixed-point math. It is similar to the existing pmulhw, but only shifts right by 15 instead of 16, and adds a factor for correct rounding.</p>
+<h4 id="intrinsic-2">Intrinsic</h4>
+<p>_m128i <a href="http://msdn.microsoft.com/en-us/library/bb513995%28v=vs.100%29.aspx">_mm_mulhrs_epi16</a> (_m128i a, _m128i b);</p>
+<h4 id="pseudocode-2">Pseudocode</h4>
+<pre><code>signed short a[8]; // input a
+signed short b[8]; // input b
+signed short r[8]; // output r
+
+for (i=0; i &lt; 8; i++)
+   r[i] = INT16((a[i]*b[i] + 0x4000) &gt;&gt; 15);</code></pre>
+<p><span id="PSHUFB"></span></p>
+<h3 id="pshufb">PSHUFB</h3>
+<p>Packed Shuffle Bytes is a very powerful instruction that can perform a fast arbitrary byte-shuffle of a register. It can also set some output bytes to zero instead of selecting them from the input. Packed Shuffle Bytes is used inside the <a href="/SSSE3">SSSE3 Version of Hyperbola Quintessence</a> to perform byte swaps. There might be some other interesting applications too, such as <a href="/SSSE3">SSSE3 Population Count</a>. <a href="/XOP">VPPERM</a> from <a href="/XOP">XOP</a> is an even more powerful variant on this instruction.</p>
+<h4 id="intrinsic-3">Intrinsic</h4>
+<p>_m128i <a href="http://msdn.microsoft.com/en-us/library/bb531427%28v=vs.100%29.aspx">_mm_shuffle_epi8</a> (_m128i a, _m128i b);</p>
+<h4 id="pseudocode-3">Pseudocode</h4>
+<pre><code>char a[16]; // input a
+char b[16]; // input b
+char r[16]; // output r
+
+for (i=0; i &lt; 16; i++)
+   r[i] = (b[i] &lt; 0) ? 0 : a[b[i] % 16];</code></pre>
+<p><span id="PSIGN"></span></p>
+<h3 id="psign">PSIGN</h3>
+<p>Multiplies each element of one vector with the <a href="https://en.wikipedia.org/wiki/Sign_function">sign function</a> {-1,0,1} of the second vector. The instruction is available for signed <a href="/Byte">bytes</a> (8-bit char psignb), signed <a href="/Word">words</a> (16-bit short psignw) and <a href="/Double_Word">double words</a> (32-bit int psignd). If both input operands are equal, the result is a vector of absolute values, though PABS is probably preferred for this purpose.</p>
+<h4 id="intrinsic-4">Intrinsic</h4>
+<p>_m128i <a href="http://msdn.microsoft.com/en-us/library/bb531461%28v=vs.100%29.aspx">_mm_sign_epi8</a> (_m128i a, _m128i b); _m128i <a href="http://msdn.microsoft.com/en-us/library/bb531410%28v=vs.100%29.aspx">_mm_sign_epi16</a> (_m128i a, _m128i b); _m128i <a href="http://msdn.microsoft.com/en-us/library/bb514081%28v=vs.100%29.aspx">_mm_sign_epi32</a> (_m128i a, _m128i b);</p>
+<h4 id="pseudocode-4">Pseudocode</h4>
+<pre><code>/* type := {char, short, int}, N = {16, 8, 4} */
+#define N (sizeof(__m128i)/sizeof(type))
+type a[N]; // input a
+type b[N]; // input b
+type r[N]; // output r
+
+for (i=0; i &lt; N; i++)
+   r[i] = (b[i] &lt; 0) ? -a[i] : ((b[i] == 0) ? 0 : a[i])</code></pre>
+<h2 id="applications">Applications</h2>
+<h3 id="sse3-population-count">SSE3 Population Count<span id="PopCount"></span></h3>
+<p>In 2008, <a href="/Wojciech_Muła">Wojciech Muła</a> introduced a SSSE3 <a href="/Population_Count">Population Count</a> performing a pair of <a href="/SSSE3">PSHUFB</a> 16 parallel <a href="/Nibble">nibble</a> in-xmm lookups <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>, in the meantime due to <a href="/AVX2">AVX2</a> or <a href="/AVX-512">AVX-512</a> even possible with doubled or fourfold register widths, competing the native <a href="/X86-64">x86-64</a> <a href="/X86-64">popcount instruction</a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a></p>
+<pre><code>/**
+ * popCount2 
+ * @author Wojciech Muła
+ * @param v vector of two bitboards
+ * @return quad word vector of two popcounts
+*/
+__m128i popCount(__m128i v) {
+  __m128i lu = _mm_setr_epi8(0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4);
+  __m128i lm = _mm_set1_epi8(0x0f);
+  __m128i lo = _mm_and_si128(v, lm);
+  __m128i hi = _mm_and_si128(_mm_srli_epi16(v, 4), lm);
+  __m128i cl = _mm_shuffle_epi8(lu, lo); /* 16 low nibble counts */
+  __m128i ch = _mm_shuffle_epi8(lu, hi); /* 16 high nibble counts */
+  __m128i cb = _mm_add_epi8(cl, ch); /* 16 byte counts */
+  return _mm_sad_epu8(cb, _mm_setzero_si128());
+}</code></pre>
+<p><span id="DotProduct"></span></p>
+<h3 id="byte-wise-dot-product">Byte-wise Dot-Product</h3>
+<p>This SSSE3-dot-product multiplies a vector of 64 unsigned chars with a vector of 64 signed char, and adds all 64 intermediate signed 16-bit products with saturation. It uses the <a href="/SSSE3">pmaddubsw</a> and <a href="/SSSE3">phaddsw</a> SSSE3 instructions, in total 11 SSE instructions.</p>
+<pre><code>int dotProduct(unsigned char features[], char weights[] /* XMM_ALIGN */) {
+   __m128i r0, r1, r2, r3;
+   __m128i* a = (__m128i*) features;
+   __m128i* b = (__m128i*) weights;
+   r0 = _mm_maddubs_epi16 (a[0], b[0]);
+   r1 = _mm_maddubs_epi16 (a[1], b[1]);
+   r2 = _mm_maddubs_epi16 (a[2], b[2]);
+   r3 = _mm_maddubs_epi16 (a[3], b[3]);
+   r0 = _mm_adds_epi16    (r0, r1);
+   r2 = _mm_adds_epi16    (r2, r3);
+   r0 = _mm_adds_epi16    (r0, r2); // 8 shorts
+   r0 = _mm_hadds_epi16   (r0, r0); // 4 shorts
+   r0 = _mm_hadds_epi16   (r0, r0); // 2 shorts
+   r0 = _mm_hadds_epi16   (r0, r0); // 1 final short
+   short s = (short)_mm_extract_epi16(r0, 0);
+   return (int) s; // sign extended
+}</code></pre>
+<p><span id="SSSE3Version"></span></p>
+<h3 id="ssse3-hyperbola-quintessence">SSSE3 Hyperbola Quintessence</h3>
+<p>Following routine calculates bishop attacks performing the <a href="/Hyperbola_Quintessence">Hyperbola Quintessence</a>. Both <a href="/Anti-Diagonals">anti-diagonal</a> and <a href="/Diagonals">diagonal</a> attacks are processed in parallel, using both halves of a 128-bit xmm register and pre-calculated <a href="/Array">arrays</a> of bitboard pairs for line-masks, single- and eventually reversed bits. <a href="/SSSE3">PSHUFB</a> is used to swap bytes inside a <a href="/Bitboards">bitboard</a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> .</p>
+<h4 id="intrinsic-version">Intrinsic Version</h4>
+<pre><code>__m128i diaAntiMaskXMM[64]; // 1 KByte  antidiag : diagonal, excluding square
+__m128i singleBitsXMM [64]; // 1 KByte    1&lt;&lt;sq  : 1&lt;&lt;sq
+__m128i swapMaskXMM; // needs to be initialized to swap the bytes in both quad-words
+
+// SSSE3 Hyperbola Quintessence
+U64 bishopAttacks(U64 occ, enumSquare sq) {
+   __m128i o, r, m, b, s;
+   m = diaAntiMaskXMM[sq];         // antidiag : diagonal, excluding square
+   b = singleBitsXMM [sq];         // bishop bits, equal qwords
+   s = swapMaskXMM;
+   o = _mm_cvtsi64x_si128  (occ) ; // general purpose 64 bit to xmm low qword
+   o = _mm_unpacklo_epi64  (o, o); // occ : occ
+   o = _mm_and_si128       (o, m); // o (antidiag : diagonal)
+   r = _mm_shuffle_epi8    (o, s); // o&#39;(antidiag : diagonal)
+   o = _mm_sub_epi64       (o, b); // o - bishop
+   b = _mm_shuffle_epi8    (b, s); // bishop&#39;, one may also use singleBitsXMM [sq^56]
+   r = _mm_sub_epi64       (r, b); // o&#39;- bishop&#39;
+   r = _mm_shuffle_epi8    (r, s); // re-reverse
+   o = _mm_xor_si128       (o, r); // attacks
+   o = _mm_and_si128       (o, m); // antidiag : diagonal
+   r = _mm_unpackhi_epi64  (o, o); // antidiag : antidiag
+   o = _mm_add_epi64       (o, r); // diagonal + antidiag
+   return _mm_cvtsi128_si64(o);    // convert xmm to general purpose 64 bit
+}</code></pre>
+<p><span id="Peshkov"></span></p>
+<h4 id="peshkovs-optimization">Peshkov's Optimization</h4>
+<p>The pioneer of Hyperbola Quintessence, <a href="/Aleks_Peshkov">Aleks Peshkov</a>, applies a more sophisticated, optimized <a href="/Cpp">C++</a> approach, further utilizing disjoint ray-attacks, and <a href="/General_Setwise_Operations">xor</a> instruction is own inverse and distributive over <a href="/Flipping_Mirroring_and_Rotating">mirroring or flipping</a>. Once per <a href="/Node">node</a> he instantiates an <a href="/Occupancy">occupied object</a> based on a <a href="https://en.wikipedia.org/wiki/Type_safety">type-safe</a> <a href="https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern">curiously recurring template pattern</a> aka the <a href="https://en.wikipedia.org/wiki/Barton%E2%80%93Nackman_trick">Barton–Nackman trick</a> to encapsulate the SSE intrinsic data types, to keep a twin of normal and flipped occupancy as base for further <a href="/Files">file</a>-, <a href="/Diagonals">diagonal</a> or <a href="/Anti-Diagonals">anti-diagonal</a> attack generations, which then requires only one final shuffle per piece attack getter, whether it is a bishop or even a queen.</p>
+<pre><code>class Occupied : public BitSet&lt;Occupied, char_x16_t&gt; {
+    typedef BitSet&lt;Occupied, char_x16_t&gt; Base;
+
+    struct Mask {
+        value_type singleton;
+        value_type file;
+        value_type diagonal;
+        value_type antidiag;
+
+        Mask operator () (Square);
+    };
+    typedef Square::const_array&lt;Mask, Mask&gt; CACHE_ALIGN AttackMask;
+    static const AttackMask mask;
+
+    struct Shuffle {
+        value_type hyperbola;
+        value_type flipShift;
+        Shuffle ();
+    };
+    static const Shuffle shuffle;
+
+    static BitBoard bitboard(value_type value) {
+        return BitBoard(static_cast&lt;BitBoard::value_type&gt;(_mm_cvtsi128_si64(value)));
+    }
+
+    static BitBoard hyperbola(value_type value) {
+        value_type reverse = _mm_shuffle_epi8(value, shuffle.hyperbola);
+        return bitboard(value ^ reverse); //xor is principal here
+    }
+
+    INLINE BitBoard bishopAttack(Square from) const {
+        value_type d = value;
+        value_type a = value;
+        d &amp;= mask[from].diagonal;
+        a &amp;= mask[from].antidiag;
+        d = _mm_sub_epi64(d, mask[from].singleton);
+        a = _mm_sub_epi64(a, mask[from].singleton);
+        d &amp;= mask[from].diagonal;
+        a &amp;= mask[from].antidiag;
+        return hyperbola(d ^ a);
+    }
+
+    ...
+public:
+    Occupied (const BitBoard&amp; myB, const BitBoard&amp; opB) {
+        value_type my = _mm_cvtsi64_si128(reinterpret_cast&lt;const U64&amp;&gt;(myB));
+        value_type op = _mm_cvtsi64_si128(reinterpret_cast&lt;const U64&amp;&gt;(opB));
+        op = _mm_shuffle_epi8(op, shuffle.flipShift);
+        assert (Occupied(my &amp; op) == empty()); //no intersection
+        this-&gt;value = my ^ op;
+    }
+
+    ...
+};</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/AltiVec">AltiVec</a></li>
+<li><a href="/AVX">AVX</a></li>
+<li><a href="/AVX2">AVX2</a></li>
+<li><a href="/AVX-512">AVX-512</a></li>
+<li><a href="/MMX">MMX</a></li>
+<li><a href="/SIMD_and_SWAR_Techniques">SIMD and SWAR Techniques</a></li>
+<li><a href="/SSE2">SSE2</a></li>
+<li><a href="/SSE3">SSE3</a></li>
+<li><a href="/SSE4">SSE4</a></li>
+<li><a href="/SSE5">SSE5</a></li>
+<li><a href="/X86-64">x86-64</a></li>
+<li><a href="/XOP">XOP</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/SSSE3">SSSE3 from Wikipedia</a></li>
+<li><a href="http://sseplus.sourceforge.net/index.html">SSEPlus Project Documentation</a></li>
+<li><a href="http://www.agner.org/optimize/blog/">Agner`s CPU blog</a> by <a href="http://www.agner.org/">Agner Fog</a></li>
+<li><a href="http://0x80.pl/articles/sse-popcount.html">SSSE3: fast popcount</a> by <a href="/Wojciech_Muła">Wojciech Muła</a>, May 24, 2008 » <a href="/Population_Count">Population Count</a></li>
+<li><a href="http://software.intel.com/sites/landingpage/IntrinsicsGuide/">Intel Intrinsics Guide</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/X86">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://msdn.microsoft.com/en-us/library/vstudio/bb892952%28v=vs.100%29.aspx">Supplemental Streaming SIMD Extensions 3 Instructions</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://www.cs.fsu.edu/~engelen/courses/HPC-adv/intref_cls.pdf">Intel C++ Compiler for Linux Intrinsics Reference</a> (pdf)<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://gcc.gnu.org/ml/gcc-patches/2008-03/msg00619.html">fixing SSSE3 pmaddubsw description</a> from the mail archive of the <a href="/cdn-cgi/l/email-protection#a1c6c2c28cd1c0d5c2c9c4d2e1c6c2c28fc6cfd48fced3c6"><span class="__cf_email__" data-cfemail="88efebeba5f8e9fcebe0edfbc8efebeba6efe6fda6e7faef">[email&#160;protected]</span></a> mailing list for the <a href="/Free_Software_Foundation">GCC project</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://0x80.pl/articles/sse-popcount.html">SSSE3: fast popcount</a> by <a href="/Wojciech_Muła">Wojciech Muła</a>, May 24, 2008<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="/Wojciech_Muła">Wojciech Muła</a>, <a href="http://dblp.uni-trier.de/pers/hd/k/Kurz:Nathan">Nathan Kurz</a>, <a href="https://github.com/lemire">Daniel Lemire</a> (<strong>2016</strong>). <em>Faster Population Counts Using AVX2 Instructions</em>. <a href="https://arxiv.org/abs/1611.07612">arXiv:1611.07612</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=367616&amp;t=35858">Re: Plain and fancy magic on modern hardware</a> by Robert Purves, <a href="/Computer_Chess_Forums">CCC</a>, August 23, 2010<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/SSSE3">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

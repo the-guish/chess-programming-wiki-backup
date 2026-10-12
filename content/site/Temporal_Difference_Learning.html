@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Temporal Difference Learning - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Temporal Difference Learning</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Learning">Learning</a> * Temporal Difference Learning</strong></p>
+<p><strong>Temporal Difference Learning</strong>, (TD learning)<br />
+is a machine learning method applied to multi-step prediction problems. As a prediction method primarily used for <a href="/Reinforcement_Learning">reinforcement learning</a>, TD learning takes into account the fact that subsequent predictions are often correlated in some sense, while in <a href="/Supervised_Learning">supervised learning</a>, one learns only from actually observed values. TD resembles <a href="https://en.wikipedia.org/wiki/Monte_Carlo_method">Monte Carlo methods</a> with <a href="/Dynamic_Programming">dynamic programming</a> techniques <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. In the domain of computer games and computer chess, TD learning is applied through self play, subsequently predicting the <a href="https://en.wikipedia.org/wiki/Probability">probability</a> of winning a <a href="/Chess_Game">game</a> during the sequence of <a href="/Moves">moves</a> from the <a href="/Initial_Position">initial position</a> until the end, to adjust weights for a more reliable prediction.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#prediction">Prediction</a></li>
+<li><a href="#tdλ">TD(λ)</a></li>
+<li><a href="#tdleafλ">TDLeaf(λ)</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#quotes">Quotes</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#don-beal">Don Beal</a></li>
+<li><a href="#bas-hamstra">Bas Hamstra</a></li>
+<li><a href="#don-dailey">Don Dailey</a></li>
+</ol>
+</details></li>
+<li><a href="#chess-programs">Chess Programs</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#publications">Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1959">1959</a></li>
+<li><a href="#1970-">1970 ...</a></li>
+<li><a href="#1980-">1980 ...</a></li>
+<li><a href="#1990-">1990 ...</a></li>
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1995--1">1995 ...</a></li>
+<li><a href="#2000--1">2000 ...</a></li>
+<li><a href="#2010--1">2010 ...</a></li>
+<li><a href="#2015--1">2015 ...</a></li>
+<li><a href="#2020--1">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="prediction">Prediction</h2>
+<p>Each prediction is a single number, derived from a formula using adjustable weights of features, for instance a <a href="/Neural_Networks">neural network</a> most simply a single neuron <a href="/Neural_Networks">perceptron</a>, that is a linear <a href="/Evaluation">evaluation</a> function ... <span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="/assets/TDLForula1.jpg" alt="" class="block w-full h-auto" /></span> <span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6" style="--wiki-img-w:220px"><img src="/assets/SigDeri.jpg" alt="Sigmoid and Derivative" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span> ... with the <a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">pawn advantage</a> converted to a <a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">winning probability</a> by the standard <a href="https://en.wikipedia.org/wiki/Sigmoid_function">sigmoid squashing function</a>, also topic in <a href="/Automated_Tuning">logistic regression</a> in the domain of <a href="/Supervised_Learning">supervised learning</a> and <a href="/Automated_Tuning">automated tuning</a>, ... <span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="/assets/TDLForula2.jpg" alt="" class="block w-full h-auto" /></span> ... which has the advantage of its simple <a href="https://en.wikipedia.org/wiki/Derivative">derivative</a>: <span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="/assets/TDLForula3.jpg" alt="" class="block w-full h-auto" /></span> <span id="TDLamba"></span></p>
+<h2 id="tdλ">TD(λ)</h2>
+<p>Each pair of <a href="https://en.wiktionary.org/wiki/temporal">temporally</a> successive predictions P at time step t and t+1 gives rise to a recommendation for weight changes, to converge P<span style="font-size: 90%;vertical-align: sub;">t</span> to P<span style="font-size: 90%;vertical-align: sub;">t+1</span>, first applied in the late 50s by <a href="/Arthur_Samuel">Arthur Samuel</a> in his <a href="/Checkers">Checkers</a> player for <a href="/Automated_Tuning">automamated evaluation tuning</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>. This TD method was improved, generalized and formalized by <a href="/Richard_Sutton">Richard Sutton</a> et al. in the 80s, the term <em>Temporal Difference Learning</em> coined in 1988 <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>, also introducing the decay or recency parameter <strong>λ</strong>, where proportions of the score came from the outcome of <a href="https://en.wikipedia.org/wiki/Monte_Carlo_method">Monte Carlo</a> simulated games, tapering between <a href="https://en.wikipedia.org/wiki/Bootstrapping#Artificial_intelligence_and_machine_learning">bootstrapping</a> (λ = 0) and Monte Carlo predictions (λ = 1), the latter equivalent to <a href="https://en.wikipedia.org/wiki/Gradient_descent">gradient descent</a> on the <a href="https://en.wikipedia.org/wiki/Mean_squared_error">mean squared error function</a>. Weight adjustments in TD(λ) are made according to ... <span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="/assets/TDLForula4.jpg" alt="" class="block w-full h-auto" /></span> ... where P is the series of temporally successive predictions, w the set of adjustable weights. α is a parameter controlling the learning rate, also called step-size, ∇<span style="font-size: 90%;vertical-align: sub;">w</span>P<span style="font-size: 90%;vertical-align: sub;">k</span> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> is the <a href="https://en.wikipedia.org/wiki/Gradient">gradient</a>, the vector of <a href="https://en.wikipedia.org/wiki/Partial_derivative">partial derivatives</a> of P<span style="font-size: 90%;vertical-align: sub;">t</span> with respect of w. The process may be applied to any initial set of weights. Learning performance depends on λ and α, which have to be chosen appropriately for the domain. In principle, TD(λ) weight adjustments may be made after each move, or at any arbitrary interval. For game playing tasks the end of every game is a convenient point to actually alter the evaluation weights <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>.</p>
+<p>TD(λ) was famously applied by <a href="/Gerald_Tesauro">Gerald Tesauro</a> in his <a href="/Backgammon">Backgammon</a> program <a href="https://en.wikipedia.org/wiki/TD-Gammon">TD-Gammon</a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>, a stochastic game picking the action whose successor state minimizes the opponent's expected reward, i.e. <a href="/Search">looking</a> one <a href="/Ply">ply</a> ahead. <span id="TDLeaf"></span></p>
+<h2 id="tdleafλ">TDLeaf(λ)</h2>
+<p>In games like chess or <a href="/Othello">Othello</a>, due to their <a href="/Tactics">tactical</a> nature, <a href="/Search">deep searches</a> are necessary for expert performance. The problem has already been recognized and solved by <a href="/Arthur_Samuel">Arthur Samuel</a> but seemed to have been forgotten later on <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> - rediscovered independently by <a href="/Don_Beal">Don Beal</a> and <a href="/Martin_C._Smith">Martin C. Smith</a> in 1997 <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a>, and by <a href="/Jonathan_Baxter">Jonathan Baxter</a>, <a href="/Andrew_Tridgell">Andrew Tridgell</a>, and <a href="/Lex_Weaver">Lex Weaver</a> <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a>, who coined the term TD-Leaf. TD-Leaf is the adaption of TD(λ) to <a href="/Minimax">minimax</a> search, where instead of the corresponding <a href="/Chess_Position">positions</a> of the <a href="/Root">root</a> the <a href="/Leaf_Node">leaf nodes</a> of the <a href="/Principal_Variation">principal variation</a> are considered in the weight adjustments. TD-Leaf was successfully used in <a href="/Automated_Tuning">evaluation tuning</a> of chess programs <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a>, with <a href="/KnightCap">KnightCap</a> <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a> and <a href="/CilkChess">CilkChess</a> as most prominent samples, while the latter used the improved <strong>Temporal Coherence Learning</strong> <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a>, which automatically adjusts α and λ <a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a>.</p>
+<h2 id="quotes">Quotes</h2>
+<h3 id="don-beal">Don Beal</h3>
+<p><a href="/Don_Beal">Don Beal</a> in a 1998 <a href="/CCC">CCC</a> discussion with <a href="/Jonathan_Baxter">Jonathan Baxter</a> <a href="#fn15" class="footnote-ref" id="fnref15" role="doc-noteref"><sup>15</sup></a>:</p>
+<p><code>With fixed learning rates (aka step size) we found </code><a href="/Point_Value"><code>piece values</code></a><code> settle to consistent relative ordering in around 500 self-play games. The ordering remains in place despite considerable erratic movements. But </code><a href="/Piece-Square_Tables"><code>piece-square values</code></a><code> can take a lot longer - more like 5000.</code></p>
+<p><code>The learning rate is critical - it has to be as large as one dares for fast learning, but low for stable values.  We've been experimenting with methods for automatically adjusting the learning rate. (Higher rates if the adjustments go in the same direction, lower if they keep changing direction.)</code></p>
+<p><code>The other problem is learning weights for terms which only occur rarely. Then the learning process doesn't see enough examples to settle on good weights in a reasonable time. I suspect this is the main limitation of the method, but it may be possible to devise ways to generate extra games which exercise the rare conditions. </code></p>
+<h3 id="bas-hamstra">Bas Hamstra</h3>
+<p><a href="/Bas_Hamstra">Bas Hamstra</a> in a 2002 <a href="/CCC">CCC</a> discussion on TD learning <a href="#fn16" class="footnote-ref" id="fnref16" role="doc-noteref"><sup>16</sup></a>:</p>
+<p><code>I have played with it. I am convinced it has possibilities, but one problem I encountered was the cause-effect problem. For say I am a piece down. After I lost the game TD will conclude that the winner had better </code><a href="/Mobility"><code>mobility</code></a><code> and will tune it up. However worse mobility was not the </code><strong><code>cause</code></strong><code> of the loss, it was the </code><strong><code>effect</code></strong><code> of simply being a piece down. In my case it kept tuning mobility up and up until ridiculous values. </code></p>
+<h3 id="don-dailey">Don Dailey</h3>
+<p><a href="/Don_Dailey">Don Dailey</a> in a reply <a href="#fn17" class="footnote-ref" id="fnref17" role="doc-noteref"><sup>17</sup></a> to <a href="/Ben-Hur_Carlos_Vieira_Langoni_Junior">Ben-Hur Carlos Vieira Langoni Junior</a>, <a href="/CCC">CCC</a>, December 2010 <a href="#fn18" class="footnote-ref" id="fnref18" role="doc-noteref"><sup>18</sup></a> :</p>
+<p><code>Another approach that may be more in line with what you want is called "temporal difference learning", and it is based on feedback from each move to the move that precedes it. For example if you play move 35 and the program thinks the position is equal, but then on move 36 you find that you are winning a pawn, it indicates that the evaluation of move 35 is in error, the position is better than the program thought it was. Little tiny incremental adjustments are made to the evaluation function so that it is ever so slightly biased in favor of being slightly more positive in this case, or slightly more negative in the case where you find your score is dropping. This is done recursively back through the moves of the game so that winning the game gives some credit to all the positions of the game. Look on the web and read up on the "credit assignment problem" and temporal difference learning. It's probably ideal for what you are looking for. It can be done at the end of the game one time and scores then updated. If you are not using </code><a href="/Float"><code>floating point</code></a><code> evaluation you may have to figure out how to modify this to be workable. </code></p>
+<h2 id="chess-programs">Chess Programs</h2>
+<ul>
+<li><a href="/CilkChess">CilkChess</a></li>
+<li><a href="/EXchess">EXchess</a></li>
+<li><a href="/FUSCsharp">FUSc#</a></li>
+<li><a href="/Giraffe">Giraffe</a></li>
+<li><a href="/Green_Light_Chess">Green Light Chess</a></li>
+<li><a href="/KnightCap">KnightCap</a></li>
+<li><a href="/Meep">Meep</a></li>
+</ul>
+<p><a href="/Meep">RootStrap</a></p>
+<p><a href="/Meep">TreeStrap</a></p>
+<ul>
+<li><a href="/Merlin_%28HU%29">Merlin</a></li>
+<li><a href="/Morph">Morph</a></li>
+<li><a href="/NeuroChess">NeuroChess</a></li>
+<li><a href="/SAL">SAL</a></li>
+<li><a href="/Tao">Tao</a> <a href="#fn19" class="footnote-ref" id="fnref19" role="doc-noteref"><sup>19</sup></a></li>
+<li><a href="/TDChess">TDChess</a></li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Automated_Tuning">Automated Tuning</a></li>
+<li><a href="/Backgammon">Backgammon</a></li>
+<li><a href="/Deep_Learning">Deep Learning</a></li>
+<li><a href="/Evaluation">Evaluation</a></li>
+<li><a href="/Neural_Networks">Neural Networks</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<h3 id="1959">1959</h3>
+<ul>
+<li><a href="/Arthur_Samuel">Arthur Samuel</a> (<strong>1959</strong>). <em><a href="http://domino.watson.ibm.com/tchjr/journalindex.nsf/600cc5649e2871db852568150060213c/39a870213169f45685256bfa00683d74!OpenDocument">Some Studies in Machine Learning Using the Game of Checkers</a></em>. IBM Journal July 1959</li>
+</ul>
+<h3 id="1970-">1970 ...</h3>
+<ul>
+<li><a href="/A._Harry_Klopf">A. Harry Klopf</a> (<strong>1972</strong>). <em>Brain Function and Adaptive Systems - A Heterostatic Theory</em>. <a href="https://en.wikipedia.org/wiki/Air_Force_Cambridge_Research_Laboratories">Air Force Cambridge Research Laboratories</a>, Special Reports, No. 133, <a href="http://www.dtic.mil/dtic/tr/fulltext/u2/742259.pdf">pdf</a></li>
+<li><a href="/Mathematician">John H. Holland</a> (<strong>1975</strong>). <em>Adaptation in Natural and Artificial Systems: An Introductory Analysis with Applications to Biology, Control, and Artificial Intelligence</em>. <a href="https://www.amazon.com/Adaptation-Natural-Artificial-Systems-Introductory/dp/0262581116">amazon.com</a></li>
+<li><a href="/Ian_H._Witten">Ian H. Witten</a> (<strong>1977</strong>). <em>An Adaptive Optimal Controller for Discrete-Time Markov Environments</em>. <a href="https://en.wikipedia.org/wiki/Information_and_Computation">Information and Control</a>, Vol. 34, No. 4, <a href="https://core.ac.uk/download/pdf/82451748.pdf">pdf</a></li>
+</ul>
+<h3 id="1980-">1980 ...</h3>
+<ul>
+<li><a href="/Richard_Sutton">Richard Sutton</a> (<strong>1984</strong>). <em><a href="http://scholarworks.umass.edu/dissertations/AAI8410337/">Temporal Credit Assignment in Reinforcement Learning</a></em>. Ph.D. dissertation, <a href="https://en.wikipedia.org/wiki/University_of_Massachusetts">University of Massachusetts</a></li>
+<li><a href="/Jens_Christensen">Jens Christensen</a> (<strong>1986</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-1-4613-2279-5_9?no-access=true">Learning Static Evaluation Functions by Linear Regression</a></em>. in <a href="/Tom_Mitchell">Tom Mitchell</a>, <a href="/Jaime_Carbonell">Jaime Carbonell</a>, <a href="/Ryszard_Michalski">Ryszard Michalski</a> (<strong>1986</strong>). <em><a href="http://link.springer.com/book/10.1007/978-1-4613-2279-5">Machine Learning: A Guide to Current Research</a></em>. The Kluwer International Series in Engineering and Computer Science, Vol. 12</li>
+<li><a href="/Richard_Sutton">Richard Sutton</a> (<strong>1988</strong>). <em>Learning to Predict by the Methods of Temporal Differences</em>. <a href="https://en.wikipedia.org/wiki/Machine_Learning_%28journal%29">Machine Learning</a>, Vol. 3, No. 1</li>
+<li><a href="/Andrew_Barto">Andrew Barto</a>, <a href="/Richard_Sutton">Richard Sutton</a>, <a href="https://dblp.uni-trier.de/pers/hd/w/Watkins:Christopher_J=_C=_H=">Christopher J. C. H. Watkins</a> (<strong>1989</strong>). <em><a href="https://papers.nips.cc/paper/194-sequential-decision-problems-and-neural-networks">Sequential Decision Problems and Neural Networks</a></em>. <a href="https://dblp.uni-trier.de/db/conf/nips/nips1989.html">NIPS 1989</a></li>
+</ul>
+<h3 id="1990-">1990 ...</h3>
+<ul>
+<li><a href="/Richard_Sutton">Richard Sutton</a>, <a href="/Andrew_Barto">Andrew Barto</a> (<strong>1990</strong>). <em>Time-Derivative Models of Pavlovian Reinforcement</em>. in <a href="http://node.realityspline.net/ari/work/neuro/people/showpeople.php?person=faculty/mgabriel.php">Michael Gabriel</a>, <a href="http://people.umass.edu/jwmoore/people.htm#JWMoore">John Moore</a> (eds.) (<strong>1990</strong>). <em>Learning and Computational Neuroscience: Foundations of Adaptive Networks</em>. <a href="https://en.wikipedia.org/wiki/MIT_Press">MIT Press</a>, <a href="https://webdocs.cs.ualberta.ca/~sutton/papers/sutton-barto-90.pdf">pdf</a></li>
+<li><a href="http://dblp.uni-trier.de/pers/hd/y/Yee:Richard_C=">Richard C. Yee</a>, <a href="http://dblp.uni-trier.de/pers/hd/s/Saxena:Sharad">Sharad Saxena</a>, <a href="/Paul_E._Utgoff">Paul E. Utgoff</a>, <a href="/Andrew_Barto">Andrew Barto</a> (<strong>1990</strong>). <em>Explaining Temporal Differences to Create Useful Concepts for Evaluating States</em>. <a href="http://dblp.uni-trier.de/db/conf/aaai/aaai90.html#YeeSUB90">AAAI 1990</a>, <a href="http://www.aaai.org/Papers/AAAI/1990/AAAI90-132.pdf">pdf</a></li>
+<li><a href="/Peter_Dayan">Peter Dayan</a> (<strong>1990</strong>). <em><a href="https://papers.nips.cc/paper/428-navigating-through-temporal-difference">Navigating Through Temporal Difference</a></em>. <a href="https://papers.nips.cc/book/advances-in-neural-information-processing-systems-3-1990">NIPS 1990</a></li>
+<li><a href="/Gerald_Tesauro">Gerald Tesauro</a> (<strong>1992</strong>). <em>Temporal Difference Learning of Backgammon Strategy</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/icml/ml1992.html#Tesauro92">ML 1992</a></li>
+<li><a href="/Peter_Dayan">Peter Dayan</a> (<strong>1992</strong>). <em><a href="https://www.researchgate.net/publication/227208155_The_Convergence_of_TDl_for_General_l">The convergence of TD (λ) for general λ</a></em>. <a href="https://en.wikipedia.org/wiki/Machine_Learning_(journal)">Machine Learning</a>, Vol. 8, No. 3</li>
+<li><a href="/Gerald_Tesauro">Gerald Tesauro</a> (<strong>1992</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=139616">Practical Issues in Temporal Difference Learning</a></em>. <a href="https://en.wikipedia.org/wiki/Machine_Learning_%28journal%29">Machine Learning</a>, Vol. 8, Nos. 3-4</li>
+<li><a href="/Michael_Gherrity">Michael Gherrity</a> (<strong>1993</strong>). <em>A Game Learning Machine</em>. Ph.D. thesis, <a href="https://de.wikipedia.org/wiki/University_of_California,_San_Diego">University of California, San Diego</a>, advisor <a href="/Mathematician">Paul Kube</a>, <a href="http://www.gherrity.org/thesis.pdf">pdf</a>, <a href="http://www.top-5000.nl/ps/A%20game%20learning%20machine.pdf">pdf</a></li>
+<li><a href="/Peter_Dayan">Peter Dayan</a> (<strong>1993</strong>). <em>Improving generalisation for temporal difference learning: The successor representation</em>. <a href="https://en.wikipedia.org/wiki/Neural_Computation_(journal)">Neural Computation</a>, Vol. 5, <a href="http://www.gatsby.ucl.ac.uk/~dayan/papers/sr93.pdf">pdf</a></li>
+<li><a href="/Nicol_N._Schraudolph">Nicol N. Schraudolph</a>, <a href="/Peter_Dayan">Peter Dayan</a>, <a href="/Terrence_J._Sejnowski">Terrence J. Sejnowski</a> (<strong>1993</strong>). <em><a href="https://papers.nips.cc/paper/820-temporal-difference-learning-of-position-evaluation-in-the-game-of-go">Temporal Difference Learning of Position Evaluation in the Game of Go</a></em>. <a href="https://papers.nips.cc/book/advances-in-neural-information-processing-systems-6-1993">NIPS 1993</a> <a href="#fn20" class="footnote-ref" id="fnref20" role="doc-noteref"><sup>20</sup></a></li>
+<li><a href="/Peter_Dayan">Peter Dayan</a>, <a href="/Terrence_J._Sejnowski">Terrence J. Sejnowski</a> (<strong>1994</strong>). <em>TD(λ) converges with Probability 1</em>. <a href="https://en.wikipedia.org/wiki/Machine_Learning_(journal)">Machine Learning</a>, Vol. 14, No. 1, <a href="https://www.researchgate.net/profile/Terrence_Sejnowski/publication/228392650_TD_X_Converges_with_Probability/links/54a4afea0cf256bf8bb327a9.pdf?origin=publication_detail">pdf</a></li>
+</ul>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li>Anton Leouski (<strong>1995</strong>). <em>Learning of Position Evaluation in the Game of Othello</em>. Master's Project, <a href="https://en.wikipedia.org/wiki/University_of_Massachusetts">University of Massachusetts</a>, <a href="https://en.wikipedia.org/wiki/Amherst,_Massachusetts">Amherst, Massachusetts</a>, <a href="http://people.ict.usc.edu/~leuski/publications/papers/UM-CS-1995-023.pdf">pdf</a></li>
+<li><a href="/Gerald_Tesauro">Gerald Tesauro</a> (<strong>1995</strong>). <em>Temporal Difference Learning and TD-Gammon</em>. <a href="/ACM">Communications of the ACM</a>, Vol. 38, No. 3</li>
+<li><a href="/Sebastian_Thrun">Sebastian Thrun</a> (<strong>1995</strong>). <em><a href="http://robots.stanford.edu/papers/thrun.nips7.neuro-chess.html">Learning to Play the Game of Chess</a></em>. in <a href="/Gerald_Tesauro">Gerald Tesauro</a>, <a href="https://en.wikipedia.org/wiki/David_S._Touretzky">David S. Touretzky</a>, <a href="http://mitpress.mit.edu/authors/todd-k-leen">Todd K. Leen</a> (eds.) Advances in Neural Information Processing Systems 7, <a href="https://en.wikipedia.org/wiki/MIT_Press">MIT Press</a></li>
+</ul>
+<p><strong>1996</strong></p>
+<ul>
+<li><a href="/Robert_Schapire">Robert Schapire</a>, <a href="/Mathematician">Manfred K. Warmuth</a> (<strong>1996</strong>). <em>On the Worst-Case Analysis of Temporal-Difference Learning Algorithms</em>. <a href="https://en.wikipedia.org/wiki/Machine_Learning_%28journal%29">Machine Learning</a>, Vol. 22, Nos. 1-3, <a href="https://users.soe.ucsc.edu/~manfred/pubs/J34.pdf">pdf</a></li>
+<li><a href="/Johannes_Fürnkranz">Johannes Fürnkranz</a> (<strong>1996</strong>). <em>Machine Learning in Computer Chess: The Next Generation.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 19, No. 3</a>, <a href="http://www.ofai.at/cgi-bin/get-tr?download=1&amp;paper=oefai-tr-96-11.ps.gz">zipped ps</a></li>
+<li>Steven Bradtke, <a href="/Andrew_Barto">Andrew Barto</a> (<strong>1996</strong>) <em>Linear Least-Squares Algorithms for Temporal Difference Learning</em>. <a href="https://en.wikipedia.org/wiki/Machine_Learning_%28journal%29">Machine Learning</a>, Vol. 22, Nos. 1/2/3, <a href="http://www-anw.cs.umass.edu/pubs/1995_96/bradtke_b_ML96.pdf">pdf</a></li>
+</ul>
+<p><strong>1997</strong></p>
+<ul>
+<li><a href="/Mathematician">John N. Tsitsiklis</a>, <a href="/Mathematician">Benjamin Van Roy</a> (<strong>1997</strong>). <em><a href="https://scholar.google.com/citations?view_op=view_citation&amp;hl=en&amp;user=bWTPrLEAAAAJ&amp;citation_for_view=bWTPrLEAAAAJ:2osOgNQ5qMEC">An Analysis of Temporal Difference Learning with Function Approximation</a></em>. <a href="/IEEE">IEEE Transactions on Automatic Control</a>, Vol. 42, No. 5</li>
+<li><a href="/Don_Beal">Don Beal</a>, <a href="/Martin_C._Smith">Martin C. Smith</a> (<strong>1997</strong>). <em>Learning Piece Values Using Temporal Differences</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 20, No. 3</a></li>
+<li><a href="/Jonathan_Baxter">Jonathan Baxter</a>, <a href="/Andrew_Tridgell">Andrew Tridgell</a>, <a href="/Lex_Weaver">Lex Weaver</a> (<strong>1997</strong>) <em>Knightcap: A chess program that learns by combining td(λ) with minimax search</em>. 15th International Conference on Machine Learning, <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.54.8263&amp;rep=rep1&amp;type=pdf">pdf</a> via <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.54.8263">citeseerX</a></li>
+</ul>
+<p><strong>1998</strong></p>
+<ul>
+<li><a href="/Don_Beal">Don Beal</a>, <a href="/Martin_C._Smith">Martin C. Smith</a> (<strong>1998</strong>). <em><a href="http://www.springerlink.com/content/l9f4ngc2tqgnac9e/">First Results from Using Temporal Difference Learning in Shogi</a></em>. <a href="/CG_1998">CG 1998</a></li>
+<li><a href="/Jonathan_Baxter">Jonathan Baxter</a>, <a href="/Andrew_Tridgell">Andrew Tridgell</a>, <a href="/Lex_Weaver">Lex Weaver</a> (<strong>1998</strong>). <em>Experiments in Parameter Learning Using Temporal Differences</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 21, No. 2</a></li>
+<li><a href="/Richard_Sutton">Richard Sutton</a>, <a href="/Andrew_Barto">Andrew Barto</a> (<strong>1998</strong>). <em><a href="http://www.incompleteideas.net/sutton/book/the-book.html">Reinforcement Learning: An Introduction</a></em>. <a href="https://en.wikipedia.org/wiki/MIT_Press">MIT Press</a>, <a href="https://webdocs.cs.ualberta.ca/~sutton/book/ebook/node60.html">6. Temporal-Difference Learning</a></li>
+<li><a href="/Justin_A._Boyan">Justin A. Boyan</a> (<strong>1998</strong>). <em>Least-Squares Temporal Difference Learning</em>. <a href="/Carnegie_Mellon_University">Carnegie Mellon University</a>, CMU-CS-98-152, <a href="http://www.research.rutgers.edu/~lihong/project/ahlp/boyan99least.pdf">pdf</a></li>
+</ul>
+<p><strong>1999</strong></p>
+<ul>
+<li><a href="/Jonathan_Baxter">Jonathan Baxter</a>, <a href="/Andrew_Tridgell">Andrew Tridgell</a>, <a href="/Lex_Weaver">Lex Weaver</a> (<strong>1999</strong>). <em>TDLeaf(lambda): Combining Temporal Difference Learning with Game-Tree Search</em>. <a href="https://www.chatbots.org/journal/australian_journal_of_intelligent_information_processing_systems/">Australian Journal of Intelligent Information Processing Systems</a>, Vol. 5 No. 1, <a href="http://arxiv.org/abs/cs/9901001">arXiv:cs/9901001</a></li>
+<li><a href="/Don_Beal">Don Beal</a>, <a href="/Martin_C._Smith">Martin C. Smith</a> (<strong>1999</strong>). <em><a href="http://portal.acm.org/citation.cfm?id=1624299">Temporal Coherence and Prediction Decay in TD Learning</a></em>. <a href="/Conferences">IJCAI 1999</a>, <a href="http://ijcai.org/Past%20Proceedings/IJCAI-99-VOL-1/PDF/081.pdf">pdf</a></li>
+<li><a href="/Don_Beal">Don Beal</a>, <a href="/Martin_C._Smith">Martin C. Smith</a> (<strong>1999</strong>). <em>Learning Piece-Square Values using Temporal Differences.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 22, No. 4</a></li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="/Sebastian_Thrun">Sebastian Thrun</a>, <a href="/Michael_L._Littman">Michael L. Littman</a> (<strong>2000</strong>). <em>A Review of Reinforcement Learning</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/journals/aim/aim21.html#ThrunL00">AI Magazine, Vol. 21</a>, No. 1, <a href="http://www.aistudy.com/paper/aaai_journal/AIMag21-01-001.pdf">pdf</a></li>
+<li><a href="/Robert_Levinson">Robert Levinson</a>, Ryan Weber (<strong>2000</strong>). <em><a href="http://link.springer.com/chapter/10.1007/3-540-45579-5_9">Chess Neighborhoods, Function Combination, and Reinforcement Learning</a></em>. <a href="/CG_2000">CG 2000</a>, <a href="https://users.soe.ucsc.edu/~levinson/Papers/CNFCRL.pdf">pdf</a> » <a href="/Morph">Morph</a></li>
+<li><a href="/Jonathan_Baxter">Jonathan Baxter</a>, <a href="/Andrew_Tridgell">Andrew Tridgell</a>, <a href="/Lex_Weaver">Lex Weaver</a> (<strong>2000</strong>). <em>Learning to Play Chess Using Temporal Differences</em>. <a href="http://www.dblp.org/db/journals/ml/ml40.html#BaxterTW00">Machine Learning, Vol 40, No. 3</a>, <a href="http://www.cs.princeton.edu/courses/archive/fall06/cos402/papers/chess-RL.pdf">pdf</a></li>
+<li><a href="/Johannes_Fürnkranz">Johannes Fürnkranz</a> (<strong>2000</strong>). <em>Machine Learning in Games: A Survey</em>. <a href="https://en.wikipedia.org/wiki/Austrian_Research_Institute_for_Artificial_Intelligence">Austrian Research Institute for Artificial Intelligence</a>, OEFAI-TR-2000-3, <a href="http://www.ofai.at/cgi-bin/get-tr?download=1&amp;paper=oefai-tr-2000-31.pdf">pdf</a></li>
+</ul>
+<p><strong>2001</strong></p>
+<ul>
+<li><a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, <a href="/Markian_Hlynka">Markian Hlynka</a>, Vili Jussila (<strong>2001</strong>). <em>Temporal Difference Learning Applied to a High-Performance Game-Playing Program</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/ijcai/ijcai2001.html#SchaefferHJ01">IJCAI 2001</a></li>
+<li><a href="/Don_Beal">Don Beal</a>, <a href="/Martin_C._Smith">Martin C. Smith</a> (<strong>2001</strong>). <em><a href="http://www.sciencedirect.com/science?_ob=ArticleURL&amp;_udi=B6V1G-41MJ1SV-7&amp;_user=10&amp;_coverDate=02%2F06%2F2001&amp;_rdoc=1&amp;_fmt=high&amp;_orig=search&amp;_sort=d&amp;_docanchor=&amp;view=c&amp;_searchStrId=1436661548&amp;_rerunOrigin=google&amp;_acct=C000050221&amp;_version=1&amp;_urlVersion=0&amp;_userid=10&amp;md5=d855cbad10953476dbb92258347c8e94">Temporal difference learning applied to game playing and the results of application to Shogi</a></em>. <a href="https://en.wikipedia.org/wiki/Theoretical_Computer_Science_%28journal%29">Theoretical Computer Science</a>, Vol. 252, Nos. 1-2</li>
+<li><a href="/Nicol_N._Schraudolph">Nicol N. Schraudolph</a>, <a href="/Peter_Dayan">Peter Dayan</a>, <a href="/Terrence_J._Sejnowski">Terrence J. Sejnowski</a> (<strong>2001</strong>). <em><a href="https://link.springer.com/chapter/10.1007/978-3-7908-1833-8_4">Learning to Evaluate Go Positions via Temporal Difference Methods</a></em>. <a href="http://jasss.soc.surrey.ac.uk/7/1/reviews/takama.html">Computational Intelligence in Games, Studies in Fuzziness and Soft Computing</a>. <a href="http://www.springer.com/economics?SGWID=1-165-6-73481-0">Physica-Verlag</a>, <a href="https://papers.cnl.salk.edu/PDFs/Learning%20to%20Evaluate%20Go%20Positions%20Via%20Temporal%20Difference%20Methods%202001-3244.pdf">pdf</a></li>
+<li><a href="/Lex_Weaver">Lex Weaver</a>, <a href="/Jonathan_Baxter">Jonathan Baxter</a> (<strong>2001</strong>). <em>STD (λ): learning state differences with TD (λ)</em>. <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.20.7737">CiteSeerX</a></li>
+</ul>
+<p><strong>2002</strong></p>
+<ul>
+<li>Ari Shapiro, Gil Fuchs, <a href="/Robert_Levinson">Robert Levinson</a> (<strong>2002</strong>). <em><a href="http://www.arishapiro.com/researchportfolio/Learning%20Game%20Strategy/index.htm">Learning a Game Strategy Using Pattern-Weights and Self-play</a></em>. <a href="/CG_2002">CG 2002</a>, <a href="http://www.arishapiro.com//ShapiroA_CG2002.pdf">pdf</a></li>
+<li><a href="/Mark_Winands">Mark Winands</a>, <a href="/Levente_Kocsis">Levente Kocsis</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2002</strong>). <em>Temporal difference learning and the Neural MoveMap heuristic in the game of Lines of Action</em>. GAME-ON 2002 » <a href="/Neural_MoveMap_Heuristic">Neural MoveMap Heuristic</a></li>
+<li><a href="/James_Swafford">James Swafford</a> (<strong>2002</strong>). <em>Optimizing Parameter Learning using Temporal Differences</em>. <a href="http://www.aaai.org/Conferences/AAAI/aaai02.php">AAAI-02</a>, Student Abstracts, <a href="https://www.aaai.org/Papers/AAAI/2002/AAAI02-150.pdf">pdf</a></li>
+<li><a href="/Justin_A._Boyan">Justin A. Boyan</a> (<strong>2002</strong>). <em><a href="https://link.springer.com/article/10.1023%2FA%3A1017936530646">Technical Update: Least-Squares Temporal Difference Learning</a></em>. <a href="https://en.wikipedia.org/wiki/Machine_Learning_(journal)">Machine Learning</a>, Vol. 49, <a href="http://research.cs.rutgers.edu/~lihong/project/ahlp/boyan02least.pdf">pdf</a></li>
+<li><a href="/Don_Beal">Don Beal</a> (<strong>2002</strong>). <em><a href="https://www.researchgate.net/publication/221556841_TD_mu_A_Modificaiton_of_TD_lambda_That_Enables_a_Program_to_Learn_Weights_for_Good_Play_Even_if_It_Observes_Only_Bad_Play">TD(µ): A Modification of TD(λ) That Enables a Program to Learn Weights for Good Play Even if It Observes Only Bad Play</a></em>. <a href="https://dblp.org/db/conf/jcis/jcis2002">JCIS 2002</a></li>
+</ul>
+<p><strong>2003</strong></p>
+<ul>
+<li><a href="/Henk_Mannen">Henk Mannen</a> (<strong>2003</strong>). <em>Learning to play chess using reinforcement learning with database games</em>. Master’s thesis, Cognitive Artiﬁcial Intelligence, <a href="https://en.wikipedia.org/wiki/Utrecht_University">Utrecht University</a>, <a href="https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.109.810&amp;rep=rep1&amp;type=pdf">pdf</a></li>
+<li><a href="/Henk_Mannen">Henk Mannen</a>, <a href="/Marco_Wiering">Marco Wiering</a> (<strong>2004</strong>). <em><a href="https://www.semanticscholar.org/paper/Learning-to-Play-Chess-using-TD(lambda)-learning-Mannen-Wiering/00a6f81c8ebe8408c147841f26ed27eb13fb07f3">Learning to play chess using TD(λ)-learning with database games</a></em>. Cognitive Artiﬁcial Intelligence, <a href="https://en.wikipedia.org/wiki/Utrecht_University">Utrecht University</a>, Benelearn’04, <a href="https://www.ai.rug.nl/~mwiering/GROUP/ARTICLES/learning-chess.pdf">pdf</a></li>
+<li><a href="/Marco_Block-Berlitz">Marco Block</a> (<strong>2004</strong>). <em>Verwendung von Temporale-Differenz-Methoden im Schachmotor FUSc#</em>. Diplomarbeit, Betreuer: <a href="/Raúl_Rojas">Raúl Rojas</a>, <a href="/Free_University_of_Berlin">Free University of Berlin</a>, <a href="http://page.mi.fu-berlin.de/block/Skripte/diplomarbeit.pdf">pdf</a> (German)</li>
+<li><a href="/Jacek_Mańdziuk">Jacek Mańdziuk</a>, Daniel Osman (<strong>2004</strong>). <em>Temporal Difference Approach to Playing Give-Away Checkers</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/icaisc/icaisc2004.html#MandziukO04">ICAISC 2004</a>, <a href="http://www.mini.pw.edu.pl/~mandziuk/PRACE/ICAISC04-3.pdf">pdf</a></li>
+<li><a href="/Kristian_Kersting">Kristian Kersting</a>, <a href="/Mathematician">Luc De Raedt</a> (<strong>2004</strong>). <em><a href="https://lirias.kuleuven.be/1992259?limo=0">Logical Markov Decision Programs and the Convergence of Logical TD(lambda)</a></em>. <a href="https://dblp.org/db/conf/ilp/ilp2004.html#KerstingR04">ILP 2004</a>, <a href="http://people.csail.mit.edu/kersting/papers/ilp04.pdf">pdf</a></li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="/Marco_Wiering">Marco Wiering</a>, <a href="http://dblp.uni-trier.de/pers/hd/p/Patist:Jan_Peter">Jan Peter Patist</a>, <a href="/Henk_Mannen">Henk Mannen</a> (<strong>2005</strong>). <em>Learning to Play Board Games using Temporal Difference Methods</em>. Technical Report, <a href="https://en.wikipedia.org/wiki/Utrecht_University">Utrecht University</a>, UU-CS-2005-048, <a href="http://www.ai.rug.nl/~mwiering/GROUP/ARTICLES/learning_games_TR.pdf">pdf</a></li>
+<li><a href="/Thomas_Philip_Runarsson">Thomas Philip Runarsson</a>, <a href="/Simon_Lucas">Simon Lucas</a> (<strong>2005</strong>). <em>Coevolution versus self-play temporal difference learning for acquiring position evaluation in small-board go</em>. <a href="/IEEE">IEEE Transactions on Evolutionary Computation</a>, Vol. 9, No. 6</li>
+</ul>
+<p><strong>2006</strong></p>
+<ul>
+<li><a href="/Simon_Lucas">Simon Lucas</a>, <a href="/Thomas_Philip_Runarsson">Thomas Philip Runarsson</a> (<strong>2006</strong>). <em><a href="https://scholar.google.is/citations?view_op=view_citation&amp;hl=en&amp;user=4eWdc_sAAAAJ&amp;citation_for_view=4eWdc_sAAAAJ:qjMakFHDy7sC">Temporal Difference Learning versus Co-Evolution for Acquiring Othello Position Evaluation</a></em>. <a href="/IEEE">CIG 2006</a></li>
+</ul>
+<p><strong>2007</strong></p>
+<ul>
+<li>Edward P. Manning (<strong>2007</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=4219046">Temporal Difference Learning of an Othello Evaluation Function for a Small Neural Network with Shared Weights</a></em>. <a href="/IEEE">IEEE Symposium on Computational Intelligence and AI in Games</a></li>
+<li>Daniel Osman (<strong>2007</strong>). <em>Temporal Difference Methods for Two-player Board Games</em>. Ph.D. thesis, Faculty of Mathematics and Information Science, <a href="https://en.wikipedia.org/wiki/Warsaw_University_of_Technology">Warsaw University of Technology</a></li>
+<li><a href="/Yasuhiro_Osaki">Yasuhiro Osaki</a>, <a href="/Kazutomo_Shibahara">Kazutomo Shibahara</a>, <a href="/Yasuhiro_Tajima">Yasuhiro Tajima</a>, <a href="/Yoshiyuki_Kotani">Yoshiyuki Kotani</a> (<strong>2007</strong>). <em>Reinforcement Learning of Evaluation Functions Using Temporal Difference-Monte Carlo learning method</em>. <a href="/Conferences">12th Game Programming Workshop</a></li>
+<li><a href="/Andrew_Barto">Andrew Barto</a> (<strong>2007</strong>). <em><a href="http://www.scholarpedia.org/article/Temporal_difference_learning">Temporal difference learning</a></em>. <a href="https://en.wikipedia.org/wiki/Scholarpedia">Scholarpedia</a> 2(11):1604</li>
+</ul>
+<p><strong>2008</strong></p>
+<ul>
+<li><a href="/Yasuhiro_Osaki">Yasuhiro Osaki</a>, <a href="/Kazutomo_Shibahara">Kazutomo Shibahara</a>, <a href="/Yasuhiro_Tajima">Yasuhiro Tajima</a>, <a href="/Yoshiyuki_Kotani">Yoshiyuki Kotani</a> (<strong>2008</strong>). <em>An Othello Evaluation Function Based on Temporal Difference Learning using Probability of Winning</em>. <a href="http://www.csse.uwa.edu.au/cig08/Proceedings/toc.html">CIG'08</a>, <a href="http://www.csse.uwa.edu.au/cig08/Proceedings/papers/8010.pdf">pdf</a></li>
+<li><a href="/Richard_Sutton">Richard Sutton</a>, <a href="/Csaba_Szepesvári">Csaba Szepesvári</a>, <a href="/Hamid_Reza_Maei">Hamid Reza Maei</a> (<strong>2008</strong>). <em>A Convergent O(n) Algorithm for Off-policy Temporal-difference Learning with Linear Function Approximation</em>. <a href="https://dblp.uni-trier.de/db/conf/nips/nips2008.html#SuttonSM08">NIPS 2008</a>, <a href="https://proceedings.neurips.cc/paper/2008/file/e0c641195b27425bb056ac56f8953d24-Paper.pdf">pdf</a></li>
+<li><a href="/Sacha_Droste">Sacha Droste</a>, <a href="/Johannes_Fürnkranz">Johannes Fürnkranz</a> (<strong>2008</strong>). <em>Learning of Piece Values for Chess Variants.</em> Technical Report TUD–KE–2008-07, Knowledge Engineering Group, <a href="/Darmstadt_University_of_Technology">TU Darmstadt</a>, <a href="http://www.ke.tu-darmstadt.de/publications/reports/tud-ke-2008-07.pdf">pdf</a></li>
+<li><a href="/Sacha_Droste">Sacha Droste</a>, <a href="/Johannes_Fürnkranz">Johannes Fürnkranz</a> (<strong>2008</strong>). <em>Learning the Piece Values for three Chess Variants</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 31, No. 4</a></li>
+<li><a href="/Marco_Block-Berlitz">Marco Block</a>, Maro Bader, <a href="http://page.mi.fu-berlin.de/tapia/">Ernesto Tapia</a>, Marte Ramírez, Ketill Gunnarsson, Erik Cuevas, Daniel Zaldivar, <a href="/Raúl_Rojas">Raúl Rojas</a> (<strong>2008</strong>). <em>Using Reinforcement Learning in Chess Engines</em>. Concibe Science 2008, <a href="http://www.micai.org/rcs/">Research in Computing Science</a>: Special Issue in Electronics and Biomedical Engineering, Computer Science and Informatics, Vol. 35, <a href="http://page.mi.fu-berlin.de/block/concibe2008.pdf">pdf</a></li>
+<li>Albrecht Fiebiger (<strong>2008</strong>). <em>Einsatz von allgemeinen Evaluierungsheuristiken in Verbindung mit der Reinforcement-Learning-Strategie in der Schachprogrammierung</em>. <a href="https://de.wikipedia.org/wiki/Besondere_Lernleistung">Besondere Lernleistung</a> im <a href="https://de.wikipedia.org/wiki/Fachgebiet">Fachbereich</a> <a href="https://de.wikipedia.org/wiki/Informatik">Informatik</a>, <a href="https://en.wikipedia.org/wiki/Federal_School_of_Saxony%E2%80%93Saint_Afra">Sächsischees Landesgymnasium Sankt Afra</a>, Internal advisor: Ralf Böttcher, External advisors: <a href="/Stefan_Meyer-Kahlen">Stefan Meyer-Kahlen</a>, <a href="/Marco_Block-Berlitz">Marco Block</a>, <a href="http://page.mi.fu-berlin.de/block/abschlussarbeiten/Fiebiger_BeLL.pdf">pdf</a> (German)</li>
+</ul>
+<p><strong>2009</strong></p>
+<ul>
+<li><a href="/Hamid_Reza_Maei">Hamid Reza Maei</a>, <a href="/Csaba_Szepesvári">Csaba Szepesvári</a>, <a href="/Shalabh_Bhatnagar">Shalabh Bhatnagar</a>, <a href="/Doina_Precup">Doina Precup</a>, <a href="/David_Silver">David Silver</a>, <a href="/Richard_Sutton">Richard Sutton</a> (<strong>2009</strong>). <em>Convergent Temporal-Difference Learning with Arbitrary Smooth Function Approximation</em>. <a href="https://dblp.uni-trier.de/db/conf/nips/nips2009.html#MaeiSBPSS09">NIPS 2009</a>, <a href="https://papers.nips.cc/paper/2009/file/3a15c7d0bbe60300a39f76f8a5ba6896-Paper.pdf">pdf</a></li>
+<li><a href="/Joel_Veness">Joel Veness</a>, <a href="/David_Silver">David Silver</a>, <a href="/William_Uther">William Uther</a>, <a href="/Alan_Blair">Alan Blair</a> (<strong>2009</strong>). <em><a href="http://papers.nips.cc/paper/3722-bootstrapping-from-game-tree-search">Bootstrapping from Game Tree Search</a></em>. NIPS 2009, <a href="http://jveness.info/publications/nips2009%20-%20bootstrapping%20from%20game%20tree%20search.pdf">pdf</a></li>
+<li><a href="/Richard_Sutton">Richard Sutton</a>, <a href="/Hamid_Reza_Maei">Hamid Reza Maei</a>, <a href="/Doina_Precup">Doina Precup</a>, <a href="/Shalabh_Bhatnagar">Shalabh Bhatnagar</a>, <a href="/David_Silver">David Silver</a>, <a href="/Csaba_Szepesvári">Csaba Szepesvári</a>, Eric Wiewiora. (<strong>2009</strong>). <em><a href="https://dl.acm.org/doi/10.1145/1553374.1553501">Fast Gradient-Descent Methods for Temporal-Difference Learning with Linear Function Approximation</a></em>. <a href="https://dblp.uni-trier.de/db/conf/icml/icml2009.html#SuttonMPBSSW09">ICML 2009</a></li>
+<li><a href="/Simon_Lucas">Simon Lucas</a> (<strong>2009</strong>). <em><a href="https://ieeexplore.ieee.org/document/5286496">Temporal difference learning with interpolated table value functions</a></em>. <a href="/IEEE">CIG 2009</a></li>
+<li><a href="/Marcin_Szubert">Marcin Szubert</a>, <a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a> (<strong>2009</strong>). <em>Coevolutionary Temporal Difference Learning for Othello</em>. <a href="/IEEE">GIG 2009</a>, <a href="http://www.cs.put.poznan.pl/wjaskowski/pub/papers/szubert09coevolutionary.pdf">pdf</a></li>
+<li><a href="/Marcin_Szubert">Marcin Szubert</a> (<strong>2009</strong>). <em>Coevolutionary Reinforcement Learning and its Application to Othello</em>. M.Sc. thesis, <a href="https://en.wikipedia.org/wiki/Pozna%C5%84_University_of_Technology">Poznań University of Technology</a>, supervisor <a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a>, <a href="https://mszubert.github.io/papers/Szubert_2009_MSC.pdf">pdf</a></li>
+<li><a href="http://www.cs.cmu.edu/~zkolter/">J. Zico Kolter</a>, Andrew Ng (<strong>2009</strong>). <em>Regularization and Feature Selection in Least-Squares Temporal Difference Learning</em>. <a href="http://www.machinelearning.org/archive/icml2009/">ICML 2009</a>, <a href="http://www.cs.cmu.edu/~zkolter/pubs/kolter-icml09b-full.pdf">pdf</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="/Marco_Wiering">Marco Wiering</a> (<strong>2010</strong>). <em>Self-play and using an expert to learn to play backgammon with temporal difference learning</em>. <a href="http://www.scirp.org/journal/jilsa/">Journal of Intelligent Learning Systems and Applications</a>, Vol. 2, No. 2</li>
+<li><a href="/Hamid_Reza_Maei">Hamid Reza Maei</a>, <a href="/Richard_Sutton">Richard Sutton</a> (<strong>2010</strong>). <em><a href="https://www.researchgate.net/publication/215990384_GQlambda_A_general_gradient_algorithm_for_temporal-difference_prediction_learning_with_eligibility_traces">GQ(λ): A general gradient algorithm for temporal-difference prediction learning with eligibility traces</a></em>. <a href="https://agi-conf.org/2010/">AGI 2010</a></li>
+<li><a href="/Hamid_Reza_Maei">Hamid Reza Maei</a> (<strong>2011</strong>). <em><a href="https://era.library.ualberta.ca/items/fd55edcb-ce47-4f84-84e2-be281d27b16a">Gradient Temporal-Difference Learning Algorithms</a></em>. Ph.D. thesis, <a href="/University_of_Alberta">University of Alberta</a>, advisor <a href="/Richard_Sutton">Richard Sutton</a></li>
+<li><a href="/Joel_Veness">Joel Veness</a> (<strong>2011</strong>). <em>Approximate Universal Artificial Intelligence and Self-Play Learning for Games</em>. Ph.D. thesis, <a href="https://en.wikipedia.org/wiki/University_of_New_South_Wales">University of New South Wales</a>, supervisors: Kee Siong Ng, <a href="/Marcus_Hutter">Marcus Hutter</a>, <a href="/Alan_Blair">Alan Blair</a>, <a href="/William_Uther">William Uther</a>, John Lloyd; <a href="http://jveness.info/publications/veness_phd_thesis_final.pdf">pdf</a></li>
+<li><a href="/I-Chen_Wu">I-Chen Wu</a>, Hsin-Ti Tsai, <a href="/Hung-Hsuan_Lin">Hung-Hsuan Lin</a>, Yi-Shan Lin, Chieh-Min Chang, <a href="/Ping-Hung_Lin">Ping-Hung Lin</a> (<strong>2011</strong>). <em><a href="https://www.conftool.net/acg13/index.php?page=browseSessions&amp;form_session=5">Temporal Difference Learning for Connect6</a></em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a></li>
+<li>Nikolaos Papahristou, Ioannis Refanidis (<strong>2011</strong>). <em><a href="https://www.conftool.net/acg13/index.php?page=browseSessions&amp;form_session=5">Improving Temporal Difference Performance in Backgammon Variants</a></em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a>, <a href="http://ai.uom.gr/nikpapa/publications/Improving%20Temporal%20Difference%20Learning%20in%20Backgammon%20Variants_ACG13.pdf">pdf</a></li>
+<li><a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a>, <a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Marcin_Szubert">Marcin Szubert</a> (<strong>2011</strong>). <em><a href="http://www.degruyter.com/view/j/amcs.2011.21.issue-4/v10006-011-0057-3/v10006-011-0057-3.xml">Evolving small-board Go players using Coevolutionary Temporal Difference Learning with Archives</a></em>. <a href="http://www.degruyter.com/view/j/amcs">Applied Mathematics and Computer Science</a>, Vol. 21, No. 4</li>
+<li><a href="/Marcin_Szubert">Marcin Szubert</a>, <a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a> (<strong>2011</strong>). <em>Learning Board Evaluation Function for Othello by Hybridizing Coevolution with Temporal Difference Learning</em>. <a href="http://control.ibspan.waw.pl:3000/mainpage">Control and Cybernetics</a>, Vol. 40, No. 3, <a href="http://www.cs.put.poznan.pl/wjaskowski/pub/papers/szubert2011learning.pdf">pdf</a></li>
+<li><a href="/István_Szita">István Szita</a> (<strong>2012</strong>). <em><a href="http://link.springer.com/chapter/10.1007%2F978-3-642-27645-3_17">Reinforcement Learning in Games</a></em>. in <a href="/Marco_Wiering">Marco Wiering</a>, <a href="http://martijnvanotterlo.nl/">Martijn Van Otterlo</a> (eds.). <em>Reinforcement learning: State-of-the-art</em>. <a href="http://link.springer.com/book/10.1007/978-3-642-27645-3">Adaptation, Learning, and Optimization, Vol. 12</a>, <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a></li>
+<li><a href="/David_Silver">David Silver</a>, <a href="/Richard_Sutton">Richard Sutton</a>, <a href="/Martin_Müller">Martin Mueller</a> (<strong>2013</strong>). <em>Temporal-Difference Search in Computer Go</em>. Proceedings of the <a href="http://icaps13.icaps-conference.org/technical-program/workshop-program/planning-and-learning/">ICAPS-13 Workshop on Planning and Learning</a>, <a href="http://webdocs.cs.ualberta.ca/~sutton/papers/SSM-ICAPS-13.pdf">pdf</a></li>
+<li>Florian Kunz (<strong>2013</strong>). <em>An Introduction to Temporal Difference Learning</em>. Seminar on Autonomous Learning Systems, <a href="/Darmstadt_University_of_Technology">TU Darmstad</a>, <a href="http://www.ausy.informatik.tu-darmstadt.de/uploads/Teaching/AutonomousLearningSystems/Kunz_ALS_2013.pdf">pdf</a></li>
+<li><a href="/I-Chen_Wu">I-Chen Wu</a>, <a href="/Kun-Hao_Yeh">Kun-Hao Yeh</a>, <a href="/Chao-Chin_Liang">Chao-Chin Liang</a>, Chia-Chuan Chang, Han Chiang (<strong>2014</strong>). <em>Multi-Stage Temporal Difference Learning for 2048</em>. TAAI 2014</li>
+<li><a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Marcin_Szubert">Marcin Szubert</a>, <a href="/Paweł_Liskowski">Paweł Liskowski</a> (<strong>2014</strong>). <em>Multi-Criteria Comparison of Coevolution and Temporal Difference Learning on Othello</em>. <a href="http://www.evostar.org/2014/">EvoApplications 2014</a>, <a href="http://www.springer.com/computer/theoretical+computer+science/book/978-3-662-45522-7">Springer, volume 8602</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li>James L. McClelland (<strong>2015</strong>). <em><a href="https://web.stanford.edu/group/pdplab/pdphandbook/handbook3.html#handbookch10.html">Explorations in Parallel Distributed Processing: A Handbook of Models, Programs, and Exercises</a></em>. Second Edition, <a href="https://web.stanford.edu/group/pdplab/pdphandbook/handbookli1.html">Contents</a>, <a href="https://web.stanford.edu/group/pdplab/pdphandbook/handbookch10.html">Temporal-Difference Learning</a></li>
+<li><a href="/Matthew_Lai">Matthew Lai</a> (<strong>2015</strong>). <em>Giraffe: Using Deep Reinforcement Learning to Play Chess</em>. M.Sc. thesis, <a href="https://en.wikipedia.org/wiki/Imperial_College_London">Imperial College London</a>, <a href="http://arxiv.org/abs/1509.01549v1">arXiv:1509.01549v1</a> » <a href="/Giraffe">Giraffe</a></li>
+<li>Markus Thill (<strong>2015</strong>). <em>Temporal Difference Learning Methods with Automatic Step-Size Adaption for Strategic Board Games: Connect-4 and Dots-and-Boxes</em>. Master thesis, <a href="https://en.wikipedia.org/wiki/Technical_University_of_Cologne">Technical University of Cologne</a>, Campus Gummersbach, <a href="http://www.gm.fh-koeln.de/~konen/research/PaperPDF/MT-Thill2015-final.pdf">pdf</a></li>
+<li>Kazuto Oka, Kiminori Matsuzaki (<strong>2016</strong>). <em>Systematic Selection of N-tuple Networks for 2048</em>. <a href="/CG_2016">CG 2016</a></li>
+<li>Huizhen Yu, A. Rupam Mahmood, <a href="/Richard_Sutton">Richard Sutton</a> (<strong>2017</strong>). <em>On Generalized Bellman Equations and Temporal-Difference Learning</em>. Canadian Conference on AI 2017, <a href="https://arxiv.org/abs/1704.04463">arXiv:1704.04463</a></li>
+<li><a href="/William_Uther">William Uther</a> (<strong>2017</strong>). <em><a href="https://link.springer.com/referenceworkentry/10.1007/978-1-4899-7687-1_817">Temporal Difference Learning</a></em>. in <a href="https://en.wikipedia.org/wiki/Claude_Sammut">Claude Sammut</a>, <a href="https://en.wikipedia.org/wiki/Geoff_Webb">Geoffrey I. Webb</a> (eds) (<strong>2017</strong>). <em><a href="https://link.springer.com/referencework/10.1007%2F978-1-4899-7687-1">Encyclopedia of Machine Learning and Data Mining</a></em>. <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="https://scholar.google.ca/citations?user=yVtSOt8AAAAJ&amp;hl=en">Emmanuel Bengio</a>, <a href="/Joelle_Pineau">Joelle Pineau</a>, <a href="/Doina_Precup">Doina Precup</a> (<strong>2020</strong>). <em>Interference and Generalization in Temporal Difference Learning</em>. <a href="https://arxiv.org/abs/2003.06350">arXiv:2003.06350</a></li>
+<li><a href="https://scholar.google.ca/citations?user=4C5wrXIAAAAJ&amp;hl=en">Joshua Romoff</a>, <a href="https://scholar.google.com/citations?user=dy_JBs0AAAAJ&amp;hl=en">Peter Henderson</a>, <a href="https://scholar.google.com/citations?user=HUmLDxcAAAAJ&amp;hl=en">David Kanaa</a>, <a href="https://scholar.google.ca/citations?user=yVtSOt8AAAAJ&amp;hl=en">Emmanuel Bengio</a>, <a href="https://scholar.google.com/citations?user=D4LT5xAAAAAJ&amp;hl=en">Ahmed Touati</a>, <a href="https://scholar.google.ca/citations?user=9H77FYYAAAAJ&amp;hl=en">Pierre-Luc Bacon</a>, <a href="/Joelle_Pineau">Joelle Pineau</a> (<strong>2020</strong>). <em>TDprop: Does Jacobi Preconditioning Help Temporal Difference Learning?</em> <a href="https://arxiv.org/abs/2007.02786">arXiv:2007.02786</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1995--1">1995 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=28584">Parameter Tuning</a> by <a href="/Jonathan_Baxter">Jonathan Baxter</a>, <a href="/CCC">CCC</a>, October 01, 1998 » <a href="/KnightCap">KnightCap</a></li>
+</ul>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=28819">Re: Parameter Tuning</a> by <a href="/Don_Beal">Don Beal</a>, <a href="/CCC">CCC</a>, October 02, 1998</p>
+<h3 id="2000--1">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=117970">Pseudo-code for TD learning</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, July 06, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=147377">any good experiences with genetic algos or temporal difference learning?</a> by <a href="/Rafael_B._Andrist">Rafael B. Andrist</a>, <a href="/CCC">CCC</a>, January 01, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=148342">Temporal Difference</a> by <a href="/Bas_Hamstra">Bas Hamstra</a>, <a href="/CCC">CCC</a>, January 05, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=149645">Tao update</a> by <a href="/Bas_Hamstra">Bas Hamstra</a>, <a href="/CCC">CCC</a>, January 12, 2001 » <a href="/Tao">Tao</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=218650">Re: Parameter Learning Using Temporal Differences !</a> by <a href="/Aaron_Tay">Aaron Tay</a>, <a href="/CCC">CCC</a>, March 19, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=243354">Hello from Edmonton (and on Temporal Differences)</a> by <a href="/James_Swafford">James Swafford</a>, <a href="/CCC">CCC</a>, July 30, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=394403">Temporal Differences</a> by <a href="/Stuart_Cracraft">Stuart Cracraft</a>, <a href="/CCC">CCC</a>, November 03, 2004</li>
+</ul>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=394440">Re: Temporal Differences</a> by <a href="/Guy_Haworth">Guy Haworth</a>, <a href="/CCC">CCC</a>, November 04, 2004 <a href="#fn21" class="footnote-ref" id="fnref21" role="doc-noteref"><sup>21</sup></a></p>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=401974">Temporal Differences</a> by <a href="/Peter_Fendrich">Peter Fendrich</a>, <a href="/CCC">CCC</a>, December 21, 2004</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=4467&amp;p=23234">Chess program improvement project (copy at TalkChess/ICD)</a> by <a href="/Stuart_Cracraft">Stuart Cracraft</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, March 07, 2006 » <a href="/Win_at_Chess">Win at Chess</a></li>
+</ul>
+<h3 id="2010--1">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=37062">Positional learning</a> by <a href="/Ben-Hur_Carlos_Vieira_Langoni_Junior">Ben-Hur Carlos Vieira Langoni Junior</a>, <a href="/CCC">CCC</a>, December 13, 2010</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=37062&amp;start=2">Re: Positional learning</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, December 13, 2010</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=43323">Pawn Advantage, Win Percentage, and Elo</a> by <a href="/Adam_Hair">Adam Hair</a>, <a href="/CCC">CCC</a>, April 15, 2012</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=43323&amp;start=3">Re: Pawn Advantage, Win Percentage, and Elo</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, April 15, 2012</p>
+<h3 id="2015--1">2015 ...</h3>
+<ul>
+<li><a href="http://talkchess.com/forum/viewtopic.php?t=56913">*First release* Giraffe, a new engine based on deep learning</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, July 08, 2015 » <a href="/Deep_Learning">Deep Learning</a>, <a href="/Giraffe">Giraffe</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57860">td-leaf</a> by <a href="/Alexandru_Mosoi">Alexandru Mosoi</a>, <a href="/CCC">CCC</a>, October 06, 2015 » <a href="/Automated_Tuning">Automated Tuning</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62053">TD-leaf(lambda)</a> by <a href="/Robert_Pope">Robert Pope</a>, <a href="/CCC">CCC</a>, November 09, 2016</li>
+<li><a href="https://www.game-ai-forum.org/viewtopic.php?f=21&amp;t=695">TD(1)</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/Computer_Chess_Forums">Game-AI Forum</a>, November 20, 2019 » <a href="/Automated_Tuning">Automated Tuning</a></li>
+</ul>
+<h3 id="2020--1">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72810">Board adaptive / tuning evaluation function - no NN/AI</a> by Moritz Gedig, <a href="/CCC">CCC</a>, January 14, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77053">TD learning by self play (TD-Gammon)</a> by <a href="/Chris_Whittington">Chris Whittington</a>, <a href="/CCC">CCC</a>, April 10, 2021</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Temporal_difference_learning">Temporal difference learning from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wiktionary.org/wiki/temporal">temporal - Wiktionary</a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Reinforcement_learning#Temporal_difference_methods">Reinforcement learning - Temporal difference methods from Wikipedia</a></li>
+<li><a href="https://en.chessbase.com/post/standing-on-the-shoulders-of-giants">Standing on the shoulders of giants</a> by <a href="/Albert_Silver">Albert Silver</a>, <a href="/ChessBase">ChessBase News</a>, September 18, 2019</li>
+<li><a href="/Category:Shawn_Lane">Shawn Lane</a>, <a href="/Category:Jonas_Hellborg">Jonas Hellborg</a>, <a href="/Category:Jeff_Sipe">Jeff Sipe</a> - <a href="https://en.wikipedia.org/wiki/Temporal_Analogues_of_Paradise">Temporal Analogues of Paradise</a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/eN7oj7ejlow" title="YouTube video eN7oj7ejlow" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=eN7oj7ejlow">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Learning">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://en.wikipedia.org/wiki/Temporal_difference_learning">Temporal difference learning from Wikipedia</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Arthur_Samuel">Arthur Samuel</a> (<strong>1959</strong>). <em><a href="http://domino.watson.ibm.com/tchjr/journalindex.nsf/600cc5649e2871db852568150060213c/39a870213169f45685256bfa00683d74!OpenDocument">Some Studies in Machine Learning Using the Game of Checkers</a></em>. IBM Journal July 1959<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="/Richard_Sutton">Richard Sutton</a> (<strong>1988</strong>). <em>Learning to Predict by the Methods of Temporal Differences</em>. <a href="https://en.wikipedia.org/wiki/Machine_Learning_%28journal%29">Machine Learning</a>, Vol. 3, No. 1, <a href="https://webdocs.cs.ualberta.ca/~sutton/papers/sutton-88-with-erratum.pdf">pdf</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://en.wikipedia.org/wiki/Nabla_symbol">Nabla symbol from Wikipedia</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="/Don_Beal">Don Beal</a>, <a href="/Martin_C._Smith">Martin C. Smith</a> (<strong>1998</strong>). <em><a href="http://www.springerlink.com/content/l9f4ngc2tqgnac9e/">First Results from Using Temporal Difference Learning in Shogi</a></em>. <a href="/CG_1998">CG 1998</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="/Gerald_Tesauro">Gerald Tesauro</a> (<strong>1992</strong>). <em>Temporal Difference Learning of Backgammon Strategy</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/icml/ml1992.html#Tesauro92">ML 1992</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="/Gerald_Tesauro">Gerald Tesauro</a> (<strong>1994</strong>). <em>TD-Gammon, a Self-Teaching Backgammon Program, Achieves Master-Level Play</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/journals/neco/neco6.html#Tesauro94">Neural Computation Vol. 6, No. 2</a><a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="/Sacha_Droste">Sacha Droste</a>, <a href="/Johannes_Fürnkranz">Johannes Fürnkranz</a> (<strong>2008</strong>). <em>Learning of Piece Values for Chess Variants.</em> Technical Report TUD–KE–2008-07, Knowledge Engineering Group, <a href="/Darmstadt_University_of_Technology">TU Darmstadt</a>, <a href="http://www.ke.tu-darmstadt.de/publications/reports/tud-ke-2008-07.pdf">pdf</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="/Don_Beal">Don Beal</a>, <a href="/Martin_C._Smith">Martin C. Smith</a> (<strong>1997</strong>). <em>Learning Piece Values Using Temporal Differences</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 20, No. 3</a><a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="/Jonathan_Baxter">Jonathan Baxter</a>, <a href="/Andrew_Tridgell">Andrew Tridgell</a>, <a href="/Lex_Weaver">Lex Weaver</a> (<strong>1997</strong>) <em>Knightcap: A chess program that learns by combining td(λ) with minimax search</em>. 15th International Conference on Machine Learning, <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.54.8263&amp;rep=rep1&amp;type=pdf">pdf</a> via <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.54.8263">citeseerX</a><a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="/Don_Beal">Don Beal</a>, <a href="/Martin_C._Smith">Martin C. Smith</a> (<strong>1999</strong>). <em>Learning Piece-Square Values using Temporal Differences.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 22, No. 4</a><a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="/Jonathan_Baxter">Jonathan Baxter</a>, <a href="/Andrew_Tridgell">Andrew Tridgell</a>, <a href="/Lex_Weaver">Lex Weaver</a> (<strong>1998</strong>). <em>Knightcap: A chess program that learns by combining td(λ) with game-tree search</em>. Proceedings of the 15th International Conference on Machine Learning, <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.54.8263&amp;rep=rep1&amp;type=pdf">pdf</a> via <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.54.8263">citeseerX</a><a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="http://supertech.csail.mit.edu/chess/">The Cilkchess Parallel Chess Program</a><a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p><a href="/Don_Beal">Don Beal</a>, <a href="/Martin_C._Smith">Martin C. Smith</a> (<strong>1999</strong>). <em><a href="http://portal.acm.org/citation.cfm?id=1624299">Temporal Coherence and Prediction Decay in TD Learning</a></em>. <a href="/Conferences">IJCAI 1999</a>, <a href="http://ijcai.org/Past%20Proceedings/IJCAI-99-VOL-1/PDF/081.pdf">pdf</a><a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn15"><p><a href="https://www.stmintz.com/ccc/index.php?id=28819">Re: Parameter Tuning</a> by <a href="/Don_Beal">Don Beal</a>, <a href="/CCC">CCC</a>, October 02, 1998<a href="#fnref15" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn16"><p><a href="https://www.stmintz.com/ccc/index.php?id=244085">Re: Hello from Edmonton (and on Temporal Differences)</a> by <a href="/Bas_Hamstra">Bas Hamstra</a>, <a href="/CCC">CCC</a>, August 05, 2002<a href="#fnref16" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn17"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=37062&amp;start=2">Re: Positional learning</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, December 13, 2010<a href="#fnref17" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn18"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=37062">Positional learning</a> by <a href="/Ben-Hur_Carlos_Vieira_Langoni_Junior">Ben-Hur Carlos Vieira Langoni Junior</a>, <a href="/CCC">CCC</a>, December 13, 2010<a href="#fnref18" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn19"><p><a href="https://www.stmintz.com/ccc/index.php?id=149645">Tao update</a> by <a href="/Bas_Hamstra">Bas Hamstra</a>, <a href="/CCC">CCC</a>, January 12, 2001<a href="#fnref19" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn20"><p><a href="http://satirist.org/learn-game/systems/go-net.html">Nici Schraudolph’s go networks</a>, review by <a href="/Jay_Scott">Jay Scott</a><a href="#fnref20" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn21"><p><a href="/Guy_Haworth">Guy Haworth</a>, <a href="/Meel_Velliste">Meel Velliste</a> (<strong>1998</strong>). <em><a href="http://centaur.reading.ac.uk/4569/">Chess Endgames and Neural Networks</a></em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 21, No. 4</a><a href="#fnref21" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Quotes">Quotes</a> · <a href="/Category:Dailey_Quotes">Dailey Quotes</a> · <a href="/Category:Jonas_Hellborg">Jonas Hellborg</a> · <a href="/Category:Shawn_Lane">Shawn Lane</a> · <a href="/Category:Jeff_Sipe">Jeff Sipe</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Temporal_Difference_Learning">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

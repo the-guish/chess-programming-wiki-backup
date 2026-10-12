@@ -1,0 +1,864 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SSE2 - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">SSE2</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Hardware">Hardware</a> * <a href="/X86">x86</a> * SSE2</strong></p>
+<p><strong>SSE2</strong> (Streaming SIMD Extensions 2) and further <a href="/X86">x86</a>- or <a href="/X86-64">x86-64</a> streaming <a href="/SIMD_and_SWAR_Techniques">SIMD</a> extensions, like <a href="/SSE3">SSE3</a>, <a href="/SSSE3">SSSE3</a>, <a href="/SSE4">SSE4</a> and AMD's announced <a href="/SSE5">SSE5</a>, as major enhancement to <a href="/SSE">SSE</a>, provide an instruction set on 128-bit registers, namely on <a href="/Array">vectors</a> of four <a href="/Float">floats</a> or two <a href="/Double">doubles</a>, as well since SSE2 as vectors of 16 <a href="/Byte">bytes</a>, eight <a href="/Word">words</a>, four <a href="/Double_Word">double words</a> or two <a href="/Quad_Word">quad words</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. In 64-bit mode there are 16 xmm registers available, xmm0..xmm15, in 32-bit mode only eight, xmm0..xmm7. SSE is explicitly available through <a href="/C">C</a>-Compiler intrinsics <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> or (inline) <a href="/Assembly">assembly</a>. Some compiler implicitly use SSE-float and double instructions for floating point data types, others even provide automatic SSE2 vectorization, while processing <a href="/Array">arrays</a> of various integer types. SSE- and SSE2-intrinsic functions are available in <a href="https://en.wikipedia.org/wiki/Visual_C%2B%2B">Visual C</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> or <a href="https://en.wikipedia.org/wiki/Intel_C%2B%2B_Compiler">Intel-C</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#integer-instructions">Integer Instructions</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#applications">Applications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#one-step-only">One Step Only</a></li>
+<li><a href="#east-attacks">East Attacks</a></li>
+<li><a href="#sse2-dot-product">SSE2 dot product</a></li>
+<li><a href="#rotated-dot-product">Rotated Dot Product</a></li>
+<li><a href="#sse2-population-count">SSE2 Population Count</a></li>
+</ol>
+</details></li>
+<li><a href="#sse2-wrapper-in-c">SSE2-Wrapper in C++</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#simd">SIMD</a></li>
+<li><a href="#manuals">Manuals</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="integer-instructions">Integer Instructions</h2>
+<p><a href="/X86">x86</a> and <a href="/X86-64">x86-64</a> - <a href="/Template:SSE2_Instructions">SSE2 Instructions</a>, <a href="/C">C</a>-<a href="https://en.wikipedia.org/wiki/Intrinsic_function">Intrinsic</a> reference from <a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#">Intel Intrinsics Guide</a></p>
+<table>
+<thead>
+<tr>
+<th><p>Mnemonic</p></th>
+<th><p>Description</p></th>
+<th colspan="3"><p>C-Intrinsic</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td colspan="2"><p>bitwise logical</p></td>
+<td><p>return</p></td>
+<td></td>
+<td><p>parameter</p></td>
+</tr>
+<tr>
+<td><p>pand</p></td>
+<td><p>packed and, r := a &amp; b</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_and_si128">_mm_and_si128</a></p></td>
+<td><p>(_m128i a, _m128i b)</p></td>
+</tr>
+<tr>
+<td><p>pandn</p></td>
+<td><p>packed and not, r := ~a &amp; b</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_andnot_si128">_mm_andnot_si128</a></p></td>
+<td><p>(_m128i a, _m128i b)</p></td>
+</tr>
+<tr>
+<td><p>por</p></td>
+<td><p>packed or, r := a | b</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_or_si128">_mm_or_si128</a></p></td>
+<td><p>(_m128i a, _m128i b)</p></td>
+</tr>
+<tr>
+<td><p>pxor</p></td>
+<td><p>packed xor, r:= a ^ b</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_xor_si128">_mm_xor_si128</a></p></td>
+<td><p>(_m128i a, _m128i b)</p></td>
+</tr>
+<tr>
+<td colspan="2"><p>quad word shifts</p></td>
+<td><p>return</p></td>
+<td></td>
+<td><p>parameter</p></td>
+</tr>
+<tr>
+<td rowspan="2"><p>psrlq</p></td>
+<td><p>packed shift right logical quad</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_srl_epi64">_mm_srl_epi64</a></p></td>
+<td><p>(_m128i a, _m128i cnt)</p></td>
+</tr>
+<tr>
+<td><p>immediate</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_srli_epi64">_mm_srli_epi64</a></p></td>
+<td><p>(_m128i a, int cnt)</p></td>
+</tr>
+<tr>
+<td rowspan="2"><p>psllq</p></td>
+<td><p>packed shift left logical quad</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_sll_epi64">_mm_sll_epi64</a></p></td>
+<td><p>(_m128i a, _m128i cnt)</p></td>
+</tr>
+<tr>
+<td><p>immediate</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_slli_epi64">_mm_slli_epi64</a></p></td>
+<td><p>(_m128i a, int cnt)</p></td>
+</tr>
+<tr>
+<td colspan="2"><p>arithmetical</p></td>
+<td><p>return</p></td>
+<td></td>
+<td><p>parameter</p></td>
+</tr>
+<tr>
+<td><p>paddb</p></td>
+<td><p>packed add bytes</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_add_epi8">_mm_add_epi8</a></p></td>
+<td><p>(_m128i a, _m128i b)</p></td>
+</tr>
+<tr>
+<td><p>psubb</p></td>
+<td><p>packed subtract bytes</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_sub_epi8">_mm_sub_epi8</a></p></td>
+<td><p>(_m128i a, _m128i b)</p></td>
+</tr>
+<tr>
+<td><p>psadbw</p></td>
+<td><p>packed sum of absolute differences<br />
+of bytes into a word</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_sad_epu8">_mm_sad_epu8</a></p></td>
+<td><p>(_m128i a, _m128i b)</p></td>
+</tr>
+<tr>
+<td><p>pmaxsw</p></td>
+<td><p>packed maximum signed words</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_max_epi16">_mm_max_epi16</a></p></td>
+<td><p>(_m128i a, _m128i b)</p></td>
+</tr>
+<tr>
+<td><p>pmaxub</p></td>
+<td><p>packed maximum unsigned bytes</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_max_epu8">_mm_max_epu8</a></p></td>
+<td><p>(_m128i a, _m128i b)</p></td>
+</tr>
+<tr>
+<td><p>pminsw</p></td>
+<td><p>packed minimum signed words</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_min_epi16">_mm_min_epi16</a></p></td>
+<td><p>(_m128i a, _m128i b)</p></td>
+</tr>
+<tr>
+<td><p>pminub</p></td>
+<td><p>packed minimum unsigned bytes</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_min_epu8">_mm_min_epu8</a></p></td>
+<td><p>(_m128i a, _m128i b)</p></td>
+</tr>
+<tr>
+<td><p>pcmpeqb</p></td>
+<td><p>packed compare equal bytes</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_cmpeq_epi8">_mm_cmpeq_epi8</a></p></td>
+<td><p>(_m128i a, _m128i b)</p></td>
+</tr>
+<tr>
+<td><p>pmullw</p></td>
+<td><p>packed multiply mow signed (unsigned) word</p></td>
+<td><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_mullo_epi16">_mm_mullo_epi16</a></p></td>
+<td><p>(_m128i a, _m128i b)</p></td>
+</tr>
+<tr>
+<td><p>pmulhw</p></td>
+<td><p>packed multiply high signed word</p></td>
+<td><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_mulhi_epi16">_mm_mulhi_epi16</a></p></td>
+<td><p>(_m128i a, _m128i b)</p></td>
+</tr>
+<tr>
+<td><p>pmulhuw</p></td>
+<td><p>packed multiply high unsigned word</p></td>
+<td><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_mulhi_epu16">_mm_mulhi_epu16</a></p></td>
+<td><p>(_m128i a, _m128i b)</p></td>
+</tr>
+<tr>
+<td><p>pmaddwd</p></td>
+<td><p>packed multiply words and add doublewords</p></td>
+<td><p>_m128</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_madd_epi16">_mm_madd_epi16</a></p></td>
+<td><p>(_m128i a, _m128i b)</p></td>
+</tr>
+<tr>
+<td colspan="2"><p>unpack, shuffle</p></td>
+<td><p>return</p></td>
+<td></td>
+<td><p>parameter</p></td>
+</tr>
+<tr>
+<td><p>punpcklbw</p></td>
+<td><p>unpack and interleave low bytes<br />
+<code>gGhHfFeE:dDcCbBaA :=</code><br />
+<code>xxxxxxxx:GHFEDCBA #</code><br />
+<code>xxxxxxxx:ghfedcba</code></p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_unpacklo_epi8">_mm_unpacklo_epi8</a></p></td>
+<td><p>(_m128i A, _m128i a)</p></td>
+</tr>
+<tr>
+<td><p>punpckhbw</p></td>
+<td><p>unpack and interleave high bytes<br />
+<code>gGhHfFeE:dDcCbBaA :=</code><br />
+<code>GHFEDCBA:xxxxxxxx #</code><br />
+<code>ghfedcba:xxxxxxxx</code></p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_unpackhi_epi8">_mm_unpackhi_epi8</a></p></td>
+<td><p>(_m128i A, _m128i a)</p></td>
+</tr>
+<tr>
+<td><p>punpcklwd</p></td>
+<td><p>unpack and interleave low words<br />
+<code>dDcC:bBaA := xxxx:DCBA#xxxx:dcba</code></p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_unpacklo_epi16">_mm_unpacklo_epi16</a></p></td>
+<td><p>(_m128i A, _m128i a)</p></td>
+</tr>
+<tr>
+<td><p>punpckhwd</p></td>
+<td><p>unpack and interleave high words<br />
+<code>dDcC:bBaA := DCBA:xxxx#dcba:xxxx</code></p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_unpackhi_epi16">_mm_unpackhi_epi16</a></p></td>
+<td><p>(_m128i A, _m128i a)</p></td>
+</tr>
+<tr>
+<td><p>punpckldq</p></td>
+<td><p>unpack and interleave low doublewords<br />
+<code>bB:aA := xx:BA # xx:ba</code></p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_unpacklo_epi32">_mm_unpacklo_epi32</a></p></td>
+<td><p>(_m128i A, _m128i a)</p></td>
+</tr>
+<tr>
+<td><p>punpckhdq</p></td>
+<td><p>unpack and interleave high doublewords<br />
+<code>bB:aA := BA:xx # ba:xx</code></p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_unpackhi_epi32">_mm_unpackhi_epi32</a></p></td>
+<td><p>(_m128i A, _m128i a)</p></td>
+</tr>
+<tr>
+<td><p>punpcklqdq</p></td>
+<td><p>unpack and interleave low quadwords<br />
+<code>a:A := x:A # x:a</code></p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_unpacklo_epi64">_mm_unpacklo_epi64</a></p></td>
+<td><p>(_m128i A, _m128i a)</p></td>
+</tr>
+<tr>
+<td><p>punpckhqdq</p></td>
+<td><p>unpack and interleave high quadwords<br />
+<code>a:A := A:x # a:x</code></p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_unpackhi_epi64">_mm_unpackhi_epi64</a></p></td>
+<td><p>(_m128i A, _m128i a)</p></td>
+</tr>
+<tr>
+<td><p>pshuflw</p></td>
+<td><p>packed shuffle low words</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_shufflelo_epi16">_mm_shufflelo_epi16</a></p></td>
+<td><p>(_m128i a, int imm)</p></td>
+</tr>
+<tr>
+<td><p>pshufhw</p></td>
+<td><p>packed shuffle high words</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_shufflehi_epi16">_mm_shufflehi_epi16</a></p></td>
+<td><p>(_m128i a, int imm)</p></td>
+</tr>
+<tr>
+<td><p>pshufd</p></td>
+<td><p>packed shuffle doublewords</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_shuffle_epi32">_mm_shuffle_epi32</a></p></td>
+<td><p>(_m128i a, int imm)</p></td>
+</tr>
+<tr>
+<td colspan="2"><p>load, store, moves</p></td>
+<td><p>return</p></td>
+<td></td>
+<td><p>parameter</p></td>
+</tr>
+<tr>
+<td><p>movdqa</p></td>
+<td><p>move aligned double quadword<br />
+xmm := *p</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_load_si128">_mm_load_si128</a></p></td>
+<td><p>(_m128i const *p)</p></td>
+</tr>
+<tr>
+<td><p>movdqu</p></td>
+<td><p>move unaligned double quadword<br />
+xmm := *p</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_loadu_si128">_mm_loadu_si128</a></p></td>
+<td><p>(_m128i const*p)</p></td>
+</tr>
+<tr>
+<td><p>movdqa</p></td>
+<td><p>move aligned double quadword<br />
+*p := xmm</p></td>
+<td style="text-align:right;"><p>void</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_store_si128">_mm_store_si128</a></p></td>
+<td><p>(_m128i *p, _m128i a)</p></td>
+</tr>
+<tr>
+<td><p>movdqu</p></td>
+<td><p>move unaligned double quadword<br />
+*p := xmm</p></td>
+<td style="text-align:right;"><p>void</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_storeu_si128">_mm_storeu_si128</a></p></td>
+<td><p>(_m128i *p, _m128i a)</p></td>
+</tr>
+<tr>
+<td><p>movq</p></td>
+<td><p>move quadword, xmm := gp64</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_storeu_si128">_mm_cvtsi64_si128</a></p></td>
+<td><p>(_int64 a)</p></td>
+</tr>
+<tr>
+<td><p>movq</p></td>
+<td><p>move quadword, gp64 := xmm</p></td>
+<td style="text-align:right;"><p>_int64</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_cvtsi128_si64">_mm_cvtsi128_si64</a></p></td>
+<td><p>(_m128i a)</p></td>
+</tr>
+<tr>
+<td><p>movd</p></td>
+<td><p>move double word or quadword<br />
+xmm := gp64</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_cvtsi64x_si128">_mm_cvtsi64x_si128</a></p></td>
+<td><p>(_int64 value)</p></td>
+</tr>
+<tr>
+<td><p>movd</p></td>
+<td><p>move doubleword, xmm := gp32</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_cvtsi32_si128">_mm_cvtsi32_si128</a></p></td>
+<td><p>(int a)</p></td>
+</tr>
+<tr>
+<td><p>movd</p></td>
+<td><p>move doubleword, gp32 := xmm</p></td>
+<td style="text-align:right;"><p>int</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_cvtsi128_si32">_mm_cvtsi128_si32</a></p></td>
+<td><p>(_m128i a)</p></td>
+</tr>
+<tr>
+<td><p>pextrw</p></td>
+<td><p>extract packed word, gp16 := xmm[i]</p></td>
+<td style="text-align:right;"><p>int</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_extract_epi16">_mm_extract_epi16</a></p></td>
+<td><p>(_m128i a, int imm)</p></td>
+</tr>
+<tr>
+<td><p>pinsrw</p></td>
+<td><p>packed insert word, xmm[i] := gp16</p></td>
+<td style="text-align:right;"><p>_m128i</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_insert_epi16">_mm_insert_epi16</a></p></td>
+<td><p>(_m128i a, int b, int imm)</p></td>
+</tr>
+<tr>
+<td><p>pmovmskb</p></td>
+<td><p>packed move mask byte,<br />
+gp32 := 16 sign-bits(xmm)</p></td>
+<td style="text-align:right;"><p>int</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_movemask_epi">_mm_movemask_epi</a></p></td>
+<td><p>(_m128i a)</p></td>
+</tr>
+<tr>
+<td colspan="2"><p>cache support</p></td>
+<td><p>return</p></td>
+<td></td>
+<td><p>parameter</p></td>
+</tr>
+<tr>
+<td><p>prefetch</p></td>
+<td></td>
+<td><p>void</p></td>
+<td><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_prefetch">_mm_prefetch</a></p></td>
+<td><p>(char const* p , int i)</p></td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="applications">Applications</h2>
+<p>Some vc2005 tested, sample SSE2 <a href="/Bitboards">bitboard</a> routines: <span id="OneStepOnlySSE2"></span></p>
+<h3 id="one-step-only">One Step Only</h3>
+<p>Since 128-bit xmm registers may treated as vector of 16 bytes, shifting techniques such as <a href="/General_Setwise_Operations"> one step</a> in all eight directions can be done more efficiently with respect to wraps from a- to the h-file or vice versa. It is recommend to write a own SSE2-wrapper class with overloaded operators in C++ to encapsulate a vector of two bitboards.</p>
+<pre><code>  northwest    north   northeast
+  noWe         nort         noEa
+          +7    +8    +9
+              \  |  /
+  west    -1 &lt;-  0 -&gt; +1    east
+              /  |  \
+          -9    -8    -7
+  soWe         sout         soEa
+  southwest    south   southeast</code></pre>
+<p>Veritcal steps as usual with 64-byte shift a rank each:</p>
+<pre><code>__m128i nortOne(__m128i b) {
+   b = _mm_slli_epi64 (b, 8);
+   return b;
+}
+
+__m128i soutOne(__m128i b) {
+   b = _mm_srli_epi64 (b, 8);
+   return b;
+}</code></pre>
+<p>Unfortunately there is no byte-wise shift in the SSE2-instruction set (as well as MMX), but using byte-wise parallel add avoids using the wrap masks, which need otherwise load from memory or computed. Applying the wraps mask takes two instructions.</p>
+<pre><code>__m128i butNotA(__m128i b) {
+   b = _mm_srli_epi64 (b, 1);
+   b = _mm_add_epi8   (b, b);
+   return b;
+}
+
+__m128i butNotH(__m128i b) {
+   b = _mm_add_epi8   (b, b);
+   b = _mm_srli_epi64 (b, 1);
+   return b;
+}</code></pre>
+<p>This is how the east direction are computed based on parallel byte-wise add. Either one or two SSE2-instructions:</p>
+<pre><code>__m128i eastOne(__m128i b) {
+   b = _mm_add_epi8   (b, b);
+   return b;
+}
+
+__m128i noEaOne (__m128i b) {
+   b = _mm_add_epi8   (b, b);
+   b = _mm_slli_epi64 (b, 8);
+   return b;
+}
+
+__m128i soEaOne (__m128i b) {
+   b = _mm_add_epi8   (b, b);
+   b = _mm_srli_epi64 (b, 8);
+   return b;
+}</code></pre>
+<p>West directions need a leading not A-file and take three instructions each:</p>
+<pre><code>__m128i westOne(__m128i b) {
+   b = _mm_srli_epi64 (b, 1);
+   b = _mm_add_epi8   (b, b);
+   b = _mm_srli_epi64 (b, 1);
+   return b;
+}
+
+__m128i soWeOne (__m128i b) {
+   b = _mm_srli_epi64 (b, 1);
+   b = _mm_add_epi8   (b, b);
+   b = _mm_srli_epi64 (b, 9);
+   return b;
+}
+
+__m128i noWeOne (__m128i b) {
+   b = _mm_srli_epi64 (b, 1);
+   b = _mm_add_epi8   (b, b);
+   b = _mm_slli_epi64 (b, 7);
+   return b;
+}</code></pre>
+<p><span id="EastAttacks"></span></p>
+<h3 id="east-attacks">East Attacks</h3>
+<p>SIMD-wise <a href="/Fill_by_Subtraction">Fill by Subtraction</a> with byte- or rank-wise arithmetic takes only a few instructions with SSE2:</p>
+<pre><code>__m128i eastAttacks (__m128i occ, __m128i rooks) {
+   __m128i tmp;
+   occ  = _mm_or_si128 (occ, rooks);  //  make rooks member of occupied
+   tmp  = _mm_xor_si128(occ, rooks);  // occ - rooks
+   tmp  = _mm_sub_epi8 (tmp, rooks);  // occ - 2*rooks
+   return _mm_xor_si128(occ, tmp);    // occ ^ (occ - 2*rooks)
+}</code></pre>
+<p><span id="SSE2dotproduct"></span></p>
+<h3 id="sse2-dot-product">SSE2 dot product</h3>
+<p>The <a href="https://en.wikipedia.org/wiki/Dot_product">dot product</a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> of a vector of <a href="/Bit">bits</a> by a weight vector of <a href="/Byte">bytes</a> might be used in determining <a href="/Mobility">mobility</a> for <a href="/Evaluation">evaluation</a> purposes. The vector of bits is a bitboard of all squares attacked by one (or multiple) piece(s), while the the weight vector considers the "importance" of <a href="/Squares">squares</a>, like center control, or even <a href="/King_Safety">square controls</a> near the opponent <a href="/King">king</a>, e.g. by providing 64 weight vectors for each king square.</p>
+<p><code>             64</code><br />
+<code>bb·weights = </code><span style="font-size:240%;"><code>∑</code></span><code> bb</code><span style="vertical-align: sub;"><code>i</code></span><code> weights</code><span style="vertical-align: sub;"><code>i</code></span><code> = bb</code><span style="vertical-align: sub;"><code>1</code></span><code> weights</code><span style="vertical-align: sub;"><code>1</code></span><code> + ... + bb</code><span style="vertical-align: sub;"><code>64</code></span><code> weights</code><span style="vertical-align: sub;"><code>64</code></span><br />
+<code>             i=1</code></p>
+<p>The 64-bit times 64-byte dot product implements a kind of weighted <a href="/Population_Count">population count</a> similar than following loop approach, but completely unrolled and <a href="/Avoiding_Branches">branchless</a>:</p>
+<pre><code>int dotProduct(U64 bb, BYTE weights[])
+{
+   U64 bit  = 1;
+   int accu = 0;
+   for (int sq=0; sq &lt; 64; sq++, bit += bit) {
+      if ( bb &amp; bit) accu += weights[sq];
+      // accu += weights[sq] &amp; -((  bb &amp; bit) == bit); // branchless 1
+      // accu += weights[sq] &amp; -(( ~bb &amp; bit) == 0);   // branchless 2
+   }
+   return accu;
+}</code></pre>
+<p>The SSE2 routine expands a bitboard as a vector of 64 bits into 64-bytes inside four 128-bit xmm registers, and performs the multiplication with the byte-vector by bitwise 'and', before it finally adds all bytes together. The bitboard is therefor manifolded eight times with a sequence of seven unpack and interleave instructions to remain the same expanded byte-order of the bits from the bitboards, before to mask and compare them with a vector of bytes with one appropriate bit set each.</p>
+<p>The dot product is designed for unsigned weights in the 0..63 range, so that vertical bytewise adds of the four weights can not overflow. Nevertheless, three <em>PADDUSB - packed add unsigned byte with saturation</em> instructions (<a href="http://msdn.microsoft.com/en-us/library/9hahyddy%28VS.80%29.aspx">_mm_adds_epu8</a>) are used to limit the maximum four byte sum to 255 to make the routine more "robust" for cases with average weights greater than 63. The horizontal add of both <a href="/Quad_Word">quad words</a> of the 128-bit xmmregister is performed by the <em>PSADBW - packed sum of absolute differences of bytes into a word</em> instruction (<a href="http://msdn.microsoft.com/en-us/library/b0yshs6s.aspx">_mm_sad_epu8</a>) with zero, while the final add of the two resulting <a href="/Word">word</a> sums in the high and low quad word of the xmm register is done with general purpose registers.</p>
+<pre><code>#include &lt;emmintrin.h&gt;
+#define XMM_ALIGN __declspec(align(16))
+
+/* for average weights &lt; 64 */
+int dotProduct64(U64 bb, BYTE weights[] /* XMM_ALIGN */)
+{
+   static const U64 XMM_ALIGN sbitmask[2] = {
+     C64(0x8040201008040201),
+     C64(0x8040201008040201)
+   };
+   __m128i x0, x1, x2, x3, bm;
+   __m128i* pW = (__m128i*) weights;
+   bm = _mm_load_si128 ( (__m128i*) sbitmask);
+   x0 = _mm_cvtsi64x_si128(bb);        // 0000000000000000:8040201008040201
+   // extend bits to bytes
+   x0 = _mm_unpacklo_epi8  (x0, x0);   // 8080404020201010:0808040402020101
+   x2 = _mm_unpackhi_epi16 (x0, x0);   // 8080808040404040:2020202010101010
+   x0 = _mm_unpacklo_epi16 (x0, x0);   // 0808080804040404:0202020201010101
+   x1 = _mm_unpackhi_epi32 (x0, x0);   // 0808080808080808:0404040404040404
+   x0 = _mm_unpacklo_epi32 (x0, x0);   // 0202020202020202:0101010101010101
+   x3 = _mm_unpackhi_epi32 (x2, x2);   // 8080808080808080:4040404040404040
+   x2 = _mm_unpacklo_epi32 (x2, x2);   // 2020202020202020:1010101010101010
+   x0 = _mm_and_si128      (x0, bm);
+   x1 = _mm_and_si128      (x1, bm);
+   x2 = _mm_and_si128      (x2, bm);
+   x3 = _mm_and_si128      (x3, bm);
+   x0 = _mm_cmpeq_epi8     (x0, bm);
+   x1 = _mm_cmpeq_epi8     (x1, bm);
+   x2 = _mm_cmpeq_epi8     (x2, bm);
+   x3 = _mm_cmpeq_epi8     (x3, bm);
+   // multiply by &quot;and&quot; with -1 or 0
+   x0 = _mm_and_si128      (x0, pW[0]);
+   x1 = _mm_and_si128      (x1, pW[1]);
+   x2 = _mm_and_si128      (x2, pW[2]);
+   x3 = _mm_and_si128      (x3, pW[3]);
+   // add all bytes (with saturation)
+   x0 = _mm_adds_epu8      (x0, x1);
+   x0 = _mm_adds_epu8      (x0, x2);
+   x0 = _mm_adds_epu8      (x0, x3);
+   x0 = _mm_sad_epu8       (x0, _mm_setzero_si128 ());
+   return _mm_cvtsi128_si32(x0)
+        + _mm_extract_epi16(x0, 4);
+}</code></pre>
+<h3 id="rotated-dot-product">Rotated Dot Product</h3>
+<p>A little bit cheaper is to expand the bitboard to a vector of 90 degree rotated {0,255} bytes, which requires a rotated weight vector as well <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>.</p>
+<pre><code>/* for average weights &lt; 64 */
+int dotProduct64(U64 bb, BYTE weightsRot90[] /* XMM_ALIGN */)
+{
+   static const U64 CACHE_ALIGN masks[8] = {
+      C64(0x0101010101010101), C64(0x0202020202020202),
+      C64(0x0404040404040404), C64(0x0808080808080808),
+      C64(0x1010101010101010), C64(0x2020202020202020),
+      C64(0x4040404040404040), C64(0x8080808080808080),
+   };
+   __m128i x0, x1, x2, x3, zr; U32 cnt;
+   __m128i * pM = (__m128i*) masks;
+   __m128i * pW = (__m128i*) weightsRot90;
+   x0 = _mm_cvtsi64x_si128 (bb);
+   x0 = _mm_unpacklo_epi64 (x0, x0);
+   zr = _mm_setzero_si128  ();
+   x3 = _mm_andnot_si128   (x0, pM[3]);
+   x2 = _mm_andnot_si128   (x0, pM[2]);
+   x1 = _mm_andnot_si128   (x0, pM[1]);
+   x0 = _mm_andnot_si128   (x0, pM[0]);
+   x3 = _mm_cmpeq_epi8     (x3, zr);
+   x2 = _mm_cmpeq_epi8     (x2, zr);
+   x1 = _mm_cmpeq_epi8     (x1, zr);
+   x0 = _mm_cmpeq_epi8     (x0, zr);
+   // multiply by &quot;and&quot; with -1 or 0
+   x3 = _mm_and_si128      (x3, pW[3]);
+   x2 = _mm_and_si128      (x2, pW[2]);
+   x1 = _mm_and_si128      (x1, pW[1]);
+   x0 = _mm_and_si128      (x0, pW[0]);
+   // add all bytes (with saturation)
+   x3 = _mm_adds_epu8      (x3, x2);
+   x0 = _mm_adds_epu8      (x0, x1);
+   x0 = _mm_adds_epu8      (x0, x3);
+   x0 = _mm_sad_epu8       (x0, zr);
+   return _mm_cvtsi128_si32(x0)
+        + _mm_extract_epi16(x0, 4);
+}</code></pre>
+<p><span id="SSE2popcount"></span></p>
+<h3 id="sse2-population-count">SSE2 Population Count</h3>
+<p>Following proposal of a <a href="/Population_Count">SWAR-Popcount</a> combined with a dot product might be quite competitive on recent <a href="/X86-64">x86-64</a> processors with a throughput of up to three simd-instructions per cycle <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> . It determines the cardinalities of eight bitboards, multiplies them with a corresponding weight, a signed 16-bit <a href="/Word">word</a>, to finally add all together as integer. However, <a href="/Wojciech_Muła">Wojciech Muła's</a> <a href="/SSSE3">SSSE3 PopCnt</a> would save some more cycles, even more with doubled or fourfold register widths using <a href="/AVX2">AVX2</a> or <a href="/AVX-512">AVX-512</a>.</p>
+<pre><code>/**
+ * popCountWeight8
+ * @author Gerd Isenberg
+ * @param bb vector of eight bitboards
+ *        weight vector of eight short weights
+ * @return sum(0,7) popcnt(bb[i]) * weight[i]
+ */
+int popCountWeight8(const U64 bb[8], const short weight[8]) {
+   static const U64 XMM_ALIGN masks[6] = {
+      C64(0x5555555555555555), C64(0x5555555555555555),
+      C64(0x3333333333333333), C64(0x3333333333333333),
+      C64(0x0f0f0f0f0f0f0f0f), C64(0x0f0f0f0f0f0f0f0f)
+   };
+   const __m128i* pM = (const __m128i*) masks;
+   const __m128i* pb = (const __m128i*) bb;
+   __m128i v = pb[0], w = pb[1], x = pb[2], y = pb[3];
+   v = _mm_sub_epi8(v, _mm_and_si128(_mm_srli_epi64(v, 1), pM[0]));
+   w = _mm_sub_epi8(w, _mm_and_si128(_mm_srli_epi64(w, 1), pM[0]));
+   x = _mm_sub_epi8(x, _mm_and_si128(_mm_srli_epi64(x, 1), pM[0]));
+   y = _mm_sub_epi8(y, _mm_and_si128(_mm_srli_epi64(y, 1), pM[0]));
+
+   v = _mm_add_epi8(_mm_and_si128(v, pM[1]), _mm_and_si128(_mm_srli_epi64(v, 2), pM[1]));
+   w = _mm_add_epi8(_mm_and_si128(w, pM[1]), _mm_and_si128(_mm_srli_epi64(w, 2), pM[1]));
+   x = _mm_add_epi8(_mm_and_si128(x, pM[1]), _mm_and_si128(_mm_srli_epi64(x, 2), pM[1]));
+   y = _mm_add_epi8(_mm_and_si128(y, pM[1]), _mm_and_si128(_mm_srli_epi64(y, 2), pM[1]));
+
+   v = _mm_and_si128(_mm_add_epi8 (v, _mm_srli_epi64(v, 4)), pM[2]);
+   w = _mm_and_si128(_mm_add_epi8 (w, _mm_srli_epi64(w, 4)), pM[2]);
+   x = _mm_and_si128(_mm_add_epi8 (x, _mm_srli_epi64(x, 4)), pM[2]);
+   y = _mm_and_si128(_mm_add_epi8 (y, _mm_srli_epi64(y, 4)), pM[2]);
+
+   __m128i z = _mm_setzero_si128();
+   v = _mm_packs_epi16(_mm_sad_epu8(v, z), _mm_sad_epu8(w, z));
+   x = _mm_packs_epi16(_mm_sad_epu8(x, z), _mm_sad_epu8(y, z));
+   const __m128i* pW = (const __m128i*) weight;
+   v = _mm_madd_epi16 (_mm_packs_epi16(v, x), pW[0]);
+   v = _mm_add_epi32  (v, _mm_srli_si128(v, 4));
+   v = _mm_add_epi32  (v, _mm_srli_si128(v, 8));
+   return _mm_cvtsi128_si32(v);
+}</code></pre>
+<p><span id="SSE2WrapperinCpp"></span></p>
+<h2 id="sse2-wrapper-in-c">SSE2-Wrapper in C++</h2>
+<p><a href="/Cpp">C++</a> quite efficiently allows to wrap all the intrinsics and to write classes with appropriate operators overloaded - the proposal here overloads + and - operators for byte- or rank-wise arithmetic, shifts work on 64-bit entities as often used in mentioned SSE2-routines or <a href="/Kogge-Stone_Algorithm">Kogge-Stone</a> fill-stuff. A base class for the memory layout and two derivations provide to implement routines with SSE2 or general purpose instructions - or any other available SIMD-architecture like <a href="/AltiVec">AltiVec</a>. For instance a <a href="/Quad-Bitboards">quad-bitboard</a> attack-getter:</p>
+<pre><code>// T is either XMM or GPR
+template &lt;class T&gt; inline
+void eastAttacks(QBB&amp; t, const QBB&amp; s, U64 occ) {
+   T* pt = (T*)&amp;t;
+   T r0(s.bb[0]);
+   T r1(s.bb[2]);
+   T o0(occ, occ);
+   T o1  = o0 | r1;
+   o0    = o0 | r0;
+   pt[0] = o0 ^ ((o0 ^ r0) - r0);
+   pt[1] = o1 ^ ((o1 ^ r1) - r1);
+}</code></pre>
+<p>A proposal for a class skeleton:</p>
+<pre><code>class DBB
+{
+   friend class XMM;
+   friend class GPR;
+public:
+   DBB(){}
+   ... more constructors
+public:
+   union
+   {
+      __m128i x; // this intrinsice type is wrapped here
+      u64 b[2];
+   };
+};
+
+// intrinsic sse2 xmm wrapper
+class XMM : public DBB
+{
+public:
+   XMM(){}
+   XMM(U64 b) {x = _mm_cvtsi64x_si128(b);}
+   XMM(__m128i a){x = a;}
+   XMM(U64 high, U64 low) ...
+   ... more constructors
+
+   XMM&amp; operator&gt;&gt;=(int sh) {x = _mm_srli_epi64(x, sh); return *this;}
+   XMM&amp; operator&lt;&lt;=(int sh) {x = _mm_slli_epi64(x, sh); return *this;}
+   XMM&amp; operator&amp;=(const XMM &amp;a) {x = _mm_and_si128(x, a.x); return *this;}
+   XMM&amp; operator|=(const XMM &amp;a) {x = _mm_or_si128 (x, a.x); return *this;}
+   XMM&amp; operator^=(const XMM &amp;a) {x = _mm_xor_si128(x, a.x); return *this;}
+
+   // byte- or rankwise arithmetic
+   XMM&amp; operator+=(const XMM &amp;a) {x = _mm_add_epi8(x, a.x); return *this;}
+   XMM&amp; operator-=(const XMM &amp;a) {x = _mm_sub_epi8(x, a.x); return *this;}
+
+   friend XMM operator&gt;&gt;(const XMM &amp;a, int sh) {return XMM(_mm_srli_epi64(a.x, sh));}
+   friend XMM operator&lt;&lt;(const XMM &amp;a, int sh) {return XMM(_mm_slli_epi64(a.x, sh));}
+   friend XMM operator&amp; (const XMM &amp;a, const XMM &amp;b) {return XMM(_mm_and_si128(a.x, b.x));}
+   friend XMM operator| (const XMM &amp;a, const XMM &amp;b) {return XMM(_mm_or_si128(a.x, b.x));}
+   friend XMM operator^ (const XMM &amp;a, const XMM &amp;b) {return XMM(_mm_xor_si128(a.x, b.x));}
+   friend XMM operator+ (const XMM &amp;a, const XMM &amp;b) {return XMM(_mm_add_epi8(a.x, b.x));}
+   friend XMM operator- (const XMM &amp;a, const XMM &amp;b) {return XMM(_mm_sub_epi8(a.x, b.x));}
+   ...
+};
+
+// pure C wrapper
+class GPR : public DBB
+{
+   ...
+};</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/DirGolem">DirGolem</a></li>
+<li><a href="/Pigeon">Pigeon</a></li>
+<li><a href="/SIMD_and_SWAR_Techniques">SIMD and SWAR Techniques</a></li>
+<li><a href="/SIMD_Techniques">SIMD Techniques</a> for <a href="/Sliding_Piece_Attacks">Sliding Piece Attacks</a> with <a href="/Bitboards">Bitboards</a></li>
+<li><a href="/Quad-Bitboards">SSE2 Conversions</a> of <a href="/Quad-Bitboards">Quad-Bitboards</a></li>
+</ul>
+<h2 id="simd">SIMD</h2>
+<ul>
+<li><a href="/AltiVec">AltiVec</a></li>
+<li><a href="/AVX">AVX</a></li>
+<li><a href="/AVX2">AVX2</a></li>
+<li><a href="/AVX-512">AVX-512</a></li>
+<li><a href="/MMX">MMX</a></li>
+<li><a href="/SSE">SSE</a></li>
+<li><a href="/SSE3">SSE3</a></li>
+<li><a href="/SSSE3">SSSE3</a></li>
+<li><a href="/SSE4">SSE4</a></li>
+<li><a href="/SSE5">SSE5</a></li>
+<li><a href="/XOP">XOP</a></li>
+</ul>
+<h2 id="manuals">Manuals</h2>
+<ul>
+<li><a href="https://support.amd.com/TechDocs/26568.pdf">AMD64 Architecture Programmer’s Manual Volume 4: 128-Bit and 256-Bit Media Instructions</a> (pdf)</li>
+<li><a href="https://www.intel.com/content/www/us/en/architecture-and-technology/64-ia-32-architectures-software-developer-vol-2a-manual.html">Intel® 64 and IA-32 Architectures Software Developer’s Manual Volume 2A: Instruction Set Reference, A-L</a></li>
+<li><a href="https://www.intel.com/content/www/us/en/architecture-and-technology/64-ia-32-architectures-software-developer-vol-2b-manual.html">Intel® 64 and IA-32 Architectures Software Developer’s Manual Volume 2B: Instruction Set Reference, M-U</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=343790">A SIMD idea, eg. Piece/Gain of a capture target</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/CCC">CCC</a>, January 21, 2004 » <a href="/Move_Ordering">Move Ordering</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=377546">SSE2 bit[64] * byte[64] dot product</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/CCC">CCC</a>, July 17, 2004</li>
+<li><a href="https://groups.google.com/group/comp.lang.asm.x86/browse_frm/thread/11095ec26e3ed536">SSE2-Sort within a register</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="https://groups.google.com/group/comp.lang.asm.x86/topics">comp.lang.asm.x86</a>, January 08, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=405396">planning a SSE-optimized chess engine</a> by <a href="/Aart_Bik">Aart Bik</a>, <a href="/CCC">CCC</a>, January 12, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=418648">On SSE2-Intrinsics</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/CCC">CCC</a>, March 28, 2005</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=30471">Problem with functions not inlining</a> by <a href="/Gregory_Strong">Gregory Strong</a>, <a href="/CCC">CCC</a>, November 04, 2009</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Streaming_SIMD_Extensions">SSE from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/SSE2">SSE2 from Wikipedia</a></li>
+<li><a href="http://stackoverflow.com/questions/661338/sse-sse2-and-sse3-for-gnu-c">SSE SSE2 and SSE3 for GNU C++</a>, <a href="https://en.wikipedia.org/wiki/Stack_Overflow">Stack Overflow</a></li>
+<li><a href="http://stackoverflow.com/questions/7646018/sse-instructions-single-memory-access">Concurrency - SSE instructions: single memory access</a>, <a href="https://en.wikipedia.org/wiki/Stack_Overflow">Stack Overflow</a></li>
+<li><a href="http://www.agner.org/optimize/#manuals">Agner Fog's manuals</a></li>
+</ul>
+<p><a href="http://www.agner.org/optimize/calling_conventions.pdf">Calling conventions for different C++ compilers and operating systems</a> (pdf) by <a href="http://www.agner.org/">Agner Fog</a></p>
+<ul>
+<li><a href="http://www.agner.org/optimize/blog/">Agner`s CPU blog</a> by <a href="http://www.agner.org/">Agner Fog</a></li>
+<li><a href="http://developer.amd.com/cpu/Libraries/sseplus/Pages/default.aspx">SSEPlus Project</a> from <a href="http://developer.amd.com/pages/default.aspx">AMD Developer Central</a></li>
+<li><a href="http://sseplus.sourceforge.net/index.html">SSEPlus Project Documentation</a></li>
+<li><a href="http://software.intel.com/sites/landingpage/IntrinsicsGuide/">Intel Intrinsics Guide</a></li>
+<li><a href="http://www.aartbik.com/simd.php">The Software Vectorization HandBook</a> by <a href="/Aart_Bik">Aart Bik</a></li>
+<li><a href="/Category:Kraan">Kraan</a> - Vollgas Ahoi <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a>, <a href="https://www.swp.de/suedwesten/staedte/geislingen/raetsche-geislingen-aus-der-raetschenmuehle-live-in-die-wohnzimmer-44964276.html">Rätschenmühle</a>, <a href="https://en.wikipedia.org/wiki/Geislingen_an_der_Steige">Geislingen</a>, April 25, 2009, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p>lineup: <a href="/Category:Hellmut_Hattler">Hellmut Hattler</a>, <a href="https://en.wikipedia.org/wiki/Peter_Wolbrandt">Peter Wolbrandt</a>, <a href="https://www.discogs.com/artist/345783-Jan-Fride-Wolbrandt">Jan Fride Wolbrandt</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/A11bAJOOqF8" title="YouTube video A11bAJOOqF8" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=A11bAJOOqF8">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/X86">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://support.amd.com/TechDocs/26568.pdf">AMD64 Architecture Programmer’s Manual Volume 4: 128-Bit and 256-Bit Media Instructions</a> (pdf), has detailed explanations on all SSE2 128-Bit Media Instructions<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://msdn.microsoft.com/en-us/library/84t4h8ys%28v=VS.100%29.aspx">Integer Intrinsics Using Streaming SIMD Extensions 2</a> Visual C++ Developer Center - Run-Time Library Reference<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://msdn.microsoft.com/en-us/library/x8zs5twb%28v=VS.100%29.aspx">Instruction Reference</a> Visual C++ Developer Center - Run-Time Library Reference<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#">Intel Intrinsics Guide</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://mathworld.wolfram.com/DotProduct.html">Dot Product - from Wolfram MathWorld</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="https://www.stmintz.com/ccc/index.php?id=377546">SSE2 bit[64] * byte[64] dot product</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/CCC">CCC</a>, July 17, 2004<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="http://www.intel.com/design/processor/manuals/248966.pdf">Intel 64 and IA32 Architectures Optimization Reference Manual</a> (pdf) Appendix C Instruction Latencies<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="https://www.amd.com/system/files/TechDocs/40546.pdf">Software Optimization Guide for AMD Family 10h and 12h Processors</a> (pdf) Appendix C Instruction Latencies<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="https://en.wiktionary.org/wiki/Vollgas">Vollgas - Wiktionary</a>, <a href="https://en.wiktionary.org/wiki/ahoi">ahoi - Wiktionary</a><a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Kraan">Kraan</a> · <a href="/Category:Hellmut_Hattler">Hellmut Hattler</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/SSE2">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, AartBik.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

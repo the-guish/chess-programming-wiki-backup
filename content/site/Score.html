@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Score - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Score</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Search">Search</a> * Score</strong></p>
+<p>The <strong>Score</strong> is a value assigned to a <a href="/Node">node</a> inside a search process, representing the chances of winning or losing. While <a href="/Interior_Node">interior node</a> scores were backed-up from their child nodes by <a href="/Minimax">minimaxing</a>, and <a href="/Terminal_Node">terminal nodes</a> hold perfect game theoretic values, further <a href="/Leaf_Node">leaf nodes</a> have heuristic values assigned.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#terminal-nodes">Terminal Nodes</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#mate-scores">Mate Scores</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#draw-scores">Draw Scores</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#zero">Zero</a></li>
+<li><a href="#contempt-factor">Contempt Factor</a></li>
+<li><a href="#around-zero">Around Zero</a></li>
+</ol>
+</details></li>
+</ol>
+</details></li>
+<li><a href="#heuristic-nodes">Heuristic Nodes</a></li>
+<li><a href="#value-range">Value Range</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#value-type">Value Type</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#fixed-point">Fixed Point</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#grain">Grain</a></li>
+<li><a href="#arbitrary-bit-field-scores">Arbitrary Bit-field Scores</a></li>
+<li><a href="#sign-extension">Sign Extension</a></li>
+</ol>
+</details></li>
+<li><a href="#floating-point">Floating Point</a></li>
+</ol>
+</details></li>
+<li><a href="#score-types">Score Types</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="terminal-nodes">Terminal Nodes</h2>
+<p><a href="/Terminal_Node">Terminal nodes</a> hold perfect game theoretic values for either <a href="/Checkmate">mate</a> and <a href="/Draw">draw</a>, that is {1,-1,0} for a White win, Black win, or draw, practically, dependent on the type, resolution and range, multiplied by some factor, for instance <a href="/Word">SHRT_MAX</a>/2 for signed 16-bit <a href="/Word">words</a> in <a href="/C">C</a> or <a href="/Cpp">C++</a>. <span id="MateScores"></span></p>
+<h3 id="mate-scores">Mate Scores</h3>
+<p>A <a href="/Checkmate">mate score</a> is assigned to terminal mate <a href="/Root">root</a> position, in White relative minimax either the maximum (black mated) or minimum (white mated) values of the whole value range, in <a href="/Side_to_move">side to move</a> relative <a href="/Negamax">negamax</a> metric always the minimum, i.e. VALUE_MATED = -<a href="/Word">SHRT_MAX</a>/2. Below the root the absolute values of mate scores are usually decremented by <a href="/Ply">ply</a> distance to the root, to encourage programs to prefer shorter mates if winning or longer mates if losing.</p>
+<p>Inside a negamax based search, most <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> programs assign <em>VALUE_MATED + <a href="/Ply">ply</a> distance to the root</em> as worst case score if entering a <a href="/Node">node</a>, which if propagated as mate score along the <a href="/Principal_Variation">principal variation</a> to the root, translates in mate in odd plies (positive values), or getting mated in even plies. <span id="Delayedlossbonus"></span> However, those scores need ply-adjustment if stored as <a href="/Exact_Score">exact score</a> inside the <a href="/Transposition_Table">transposition table</a>, and re-adjustment if retrieving from TT. An alternative approach, not only related to mate scores was proposed by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, the <strong>Delayed-loss bonus</strong> as implemented in <a href="/Micro-Max">Micro-Max</a> et al. <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>. <span id="DrawScore"></span></p>
+<h3 id="draw-scores">Draw Scores</h3>
+<h4 id="zero">Zero</h4>
+<p>Assuming symmetric <a href="/Evaluation">evaluation</a> and <a href="/Negamax">negamaxed</a> values, positive scores indicate the <a href="/Side_to_move">side to move</a> is ahead, and negative if behind, which defines the value of zero as a natural <a href="/Draw">draw</a> score, no matter whether the draw is caused by a <a href="/Stalemate">stalemate</a>, <a href="/Repetitions">three-fold repetitions</a>, <a href="/Fifty-move_Rule">fifty-move rule draw</a>, or <a href="/Draw_Evaluation">draws</a> by <a href="/Material">insufficient material</a>.</p>
+<ul>
+<li><a href="/Fifty-move_Rule">Fifty-move Rule</a></li>
+<li><a href="/Repetitions">Repetitions</a></li>
+<li><a href="/Stalemate">Stalemate</a></li>
+</ul>
+<h4 id="contempt-factor">Contempt Factor</h4>
+<p>Some programs apply a <a href="/Contempt_Factor">contempt factor</a>, to avoid early draws against apparently weaker opponents, or to prefer draws versus stronger opponents otherwise.</p>
+<ul>
+<li><a href="/Contempt_Factor">Contempt Factor</a></li>
+</ul>
+<h4 id="around-zero">Around Zero</h4>
+<p><a href="/Cray_Blitz">Cray Blitz</a> applied a special draw heuristic, not uniformly using zero as draw score, but rather zero plus the <a href="/Ply">ply</a> distance to the <a href="/Root">root</a> to prefer later draws rather than a draw now. Additionally, the draw score range is disjoint from <a href="/Evaluation">evaluation</a> scores, which then exclude values around zero by adding or subtracting appropriate offsets if either greater or equal, or less than zero <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>.</p>
+<h2 id="heuristic-nodes">Heuristic Nodes</h2>
+<p>Other <a href="/Leaf_Node">leaf nodes</a> than terminal nodes determine a heuristic value of the <a href="/Chess_Position">position</a> by an <a href="/Evaluation_Function">evaluation function</a>. The value range of heuristic values has a symmetrical reduced value range far outside the mate scores, dominated by the <a href="/Material">material balance</a>, with the theoretical maximum of</p>
+<pre><code> 9*VALUE_QUEEN + 2*VALUE_ROOK + 2*VALUE_BISHOP + 2*VALUE_KNIGHT</code></pre>
+<p>which is about 115 pawn units, or about 11,500 in centipawn units. Practically it is quite safe to saturate the heuristic eval value range with +-30 to +-50 pawn units, which leaves enough space for disjoint scores for <a href="/Interior_Node_Recognizer">interior node recognizers</a>. Some programs exclude zero as heuristic score, to make heuristic values absolutely disjoint from perfect terminal node scores, which has some issues considering contempt.</p>
+<ul>
+<li><a href="/Draw_Evaluation">Draw Evaluation</a></li>
+<li><a href="/Evaluation">Evaluation</a></li>
+<li><a href="/Mop-up_Evaluation">Mop-up Evaluation</a></li>
+</ul>
+<p><span id="ValueRange"></span></p>
+<h2 id="value-range">Value Range</h2>
+<p>The value range of the score is determined by the mate scores, which range should be disjoint from the heuristic scores. Therefore, pure heuristic scores often saturate with a usual winning advantage of +- three or four queens. Mate scores or winning scores determined by <a href="/Interior_Node_Recognizer">interior node recognizer</a> aka <a href="/Endgame_Tablebases">endgame tablebases</a>, may intersect the range of heuristic scores with huge material difference, for instance to avoid "dumb" queen sacrifices to transpose into a won KBNK with mate in 30 or so.</p>
+<pre><code>-oo                                             zero                                              +oo
+ +----------------+-+--------+-+---------------+----+---------------+-+---------+-+---------------+
+ mated in 0...N |~| losing |~| -4 queens ... |draw| ...  4 queens |~| winning |~| mate in N...1 |
+ +----------------+-+--------+-+---------------+----+---------------+-+---------+-+---------------+</code></pre>
+<h2 id="value-type">Value Type</h2>
+<p>Since <a href="https://en.wikipedia.org/wiki/Floating_point">floating point arithmetic</a> was too slow or even not available, it was and is quite common to use integers with <a href="https://en.wikipedia.org/wiki/Fixed-point_arithmetic">fixed point</a> pawn unit interpretation. However, if <a href="/Float">Float</a> and <a href="/Double">Double</a> are available intrinsic data types inside the target architecture, certain expressions in heuristic evaluation might be done by floating point arithmetic to deal with <a href="https://en.wikipedia.org/wiki/Fixed-point_arithmetic#Precision_loss_and_overflow">Precision loss and overflow</a> issues in temporary scaling terms using multiplicative or none-linear functions. <span id="FixedPoint"></span></p>
+<h3 id="fixed-point">Fixed Point</h3>
+<p>Heuristic integer scores need to define a fixed point resolution. What is one integer unit about? To cover fractional pawn relative <a href="/Point_Value">piece values</a>, a pawn unit is a multiple of one integer unit, something like 32, 50, 64, 100 (<a href="/Centipawns">centipawns</a>), 128, 256 or up to 1000 (<a href="/Millipawns">millipawns</a>) or more, to allow a smooth relation of all piece values and to make the granularity or grain fine enough to distinguish positional evaluation terms. <span id="Grain"></span></p>
+<h4 id="grain">Grain</h4>
+<p>On the other hand, some programmers perform a final <a href="https://en.wikipedia.org/wiki/Rounding">rounding</a> of heuristic integer scores from evaluation for a coarser grain, i.e. divide by two or four, yielding in a reduced value range accordingly. The basic idea is to increase search efficiency in <a href="/Alpha-Beta">alpha-beta</a> and that like, because move ordering becomes less sensitive from arbitrary or noisy centi- or millipawn improvements from later moves. Depending on the program, its search algorithm and evaluation, that may work to some extend. <a href="/Aske_Plaat">Aske Plaat's</a> <a href="/MTD%28f%29">MTD(f)</a> <em>Implementation Tips</em> cover the grain of the evaluation <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> :</p>
+<p><code> The coarser the grain of eval, the less passes MTD(f) has to make to converge to the minimax value. Some programs have a fine grained evaluation function, where positional knowledge can be worth as little as one hundredth of a pawn. Big score swings can become inefficient for these programs. It may help to dynamically increase the step size: instead of using the previous bound, one can, for example, add an extra few points in the search direction (for failing high, or searching upward, adding the bonus, and for failing low, or searching downward, subtracting the bonus) every two passes or so. (</code><a href="/Don_Dailey"><code>Don Dailey</code></a><code> found that a scheme like this works well in a version of </code><a href="/CilkChess"><code>CilkChess</code></a><code>.) At the end, if you overshoot the minimax value, you have to make a small search in the opposite direction, using the previous search bound without an extra bonus, to make the final convergence. Also, it can be quite instructive to experiment with different evaluation function grain sizes. Sometimes coarse grain functions work better than fine grain, both for </code><a href="/NegaScout"><code>NegaScout</code></a><code> and MTD(f). </code></p>
+<h4 id="arbitrary-bit-field-scores">Arbitrary Bit-field Scores</h4>
+<p>While calculating and keeping scores in registers or <a href="/Stack">stack</a> is best done 32-bit wise with todays processors, also dealing with <a href="https://en.wikipedia.org/wiki/Fixed-point_arithmetic#Precision_loss_and_overflow">Precision loss and overflow</a> issues in temporary multiplicative scaling terms, fewer bits are desirable when storing scores in <a href="/Hash_Table">Hash tables</a>.</p>
+<p>For instance, with centipawn resolution a 15-bit signed integer type is appropriate. Sign extended to 16 bit already avoids short signed overflow issues in various additive score comparison terms. Absolute mate score in centipawn resolution is usually <a href="/Word">SHRT_MAX</a>/2 as defined in <a href="/C">C</a>. <span id="SignExtension"></span></p>
+<h4 id="sign-extension">Sign Extension</h4>
+<p>A shiftless sign extension of stored signed values with less bits required than available inside a register (16, 32, 64) might be done by <a href="/General_Setwise_Operations">exclusive or</a> and subtraction of the value of the sign bit from the zero extended (shift right and mask, or <a href="/X86-64">x86-64</a> <a href="/BMI1">BMI1</a> <a href="/BMI1">BEXTR</a> instruction) value <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a> :</p>
+<pre><code>X_signextended ::= (X_zeroextended ^ signbit) - signbit</code></pre>
+<p>or, since masking is usually required anyway,</p>
+<pre><code>X_signextended ::= (X &amp; (signbit-1)) - (X &amp; signbit)</code></pre>
+<p>A 15 bit signed integer two's complement value with bit 14 as sign bit, has a signbit value of 0x4000 or 16384. Alternatively, almost with same effort, one may store only positive values, that is signed value + OFFSET, to adjust the retrieved values accordantly.</p>
+<h3 id="floating-point">Floating Point</h3>
+<p>While todays processors like <a href="/X86-64">x86-64</a> provide fast <a href="/SIMD_and_SWAR_Techniques">SIMD</a> instructions with vectors of 32-bit <a href="/Float">floats</a>, it might be worth to try floating point scores in pawn-units in evaluation, interior node recognizers and search. However, that requires 32-bit inside a hash table entry as well. <span id="Type"></span></p>
+<h2 id="score-types">Score Types</h2>
+<p>In <a href="/Alpha-Beta">alpha-beta</a>, the vast majority of the nodes hold either <a href="/Upper_Bound">upper</a> (<a href="/Node_Types">All-nodes</a>) or <a href="/Lower_Bound">lower bounds</a> (<a href="/Node_Types">Cut-nodes</a>) rather than an <a href="/Exact_Score">exact scores</a> of confirmed <a href="/Node_Types">PV-nodes</a>. Rather than associate some bound-bits with a score, <a href="/Don_Beal">Don Beal</a> proposed <a href="/Integrated_Bounds_and_Values">integrated bounds and values</a> integers <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a> .</p>
+<ul>
+<li><a href="/Exact_Score">Exact Score</a></li>
+<li><a href="/Lower_Bound">Lower Bound</a></li>
+<li><a href="/Upper_Bound">Upper Bound</a></li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Alpha-Beta">Alpha-Beta</a></li>
+<li><a href="/B%252A">B*</a></li>
+<li><a href="/Bound">Bound</a></li>
+<li><a href="/Chess_Game">Chess Game</a></li>
+<li><a href="/Integrated_Bounds_and_Values">Integrated Bounds and Values</a></li>
+<li><a href="/Interior_Node_Recognizer">Interior Node Recognizer</a></li>
+<li><a href="/Mate_Distance_Pruning">Mate Distance Pruning</a></li>
+<li><a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">Pawn Advantage, Win Percentage, and Elo</a></li>
+<li><a href="/Transposition_Table">Transposition Table</a></li>
+<li><a href="/Odd-Even_Effect">Score Oscillation</a></li>
+<li><a href="/Tempo">Tempo</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Don_Beal">Don Beal</a> (<strong>1984</strong>). <em>Mixing Heuristic and Perfect Evaluations: Nested Minimax</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 7, No. 1</a></li>
+<li><a href="/Don_Beal">Don Beal</a> (<strong>1995</strong>). <em>An Integrated-Bounds-and-Values (IBV) Numeric Scale for Minimax Searches</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 18, No. 2</a></li>
+<li><a href="/Jacek_Mańdziuk">Jacek Mańdziuk</a>, Daniel Osman (<strong>2004</strong>). <em>Alpha-Beta Search Enhancements with a Real-Value Game-State Evaluation Function</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 27, No. 1</a>, <a href="http://www.mini.pw.edu.pl/~mandziuk/PRACE/ICGA.pdf">pdf</a></li>
+<li><a href="http://dis.ijs.si/mitjal/">Mitja Luštrek</a>, <a href="/Matjaž_Gams">Matjaž Gams</a>, <a href="/Ivan_Bratko">Ivan Bratko</a> (<strong>2006</strong>). <em>Is Real-Valued Minimax Pathological</em>? <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 170, <a href="http://dis.ijs.si/MitjaL/documents/Is_Real-Valued_Minimax_Pathological-AIJ-06.pdf">pdf</a></li>
+<li><a href="/Kazutomo_Shibahara">Kazutomo Shibahara</a>, <a href="/Yoshiyuki_Kotani">Yoshiyuki Kotani</a> (<strong>2008</strong>). <em>Combining Final Score with Winning Percentage using Sigmoid Function in Monte-Carlo Algorithm</em>. <a href="/Conferences">13th Game Programming Workshop</a>, <a href="http://www.csse.uwa.edu.au/cig08/Proceedings/papers/8016.pdf">pdf</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/cbd402de3b07b976/b31333d734e8a6cc">Re: Which is better, IYHO</a> by <a href="/Ian_Kennedy">Ian Kennedy</a>, <a href="/Computer_Chess_Forums">rgcc</a>, August 20, 1995</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=58">Using too-shallow mate scores from the hash table</a> by <a href="/David_Eppstein">David Eppstein</a>, <a href="/CCC">CCC</a>, July 05, 1998 » <a href="/Transposition_Table">Transposition Table</a>, <a href="/Checkmate">Mate Score</a></li>
+</ul>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=21814">Re: Using too-shallow mate scores from the hash table</a> by <a href="/David_Eppstein">David Eppstein</a>, <a href="/CCC">CCC</a>, July 06, 1998</p>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=21838">Re: Using too-shallow mate scores from the hash table</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, July 07, 1998</p>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=111465">a standard for evaluation score</a> by <a href="/Gianluigi_Masciulli">Gianluigi Masciulli</a>, <a href="/CCC">CCC</a>, May 18, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=265079">Max positional score difference</a> by Nagendra Singh Tomar, <a href="/CCC">CCC</a>, November 15, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=266288">Resign Score</a> by Darren Rushton, <a href="/CCC">CCC</a>, November 20, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=268595">A high pressure squeezed idea - mate and mate score, and speed in verify</a> by <a href="/Scott_Farrell">Scott Farrell</a>, <a href="/CCC">CCC</a>, December 03, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=309279">Bounds... when is an exact score an EXACT score?</a> by <a href="/Ross_Boyd">Ross Boyd</a>, <a href="/CCC">CCC</a>, August 01, 2003</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=3405">Mate scores in the hash table</a> by Eduardo Waghabi, <a href="/Computer_Chess_Forums">Winboard Forum</a>, September 02, 2005 » <a href="/Transposition_Table">Transposition Table</a>, <a href="/Checkmate">Checkmate</a></li>
+</ul>
+<p><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=3405#p17151">Re: Mate scores in the hash table</a> by <a href="/Bruce_Moreland">Bruce Moreland</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, September 04, 2005</p>
+<p><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=3405#p17152">Re: Mate scores in the hash table</a> by <a href="/Josué_Forte">Josué Forte</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, September 04, 2005</p>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=469728">The Code for the Rybka-Mate-Bug</a> by <a href="/Chrilly_Donninger">Chrilly Donninger</a>, <a href="/CCC">CCC</a>, December 13, 2005 » <a href="/Rybka">Rybka</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=16751">Delayed-loss-bonus discussion goes here</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, September 28, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=16942">Draw scores</a> by <a href="/Carey_Bloodworth">Carey</a>, <a href="/CCC">CCC</a>, October 05, 2007 » <a href="/Draw">Draw</a>, <a href="/Score">Draw Score</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=22817">Evaluation functions. Why integer?</a> by oysteijo, <a href="/CCC">CCC</a>, August 06, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=29694">Centipawns and Millipawns</a> by Ricardo Gibert, <a href="/CCC">CCC</a>, September 08, 2009</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=31981">Seeing a promotion, but not playing it...</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, January 24, 2010</li>
+<li><a href="http://talkchess.com/forum/viewtopic.php?t=32348">TT score</a> by <a href="/Luca_Hemmerich">Luca Hemmerich</a>, <a href="/CCC">CCC</a>, February 03, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=37016">Puzzle with mate scores in TT</a> by Robert Purves, <a href="/CCC">CCC</a>, December 10, 2010 » <a href="/Transposition_Table">Transposition Table</a>, <a href="/Checkmate">Checkmate</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41640">Mate score in TT</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, December 28, 2011 » <a href="/Transposition_Table">Transposition Table</a>, <a href="/Checkmate">Mate Score</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=42050">Rounding</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, January 18, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=43385">Multi dimensional score</a> by <a href="/Nicu_Ionita">Nicu Ionita</a>, <a href="/CCC">CCC</a>, April 20, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=45768">houdini3 search and mate scores</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, October 29, 2012 » <a href="/Houdini">Houdini</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50296">Stockfish Syzygy: how to interpret mates?</a> by <a href="/Jouni_Uski">Jouni Uski</a>, <a href="/CCC">CCC</a>, December 01, 2013 » <a href="/Stockfish">Stockfish</a>, <a href="/Syzygy_Bases">Syzygy Bases</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54141">Mate score from the transposition table</a> by <a href="/Evert_Glebbeek">Evert Glebbeek</a>, <a href="/CCC">CCC</a>, October 25, 2014 » <a href="/Transposition_Table">Transposition Table</a>, <a href="/Checkmate">Checkmate</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2951">TT Mate scores</a> by rgoomes, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, February 10, 2016 » <a href="/Transposition_Table">Transposition Table</a>, <a href="/Checkmate">Checkmate</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61381">Score from white side or from playing side?</a> by Luis Babboni, <a href="/CCC">CCC</a>, September 10, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63884">reporting engine scores</a> by Mike Adams, <a href="/CCC">CCC</a>, May 02, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63948">Update Best Score and Best Move</a> by <a href="/Tamás_Kuzmics">Tamás Kuzmics</a>, <a href="/CCC">CCC</a>, May 10, 2017 » <a href="/Best_Move">Best Move</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=64428">Mate Score</a> by <a href="/Tamás_Kuzmics">Tamás Kuzmics</a>, <a href="/CCC">CCC</a>, June 27, 2017 » <a href="/Checkmate">Mate Score</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65764">Statistical interpretation of search and eval scores</a> by J. Wesley Cleveland, <a href="/CCC">CCC</a>, November 18, 2017 » <a href="/Match_Statistics">Match Statistics</a>, <a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">Pawn Advantage, Win Percentage, and Elo</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=67049">Mate scores in TT (a new?... approach)</a> by Vince Sempronio, <a href="/CCC">CCC</a>, April 09, 2018</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=67078">Yet another Mate scores in TT thread</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, April 12, 2018 » <a href="/Checkmate">Checkmate</a>, <a href="/Transposition_Table">Transposition Table</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=67102">Draw scores in TT</a> by <a href="/Srdja_Matovic">Srdja Matovic</a>, <a href="/CCC">CCC</a>, April 14, 2018 » <a href="/Draw">Draw</a>, <a href="/Score">Draw Score</a>, <a href="/Transposition_Table">Transposition Table</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=71707">Why does stockfish randomise draw evaluations?</a> by <a href="/Vincent_Tang">Vincent Tang</a>, <a href="/CCC">CCC</a>, September 01, 2019 » <a href="/Stockfish">Stockfish</a>, <a href="/Draw_Evaluation">Draw Evaluation</a>, Draw Score, <a href="/Search_with_Random_Leaf_Values">Search with Random Leaf Values</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72140">UCI Win/Draw/Loss reporting</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, <a href="/CCC">CCC</a>, October 22, 2019 » <a href="/UCI">UCI</a>, <a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">Pawn Advantage, Win Percentage, and Elo</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="https://lczero.org/blog/2020/04/wdl-head/">Win-Draw-Loss evaluation</a> by <a href="/Alexander_Lyashuk">crem</a>, <a href="/Leela_Chess_Zero">LCZero blog</a>, April 20, 2020 » <a href="/TCEC_Season_17">TCEC Season 17 Superfinal</a>, <a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">Pawn Advantage, Win Percentage, and Elo</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74339">Stockfish has included WDL stats in engine output</a> by Deberger, <a href="/CCC">CCC</a>, July 02, 2020 » <a href="/Stockfish">Stockfish</a>, <a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">Pawn Advantage, Win Percentage, and Elo</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74411">Correct way to store and extract mate scores</a> by Ian Mitchell, <a href="/CCC">CCC</a>, July 08, 2020 » <a href="/Checkmate">Checkmate</a>, <a href="/Transposition_Table">Transposition Table</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="http://web.archive.org/web/20070707035457/www.brucemo.com/compchess/programming/matescore.htm">Checkmate/Stalemate Scoring</a> from <a href="/Bruce_Moreland">Bruce Moreland's</a> <a href="http://web.archive.org/web/20070607231311/www.brucemo.com/compchess/programming/index.htm">Programming Topics</a></li>
+<li><a href="http://web.archive.org/web/20070707041901/www.brucemo.com/compchess/programming/matehash.htm">Handling Mate Scores</a> from <a href="/Bruce_Moreland">Bruce Moreland's</a> <a href="http://web.archive.org/web/20070607231311/www.brucemo.com/compchess/programming/index.htm">Programming Topics</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Score">Score from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Score_%28game%29">Score (game) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Fixed-point_arithmetic">Fixed point arithmetic from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Floating_point">Floating point from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Rounding">Rounding from Wikipedia</a></li>
+<li><a href="/Category:Kinga_Głyk">Kinga Głyk</a> - Difficult Choices, album <a href="http://polskienagrania.com.pl/2017/10/03/kinga-glyk-dream/">Dream</a> (2017), <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p>feat. <a href="https://en.wikipedia.org/wiki/Gregory_Hutchinson_(musician)">Gregory Hutchinson</a>, <a href="https://en.wikipedia.org/wiki/Tim_Garland">Tim Garland</a>, <a href="https://en.wikipedia.org/wiki/Nitai_Hershkovits">Nitai Hershkovits</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/kx9xjfcKO1A" title="YouTube video kx9xjfcKO1A" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=kx9xjfcKO1A">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Search">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://www.stmintz.com/ccc/index.php?id=469728">The Code for the Rybka-Mate-Bug</a> by <a href="/Chrilly_Donninger">Chrilly Donninger</a>, <a href="/CCC">CCC</a>, December 13, 2005<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://home.hccnet.nl/h.g.muller/delay.html">Evaluation: Aging - The Delay Penalty</a> from <a href="/Micro-Max">Micro-Max</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=147295&amp;t=15129">Re: Transposition Tables</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, September 26, 2007<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=16751">Delayed-loss-bonus discussion goes here</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, September 28, 2007<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=31981">Seeing a promotion, but not playing it...</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, January 24, 2010<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=58881&amp;start=1">Re: The cause of extreme piece shuffling</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, January 11, 2016<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="/Harry_Nelson">Harry Nelson</a>, <a href="/Robert_Hyatt">Robert Hyatt</a> (<strong>1988</strong>). <em>The Draw Heuristic of Cray Blitz</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 11, No. 1</a><a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="http://people.csail.mit.edu/plaat/mtdf.html">MTD(f) - A Minimax Algorithm faster than NegaScout</a> by <a href="/Aske_Plaat">Aske Plaat</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="http://aggregate.org/MAGIC/#Sign%20Extension">Sign Extension</a> from <a href="http://aggregate.org/MAGIC">The Aggregate Magic Algorithms</a> by <a href="/Hank_Dietz">Hank Dietz</a><a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="/Don_Beal">Don Beal</a> (<strong>1995</strong>). <em>An Integrated-Bounds-and-Values (IBV) Numeric Scale for Minimax Searches</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 18, No. 2</a><a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Kinga_Głyk">Kinga Głyk</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Score">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

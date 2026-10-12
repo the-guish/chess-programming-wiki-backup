@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rybka-Crafty Evidence VI - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Rybka-Crafty Evidence VI</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Organizations">Organizations</a> * <a href="/ICGA">ICGA</a> * <a href="/ICGA_Investigations">Investigations</a> * <a href="/Rybka_Controversy">Rybka Controversy</a> * <a href="/Pre-Fruit_Rybka_and_Crafty">Pre-Fruit Rybka and Crafty</a> * NextMove and NextEvasion</strong></p>
+<p><strong><a href="/Rybka-Crafty_Evidence_V">&lt; Prev</a></strong></p>
+<p>by <a href="/Mark_Watkins">Mark Watkins</a></p>
+<p>The NextMove() and NextEvasions() functions in <a href="/Crafty">Crafty</a> also re-appear in pre-Beta <a href="/Rybka">Rybka</a>. I will give the latter completely, and for reasons of length just point out one identical element in NextMove().</p>
+<h2 id="phases">Phases</h2>
+<p>First, we have Crafty's numbering of phases.</p>
+<pre><code>#define NONE                      0
+#define HASH_MOVE                 1
+#define GENERATE_CAPTURE_MOVES    2
+#define CAPTURE_MOVES             3
+#define KILLER_MOVE_1             4
+#define KILLER_MOVE_2             5
+#define GENERATE_ALL_MOVES        6
+#define SORT_ALL_MOVES            7  
+#define HISTORY_MOVES_1           8
+#define HISTORY_MOVES_2           9
+#define REMAINING_MOVES          10
+#define ROOT_MOVES               11</code></pre>
+<h2 id="nextevasion">NextEvasion</h2>
+<p>Crafty uses phases 1, 4, and 10 in NextEvasion(). Here is high-level logic in pre-Beta Rybka.</p>
+<pre><code>0x00459c70: sub    $0xc,%esp            # NextEvasion() function
+0x00459c75: mov    0x18(%esp),%esi
+0x00459c7a: mov    0x20(%esp),%edi
+0x00459c7e: lea    (%edi,%edi,2),%eax   
+0x00459c81: lea    (%esi,%eax,4),%ebx
+0x00459c8b* mov    %ebx,0xc(%esp)
+0x00459c84: mov    0xb20(%ebx),%eax     # get current phase
+0x00459c8a: dec    %eax                 # (sub 1 from it)
+0x00459c8f: je     0x459ca8             # if phase was 1, then ...
+0x00459c91: sub    $0x6,%eax            # (sub 6 more)
+0x00459c94: je     0x459cea             # if phase was 7, then...
+0x00459c96: sub    $0x3,%eax            # (sub 3 more)
+0x00459c99: je     0x459e9c             # if phase was 10, then...
+0x00459ca1: xor    %eax,%eax            # phase is bad, return 0
+0x00459ca7: ret</code></pre>
+<p>Here is the first part of NextEvasion(), for the case HASH_MOVE:</p>
+<pre><code>int NextEvasion(TREE * RESTRICT tree, int ply, int wtm) {
+  register int *movep, *sortv;
+  switch (tree-&gt;next_status[ply].phase) {
+  case HASH_MOVE:
+    tree-&gt;last[ply]=GenerateCheckEvasions(tree, ply, wtm, tree-&gt;last[ply-1]);
+    if (tree-&gt;hash_move[ply]) {
+      tree-&gt;next_status[ply].phase=SORT_ALL_MOVES;
+      tree-&gt;current_move[ply]=tree-&gt;hash_move[ply];
+      if (ValidMove(tree,ply,wtm,tree-&gt;current_move[ply])) return(HASH_MOVE);
+      else Print(128,&quot;bad move from hash table, ply=%d\n&quot;,ply);
+    }
+
+0x00459ca8: mov    0x137c(%esi,%edi,4),%ecx    # ptr to tree-&gt;last[ply-1]
+0x00459caf: mov    0x24(%esp),%edx
+0x00459cb3: push   %ecx, %edx, %edi, %esi
+0x00459cb7: call   0x452860                    # call GenerateCheckEvasions()
+0x00459cbc: mov    %eax,0x1380(%esi,%edi,4)    # save ptr in tree-&gt;last[ply]
+0x00459cc3: mov    (%esi,%edi,4),%eax          # load tree-&gt;hash_move[ply]
+0x00459cc9: test   %eax,%eax                   # if this is zero
+0x00459ccb: je     0x459cea                      # then goto the next phase
+0x00459ccd: mov    %eax,0x1060(%esi,%edi,4)    # tree-&gt;current_move[ply] = tree-&gt;hash_move[ply]
+0x00459cd6: movl   $0x7,0xb20(%ebx)            # set phase to 7 (SORT_ALL_MOVES)
+0x00459ce0: mov    $0x1,%eax                   # return 1
+0x00459ce9: ret    </code></pre>
+<p>Note that this pre-Beta Rybka seems not to have a ValidMove routine. Here is the SORT_ALL_MOVES case.</p>
+<pre><code>  case SORT_ALL_MOVES:
+    tree-&gt;next_status[ply].phase=REMAINING_MOVES;
+    if (tree-&gt;hash_move[ply]) {
+      for (movep=tree-&gt;last[ply-1],sortv=tree-&gt;sort_value;
+           movep&lt;tree-&gt;last[ply];movep++,sortv++)
+        if (*movep == tree-&gt;hash_move[ply]) {
+          *sortv=-999999;
+          *movep=0;
+        }
+        else {
+          if (p_values[Piece(*movep)+7] &lt; p_values[Captured(*movep)+7]) 
+            *sortv=p_values[Captured(*movep)+7]-p_values[Piece(*movep)+7];
+          else *sortv=Swap(tree,From(*movep),To(*movep),wtm);
+        }
+    }
+    else {
+      for (movep=tree-&gt;last[ply-1],sortv=tree-&gt;sort_value;
+           movep&lt;tree-&gt;last[ply];movep++,sortv++)
+        if (p_values[Piece(*movep)+7] &lt; p_values[Captured(*movep)+7]) 
+          *sortv=p_values[Captured(*movep)+7]-p_values[Piece(*movep)+7];
+        else *sortv=Swap(tree,From(*movep),To(*movep),wtm);
+    }</code></pre>
+<p>Note that pre-Beta Rybka also uses -999999 as the sentinel.</p>
+<pre><code>0x00459cea: mov    (%esi,%edi,4),%eax         # load tree-&gt;hash_move[ply]
+0x00459cee: mov    0x137c(%esi,%edi,4),%ebp
+0x00459cf5: movl   $0xa,0xb20(%ebx)           # tree-&gt;next_status[ply].phase=REMAINING_MOVES;
+0x00459cff: test   %eax,%eax                  
+0x00459d01: mov    0x1380(%esi,%edi,4),%eax
+0x00459d08: lea    0x1564(%esi),%ebx
+0x00459d0e: je     0x459d87                   # if (tree-&gt;hash_move[ply])
+0x00459d10: cmp    %eax,%ebp
+0x00459d12: jae    0x459de9                     # set up for loop
+0x00459d18: mov    0x0(%ebp),%eax            LOOP
+0x00459d1b: cmp    (%esi,%edi,4),%eax           # if (*movep == tree-&gt;hash_move[ply]
+0x00459d1e: jne    0x459d2f
+0x00459d20: movl   $0xfff0bdc1,(%ebx)             # *sortv = -999999
+0x00459d26: movl   $0x0,0x0(%ebp)                 # *movep = 0
+0x00459d2d: jmp    0x459d74                     # else
+0x00459d2f: mov    %eax,%ecx
+0x00459d31: sar    $0xf,%ecx                      # Captured(*movep)
+0x00459d34: mov    %eax,%edx
+0x00459d36: sar    $0xc,%edx                      # Piece(*movep)
+0x00459d39: and    $0x7,%ecx
+0x00459d3c: mov    0x5ffed4(,%ecx,4),%ecx         # y = p_values[Captured(*movep) + 7]
+0x00459d43: and    $0x7,%edx
+0x00459d46: mov    0x5ffed4(,%edx,4),%edx         # x = p_values[Captured(*movep) + 7]
+0x00459d4d: cmp    %ecx,%edx
+0x00459d4f: jge    0x459d57                       # if (x &lt; y) 
+0x00459d51: sub    %edx,%ecx
+0x00459d53: mov    %ecx,(%ebx)                      # *sortv= y - x
+0x00459d55: jmp    0x459d74                       # else
+0x00459d57: mov    0x28(%esp),%ecx                  # load tree pointer
+0x00459d5b: mov    %eax,%edx
+0x00459d5e: sar    $0x6,%edx
+0x00459d61: and    $0x3f,%edx                       # To(*movep)
+0x00459d65: and    $0x3f,%eax                       # From(*movep)
+0x00459d69* push   %ecx, %edx, %eax, %esi
+0x00459d6a: call   0x45ad80                         # Swap(tree,From(*movep),To(*movep),wtm)
+0x00459d6f: add    $0x10,%esp
+0x00459d72: mov    %eax,(%ebx)
+0x00459d74: mov    0x1380(%esi,%edi,4),%eax     # determine if loop is done
+0x00459d7b: add    $0x4,%ebp
+0x00459d7e: add    $0x4,%ebx
+0x00459d81: cmp    %eax,%ebp
+0x00459d83: jb     0x459d18                     # if not done, goto LOOP
+0x00459d85: jmp    0x459de9
+0x00459d87: cmp    %eax,%ebp                  # else [that is, tree-&gt;hash_move[ply] is zero]
+0x00459d89: jae    0x459de9
+0x00459d8b: jmp    0x459d90
+0x00459d8d: lea    0x0(%ecx),%ecx
+0x00459d90: mov    0x0(%ebp),%eax            LOOP2 START
+0x00459d93: mov    %eax,%ecx
+0x00459d95: sar    $0xf,%ecx                    # Captured(*movep)
+0x00459d98: mov    %eax,%edx
+0x00459d9a: sar    $0xc,%edx
+0x00459d9d: and    $0x7,%ecx                    # Piece(*movep)
+0x00459da0: mov    0x5ffed4(,%ecx,4),%ecx       # y = p_values[Captured(*movep) + 7]
+0x00459da7: and    $0x7,%edx
+0x00459daa: mov    0x5ffed4(,%edx,4),%edx       # x = p_values[Captured(*movep) + 7]
+0x00459db1: cmp    %ecx,%edx                    # if (x &lt; y)
+0x00459db3: jge    0x459dbb
+0x00459db5: sub    %edx,%ecx
+0x00459db7: mov    %ecx,(%ebx)                    # *sortv = y - x
+0x00459db9: jmp    0x459dd8                     # else
+0x00459dbb: mov    0x28(%esp),%ecx
+0x00459dbf: mov    %eax,%edx
+0x00459dc2: sar    $0x6,%edx
+0x00459dc5: and    $0x3f,%edx                     # To(*movep)
+0x00459dc9: and    $0x3f,%eax                     # From(*movep)
+0x00459dcd: push   %ecx, %edx, %eax, %esi
+0x00459dce: call   0x45ad80                       # call Swap()
+0x00459dd6: mov    %eax,(%ebx)                    # *sortv = value from Swap()
+0x00459dd8: mov    0x1380(%esi,%edi,4),%eax     # determine if loop is done
+0x00459ddf: add    $0x4,%ebp
+0x00459de2: add    $0x4,%ebx
+0x00459de5: cmp    %eax,%ebp
+0x00459de7: jb     0x459d90                     # if not, goto LOOP2</code></pre>
+<p>Next Crafty does an insertion sort in this SORT_ALL_MOVES phase.</p>
+<pre><code>    if (tree-&gt;last[ply] &gt; tree-&gt;last[ply-1]+1) {
+      int temp1, temp2, *tmovep, *tsortv;
+      int *end;
+      sortv=tree-&gt;sort_value+1;
+      movep=tree-&gt;last[ply-1]+1;
+      end=tree-&gt;last[ply];
+      for (;movep&lt;end;movep++,sortv++) {
+        temp1=*movep;
+        temp2=*sortv;
+        tmovep=movep-1;
+        tsortv=sortv-1;
+        while (tmovep&gt;=tree-&gt;last[ply-1] &amp;&amp; *tsortv&lt;temp2) {
+          *(tsortv+1)=*tsortv;
+          *(tmovep+1)=*tmovep;
+          tmovep--;
+          tsortv--;
+        }
+        *(tmovep+1)=temp1;
+        *(tsortv+1)=temp2;
+      }
+    }
+    tree-&gt;next_status[ply].last=tree-&gt;last[ply-1];</code></pre>
+<p>As does pre-Beta Rybka -- I'm not sure comments are that useful.</p>
+<pre><code>0x00459de9: mov    0x137c(%esi,%edi,4),%eax
+0x00459df0: lea    0x4(%eax),%edx
+0x00459df3: mov    0x1380(%esi,%edi,4),%eax
+0x00459dfa: cmp    %eax,%edx
+0x00459dfc: mov    %eax,0x18(%esp)
+0x00459e00: jae    0x459e88
+0x00459e06: lea    -0x4(%edx),%eax
+0x00459e09: lea    0x1568(%esi),%ebp
+0x00459e0f: mov    %eax,0x24(%esp)
+0x00459e13: jmp    0x459e20
+0x00459e15: mov    0x24(%esp),%eax
+0x00459e19: lea    0x0(%esp),%esp
+0x00459e20: mov    (%edx),%ecx
+0x00459e22: cmp    0x137c(%esi,%edi,4),%eax
+0x00459e29: mov    %ecx,0x14(%esp)
+0x00459e2d: mov    0x0(%ebp),%ecx
+0x00459e30: mov    %ecx,0x20(%esp)
+0x00459e34: lea    -0x4(%ebp),%ecx
+0x00459e37: jb     0x459e61
+0x00459e39: lea    0x0(%esp),%esp
+0x00459e40: mov    (%ecx),%ebx
+0x00459e42: cmp    0x20(%esp),%ebx
+0x00459e46: jge    0x459e61
+0x00459e48: mov    %ebx,0x4(%ecx)
+0x00459e4b: mov    (%eax),%ebx
+0x00459e4d: mov    %ebx,0x4(%eax)
+0x00459e50: mov    0x137c(%esi,%edi,4),%ebx
+0x00459e57: sub    $0x4,%eax
+0x00459e5a: sub    $0x4,%ecx
+0x00459e5d: cmp    %ebx,%eax
+0x00459e5f: jae    0x459e40
+0x00459e61: mov    0x14(%esp),%ebx
+0x00459e65: mov    %ebx,0x4(%eax)
+0x00459e68: mov    0x20(%esp),%eax
+0x00459e6c: mov    0x24(%esp),%ebx
+0x00459e70: mov    %eax,0x4(%ecx)
+0x00459e73: mov    0x18(%esp),%eax
+0x00459e77: add    $0x4,%edx
+0x00459e7a: add    $0x4,%ebx
+0x00459e7d: add    $0x4,%ebp
+0x00459e80: cmp    %eax,%edx
+0x00459e82: mov    %ebx,0x24(%esp)
+0x00459e86: jb     0x459e15
+0x00459e88: mov    0x10(%esp),%edx
+0x00459e8c: mov    0x137c(%esi,%edi,4),%ecx
+0x00459e93: mov    %ecx,0xb18(%edx)
+0x00459e99: mov    %edx,%ebx</code></pre>
+<p>And finally the REMAINING_MOVES case.</p>
+<pre><code>  case REMAINING_MOVES:
+    for (;tree-&gt;next_status[ply].last&lt;tree-&gt;last[ply];
+           tree-&gt;next_status[ply].last++)
+      if ((*tree-&gt;next_status[ply].last)) {
+        tree-&gt;current_move[ply]=*tree-&gt;next_status[ply].last++;
+        return(REMAINING_MOVES);
+      }  
+    return(NONE);
+
+0x459e9c: mov   0xb18(%ebx),%eax          # get tree-&gt;next_status[ply].last
+0x459ea2: cmp   0x1380(%esi,%edi,4),%eax  # if tree-&gt;next_status[ply].last &gt;= tree-&gt;last[ply]
+0x459ea9: jae   0x459c9f                  # return 0 [see above]
+0x459eb0: mov   0xb18(%ebx),%eax      LOOP
+0x459eb6: cmpl  $0x0,(%eax)               # if NOT *tree-&gt;next_status[ply].last
+0x459eb9: jne   0x459ed8
+0x459ebb: add   $0x4,%eax                 # increment the loop counter
+0x459ebe: mov   %eax,%ecx
+0x459ec0: mov   %eax,0xb18(%ebx)               
+0x459ec6: cmp   0x1380(%esi,%edi,4),%ecx  # if tree-&gt;next_status[ply].last &lt; tree-&gt;last[ply]
+0x459ecd: jb    0x459eb0                      # continue LOOP
+0x459ed1: xor   %eax,%eax                 # return 0
+0x459ed7: ret    
+0x459ed8: mov   0xb18(%ebx),%eax          # else
+0x459ede: mov   (%eax),%edx
+0x459ee0: mov   %edx,0x1060(%esi,%edi,4)  # tree-&gt;current_move[ply]=*tree-&gt;next_status[ply].last++;
+0x459ee8: add   $0x4,%eax
+0x459eeb: mov   %eax,0xb18(%ebx)
+0x459ef2: mov   $0xa,%eax                 # return phase 10 (REMAINING_MOVES)
+0x459efb: ret    </code></pre>
+<h2 id="nextmove">NextMove</h2>
+<p>Here is the 9th phase in both Crafty and pre-Beta Rybka. It is already somewhat odd to have this HISTORY_MOVES_2 phase.</p>
+<pre><code>  case HISTORY_MOVES_2:
+    bestval=0;
+    bestp=0;
+    for (movep=tree-&gt;last[ply-1];movep&lt;tree-&gt;last[ply];movep++)
+      if (*movep) {
+        index=*movep&amp;4095;
+        history_value= (wtm) ? history_w[index] : history_b[index];
+        if (history_value &gt; bestval) {
+          bestval=history_value;
+          bestp=movep;
+        }
+      }
+    if (bestval) {
+      tree-&gt;current_move[ply]=*bestp;
+      *bestp=0;
+      tree-&gt;next_status[ply].remaining++;
+      if (tree-&gt;next_status[ply].remaining &gt; 3) {
+        tree-&gt;next_status[ply].phase=REMAINING_MOVES;
+        tree-&gt;next_status[ply].last=tree-&gt;last[ply-1];
+      }
+      return(HISTORY_MOVES_2);
+    }</code></pre>
+<p>In the second segment, the condition that the number of moves be greater than 3 cannot be said to be typical. Here is the pre-Beta Rybka code for this segment:</p>
+<pre><code>[...]
+0x44bbd4: test   %ebp,%ebp                  # if (bestval)
+0x44bbd6: je     0x44bc22
+0x44bbd8: mov    (%edx),%eax
+0x44bbda: lea    0x2c7(%edi,%edi,2),%ecx
+0x44bbe1: mov    %eax,0x1060(%esi,%edi,4)     # tree-&gt;current_move[ply]=*bestp;
+0x44bbe8: lea    (%esi,%ecx,4),%eax
+0x44bbeb: movl   $0x0,(%edx)                  # *bestp = 0
+0x44bbf1: mov    (%eax),%edx
+0x44bbf3: inc    %edx                         # increment #remaining
+0x44bbf4: mov    %edx,%ecx
+0x44bbf6: cmp    $0x3,%ecx                    # if #remaining &gt; 3
+0x44bbf9: mov    %edx,(%eax)
+0x44bbfb: jle    0x44bc14                         
+0x44bbfd: mov    0x137c(%esi,%edi,4),%edx       # load tree-&gt;last[ply-1]
+0x44bc04: movl   $0xa,0xb20(%ebx)               # set phase to 10 (REMAINING_MOVES)
+0x44bc0e: mov    %edx,0xb18(%ebx)               # tree-&gt;next_status[ply].last = tree-&gt;last[ply-1];
+0x44bc14: mov    0x80(%esp),%ebp
+0x44bc1b: mov    $0x9,%eax                    # phase 9 is HISTORY_MOVES_2
+0x44bc20: jmp    0x44bc71                     # return (HISTORY_MOVES_2)</code></pre>
+<p>The exact similarity with the totality of NextMove() is yet to be determined, but the above should suffice to give an example of code re-use.</p>
+<p><strong><a href="/Pre-Fruit_Rybka_and_Crafty">Up one level</a></strong></p>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Rybka-Crafty_Evidence_VI">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

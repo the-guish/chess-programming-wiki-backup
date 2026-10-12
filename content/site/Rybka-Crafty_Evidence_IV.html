@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rybka-Crafty Evidence IV - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Rybka-Crafty Evidence IV</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Organizations">Organizations</a> * <a href="/ICGA">ICGA</a> * <a href="/ICGA_Investigations">Investigations</a> * <a href="/Rybka_Controversy">Rybka Controversy</a> * <a href="/Pre-Fruit_Rybka_and_Crafty">Pre-Fruit Rybka and Crafty</a> * Rybka-Crafty Evidence IV</strong></p>
+<p><strong><a href="/Rybka-Crafty_Evidence_III">&lt; Prev</a> <a href="/Rybka-Crafty_Evidence_V">Next &gt;</a></strong></p>
+<p>by <a href="/Mark_Watkins">Mark Watkins</a></p>
+<p>Copied code from the start of <a href="/Crafty">Crafty's</a> Evaluate in pre-Beta <a href="/Rybka">Rybka</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#crafty-source">Crafty Source</a></li>
+<li><a href="#pre-beta-rybka-assembly">Pre-Beta Rybka Assembly</a></li>
+<li><a href="#todo">ToDo</a></li>
+<li><a href="#sidenote">Sidenote</a></li>
+</ol>
+</details><h2 id="crafty-source">Crafty Source</h2>
+<p>Here is the start of the Evaluate() code in Crafty 19.1, with some comments removed:</p>
+<pre><code>int Evaluate(TREE * RESTRICT tree, int ply, int wtm, int alpha, int beta) {
+  register BITBOARD temp;
+  register int square, file, score, tscore, w_tropism=0, b_tropism=0;
+  register int w_spread, b_spread, trop, can_win=3;
+// ... comments and #if stuff omitted
+  if (TotalWhitePieces&lt;13 &amp;&amp; TotalBlackPieces&lt;13) {
+    can_win=EvaluateWinner(tree);
+    if (EvaluateStalemate(tree,wtm)) can_win=0;
+  }
+  if (can_win == 0) return(DrawScore(wtm));</code></pre>
+<h2 id="pre-beta-rybka-assembly">Pre-Beta Rybka Assembly</h2>
+<p>Here is the comparative code for pre-Beta Rybka:</p>
+<pre><code>0x00402a00:     push   %ebp                   # start of pre-Beta Rybka Evaluate()
+0x00402a01:     mov    %esp,%ebp
+0x00402a03:     sub    $0x44,%esp
+0x00402a06:     push   %ebx
+0x00402a07:     mov    0x10(%ebp),%ebx
+0x00402a0a:     push   %esi
+0x00402a0b:     mov    0x8(%ebp),%esi
+0x00402a0e:     mov    0xb0a(%esi),%cl        # load &quot;TotalWhitePieces&quot;
+0x00402a14:     mov    $0xd,%al               # 0xd is 13
+0x00402a16:     cmp    %al,%cl                # compare &quot;TotalWhitePieces&quot; to 13
+0x00402a18:     push   %edi
+0x00402a19:     movl   $0x3,-0x1c(%ebp)       # set &quot;can_win&quot; to 3
+0x00402a20:     jge    0x402a53
+0x00402a22:     cmp    %al,0xb0b(%esi)        # compare &quot;TotalBlackPieces&quot; to 13
+0x00402a28:     jge    0x402a53               # if both &lt; 13
+0x00402a2a:     push   %esi                       
+0x00402a2b:     call   0x401630                 # call EvaluateWinner()
+0x00402a30:     mov    %eax,%edi
+0x00402a32:     push   %ebx
+0x00402a33:     push   %esi
+0x00402a34:     mov    %edi,-0x1c(%ebp)         # store function result in &quot;can_win&quot;
+0x00402a37:     call   0x401130                 # call EvaluateStalemate()
+0x00402a3c:     add    $0xc,%esp
+0x00402a3f:     test   %eax,%eax                # if EvaluateStalemate() result is nonzero
+0x00402a41:     jne    0x402a47                   # jump to loading DrawScore(wtm) and returning
+0x00402a43:     test   %edi,%edi                # if &quot;can_win&quot; is now zero
+0x00402a45:     jne    0x402a53                 # then do the next two lines (else skip)
+0x00402a47:     mov    0x6b8d78(,%ebx,4),%eax   # get DrawScore(wtm), it seems
+0x00402a4e:     jmp    0x402b9a                 # jump to function exit...</code></pre>
+<p>As can be seen, the use of "can_win" is the same (see also the page regarding 99999), as is the comparison to 13.</p>
+<h2 id="todo">ToDo</h2>
+<p>Either Zach or Mark will disentangle EvaluateWinner() and EvaluateStalemate() to strengthen the evidence here.</p>
+<h2 id="sidenote">Sidenote</h2>
+<p>As noted by Zach, this pre-Beta Rybka does not return the __DrawScore(wtm)__ value directly, but first does some manipulations with it.</p>
+<pre><code>0x00402b9a:     cltd   
+0x00402b9b:     sub    %edx,%eax
+0x00402b9d:     sar    %eax
+0x00402b9f:     test   %eax,%eax
+0x00402ba1:     jle    0x404519
+0x00402ba7:     cmp    $0x80,%eax
+0x00402bac:     jl     0x404531
+0x00402bb2:     add    $0xffffff80,%eax
+0x00402bb5:     cltd   
+0x00402bb6:     and    $0xf,%edx
+0x00402bb9:     add    %edx,%eax
+0x00402bbc:     sar    $0x4,%eax
+0x00402bc0:     add    $0x80,%eax
+0x00402bc9:     ret   
+[...]
+0x00404519:     cmp    $0xffffff80,%eax
+0x0040451c:     jg     0x404531
+0x0040451e:     add    $0x80,%eax
+0x00404523:     cltd   
+0x00404524:     and    $0xf,%edx
+0x00404527:     add    %edx,%eax
+0x00404529:     sar    $0x4,%eax
+0x0040452c:     sub    $0x80,%eax
+0x00404537:     ret  </code></pre>
+<p>I omitted the "pop" and %esp instructions in the last here, as they only have to do with preparing the stack for subroutine exit.</p>
+<p><strong><a href="/Pre-Fruit_Rybka_and_Crafty">Up one level</a></strong></p>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Rybka-Crafty_Evidence_IV">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

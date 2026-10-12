@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sliding Piece Attacks - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Sliding Piece Attacks</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * Sliding Piece Attacks</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:267px"><a href="http://www.carinajorgensen.com/Chess/queensstar.php" target="_blank" rel="noopener noreferrer"><img src="/assets/Queen's_Star.jpg" alt="Carina Jørgensen, Queen's Star 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Carina_Jørgensen">Carina Jørgensen</a>, Queen's Star <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://www.carinajorgensen.com/Chess/queensstar.php">Queen's Star</a> 2009 by <a href="/Category:Carina_Jørgensen">Carina Jørgensen</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p>This is basically about how to calculate <a href="/Attacks">attack-sets</a> of <a href="/Sliding_Pieces">sliding pieces</a> for <a href="/Evaluation">evaluation</a> and <a href="/Move_Generation">move-generation</a> purposes. While the attack-sets of <a href="/Pawn">pawn</a>, <a href="/King">king</a> and <a href="/Knight">knight</a> are only dependent on their <a href="/Origin_Square">origin square</a>, sliding pieces like <a href="/Rook">rook</a>, <a href="/Bishop">bishop</a> or <a href="/Queen">queen</a> have to consider <a href="/Occupancy">occupancy</a>, as <a href="/Pieces">pieces</a> may block the attack-ray in one particular <a href="/Direction">direction</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#move-targets">Move targets</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#single-sliding-piece-attacks">Single Sliding Piece Attacks</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#on-an-empty-board">On an empty Board</a></li>
+<li><a href="#tinkers-approach">Tinker's Approach</a></li>
+<li><a href="#by-calculation">By Calculation</a></li>
+<li><a href="#by-occupancy-lookup">By Occupancy Lookup</a></li>
+<li><a href="#miscellaneous">Miscellaneous</a></li>
+</ol>
+</details></li>
+<li><a href="#multiple-sliding-pieces">Multiple Sliding Pieces</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1999">1999</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="move-targets">Move targets</h2>
+<p>Move target sets from attack-sets require <a href="/General_Setwise_Operations">intersection</a></p>
+<ul>
+<li>with opponent pieces for <a href="/Captures">captures</a></li>
+<li>with all empty squares for <a href="/Quiet_Moves">quiet moves</a></li>
+</ul>
+<p><span id="SingleSlidingPieceAttacks"></span></p>
+<h2 id="single-sliding-piece-attacks">Single Sliding Piece Attacks</h2>
+<p>The single sliding piece, a rook, bishop or queen is determined by square index, likely from a <a href="/BitScan">bitscan</a> of a piece-wise <a href="/Bitboard_Serialization">bitboard serialization</a> of a sliding piece bitboard from a <a href="/Bitboard_Board-Definition">standard board-definition</a>.</p>
+<h3 id="on-an-empty-board">On an empty Board</h3>
+<p>Sliding piece attack sets or their disjoint subsets on lines or rays on an otherwise empty board are that simple than none sliding pieces. They are often base of further attack calculations.</p>
+<ul>
+<li><a href="/On_an_empty_Board">Attacks on the otherwise empty Board</a></li>
+</ul>
+<h3 id="tinkers-approach">Tinker's Approach</h3>
+<p><a href="/Brian_Richardson">Brian Richardson</a> proposed a move generation approach as used in <a href="/Tinker">Tinker</a> based on rook or bishop attacks on the otherwise empty board <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. While <a href="/Bitboard_Serialization">serializing</a> all potential targets, he tests for legality inside the loop body, that is whether the <a href="/Square_Attacked_By">inbetween squares</a> of <a href="/Origin_Square">origin</a> and <a href="/Target_Square">target</a> are empty. This is not in the "real" bitboard spirit to determine attack sets in advance rather than to test individual elements of a superset belonging to a set, but at least it allows traversing disjoint target sets i.e. for captures in <a href="/Quiescence_Search">quiescence search</a>.</p>
+<h3 id="by-calculation">By Calculation</h3>
+<p>Some <a href="/Bit-Twiddling">bit-twiddling</a> ray-wise and line-wise approaches, unfortunately not always for all directions.</p>
+<ul>
+<li><a href="/Blockers_and_Beyond">Blockers and Beyond</a></li>
+<li><a href="/Classical_Approach">Classical Approach</a></li>
+</ul>
+<p><a href="/Bitfoot">Bitfoot - A/B Bitboards</a></p>
+<p><a href="/CFish">CFish - AVX2 Attacks</a></p>
+<ul>
+<li><a href="/Exploding_Bitboards">Exploding Bitboards</a></li>
+<li><a href="/Hyperbola_Quintessence">Hyperbola Quintessence</a></li>
+<li><a href="/Leorik">Leorik Attacks</a></li>
+<li><a href="/Obstruction_Difference">Obstruction Difference</a></li>
+<li><a href="/Reverse_Bitboards">Reverse Bitboards</a></li>
+<li><a href="/SBAMG">SBAMG</a></li>
+<li><a href="/Shifted_Bitboards">Shifted Bitboards</a></li>
+<li><a href="/Subtracting_a_Rook_from_a_Blocking_Piece">Subtracting a Rook from a Blocking Piece</a></li>
+</ul>
+<p><span id="AttacksbyOccupancyLookup"></span></p>
+<h3 id="by-occupancy-lookup">By Occupancy Lookup</h3>
+<p>Covering line-attacks in one run, <a href="/Magic_Bitboards">magic bitboards</a> even covers rook- and bishop-attacks in one run.</p>
+<ul>
+<li><a href="/First_Rank_Attacks">First Rank Attacks</a></li>
+<li><a href="/Occupancy_of_any_Line">Occupancy of any Line</a></li>
+<li><a href="/Rotated_Bitboards">Rotated Bitboards</a></li>
+<li><a href="/Rotated_Indices">Rotated Indices</a></li>
+<li><a href="/Kindergarten_Bitboards">Kindergarten Bitboards</a></li>
+</ul>
+<p><a href="/OliThink">Sliding Piece Attacks</a> in <a href="/OliThink">OliThink</a></p>
+<ul>
+<li><a href="/Hashing_Dictionaries">Hashing Dictionaries</a></li>
+<li><a href="/Congruent_Modulo_Bitboards">Congruent Modulo Bitboards</a></li>
+<li><a href="/Magic_Bitboards">Magic Bitboards</a></li>
+</ul>
+<p><a href="/BMI2">BMI2 - PEXT Bitboards</a></p>
+<ul>
+<li><a href="/Sherwin_Bitboards">Sherwin Bitboards</a></li>
+</ul>
+<p><a href="/SISSY_Bitboards">SISSY Bitboards</a></p>
+<ul>
+<li><a href="/Titboards">Titboards</a></li>
+</ul>
+<h3 id="miscellaneous">Miscellaneous</h3>
+<ul>
+<li><a href="/The_Switch_Approach">The Switch Approach</a></li>
+<li><a href="/SIMD_Techniques">SIMD Techniques</a></li>
+<li><a href="/Hiding_the_Implementation">Hiding the Implementation</a></li>
+</ul>
+<p><span id="Multiple"></span></p>
+<h2 id="multiple-sliding-pieces">Multiple Sliding Pieces</h2>
+<p>For bitsets with multiple sliding pieces one can apply a <a href="/Fill_Algorithms">fill algorithm</a> in each of the eight <a href="/Rays">ray-directions</a> to determine attacks. Since we keep disjoint directions, there is still a unique 1:1 relation from each bit of the target set to it's source square. This approach is great to determine target sets we may reach in two or more moves. One may use the union of rooks and queen(s), respectively bishops or queen(s) though.</p>
+<ul>
+<li><a href="/Dumb7Fill">Dumb7Fill</a></li>
+</ul>
+<p><a href="/AVX2">AVX2 Dumb7Fill</a></p>
+<ul>
+<li><a href="/Kogge-Stone_Algorithm">Kogge-Stone Algorithm</a></li>
+<li><a href="/Fill_by_Subtraction">Fill by Subtraction</a></li>
+</ul>
+<p>If applied for <a href="/Move_Generation">move generation</a> we better traverse directions rather than sliding pieces. Naturally this approach becomes less efficient, the less sliders are processed in parallel. Of course, one should avoid processing empty sets.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Efficient_Generation_of_Sliding_Piece_Attacks">Efficient Generation of Sliding Piece Attacks</a>, a Summary of selected attack generation techniques, a short Talk by <a href="/Gerd_Isenberg">Gerd Isenberg</a> from the <a href="/Workshop_Chess_and_Mathematics">Workshop Chess and Mathematics</a>, <a href="https://en.wikipedia.org/wiki/Dresden">Dresden</a>, November 21st and 22nd, 2008</li>
+<li><a href="/Combinatorial_Logic">Combinatorial Logic - Combinatorial Attacks</a></li>
+<li><a href="/Sequential_Logic">Sequential Logic - Sequential Rook Attack</a></li>
+<li><a href="/Vector_Attacks">Vector Attacks</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1999">1999</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=71016">Re: How do you represent chess boards in your chess programms</a> by <a href="/Sven_Reichard">Sven Reichard</a>, <a href="/CCC">CCC</a>, September 29, 1999</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=107485">Movegen Re: Bitmap Type Re: Tinker 81 secs Re: Testing speed</a> by <a href="/Brian_Richardson">Brian Richardson</a>, <a href="/CCC">CCC</a>, April 24, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=134490">An idea to generate rook moves without rotated BBs</a> by <a href="/Severi_Salminen">Severi Salminen</a>, <a href="/CCC">CCC</a>, October 22, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=359243">sliding attacks in three #define</a> by <a href="/Rasjid_Chan">Rasjid Chan</a>, <a href="/CCC">CCC</a>, April 09, 2004</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=16002">BitBoard Tests Magic v Non-Rotated 32 Bits v 64 Bits</a> by <a href="/Brian_Richardson">Brian Richardson</a>, <a href="/CCC">CCC</a>, August 24, 2007</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=140111&amp;t=16002">Re: BitBoard Tests Magic v Non-Rotated 32 Bits v 64 Bits</a> by <a href="/Harald_Lüßen">Harald Lüßen</a>, <a href="/CCC">CCC</a>, August 24, 2007</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=30356">Yet another bitboard attack generator</a> by <a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a>, <a href="/CCC">CCC</a>, October 28, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=30369">Other attack generator just for good measure ... C++ only...</a> by Filip Tvrzsky, <a href="/CCC">CCC</a>, October 29, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=30542">Caching AttackSets</a> by <a href="/Michael_Hoffmann">Michael Hoffmann</a>, <a href="/CCC">CCC</a>, November 09, 2009</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=51076">Bitboards</a> by Jeroen de Bruin, <a href="/Computer_Chess_Forums">Winboard Forum</a>, July 07, 2010</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=51996">Low memory usage attack bitboard generation</a> by crystalclear, <a href="/Computer_Chess_Forums">Winboard Forum</a>, October 06, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?p=446380">Re: Bitboard implementation, how much time?</a> by <a href="/Michael_Hoffmann">Michael Hoffmann</a>, <a href="/CCC">CCC</a>, January 26, 2012</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=49562">Simplest bitboard attack generation</a> by <a href="/Russell_Reagan">Russell Reagan</a>, <a href="/CCC">CCC</a>, October 03, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49611">152k rook and bishop attacks using PEXT and PDEP</a> by <a href="/Lasse_Hansen">Lasse Hansen</a>, <a href="/CCC">CCC</a>, October 06, 2013 » <a href="/BMI2">BMI2</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55418">On Rook tables in magic move generation</a> by <a href="/Syed_Fahad">Syed Fahad</a>, <a href="/CCC">CCC</a>, February 22, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55604">Yet another way of generating sliding attack masks</a> by <a href="/Syed_Fahad">Syed Fahad</a>, <a href="/CCC">CCC</a>, March 09, 2015</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=55739">New idea for Rook magic moves storage</a> by <a href="/Fermin_Serrano">Fermin Serrano</a>, <a href="/CCC">CCC</a>, March 22, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56468">Slider attack mask generation without table lookup</a> by <a href="/Syed_Fahad">Syed Fahad</a>, <a href="/CCC">CCC</a>, May 24, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58795">Comparison of bitboard attack-getter variants</a> by <a href="/Sven_Schüle">Sven Schüle</a>, <a href="/CCC">CCC</a>, January 04, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59845">SBAMG - Completing Hyperbola Quintessence</a> by <a href="/Syed_Fahad">Syed Fahad</a>, <a href="/CCC">CCC</a>, April 10, 2016</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=68741">very small bitboard move/attack generator</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, October 27, 2018</li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73063">New RookAttacks() - possibly</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/CCC">CCC</a>, February 12, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73082">scan-cut slider attack generation</a> by <a href="/Martin_Sedlak">Martin Sedlak</a>, <a href="/CCC">CCC</a>, February 13, 2020 » <a href="/Bitfoot">A/B Bitboards</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73083">Split Index Super Set Yielding (SISSY) Bitboards</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/CCC">CCC</a>, February 13, 2020 » <a href="/SISSY_Bitboards">SISSY Bitboards</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77133">I did some magic bitboard "science" and mostly learned not to worry about it</a> by Jakob Progsch, <a href="/CCC">CCC</a>, April 20, 2021</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=78693">Combining two of Bob's classic bitboard attack getters</a> by <a href="/Michael_Sherwin">Mike Sherwin</a>, <a href="/CCC">CCC</a>, November 19, 2021</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=78843">Faster than Fancy magic: Hypercube Slider lookup [TEASER]</a> by Daniel Infuehr, <a href="/CCC">CCC</a>, December 09, 2021</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79004">Hypercube Slider Lookup - New Sliding Piece Algorithm [RELEASE]</a> by Daniel Infuehr, <a href="/CCC">CCC</a>, December 31, 2021</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79005">Comparison of all known Sliding lookup algorithms</a> by Daniel Infuehr, <a href="/CCC">CCC</a>, December 31, 2021</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79078">Comparison of all known Sliding lookup algorithms [CUDA]</a> by Daniel Infuehr, <a href="/CCC">CCC</a>, January 08, 2022 » <a href="/GPU">GPU</a></li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79332">Binary Neural Networks Sliding Piece Inference [Release]</a> by Daniel Infuehr, <a href="/CCC">CCC</a>, February 10, 2022 » <a href="/Neural_Networks">Neural Networks</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Slide_attack">Slide attack from Wikipedia</a></li>
+<li><a href="/Category:Cymande">Cymande</a> - Brothers On The Slide, <a href="https://en.wikipedia.org/wiki/KCRW">KCRW</a> session, <a href="https://en.wikipedia.org/wiki/Santa_Monica,_California">Santa Monica</a>, 2016, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/RCCSQtRXCnU" title="YouTube video RCCSQtRXCnU" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=RCCSQtRXCnU">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Bitboards">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://www.stmintz.com/ccc/index.php?id=107485">Movegen Re: Bitmap Type Re: Tinker 81 secs Re: Testing speed</a> by <a href="/Brian_Richardson">Brian Richardson</a>, <a href="/CCC">CCC</a>, April 24, 2000<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Carina_Jørgensen">Carina Jørgensen</a> · <a href="/Category:Cymande">Cymande</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Sliding_Piece_Attacks">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Square Mapping Considerations - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Square Mapping Considerations</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * Square Mapping Considerations</strong></p>
+<p>Bitboards implement a <a href="https://en.wikipedia.org/wiki/Finite_set">finite set</a> of up to 64 elements - all the <a href="/Squares">squares</a> of a <a href="/Chessboard">chessboard</a>. There is a <a href="https://en.wikipedia.org/wiki/Bijection">bijective</a> one-to-one correspondence between bits of a bitboard and the squares of a board, but there are many different ways to create this mapping. Some various considerations on this mapping are listed here.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#square-and-bitindex">Square and Bitindex</a></li>
+<li><a href="#deduction-on-files-and-ranks">Deduction on Files and Ranks</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#endianness">Endianness</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#square-enumeration">Square Enumeration</a></li>
+<li><a href="#compass-rose">Compass Rose</a></li>
+<li><a href="#some-hexadecimal-constants">Some hexadecimal Constants</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#little-endian-file-rank-mapping">Little-Endian File-Rank Mapping</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#square-enumeration-1">Square Enumeration</a></li>
+<li><a href="#compass-rose-1">Compass Rose</a></li>
+<li><a href="#some-hexadecimal-constants-1">Some hexadecimal Constants</a></li>
+</ol>
+</details></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+</ol>
+</details><h2 id="square-and-bitindex">Square and Bitindex</h2>
+<p>In the strict sense there are even three finite sets with bijective one-to-one correspondence.</p>
+<ul>
+<li>A set of all squares on a chessboard for from a1 to h8 (A1 to H8). The 8 <a href="/Ranks">ranks</a> of a board are labeled from 1 to 8.The 8 <a href="/Files">files</a> of a board are labeled from 'a' to 'h' (or 'A' to 'H').</li>
+<li>A set of all 64 squares enumerated from 0..63 (or 1..64).</li>
+<li>The 64 bits inside a bitboard may be enumerated in different orders. (FirstOne versus LastOne, Forward versus Reverse).</li>
+</ul>
+<p>Usually we define the bit-indices in arithmetical order to map bits inside a bitboard to numbers.</p>
+<ul>
+<li>Bit index zero is the least significant bit (LSB = 2^0).</li>
+<li>Bit index 63 is the most significant bit (MSB = 2^63).</li>
+</ul>
+<p>The reversed ordering was used as well, motivated by the leading zero count instruction of certain processors.</p>
+<p><em>In the following we rely on arithmetical bit-order order and focus on how to map squares to numbers, which applies to other 8*8 board representations as well.</em></p>
+<h2 id="deduction-on-files-and-ranks">Deduction on Files and Ranks</h2>
+<p>We can deduct square mapping on enumerating <a href="/Files">files</a> and <a href="/Ranks">ranks</a> from 0 to 7 each. There are two common approaches to calculate the square-index from file or rank, Least Significant File Mapping or Least Significant Rank Mapping.</p>
+<pre><code>LSF squareIndex = 8*rankIndex + fileIndex
+LSR squareIndex = 8*fileIndex + rankIndex</code></pre>
+<p>LSR mapping has some advantages in calculating <a href="/Pawn_Attacks_%28Bitboards%29">pawn attacks</a>, since there are no wraps to consider. Anyway, more common is LSF-mapping where ranks are aligned to the eight consecutive bytes of a bitboard and we <strong>further rely on LSF-mapping</strong>.</p>
+<pre><code>squareIndex = 8*rankIndex + fileIndex
+FileIndex   = squareIndex modulo 8  = squareIndex &amp; 7
+RankIndex   = squareIndex div    8  = squareIndex &gt;&gt; 3</code></pre>
+<h2 id="endianness">Endianness</h2>
+<p><em>Main article: <a href="/Endianness">Endianness</a></em> The question remains how to enumerate files and ranks. There are two different orders each, <a href="/Little-endian">little-endian</a> versus <a href="/Big-endian">big-endian</a> order of bits and bytes. Thus in total four possible alternatives. The drawback of <strong>little endian</strong> file mapping becomes aware if we write bitboards as binary or hexadecimal strings, since we usually write numbers <strong>big endian</strong> wise.</p>
+<p>Anyway, further we rely on little-endian mapping of files and ranks though, since we retain a kind of "natural" relation - that is a &lt; h and 0 &lt; 7.</p>
+<pre><code>Rank 1 .. Rank 8 -&gt; 0..7
+A-File .. H-File -&gt; 0..7</code></pre>
+<p>To convert from little-endian file mapping to big-endian file mapping and vice versa:</p>
+<pre><code>squareIndexBigEndianFile    = squareIndexLittleEndianFile ^ 7;
+squareIndexLittleEndianFile = squareIndexBigEndianFile    ^ 7;</code></pre>
+<p>To convert from little-endian rank mapping to big endian-rank mapping and vice versa:</p>
+<pre><code>squareIndexBigEndianRank    = squareIndexLittleEndianRank ^ 56;
+squareIndexLittleEndianRank = squareIndexBigEndianRank    ^ 56;</code></pre>
+<p>One may combine both conversions in one step by xoring with 63.</p>
+<p>==&lt;span id="LittleEndianRankFileMapping&gt;</span>Little-Endian Rank-File Mapping== <em>Most often used in CPW samples</em></p>
+<table>
+<tbody>
+<tr>
+<td><p><div class="chess-fen" data-fen="8/8/8/8/8/8/8/8"><code>8/8/8/8/8/8/8/8</code></div></p></td>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><a href="/Bibob"><img src="/assets/Lerf.JPG" alt="" class="block w-full h-auto" /></a></span></td>
+</tr>
+</tbody>
+</table>
+
+<h4 id="square-enumeration">Square Enumeration</h4>
+<p>Little endian rank-file (LERF) mapping implies following C++ enumeration:</p>
+<pre><code>enum enumSquare {
+  a1, b1, c1, d1, e1, f1, g1, h1,
+  a2, b2, c2, d2, e2, f2, g2, h2,
+  a3, b3, c3, d3, e3, f3, g3, h3,
+  a4, b4, c4, d4, e4, f4, g4, h4,
+  a5, b5, c5, d5, e5, f5, g5, h5,
+  a6, b6, c6, d6, e6, f6, g6, h6,
+  a7, b7, c7, d7, e7, f7, g7, h7,
+  a8, b8, c8, d8, e8, f8, g8, h8
+};</code></pre>
+<h4 id="compass-rose">Compass Rose</h4>
+<p>We rely on the <a href="https://en.wikipedia.org/wiki/Compass_rose">compass rose</a> to identify <a href="/Direction">ray-directions</a> with following increments to neighbored squares.</p>
+<pre><code>  noWe         nort         noEa
+          +7    +8    +9
+              \  |  /
+  west    -1 &lt;-  0 -&gt; +1    east
+              /  |  \
+          -9    -8    -7
+  soWe         sout         soEa</code></pre>
+<h4 id="some-hexadecimal-constants">Some hexadecimal Constants</h4>
+<p>Some bitboard constants with LERF-mapping:</p>
+<pre><code>a-file             0x0101010101010101
+h-file             0x8080808080808080
+1st rank           0x00000000000000FF
+8th rank           0xFF00000000000000
+a1-h8 diagonal     0x8040201008040201
+h1-a8 antidiagonal 0x0102040810204080
+light squares      0x55AA55AA55AA55AA
+dark squares       0xAA55AA55AA55AA55</code></pre>
+<h3 id="little-endian-file-rank-mapping"><span id="LittleEndianFileRankMapping"></span>Little-Endian File-Rank Mapping</h3>
+<table>
+<tbody>
+<tr>
+<td><p><div class="chess-fen" data-fen="8/8/8/8/8/8/8/8"><code>8/8/8/8/8/8/8/8</code></div></p></td>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><a href="/Bibob"><img src="/assets/Lefr.JPG" alt="" class="block w-full h-auto" /></a></span></td>
+</tr>
+</tbody>
+</table>
+
+<h4 id="square-enumeration-1">Square Enumeration</h4>
+<p>Little endian file-rank (LEFR) mapping implies following C++ enumeration:</p>
+<pre><code>enum enumSquare {
+  a1, a2, a3, a4, a5, a6, a7, a8,
+  b1, b2, b3, b4, b5, b6, b7, b8,
+  c1, c2, c3, c4, c5, c6, c7, c8,
+  d1, d2, d3, d4, d5, d6, d7, d8,
+  e1, e2, e3, e4, e5, e6, e7, e8,
+  f1, f2, f3, f4, f5, f6, f7, f8,
+  g1, g2, g3, g4, g5, g6, g7, g8,
+  h1, h2, h3, h4, h5, h6, h7, h8
+};</code></pre>
+<h4 id="compass-rose-1">Compass Rose</h4>
+<p>We rely on the <a href="https://en.wikipedia.org/wiki/Compass_rose">compass rose</a> to identify <a href="/Direction">ray-directions</a> with following increments to neighbored squares.</p>
+<pre><code>  noWe         nort         noEa
+          -7    +1    +9
+              \  |  /
+  west    -8 &lt;-  0 -&gt; +8    east
+              /  |  \
+          -9    -1    +7
+  soWe         sout         soEa</code></pre>
+<h4 id="some-hexadecimal-constants-1">Some hexadecimal Constants</h4>
+<p>Some bitboard constants with LEFR-mapping:</p>
+<pre><code>a-file             0x00000000000000FF
+h-file             0xFF00000000000000
+1st rank           0x0101010101010101
+8th rank           0x8080808080808080
+a1-h8 diagonal     0x8040201008040201
+h1-a8 antidiagonal 0x0102040810204080
+light squares      0x55AA55AA55AA55AA
+dark squares       0xAA55AA55AA55AA55</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Bibob">Bibob</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=30562">Efficient Bitboard Implementation on 32-bit Architecture</a> by <a href="/Roberto_Waldteufel">Roberto Waldteufel</a>, <a href="/CCC">CCC</a>, October 25, 1998</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=17138">BitBoard representations of the board</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, October 14, 2007</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75304">Bit Board Orientation</a> by mobmat, <a href="/CCC">CCC</a>, October 05, 2020</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="/Category:Coldplay">Coldplay</a> - <a href="https://en.wikipedia.org/wiki/X%26Y">Square One</a> (2005), <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/DUUvDJhfNhs" title="YouTube video DUUvDJhfNhs" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=DUUvDJhfNhs">Watch on YouTube</a></p>
+<p><strong><a href="/Bitboards">Up one Level</a></strong></p>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Coldplay">Coldplay</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Square_Mapping_Considerations">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

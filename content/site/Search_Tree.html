@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Search Tree - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Search Tree</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Search">Search</a> * Tree</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/8/80/Piet_Mondrian%2C_1911%2C_Gray_Tree_%28De_grijze_boom%29%2C_oil_on_canvas%2C_79.7_x_109.1_cm%2C_Gemeentemuseum_Den_Haag%2C_Netherlands.jpg" alt="Piet Mondrian - Gray Tree, 1912 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Piet_Mondrian">Piet Mondrian</a> - <a href="https://en.wikipedia.org/wiki/Gray_Tree">Gray Tree</a>, 1912 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://en.wikipedia.org/wiki/Gray_Tree">Gray Tree from Wikipedia</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p>The <strong>Search Tree</strong> as part of the <a href="https://en.wikipedia.org/wiki/Game_tree">game tree</a> is a dynamical, hierarchical data-structure, a <a href="https://en.wikipedia.org/wiki/Graph_%28mathematics%29#Directed_graph">directed graph</a> of <a href="/Node">nodes</a>, also called <a href="https://en.wikipedia.org/wiki/Vertex_%28graph_theory%29">vertices</a> or <a href="https://en.wikipedia.org/wiki/State_diagram">states</a>, connected by directed <strong>edges</strong>, also called <strong>arcs</strong>, or <a href="https://en.wikipedia.org/wiki/State_transition_table">state transitions</a>. In the game of chess, nodes represent the alternating white and black to move <a href="/Chess_Position">chess positions</a>, and directed edges represent the alternating white and black <a href="/Moves">moves</a>.</p>
+<p>Opposed to the wooden <a href="https://en.wikipedia.org/wiki/Tree">plants</a>, which are due to their similar structure <a href="https://en.wikipedia.org/wiki/Metaphor">metaphor</a> of the search tree, where the <a href="https://en.wikipedia.org/wiki/Root">root</a> is inside the bottom ground, the root of a search tree is most often illustrated from the top down to the leaves at the bottom. Due to our text-flow from top to bottom (after left to right), this might considered as <a href="/Endianness">endianness</a> of the search tree illustration.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#alpha-beta-tree">Alpha-Beta Tree</a></li>
+<li><a href="#topology">Topology</a></li>
+<li><a href="#transpositions">Transpositions</a></li>
+<li><a href="#cycles">Cycles</a></li>
+<li><a href="#tree-walk">Tree walk</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#minimal-search-trees">Minimal Search Trees</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#minimal-alpha-beta-tree">Minimal Alpha-Beta Tree</a></li>
+<li><a href="#minimal-pv-tree">Minimal PV Tree</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="alpha-beta-tree">Alpha-Beta Tree</h2>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]" style="--wiki-img-w:480px"><a href="http://www.ics.uci.edu/%7Eeppstein/180a/970422.html" target="_blank" rel="noopener noreferrer"><img src="/assets/Deep-prune.gif" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></a></span> An <a href="/Alpha-Beta">Alpha-Beta</a> Search Tree <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
+<h2 id="topology">Topology</h2>
+<p>The <a href="/Root">root</a> of the search tree is the position we like to evaluate to find the <a href="/Best_Move">best move</a>. Leaves are either terminal nodes (mate, stalemate) or nodes which has been assigned a heuristic value, where the desired <a href="/Depth">depth</a> from the root is accomplished.</p>
+<ul>
+<li><a href="/Root">Root Node</a></li>
+<li><a href="/Leftmost_Node">Leftmost Node</a></li>
+<li><a href="/Sibling_Node">Sibling Node</a></li>
+<li><a href="/Interior_Node">Interior Node</a></li>
+<li><a href="/Leaf_Node">Leaf Node</a></li>
+<li><a href="/Terminal_Node">Terminal Node</a></li>
+<li><a href="/Branching_Factor">Branching Factor</a></li>
+</ul>
+<h2 id="transpositions">Transpositions</h2>
+<p>Because of <a href="/Transposition">transpositions</a> due to different move sequences, nodes inside the tree may occur from various ancestors - even within a different number of moves. A common sample from the [<a href="https://en.wikipedia.org/wiki/Sicilian_Defence#Sveshnikov_Variation:_4">https://en.wikipedia.org/wiki/Sicilian_Defence#Sveshnikov_Variation:_4</a>...Nf6_5.Nc3_e5 Sveshnikov Variation] in the Sicilian: <div class="chess-fen" data-fen="r1bqkb1r/pp3ppp/2np1n2/1N2p1B1/4P3/2N5/PPP2PPP/R2QKB1R"><code>r1bqkb1r/pp3ppp/2np1n2/1N2p1B1/4P3/2N5/PPP2PPP/R2QKB1R</code></div> 1. e4 c5 2. Nf3 d6 3. d4 cxd 4. Nxd4 Nf6 5. Nc3 Nc6 6. Bg5 e5 7. Ndb5</p>
+<ol type="1">
+<li>e4 c5 2. Nc3 e6 3. Nf3 Nc6 4. d4 cxd 5. Nxd4 Nf6 6. Ndb5 d6 7. Bf4 e5 8 Bg5 <span id="Cycles"></span></li>
+</ol>
+<h2 id="cycles">Cycles</h2>
+<p>The search tree may contain various cycles, since both sides may <a href="/Repetitions">repeat</a> a former position with the minimum of two <a href="/Reversible_Moves">reversible moves</a> each, or four <a href="/Ply">plies</a>. Cycles are usually eliminated and not searched twice, which results in searching a <a href="https://en.wikipedia.org/wiki/Directed_acyclic_graph">directed acyclic graph</a> (DAG).</p>
+<h2 id="tree-walk">Tree walk</h2>
+<p>Whether the search tree has to reside in memory the whole search, depends on which algorithm is used to <a href="https://en.wikipedia.org/wiki/Tree_traversal">traverse</a> and expand it. So called <a href="/Depth-First">Depth-First</a> search algorithms, like <a href="/Alpha-Beta">Alpha-Beta</a>, starts at the root and explores as far as possible along each branch before backtracking, and only has to keep one path from the root to the current position in memory. <a href="/Best-First">Best-First</a> approaches build a search-tree by visiting and expanding the most promising nodes first. <span id="MinimalGameTree"></span></p>
+<h2 id="minimal-search-trees">Minimal Search Trees</h2>
+<p>Minimal Search Trees require optimal move ordering in <a href="/Alpha-Beta">Alpha-Beta</a> or its enhancements. Of course, this goal requires an <a href="/Oracle">oracle</a>, since we don't know the best moves in advance - otherwise we wouldn't search at all. Thus rarely the expected <a href="/Node_Types">Node Types</a> don't behave as expected, but Cut-Nodes don't fail high, because their All-Node child fails high instead. Anyway, due to <a href="/Iterative_Deepening">Iterative Deepening</a> with <a href="/Transposition_Table">Transposition Table</a>, <a href="/Move_Ordering">Move Ordering</a> is already quite good, so this occurs quite rarely. Often, if the first move on an expected Cut-Node fails to cut, there are still other moves which do the cut.</p>
+<h3 id="minimal-alpha-beta-tree">Minimal Alpha-Beta Tree</h3>
+<p>A perfectly ordered Tree, <a href="/Node_Types">All-Nodes</a> (A) need to consider all successors, <a href="/Node_Types">Cut-Nodes</a> (C) only the one which already refutes the opponent move.</p>
+<pre><code>                (A)
+               / | \
+             /   |   \
+           /     |     \
+         /       |       \
+       /         |         \
+     [A]        [C]        [C]
+    / | \        |          |
+   /  |  \       |          |
+ (A) (C) (C)    (A)        (A)
+ /|\  |   |     /|\        /|\
+[ACC][A] [A]   [CCC]      [CCC]</code></pre>
+<h3 id="minimal-pv-tree">Minimal PV Tree</h3>
+<p>A minimal, perfectly ordered search tree, with <a href="/Donald_Knuth">Knuth's</a> <a href="/Node_Types">Node Types</a>. Only the <a href="/Node_Types">PV-Nodes</a> (P) are searched with an open alpha-beta window. <a href="/Node_Types">Cut-Nodes</a> as children or sibling of PV-Nodes require a <a href="/Scout">Scout-search</a>, to prove the nodes are greater or equal to beta. An <a href="/Node_Types">All-Node</a> as successor of Cut-Nodes has to consider all moves to prove no move will cause a <a href="/Beta-Cutoff">beta-cutoff</a>.</p>
+<pre><code>                (P)
+               / | \
+             /   |   \
+           /     |     \
+         /       |       \
+       /         |         \
+     [P]        [C]        [C]
+    / | \        |          |
+   /  |  \       |          |
+ (P) (C) (C)    (A)        (A)
+ /|\  |   |     /|\        /|\
+[PCC][A] [A]   [CCC]      [CCC]</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Conspiracy_Numbers">Conspiracy Numbers</a></li>
+<li><a href="/Graph_History_Interaction">Graph History Interaction</a></li>
+<li><a href="/NegaScout">NegaScout</a> or <a href="/Principal_Variation_Search">Principal Variation Search</a></li>
+<li><a href="/Path-Dependency">Path-Dependency</a></li>
+<li><a href="/Perft">Perft</a></li>
+<li><a href="/Repetitions">Repetitions</a></li>
+<li><a href="/Scout">Scout</a></li>
+<li><a href="/Search_Space">Search Space</a></li>
+<li><a href="/Transposition">Transposition</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Donald_Michie">Donald Michie</a> (<strong>1966</strong>). <em>Game Playing and Game Learning Automata.</em> Advances in Programming and Non-Numerical Computation, <a href="https://en.wikipedia.org/wiki/Leslie_Fox">Leslie Fox</a> (ed.), pp. 183-200. Oxford, Pergamon. » Includes Appendix: <em>Rules of SOMAC</em> by <a href="/John_Maynard_Smith">John Maynard Smith</a>, introduces <a href="https://en.wikipedia.org/wiki/Expectiminimax_tree">Expectiminimax tree</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></li>
+<li><a href="/Chun-Hung_Tzeng">Chun-Hung Tzeng</a>, <a href="/Paul_W._Purdom">Paul W. Purdom</a> (<strong>1983</strong>). <em><a href="https://www.aaai.org/Library/AAAI/1983/aaai83-080.php">A Theory of Game Trees</a></em>. <a href="/Conferences">AAAI-83</a></li>
+<li><a href="/Andy_Walker">Andrew N. Walker</a> (<strong>1984</strong>). <em>Uniqueness in Game Trees</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 7, No. 4</a></li>
+<li><a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, <a href="/Wim_Pijls">Wim Pijls</a>, <a href="/Arie_de_Bruin">Arie de Bruin</a> (<strong>1996</strong>). <em>Exploiting Graph Properties of Game Trees.</em> <a href="/Conferences">AAAI-96</a> » <a href="/Enhanced_Transposition_Cutoff">Enhanced Transposition Cutoff</a></li>
+<li><a href="/Wim_Pijls">Wim Pijls</a>, <a href="/Arie_de_Bruin">Arie de Bruin</a> (<strong>1998</strong>). <em><a href="https://link.springer.com/chapter/10.1007/3-540-48957-6_12">Game Tree Algorithms and Solution Trees</a></em>. <a href="/CG_1998">CG 1998</a></li>
+<li><a href="/Rémi_Coulom">Rémi Coulom</a> (<strong>2002</strong>). <em>Treemaps for Search-Tree Visualization</em>. <a href="/7th_Computer_Olympiad">7th Computer Olympiad Workshop</a>, <a href="https://www.remi-coulom.fr/Publications/CGOlympiad2002.pdf">pdf</a></li>
+<li><a href="/Yngvi_Björnsson">Yngvi Björnsson</a>, <a href="/Jónheiður_Ísleifsdóttir">Jónheiður Ísleifsdóttir</a> (<strong>2006</strong>). <em>Tools for debugging large game trees</em>. <a href="http://www.computer-shogi.org/gpw/gpw11_e.html">11th Game Programming Workshop</a>, <a href="https://en.wikipedia.org/wiki/Hakone,_Kanagawa">Hakone</a>, <a href="https://en.wikipedia.org/wiki/Japan">Japan</a> » <a href="/Debugging">Debugging</a></li>
+<li><a href="/Jónheiður_Ísleifsdóttir">Jónheiður Ísleifsdóttir</a> (<strong>2007</strong>). <em>GTQL: A Query Language for Game Trees</em>. M.Sc. thesis, <a href="https://en.wikipedia.org/wiki/Reykjav%C3%ADk_University">Reykjavík University</a></li>
+<li><a href="/Jónheiður_Ísleifsdóttir">Jónheiður Ísleifsdóttir</a>, <a href="/Yngvi_Björnsson">Yngvi Björnsson</a>. (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_20">GTQ: A Language and Tool for Game-Tree Analysis</a></em>. <a href="/CG_2008">CG 2008</a>, <a href="http://www.ru.is/faculty/yngvi/pdf/IsleifsdottirB08.pdf">pdf</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=291979">Measuring closeness to a minimal tree</a> by <a href="/Ian_Kennedy">Ian Kennedy</a>, <a href="/CCC">CCC</a>, April 06, 2003</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=42588">how to print tree non-recursively</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, February 24, 2012 » <a href="/Recursion">Recursion</a>, <a href="/Iteration">Iteration</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=45264">Probabilistic approach to optimize search tree</a> by <a href="/Sergei_Markoff">Sergei S. Markoff</a>, <a href="/CCC">CCC</a>, September 22, 2012</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Tree_%28graph_theory%29">Tree (graph theory) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Tree_%28set_theory%29">Tree (set theory) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Tree_data_structure">Tree (data structure) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Tree_decomposition">Tree decomposition from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Tree_traversal">Tree traversal from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/AVL_tree">AVL tree from Wikipedia</a> named after its inventors <a href="/Georgy_Adelson-Velsky">Georgy Adelson-Velsky</a>, <a href="/Mathematician">Evgenii Landis</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></li>
+<li><a href="https://en.wikipedia.org/wiki/Expectiminimax_tree">Expectiminimax tree from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Dancing_trees">Dancing tree from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Decision_tree">Decision tree from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Red-Black_Tree">Red-black tree from Wikipedia</a></li>
+<li><a href="/Category:Jan_Garbarek">Jan Garbarek Group</a> - <em>Once I Dreamt A Tree Upside Down</em>, 37th international jazz festival in <a href="https://en.wikipedia.org/wiki/Burghausen,_Alt%C3%B6tting">Burghausen</a>, 22.03.06 <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p>Jan Garbarek, <a href="https://en.wikipedia.org/wiki/Manu_Katch%C3%A9">Manu Katché</a>, <a href="https://en.wikipedia.org/wiki/Rainer_Br%C3%BCninghaus">Rainer Brüninghaus</a>, <a href="/Category:Eberhard_Weber">Eberhard Weber</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/Uw4oc5fKzO4" title="YouTube video Uw4oc5fKzO4" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=Uw4oc5fKzO4">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Search">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.ics.uci.edu/%7Eeppstein/180a/970422.html">Lecture notes for April 22, 1997 Alpha-Beta Search</a> by <a href="/David_Eppstein">David Eppstein</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>see <a href="/Helmut_Richter">Swap-off</a> by <a href="/Helmut_Richter">Helmut Richter</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="/Georgy_Adelson-Velsky">Georgy Adelson-Velsky</a> and <a href="/Mathematician">Evgenii Landis</a> (<strong>1962</strong>). <em>An algorithm for the organization of information</em>. <a href="https://en.wikipedia.org/wiki/Proceedings_of_the_USSR_Academy_of_Sciences">Proceedings of the USSR Academy of Sciences</a> 146: 263–266. (Russian) English translation by Myron J. Ricci in Soviet Math. Doklady, 3:1259–1263, 1962<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Piet_Mondrian">Piet Mondrian</a> · <a href="/Category:Jan_Garbarek">Jan Garbarek</a> · <a href="/Category:Eberhard_Weber">Eberhard Weber</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Search_Tree">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, Phhnguyen.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

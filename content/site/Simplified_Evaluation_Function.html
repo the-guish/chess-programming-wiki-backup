@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simplified Evaluation Function - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Simplified Evaluation Function</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Evaluation">Evaluation</a> * Simplified Evaluation Function</strong></p>
+<p>The content of this page has been originally posted by <a href="/Tomasz_Michniewski">Tomasz Michniewski</a> on the Polish chess programming discussion list (progszach). It contains a proposal of extremely basic evaluation function required from the participants of a "Unified Evaluation" test tournament. Please note that the values presented here have been designed specifically to compensate for the lack of any other chess knowledge, and <strong>not</strong> for being supplemented by it.</p>
+<p>There are two parts of this email, the first is about simple <a href="/Point_Value">piece values</a>, the second is about <a href="/Piece-Square_Tables">piece-square tables</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#piece-values">Piece Values</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#piece-square-tables">Piece-Square Tables</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#pawns">Pawns</a></li>
+<li><a href="#knights">Knights</a></li>
+<li><a href="#bishops">Bishops</a></li>
+<li><a href="#rooks">Rooks</a></li>
+<li><a href="#queen">Queen</a></li>
+<li><a href="#king">King</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+</ol>
+</details><h2 id="piece-values">Piece Values</h2>
+<p>Setting piece values I wanted to achieve several results:</p>
+<ol type="1">
+<li>Avoid exchanging one minor piece for three pawns.</li>
+<li>Encourage the engine to have the bishop pair.</li>
+<li>Avoid exchanging of two minor pieces for a rook and a pawn.</li>
+<li>Stick to human chess experience.</li>
+</ol>
+<p>Point 1 is achieved by simple:</p>
+<pre><code>B &gt; 3P
+N &gt; 3P</code></pre>
+<p>Of course there are positions where three (or even two) pawns are better than a piece. But generally, exchanging of a minor piece for three pawns is a bad idea, as these pawns might come under attack and after capturing one of them the position becomes critical. So in longer term it is better to have a piece, not three pawns.</p>
+<p>Point 2 is achieved by:</p>
+<pre><code>B &gt; N</code></pre>
+<p>Of course this doesn't guarantee anything, because we may end up with just one bishop against one knight. But on the other hand chess players often capture bishop with knight while rarely capture knight with bishop. For example white bishop d3 rarely captures black knight standing on central square e4. On the contrary, white knight on e4 may easily capture black bishop at f6. Of course one may say that sometimes white bishop from g5 captures black knight at f6. But this often happens after forcing h6 or just time issues are involved, which we ignore here. The same with <a href="https://en.wikipedia.org/wiki/Aron_Nimzowitsch">Nimzowitsch</a> bishop at b4, which should capture knight at c3 only after being forced with a3 let say.</p>
+<p>So, we avoid unnecessary exchanging of a bishop for a knight. We increase the chance to have the bishop pair. On the other hand we risk to end up in an ending with either a wrong bishop or just a bishop over a knight with pawns on only one side or in closed position. So additional evaluation with looking at pawns' constellation is called for, but at this stage we can't afford this.</p>
+<p>So together we may say:</p>
+<pre><code>B &gt; N &gt; 3P</code></pre>
+<p>Point 3 is achieved by:</p>
+<pre><code>B + N &gt; R + P</code></pre>
+<p>This is a bit problematic, as once I read in Russian Shachmaty that two minor pieces are worth a rook and two pawns. However, this might be an exageration. I may recall game from Karpov-Kasparov match where Kasparov could have won the ending with R + 2P against two minor pieces (plus some extra pawns on both sides). The game ended up in a draw, but a rook plus two pawns might be a bit too much. So instead of:</p>
+<pre><code>R + 2P &gt; B + N &gt; R + P</code></pre>
+<p>let's say something between:</p>
+<pre><code>B + N = R + 1.5P</code></pre>
+<p>OK, now I'd like to call for the word "symmetry". In chess the more symmetric position and material balance, the bigger probability of a draw result. Here, since the material balance isn't symmetric, we underline this with 1.5 factor, so the engine will either tend to have two minors against a rook plus a pawn or a rook plus two pawns against two minors. Please remember that this is still material evaluation, we aren't even in piece/square tables, not talking about real positional evaluation - so there is huge room for improvement in the future.</p>
+<p>Additional comment to the last equation is that two knights would be a bit weaker than R + 1.5P, while two bishops would be a bit stronger, but this is not important now.</p>
+<p>As you see I try to stick to the rule 4 as well. The final equation I would refer to is:</p>
+<pre><code>Q + P = 2R</code></pre>
+<p>Together we have:</p>
+<pre><code>B &gt; N &gt; 3P
+B + N = R + 1.5P
+Q + P = 2R</code></pre>
+<p>which might be satisfied by (values in <a href="/Centipawns">centipawns</a>):</p>
+<pre><code>P = 100
+N = 320
+B = 330
+R = 500
+Q = 900
+K = 20000</code></pre>
+<p>Additionally we can see that they satisfy another relationship:</p>
+<pre><code>B + 2P &gt; N + 2P &gt; R</code></pre>
+<p>However I didn't like to use it, because to exchange a rook for a minor piece and two pawns it is not enough to simply capture a knight with a rook and then additionally capture the recapturing pawn, because we additionally need two extra plies for capturing of another pawn. So this isn't often - instead just a rook for a minor piece plus one pawn is more often, where additionally some compensation is achieved. But this isn't our subject at the moment.</p>
+<p>According to these settings:</p>
+<pre><code>2B + N &gt; Q
+and
+R + B + P &gt; Q (or R + N + P &gt; Q as well)</code></pre>
+<p>I don't know what is Adam's or Mateusz's opinion about these relations and all the settings. I don't like last two formulas, but on the other hand I would like to stick to the classical rule:</p>
+<pre><code>Q + P = 2R</code></pre>
+<p>Additional comment to:</p>
+<pre><code>K = 20000</code></pre>
+<p>This is <a href="/Claude_Shannon">Shannon's</a> value for the king, which sometimes might be useful for discovering whether the king was taken. It has this feature that the maximal material balance has a value of 20000 + 9*900 + 2*500 + 4*300 = 30300 (approx.) and might be stored as 2 byte integer with a sign, so if someone wants to store two such values in one 4 byte integer - why not.</p>
+<p>Another comment is that sometimes material balance might be perceived as investing on the stock exchange - we should look at the results in longer perspective. I'd like to recall the example with a game, where one side wins without moving Ra1, which waited silently for development of Nb1, which wasn't touched at all. This side somehow won. Now let's ask whether White would win if there was no white rook at a1 from the beginning. Probably not. Why? Because there would appear exchange variants which would favour Black. So the material balance played its role. But the results of the presence of white rook at a1 could be seen only after several moves, maybe in the ending.</p>
+<h2 id="piece-square-tables">Piece-Square Tables</h2>
+<p>Now, let's move for piece-square values. Generally I would like to give bonuses for pieces standing well and penalties for pieces standing badly. Other squares will have neutral value of 0. Of course one may incorporate above <a href="/Point_Value">piece values</a> into <a href="/Piece-Square_Tables">piece-square tables</a> if they wish. I don't do this.</p>
+<h3 id="pawns">Pawns</h3>
+<p>For pawns we simply encourage the pawns to advance. Additionally we try to discourage the engine from leaving central pawns unmoved. The problem I could see here is that this is contradictory to keeping pawns in front of the king. We also ignore the factor whether the pawn is passed or not. So more advanced evaluation is called for, especially that "pawns are soul of the game".</p>
+<pre><code>// pawn
+ 0,  0,  0,  0,  0,  0,  0,  0,
+50, 50, 50, 50, 50, 50, 50, 50,
+10, 10, 20, 30, 30, 20, 10, 10,
+ 5,  5, 10, 25, 25, 10,  5,  5,
+ 0,  0,  0, 20, 20,  0,  0,  0,
+ 5, -5,-10,  0,  0,-10, -5,  5,
+ 5, 10, 10,-20,-20, 10, 10,  5,
+ 0,  0,  0,  0,  0,  0,  0,  0</code></pre>
+<p>OK, let's comment this table. Firstly the shelter in front of white short castle (long castle - it's symmetrical) - pawns at f2, g2 and h2 get bonuses. Additionally we set negative values for f3 and smaller for g3 which both create holes around king. Pawn h2 have the same value on h2 and h3, so the engine may create the hole if the situation calls for it. Moreover - if it gets position with a pawn at g3 and a bishop at g2, then it still may play h3 or not. Therefore h3 has the same value as h2.</p>
+<p>Zero value on f4, g4, h4 prevents playing with pawns in front of the king. Moving these pawns to f5, g5, h5 still brings nothing, but at this moment we have the same values as on rank 2.</p>
+<p>In the centre we have the most negative values on d2 and e2. We don't like these pawns. d3 and e3 aren't good either. Only d4 and e4 in the centre. Even better on d5 and e5.</p>
+<p>Beginning with rank 6th we give bonus for advanced pawns. On rank 7th even bigger.</p>
+<h3 id="knights">Knights</h3>
+<p>With knights we simply encourage them to go to the center. Standing on the edge is a bad idea. Standing in the corner is a terrible idea. Probably it was Tartakover who said that "one piece stands badly, the whole game stands badly". And knights move slowly.</p>
+<pre><code>// knight
+-50,-40,-30,-30,-30,-30,-40,-50,
+-40,-20,  0,  0,  0,  0,-20,-40,
+-30,  0, 10, 15, 15, 10,  0,-30,
+-30,  5, 15, 20, 20, 15,  5,-30,
+-30,  0, 15, 20, 20, 15,  0,-30,
+-30,  5, 10, 15, 15, 10,  5,-30,
+-40,-20,  0,  5,  5,  0,-20,-40,
+-50,-40,-30,-30,-30,-30,-40,-50,</code></pre>
+<p>As you can see I would happily trade for three pawns any knight standing on the edge. Additionally I put slight bonuses for e2, d2, b5, g5, b3 and g3. Then there are bonuses for being in the center.</p>
+<h3 id="bishops">Bishops</h3>
+<pre><code>// bishop
+-20,-10,-10,-10,-10,-10,-10,-20,
+-10,  0,  0,  0,  0,  0,  0,-10,
+-10,  0,  5, 10, 10,  5,  0,-10,
+-10,  5,  5, 10, 10,  5,  5,-10,
+-10,  0, 10, 10, 10, 10,  0,-10,
+-10, 10, 10, 10, 10, 10, 10,-10,
+-10,  5,  0,  0,  0,  0,  5,-10,
+-20,-10,-10,-10,-10,-10,-10,-20,</code></pre>
+<p>We avoid corners and borders. Additionally we prefer squares like b3, c4, b5, d3 and the central ones. Moreover, I wouldn't like to exchange white bishop at d3 (or c3) for black knight at e4, so squares at c3 (f3) have value of 10. As a result white bishop at d3 (c3) is worth (330+10) and black knight at e4 is worth (320+20). So the choice of whether to exchange or not should depend on other issues. On the contrary white bishop at e4 (330+10) would be captured by black knight from f6 (320+10). White bishop at g5 (330+5) won't capture black knight at f6 (320+10).</p>
+<h3 id="rooks">Rooks</h3>
+<pre><code>rook
+  0,  0,  0,  0,  0,  0,  0,  0,
+  5, 10, 10, 10, 10, 10, 10,  5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+  0,  0,  0,  5,  5,  0,  0,  0</code></pre>
+<p>The only ideas which came to my mind was to centralize, occupy the 7th rank and avoid a, h columns (in order not to defend pawn b3 from a3). So generally this is <a href="/Gerbil">Gerbil</a> like.</p>
+<h3 id="queen">Queen</h3>
+<pre><code>//queen
+-20,-10,-10, -5, -5,-10,-10,-20,
+-10,  0,  0,  0,  0,  0,  0,-10,
+-10,  0,  5,  5,  5,  5,  0,-10,
+ -5,  0,  5,  5,  5,  5,  0, -5,
+  0,  0,  5,  5,  5,  5,  0, -5,
+-10,  5,  5,  5,  5,  5,  0,-10,
+-10,  0,  5,  0,  0,  0,  0,-10,
+-20,-10,-10, -5, -5,-10,-10,-20</code></pre>
+<p>Generally with queen I marked places where I wouldn't like to have a queen. Additionally I slightly marked central squares to keep the queen in the centre and b3, c2 squares (Paweł's suggestion). The rest should be done by tactics.</p>
+<h3 id="king">King</h3>
+<pre><code>king middle game
+-30,-40,-40,-50,-50,-40,-40,-30,
+-30,-40,-40,-50,-50,-40,-40,-30,
+-30,-40,-40,-50,-50,-40,-40,-30,
+-30,-40,-40,-50,-50,-40,-40,-30,
+-20,-30,-30,-40,-40,-30,-30,-20,
+-10,-20,-20,-20,-20,-20,-20,-10,
+ 20, 20,  0,  0,  0,  0, 20, 20,
+ 20, 30, 10,  0,  0, 10, 30, 20</code></pre>
+<p>This is to make the king stand behind the pawn shelter.</p>
+<p>In the ending the values change.</p>
+<pre><code>// king end game
+-50,-40,-30,-20,-20,-30,-40,-50,
+-30,-20,-10,  0,  0,-10,-20,-30,
+-30,-10, 20, 30, 30, 20,-10,-30,
+-30,-10, 30, 40, 40, 30,-10,-30,
+-30,-10, 30, 40, 40, 30,-10,-30,
+-30,-10, 20, 30, 30, 20,-10,-30,
+-30,-30,  0,  0,  0,  0,-30,-30,
+-50,-30,-30,-30,-30,-30,-30,-50</code></pre>
+<p>And of course "These values are for white, for black I use mirrored values." Additionally we should define where the ending begins. For me it might be either if:</p>
+<ol type="1">
+<li>Both sides have no queens or</li>
+<li>Every side which has a queen has additionally no other pieces or one minorpiece maximum.</li>
+</ol>
+<h2 id="see-also">See also</h2>
+<ul>
+<li>PeSTO's Evaluation Function</li>
+</ul>
+<p><strong><a href="/Evaluation">Up one Level</a></strong></p>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Simplified_Evaluation_Function">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

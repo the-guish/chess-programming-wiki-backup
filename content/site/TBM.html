@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TBM - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">TBM</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Hardware">Hardware</a> * <a href="/X86-64">x86-64</a> * TBM</strong></p>
+<p><strong>TBM</strong> (Trailing Bit Manipulation Instructions),<br />
+an x86-64 expansion of <a href="/Bit-Twiddling">bit-manipulation</a> instructions, introduced by <a href="/AMD">AMD</a> with the <a href="https://en.wikipedia.org/wiki/Bulldozer_%28microarchitecture%29">Bulldozer microarchitecture</a>, which also comprises the <a href="/AVX">AVX</a>, <a href="/BMI1">BMI1</a> and <a href="/XOP">XOP</a> instruction sets. TBM requires bit 21 set in ECX of CPUID EAX=80000001H <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. More recent <a href="https://en.wikipedia.org/wiki/Jaguar_(microarchitecture)">AMD Jaguar</a> and <a href="https://en.wikipedia.org/wiki/Zen_(microarchitecture)">Zen</a> based processors do not support TBM <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#instructions">Instructions</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#least-significant-one-bit">Least Significant One Bit</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#blsfill">BLSFILL</a></li>
+<li><a href="#blsic">BLSIC</a></li>
+<li><a href="#tzmsk">TZMSK</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#least-significant-zero-bit">Least Significant Zero Bit</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#blcfill">BLCFILL</a></li>
+<li><a href="#blci">BLCI</a></li>
+<li><a href="#blcic">BLCIC</a></li>
+<li><a href="#blcmsk">BLCMSK</a></li>
+<li><a href="#blcs">BLCS</a></li>
+<li><a href="#t1mskc">T1MSKC</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#misc">Misc</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#bextr">BEXTR</a></li>
+</ol>
+</details></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#manuals">Manuals</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="instructions">Instructions</h2>
+<p>TBM offers various bit-manipulations based on the <a href="/General_Setwise_Operations">least significant one</a> or <a href="/General_Setwise_Operations">zero bit</a>. In general they combine two or three <a href="/General_Setwise_Operations">operations</a> on 32- or 64-bit general purpose registers, expanding the <a href="/BMI1">BMI</a> type of operations of <a href="/BMI1">BLSI</a>, <a href="/BMI1">BLSMSK</a>, <a href="/BMI1">BLSR</a>. In <a href="/C">C</a> and <a href="/Cpp">C++</a>, these instructions should be emitted by an optimizing compiler for this target platform, rather than using intrinsics. Instructions are given with <a href="https://en.wikipedia.org/wiki/Assembly_language#Opcode_mnemonics_and_extended_mnemonics">mnemonics</a> with 64-bit destination and source register according to <a href="/Assembly">Intel Syntax</a>, <a href="/C">C</a> like definition, and some arbitrary <a href="/Bitboards">bitboard</a> diagrams with <a href="/Square_Mapping_Considerations">little-endian rank-file mapping</a> (least significant bit 0 as square a1 bottom-left) to illustrate the operations.</p>
+<table>
+<tbody>
+<tr>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6" style="--wiki-img-w:220px"><a href="/Square_Mapping_Considerations"><img src="/assets/Cpwmappinghint.JPG" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></a></span></td>
+<td><p><em>Code samples and bitboard diagrams rely on <a href="/Square_Mapping_Considerations">Little endian file and rank mapping</a></em>.</p></td>
+</tr>
+</tbody>
+</table>
+
+<p><span id="BLSFILL"></span></p>
+<h3 id="least-significant-one-bit">Least Significant One Bit</h3>
+<h4 id="blsfill">BLSFILL</h4>
+<p>Fill From Lowest Set Bit. <a href="/General_Setwise_Operations">Union</a> with the decrement.</p>
+<pre><code>BLSFILL reg64, reg/mem64
+dest ::= src | (src - 1);
+
+       src         |     (src - 1)     =       dest
+0x0040201008040200  0x00402010080401FF  0x00402010080403FF
+  . . . . . . . .     . . . . . . . .     . . . . . . . .
+  . . . . . . 1 .     . . . . . . 1 .     . . . . . . 1 .
+  . . . . . 1 . .     . . . . . 1 . .     . . . . . 1 . .
+  . . . . 1 . . .     . . . . 1 . . .     . . . . 1 . . .
+  . . . 1 . . . .  |  . . . 1 . . . .  =  . . . 1 . . . .
+  . . 1 . . . . .     . . 1 . . . . .     . . 1 . . . . .
+  . 1 . . . . . .     1 . . . . . . .     1 1 . . . . . .
+  . . . . . . . .     1 1 1 1 1 1 1 1     1 1 1 1 1 1 1 1</code></pre>
+<p><span id="BLSIC"></span></p>
+<h4 id="blsic">BLSIC</h4>
+<p>Isolate Lowest Set Bit and Complement. <a href="/General_Setwise_Operations">Union</a> of <a href="/General_Setwise_Operations">complement</a> and decrement.</p>
+<pre><code>BLSIC reg64, reg/mem64
+dest ::= ~src | (src - 1);
+
+       src        -&gt;       ~src        |     (src - 1)     =       dest
+0x0040201008040200  0x00402010080401FF  0x00402010080403FF  0xFFFFFFFFFFFFFDFF
+  . . . . . . . .     1 1 1 1 1 1 1 1     . . . . . . . .     1 1 1 1 1 1 1 1
+  . . . . . . 1 .     1 1 1 1 1 1 . 1     . . . . . . 1 .     1 1 1 1 1 1 1 1
+  . . . . . 1 . .     1 1 1 1 1 . 1 1     . . . . . 1 . .     1 1 1 1 1 1 1 1
+  . . . . 1 . . .     1 1 1 1 . 1 1 1     . . . . 1 . . .     1 1 1 1 1 1 1 1
+  . . . 1 . . . . -&gt;  1 1 1 . 1 1 1 1  |  . . . 1 . . . .  =  1 1 1 1 1 1 1 1
+  . . 1 . . . . .     1 1 . 1 1 1 1 1     . . 1 . . . . .     1 1 1 1 1 1 1 1
+  . 1 . . . . . .     1 . 1 1 1 1 1 1     1 . . . . . . .     1 . 1 1 1 1 1 1
+  . . . . . . . .     1 1 1 1 1 1 1 1     1 1 1 1 1 1 1 1     1 1 1 1 1 1 1 1</code></pre>
+<p><span id="TZMSK"></span></p>
+<h4 id="tzmsk">TZMSK</h4>
+<p>Mask From Trailing Zeros. <a href="/General_Setwise_Operations">Intersection</a> of <a href="/General_Setwise_Operations">complement</a> and decrement <a href="/General_Setwise_Operations">sets all bits below</a> the <a href="/General_Setwise_Operations">least significant one bit</a>, and clears all other bits, including the LS1B itself.</p>
+<pre><code>dest ::= ~src &amp; (src - 1);
+       src        -&gt;       ~src        &amp;     (src - 1)     =       dest
+0x0040201008040200  0x00402010080401FF  0x00402010080403FF  0x00000000000001FF
+  . . . . . . . .     1 1 1 1 1 1 1 1     . . . . . . . .     . . . . . . . .
+  . . . . . . 1 .     1 1 1 1 1 1 . 1     . . . . . . 1 .     . . . . . . . .
+  . . . . . 1 . .     1 1 1 1 1 . 1 1     . . . . . 1 . .     . . . . . . . .
+  . . . . 1 . . .     1 1 1 1 . 1 1 1     . . . . 1 . . .     . . . . . . . .
+  . . . 1 . . . . -&gt;  1 1 1 . 1 1 1 1  &amp;  . . . 1 . . . .  =  . . . . . . . .
+  . . 1 . . . . .     1 1 . 1 1 1 1 1     . . 1 . . . . .     . . . . . . . .
+  . 1 . . . . . .     1 . 1 1 1 1 1 1     1 . . . . . . .     1 . . . . . . .
+  . . . . . . . .     1 1 1 1 1 1 1 1     1 1 1 1 1 1 1 1     1 1 1 1 1 1 1 1</code></pre>
+<p><span id="BLCFILL"></span></p>
+<h3 id="least-significant-zero-bit">Least Significant Zero Bit</h3>
+<h4 id="blcfill">BLCFILL</h4>
+<p>Fill From Lowest Clear Bit. <a href="/General_Setwise_Operations">Intersection</a> with the increment.</p>
+<pre><code>BLCFILL reg64, reg/mem64
+dest ::= src &amp; (src + 1);
+
+       src         &amp;     (src + 1)     =       dest
+0x80C0E0F0F8FCFEFF  0x80C0E0F0F8FCFF00  0x80C0E0F0F8FCFE00
+  . . . . . . . 1     . . . . . . . 1     . . . . . . . 1  
+  . . . . . . 1 1     . . . . . . 1 1     . . . . . . 1 1  
+  . . . . . 1 1 1     . . . . . 1 1 1     . . . . . 1 1 1  
+  . . . . 1 1 1 1     . . . . 1 1 1 1     . . . . 1 1 1 1  
+  . . . 1 1 1 1 1  &amp;  . . . 1 1 1 1 1  =  . . . 1 1 1 1 1  
+  . . 1 1 1 1 1 1     . . 1 1 1 1 1 1     . . 1 1 1 1 1 1  
+  . 1 1 1 1 1 1 1     1 1 1 1 1 1 1 1     . 1 1 1 1 1 1 1  
+  1 1 1 1 1 1 1 1     . . . . . . . .     . . . . . . . .  </code></pre>
+<p><span id="BLCI"></span></p>
+<h4 id="blci">BLCI</h4>
+<p>Isolate Lowest Clear Bit. <a href="/General_Setwise_Operations">Union</a> with the <a href="/General_Setwise_Operations">complement</a> of the increment.</p>
+<pre><code>BLCI reg64, reg/mem64
+dest ::= src | ~(src + 1);
+
+       src         |    ~(src + 1)     =       dest
+0x80C0E0F0F8FCFEFF  0x7F3F1F0F070300FF  0xFFFFFFFFFFFFFEFF
+  . . . . . . . 1     1 1 1 1 1 1 1 .     1 1 1 1 1 1 1 1  
+  . . . . . . 1 1     1 1 1 1 1 1 . .     1 1 1 1 1 1 1 1  
+  . . . . . 1 1 1     1 1 1 1 1 . . .     1 1 1 1 1 1 1 1  
+  . . . . 1 1 1 1     1 1 1 1 . . . .     1 1 1 1 1 1 1 1  
+  . . . 1 1 1 1 1  |  1 1 1 . . . . .  =  1 1 1 1 1 1 1 1  
+  . . 1 1 1 1 1 1     1 1 . . . . . .     1 1 1 1 1 1 1 1  
+  . 1 1 1 1 1 1 1     . . . . . . . .     . 1 1 1 1 1 1 1  
+  1 1 1 1 1 1 1 1     1 1 1 1 1 1 1 1     1 1 1 1 1 1 1 1  </code></pre>
+<p><span id="BLCIC"></span></p>
+<h4 id="blcic">BLCIC</h4>
+<p>Isolate Lowest Clear Bit and Complement. <a href="/General_Setwise_Operations">Intersection</a> of the <a href="/General_Setwise_Operations">complement</a> with the increment.</p>
+<pre><code>BLCIC reg64, reg/mem64
+dest ::= ~src &amp; (src + 1);
+
+       src        -&gt;       ~src        &amp;     (src + 1)     =       dest
+0x80C0E0F0F8FCFEFF  0x7F3F1F0F07030100  0x80C0E0F0F8FCFF00  0x0000000000000100
+  . . . . . . . 1     1 1 1 1 1 1 1 .     . . . . . . . 1     . . . . . . . . 
+  . . . . . . 1 1     1 1 1 1 1 1 . .     . . . . . . 1 1     . . . . . . . .  
+  . . . . . 1 1 1     1 1 1 1 1 . . .     . . . . . 1 1 1     . . . . . . . .  
+  . . . . 1 1 1 1     1 1 1 1 . . . .     . . . . 1 1 1 1     . . . . . . . .  
+  . . . 1 1 1 1 1 -&gt;  1 1 1 . . . . .  &amp;  . . . 1 1 1 1 1  =  . . . . . . . .  
+  . . 1 1 1 1 1 1     1 1 . . . . . .     . . 1 1 1 1 1 1     . . . . . . . .  
+  . 1 1 1 1 1 1 1     1 . . . . . . .     1 1 1 1 1 1 1 1     1 . . . . . . .  
+  1 1 1 1 1 1 1 1     . . . . . . . .     . . . . . . . .     . . . . . . . .  </code></pre>
+<p><span id="BLCMSK"></span></p>
+<h4 id="blcmsk">BLCMSK</h4>
+<p>Mask From Lowest Clear Bit. <a href="/General_Setwise_Operations">Exclusive or</a> with the increment.</p>
+<pre><code>BLCMSK reg64, reg/mem64
+dest ::= src ^ (src + 1);
+
+       src         ^     (src + 1)     =       dest
+0x80C0E0F0F8FCFEFF  0x80C0E0F0F8FCFF00  0x00000000000001FF
+  . . . . . . . 1     . . . . . . . 1     . . . . . . . .  
+  . . . . . . 1 1     . . . . . . 1 1     . . . . . . . .  
+  . . . . . 1 1 1     . . . . . 1 1 1     . . . . . . . .  
+  . . . . 1 1 1 1     . . . . 1 1 1 1     . . . . . . . .  
+  . . . 1 1 1 1 1  ^  . . . 1 1 1 1 1  =  . . . . . . . .  
+  . . 1 1 1 1 1 1     . . 1 1 1 1 1 1     . . . . . . . .  
+  . 1 1 1 1 1 1 1     1 1 1 1 1 1 1 1     1 . . . . . . .  
+  1 1 1 1 1 1 1 1     . . . . . . . .     1 1 1 1 1 1 1 1  </code></pre>
+<p><span id="BLCS"></span></p>
+<h4 id="blcs">BLCS</h4>
+<p>Set Lowest Clear Bit. <a href="/General_Setwise_Operations">Union</a> with the increment.</p>
+<pre><code>BLCS reg64, reg/mem64
+dest ::= src | (src + 1);
+
+       src         |     (src + 1)     =       dest
+0x80C0E0F0F8FCFEFF  0x80C0E0F0F8FCFF00  0x80C0E0F0F8FCFFFF
+  . . . . . . . 1     . . . . . . . 1     . . . . . . . 1  
+  . . . . . . 1 1     . . . . . . 1 1     . . . . . . 1 1  
+  . . . . . 1 1 1     . . . . . 1 1 1     . . . . . 1 1 1  
+  . . . . 1 1 1 1     . . . . 1 1 1 1     . . . . 1 1 1 1  
+  . . . 1 1 1 1 1  |  . . . 1 1 1 1 1  =  . . . 1 1 1 1 1  
+  . . 1 1 1 1 1 1     . . 1 1 1 1 1 1     . . 1 1 1 1 1 1  
+  . 1 1 1 1 1 1 1     1 1 1 1 1 1 1 1     1 1 1 1 1 1 1 1  
+  1 1 1 1 1 1 1 1     . . . . . . . .     1 1 1 1 1 1 1 1  </code></pre>
+<p><span id="T1MSKC"></span></p>
+<h4 id="t1mskc">T1MSKC</h4>
+<p>Inverse Mask From Trailing Ones. <a href="/General_Setwise_Operations">Union</a> of <a href="/General_Setwise_Operations">complement</a> and increment.</p>
+<pre><code>T1MSKC reg64, reg/mem64
+dest ::= ~src | (src + 1);
+
+       src        -&gt;       ~src        |     (src + 1)     =       dest
+0x80C0E0F0F8FCFEFF  0x7F3F1F0F07030100  0x80C0E0F0F8FCFF00  0xFFFFFFFFFFFFFF00
+  . . . . . . . 1     1 1 1 1 1 1 1 .     . . . . . . . 1     1 1 1 1 1 1 1 1  
+  . . . . . . 1 1     1 1 1 1 1 1 . .     . . . . . . 1 1     1 1 1 1 1 1 1 1  
+  . . . . . 1 1 1     1 1 1 1 1 . . .     . . . . . 1 1 1     1 1 1 1 1 1 1 1  
+  . . . . 1 1 1 1     1 1 1 1 . . . .     . . . . 1 1 1 1     1 1 1 1 1 1 1 1  
+  . . . 1 1 1 1 1 -&gt;  1 1 1 . . . . .  |  . . . 1 1 1 1 1  =  1 1 1 1 1 1 1 1  
+  . . 1 1 1 1 1 1     1 1 . . . . . .     . . 1 1 1 1 1 1     1 1 1 1 1 1 1 1  
+  . 1 1 1 1 1 1 1     1 . . . . . . .     1 1 1 1 1 1 1 1     1 1 1 1 1 1 1 1  
+  1 1 1 1 1 1 1 1     . . . . . . . .     . . . . . . . .     . . . . . . . .  </code></pre>
+<p><span id="BEXTR"></span></p>
+<h3 id="misc">Misc</h3>
+<h4 id="bextr">BEXTR</h4>
+<p>An immediate form of the variable <a href="/BMI1">BMI1 Bit Field Extract</a>.</p>
+<pre><code>BEXTR reg32, reg/mem32, imm32
+BEXTR reg64, reg/mem64, imm32</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/SSE4">ABM</a></li>
+<li><a href="/Bit-Twiddling">Bit-Twiddling</a></li>
+<li><a href="/BMI1">BMI1</a></li>
+<li><a href="/BMI2">BMI2</a></li>
+<li><a href="/General_Setwise_Operations">General Setwise Operations</a></li>
+</ul>
+<p><a href="/General_Setwise_Operations">Obtaining and Clearing the Least Significant Bit (LS1B)</a></p>
+<h2 id="manuals">Manuals</h2>
+<ul>
+<li><a href="https://www.amd.com/system/files/TechDocs/24594.pdf">AMD64 Architecture Programmer’s Manual Volume 3: General-Purpose and System Instructions</a> (pdf) <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></li>
+<li><a href="https://www.amd.com/system/files/TechDocs/47414_15h_sw_opt_guide.pdf">Software Optimization Guide for AMD Family 15h Processors</a> (pdf) 9.8 Optimizing with BMI and TBM Instructions, pp. 163</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Bit_Manipulation_Instruction_Sets#TBM_(Trailing_Bit_Manipulation)">TBM from Wikipedia</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/X86-64">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://support.amd.com/us/Embedded_TechDocs/25481.pdf">AMD CPUID Specification</a> (pdf)<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://www.amd.com/system/files/TechDocs/52169_KB_A_Series_Mobile.pdf">Family 16h Models 00h-0Fh AMD A-Series Mobile Accelerated Processor Product Data Sheet</a> (pdf)<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>Moved BMI and TBM instructions from Volume 4 to Volume 3 in September 2011<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/TBM">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

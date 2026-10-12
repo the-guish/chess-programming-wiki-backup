@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rotated Bitboards - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Rotated Bitboards</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * <a href="/Sliding_Piece_Attacks">Sliding Piece Attacks</a> * Rotated Bitboards</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/1/1c/Mural_from_the_Temple_of_Longing_%E2%86%96Thither%E2%86%97_MET_DP-823-001.jpg" alt="Paul Klee - Mural from the Temple of Longing ↖Thither↗ 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Paul_Klee">Paul Klee</a> - Mural from the Temple of Longing ↖Thither↗ <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="/Category:Paul_Klee">Paul Klee</a> - Mural from the Temple of Longing ↖Thither↗, <a href="https://en.wikipedia.org/wiki/Metropolitan_Museum_of_Art">Metropolitan Museum of Art</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Rotated Bitboards</strong>,<br />
+a bitboard <a href="/Move_Generation">move generation</a> technique coined by <a href="/Robert_Hyatt">Robert Hyatt</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>, and later by <a href="/Ernst_A._Heinz">Ernst A. Heinz</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> and <a href="/Peter_Gillgasch">Peter Gillgasch</a> from the <a href="/DarkThought">DarkThought</a> team. This variation uses <a href="/Flipping_Mirroring_and_Rotating">rotated</a> copies of the <a href="/Occupancy">occupancy</a> in order to place bits along a <a href="/Files">file</a>, <a href="/Diagonals">diagonal</a> or <a href="/Anti-Diagonals">anti-diagonal</a> in adjacent bits. Because of this, these bits can be easily extracted to obtain a dense <a href="/Occupancy_of_any_Line">occupancy map</a> for a <a href="/Ranks">rank</a>, file, diagonal, and anti-diagonal. These are used, along with the square of the sliding piece, to lookup a bitboard, containing attacks, in an <a href="/Array">array</a>.</p>
+<p>While the attack generation per line is more or less only one <a href="/Memory">memory</a> lookup, the <a href="/Incremental_Updates">incremental</a> <a href="/General_Setwise_Operations">update</a> of the <a href="/Occupancy">occupancy</a> during <a href="/Make_Move">make</a> and <a href="/Unmake_Move">unmake move</a> becomes more expensive, since beside the usual <a href="/Bitboard_Board-Definition">occupied bitboard</a> there are three more rotated bitboards to update, including additional mapping from square coordinates to the rotated indices.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#an-example">An Example</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#square-mapping">Square Mapping</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#by-hyatt">by Hyatt</a></li>
+<li><a href="#by-gillgasch-and-heinz">by Gillgasch and Heinz</a></li>
+<li><a href="#quotes">Quotes</a></li>
+</ol>
+</details></li>
+<li><a href="#table-size">Table size</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="an-example">An Example</h2>
+<p>As example file-attacks of rook a5 with occupancy along the a-file. The 90-degree rotated bitboard has consecutive bits of that file along its 8th rank, which serves as an index to lookup the pre-calculated file-attacks:</p>
+<pre><code>  non-rotated           rotated             file_attacks[a5][rotated]
+ ┌─┐                 ┌───────────────┐     ┌─┐
+ │1│0 0 0 0 0 0 0    │1_0_0_1_R_0_1_1│════&gt;│0│0 0 0 0 0 0 0
+ │1│0 0 0 0 0 0 0     0 0 0 0 0 0 0 0      │1│0 0 0 0 0 0 0
+ │0│0 0 0 0 0 0 0     0 0 0 0 0 0 0 0      │1│0 0 0 0 0 0 0
+ │R│0 0 0 0 0 0 0     0 0 0 0 0 0 0 0      │0│0 0 0 0 0 0 0
+ │1│0 0 0 0 0 0 0     0 0 0 0 0 0 0 0      │1│0 0 0 0 0 0 0
+ │0│0 0 0 0 0 0 0     0 0 0 0 0 0 0 0      │0│0 0 0 0 0 0 0
+ │0│0 0 0 0 0 0 0     0 0 0 0 0 0 0 0      │0│0 0 0 0 0 0 0
+ │1│0 0 0 0 0 0 0     0 0 0 0 0 0 0 0      │0│0 0 0 0 0 0 0
+ └─┘                                       └─┘</code></pre>
+<p>With a rook on the square marked 'R', an attack bitboard can be obtained with the array lookup file_attacks[R][10011011].</p>
+<h2 id="square-mapping">Square Mapping</h2>
+<p>Interesting is the different mapping of both approaches. Crafty seemed to use <a href="/Square_Mapping_Considerations">little endian square mapping</a> but bit 0 (A1) is mentioned as MSB, while bit 63 (H8) is LSB. DarkThought uses big-endian file-mapping (H1 = 0).</p>
+<h3 id="by-hyatt">by Hyatt</h3>
+<p>Crafty didn't use byte aligned <a href="/Diagonals">diagonals</a>, but visual rotation.</p>
+<pre><code>  normal chess board bitmap            occupied_squares 90 degrees
+
+  A8 B8 C8 D8 E8 F8 G8 H8              H8 H7 H6 H5 H4 H3 H2 H1
+  A7 B7 C7 D7 E7 F7 G7 H7              G8 G7 G6 G5 G4 G3 G2 G1
+  A6 B6 C6 D6 E6 F6 G6 H6              F8 F7 F6 F5 F4 F3 F2 F1
+  A5 B5 C5 D5 E5 F5 G5 H5              E8 E7 E6 E5 E4 E3 E2 E1
+  A4 B4 C4 D4 E4 F4 G4 H4              D8 D7 D6 D5 D4 D3 D2 D1
+  A3 B3 C3 D3 E3 F3 G3 H3              C8 C7 C6 C5 C4 C3 C2 C1
+  A2 B2 C2 D2 E2 F2 G2 H2              B8 B7 B6 B5 B4 B3 B2 B1
+  A1 B1 C1 D1 E1 F1 G1 H1              A8 A7 A6 A5 A4 A3 A2 A1
+
+  original left 45                     original right 45
+
+              H8                                 A8
+            G8  H7                             A7  B8
+          F8  G7  H6                         A6  B7  C8
+        E8  F7  G6  H5                     A5  B6  C7  D8
+      D8  E7  F6  G5  H4                 A4  B5  C6  D7  E8
+    C8  D7  E6  F5  G4  H3             A3  B4  C5  D6  E7  F8
+  B8  C7  D6  E5  F4  G3  H2         A2  B3  C4  D5  E6  F7  G8
+A8  B7  C6  D5  E4  F3  G2  H1     A1  B2  C3  D4  E5  F6  G7  H8
+  A7  B6  C5  D4  E3  F2  G1         B1  C2  D3  E4  F5  G6  H7
+    A6  B5  C4  D3  E2  F1             C1  D2  E3  F4  G5  H6
+      A5  B4  C3  D2  E1                 D1  E2  F3  G4  H5
+        A4  B3  C2  D1                     E1  F2  G3  H4
+          A3  B2  C1                         F1  G2  H3
+            A2  B1                             G1  H2
+              A1                                 H1
+
+  original left 45                     original right 45
+
+   G6 H5|F8 G7 H6|G8 H7|H8|            C7 D8|A6 B7 C8|A7 B8|A8|
+   H3|D8 E7 F6 G5 H4|E8 F7             F8|A4 B5 C6 D7 E8|A5 B6
+   F4 G3 H2|C8 D7 E6 F5 G4             E6 F7 G8|A3 B4 C5 D6 E7
+   E4 F3 G2 H1|B8 C7 D6 E5             E5 F6 G7 H8|A2 B3 C4 D5
+   D4 E3 F2 G1|A8 B7 C6 D5             E4 F5 G6 H7|A1 B2 C3 D4
+   B5 C4 D3 E2 F1|A7 B6 C5             D2 E3 F4 G5 H6|B1 C2 D3
+   C2 D1|A5 B4 C3 D2 E1|A6             G3 H4|D1 E2 F3 G4 H5|C1
+A1|A2 B1|A3 B2 C1|A4 B3            |H1|G1 H2|F1 G2 H3|E1 F2</code></pre>
+<h3 id="by-gillgasch-and-heinz">by Gillgasch and Heinz</h3>
+<p><a href="/DarkThought">DarkThought</a> used a similar mapping as proposed in <a href="/Flipping_Mirroring_and_Rotating">Pseudo Rotation by 45 degrees</a> from <a href="/Flipping_Mirroring_and_Rotating">Flipping Mirroring and Rotating</a>, all diagonals are packed in file-aligned bytes.</p>
+<pre><code>Normal Bitboard.                       Flipped Bitboard.
+#7 #6 #5 #4 #3 #2 #1 #0 Bit/Byte       #7 #6 #5 #4 #3 #2 #1 #0 Bit/Byte
+a8 b8 c8 d8 e8 f8 g8 h8 #7             a8 a7 a6 a5 a4 a3 a2 a1 #7
+a7 b7 c7 d7 e7 f7 g7 h7 #6             b8 b7 b6 b5 b4 b3 b2 b1 #6
+a6 b6 c6 d6 e6 f6 g6 h6 #5             c8 c7 c6 c5 c4 c3 c2 c1 #5
+a5 b5 c5 d5 e5 f5 g5 h5 #4             d8 d7 d6 d5 d4 d3 d2 d1 #4
+a4 b4 c4 d4 e4 f4 g4 h4 #3             e8 e7 e6 e5 e4 e3 e2 e1 #3
+a3 b3 c3 d3 e3 f3 g3 h3 #2             f8 f7 f6 f5 f4 f3 f2 f1 #2
+a2 b2 c2 d2 e2 f2 g2 h2 #1             g8 g7 g6 g5 g4 g3 g2 g1 #1
+a1 b1 c1 d1 e1 f1 g1 h1 #0             h8 h7 h6 h5 h4 h3 h2 h1 #0
+
+A1-H8 Bitboard.                        A8-H1 Bitboard.
+#7 #6 #5 #4 #3 #2 #1 #0 Bit/Byte       #7 #6 #5 #4 #3 #2 #1 #0 Bit/Byte
+a8|b1 c2 d3 e4 f5 g6 h7 #7             a8 b7 c6 d5 e4 f3 g2 h1 #7
+a7 b8|c1 d2 e3 f4 g5 h6 #6             a7 b6 c5 d4 e3 f2 g1|h8 #6
+a6 b7 c8|d1 e2 f3 g4 h5 #5             a6 b5 c4 d3 e2 f1|g8 h7 #5
+a5 b6 c7 d8|e1 f2 g3 h4 #4             a5 b4 c3 d2 e1|f8 g7 h6 #4
+a4 b5 c6 d7 e8|f1 g2 h3 #3             a4 b3 c2 d1|e8 f7 g6 h5 #3
+a3 b4 c5 d6 e7 f8|g1 h2 #2             a3 b2 c1|d8 e7 f6 g5 h4 #2
+a2 b3 c4 d5 e6 f7 g8|h1 #1             a2 b1|c8 d7 e6 f5 g4 h3 #1
+a1 b2 c3 d4 e5 f6 g7 h8|#0             a1|b8 c7 d6 e5 f4 g3 h2 #0</code></pre>
+<h3 id="quotes">Quotes</h3>
+<p>From <a href="/Robert_Hyatt">Robert Hyatt</a> as repost to <a href="/Urban_Koistinen">Urban Koistinen</a> from 1997 <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> :</p>
+<p><code>When I first thought about doing the rotated bitmap idea, I discussed it with Peter G. of the DarkThought team. He thought (as I did) that the idea was pretty neat and worth trying. I (from the first thought) had always planned on updating the rotated bitmaps by the following approach: I have a set of 64 bitmaps callet set_mask[n]. To set bit 32, I simply AND(bit-map,set_mask[32]). If I have a rotated-90 bitmap, then I also create a rotated-90 set_mask, and do this: AND(bit-map-R90,set_mask_R90[32]) and I am done. Peter didn't like this, and wanted to get rid of the extra memory load for the rotated set_mask variable. (note there are actually 4 of these loads needed, for each of the rotated bitmaps). So he thought about it a bit and found a cute mathematical transformation based on shifts, AND's and OR's (I won't give it here since it is his idea) that avoide needing the set_mask_Rxx masks (note that on some machines, even the set_mask itself is not needed. to set bit 32 you just start with "1" and shift it to the right position avoiding the memory load altogether. However, the effect of Peter's approach is to map diagonal bits on the real bitmap to adjacent bits in a "psuedo-rotated" bitmap, without needing the set_mask_R90 stuff at all. Is it better? I'm not sure. My tests on the P6 said NO. My tests on the alpha with big cache also said NO. Peter's tests on the machine he used said YES. It definitely takes more instructions to do what Peter is doing. On a machine with a huge memory latency, like the </code><a href="/IBM_PC"><code>PC</code></a><code>, my memory loading can be slow. But with a decent sized cache, the 64 words X 8 bytes per word (512 bytes) really tucks into a corner in cache and doesn't hurt at all, particularly since a cache hit on the P6 operates at CPU speed. The PII is a different case since the cache operates at 1/2 CPU speed, which might swing things in his favor. For the record, they are *close* under all cases. We are not talking 10% here...one might be 2% faster on one machine, the other 3% faster on another machine... But the "mapping" is really odd and would not let us just simply swap the L45 and R45 maps... </code></p>
+<h2 id="table-size">Table size</h2>
+<p>The initial implementations of rotated bitboards missed the <a href="/First_Rank_Attacks">outer square optimization</a> and used the 8-bit occupied state with four lookup tables of 256*64*8 or 128-Kbyte each, thus 1/2 MByte in total. <a href="/Roberto_Waldteufel">Roberto Waldteufel</a> seemed first time mentioned the optimization trick 1998 <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>, masking off the redundant outer occupancies for a four fold table reduction.</p>
+<p>Of course one may use calculations similar to <a href="/Kindergarten_Bitboards">kindergarten bitboards</a> to further shrink the tables. In fact, getting the occupancy state and pre-calculated information based on that are two different steps.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Flipping_Mirroring_and_Rotating">Flipping Mirroring and Rotating</a></li>
+<li><a href="/Kindergarten_Bitboards">Kindergarten Bitboards</a></li>
+<li><a href="/Occupancy_of_any_Line">Occupancy of any Line</a></li>
+<li><a href="/Rotated_Indices">Rotated Indices</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Ernst_A._Heinz">Ernst A. Heinz</a> (<strong>1997</strong>). <em><a href="http://people.csail.mit.edu/heinz/dt/node2.html">How DarkThought Plays Chess</a>.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 20, No. 3</a></li>
+<li><a href="/Robert_Hyatt">Robert Hyatt</a> (<strong>1999</strong>). <em><a href="http://www.craftychess.com/hyatt/bitmaps.html">Rotated Bitmaps, a New Twist on an Old Idea</a></em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 22, No. 4</a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a></li>
+<li><a href="/Borko_Bošković">Borko Bošković</a>, <a href="/Sašo_Greiner">Sašo Greiner</a>, <a href="/Janez_Brest">Janez Brest</a>, <a href="/Viljem_Žumer">Viljem Žumer</a> (<strong>2005</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/freeabs_all.jsp?arnumber=1491153">The Representation of Chess Game</a></em>. Proceedings of the 27th International Conference on Information Technology Interfaces</li>
+<li>Johannes Buchner (<strong>2005</strong>). <em>Rotated bitboards in FUSc#</em>. <a href="/Free_University_of_Berlin">Free University of Berlin</a>, <a href="http://page.mi.fu-berlin.de/jbuchner/rotated.pdf">pdf</a> » <a href="/FUSCsharp">FUSc#</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/d/msg/gnu.chess/lSsvkY3St7s/wZ-3sG9rNmcJ">bitmaps of rotated boards</a> by <a href="/Urban_Koistinen">Urban Koistinen</a>, <a href="/GNU_Chess">gnu.chess</a>, March 2, 1995</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/msg/d3e64cbd920b1153">Re: Speed of Move Generator</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Computer_Chess_Forums">rgcc</a>, August 17, 1995</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/b6d3210fc02baa93">Rotated bitboards - experiment and result</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Computer_Chess_Forums">rgcc</a>, February 28, 1996</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/a97c78bd49c9c9e6">bitboard move generation question</a> by <a href="/Stuart_Cracraft">Stuart Cracraft</a>, <a href="/Computer_Chess_Forums">rgcc</a>, September 05, 1997</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/00013e6c504ace86">Bitboard Representation</a> by Carl Tillotson, <a href="/Computer_Chess_Forums">rgcc</a>, September 18, 1997</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/62f15a832b95a20c">Rotated bitboards</a> by Mats Forsén, <a href="/Computer_Chess_Forums">rgcc</a>, October 29, 1997</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=17377">Rotated bitboards</a> by <a href="/Peter_Fendrich">Peter Fendrich</a>, <a href="/CCC">CCC</a>, April 22, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=30863">Efficient Rotated Bitboard Representations</a> by <a href="/Roberto_Waldteufel">Roberto Waldteufel</a>, <a href="/CCC">CCC</a>, October 28, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=31429">Extracting information from rotated Bitboards</a> by John Stoneham, <a href="/CCC">CCC</a>, November 02, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=71880">Bitboard user's information request</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, October 05, 1999</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=95468">Nice Rotated-bitmaps Article by Hyatt in ICCA</a> by <a href="/Tom_Likens">Tom Likens</a>, <a href="/CCC">CCC</a>, February 07, 2000 <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a></li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/8cd63a61ab02a1ed">Rotated Bitboards?</a> by Mauricio Castro, <a href="/Computer_Chess_Forums">rgcc</a>, October 07, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=194920">Attack Bitboards</a> by <a href="/Sune_Fischer">Sune Fischer</a>, <a href="/CCC">CCC</a>, October 30, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=342372">Resources about rotated bitboards</a> by <a href="/Federico_Andrés_Corigliano">Federico Corigliano</a>, <a href="/CCC">CCC</a>, January 02, 2004</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=29577">Generating "through" attacks with rotated bitboard</a> by <a href="/Vlad_Stamate">Vlad Stamate</a>, <a href="/CCC">CCC</a>, August 28, 2009 » <a href="/X-ray_Attacks_%28Bitboards%29">X-ray Attacks (Bitboards)</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=1376">A question on rotated bitboard</a> by n_ven, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, May 04, 2011</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="http://people.csail.mit.edu/heinz/dt/node8.html">Rotated Bitboards</a> by <a href="/Ernst_A._Heinz">Ernst A. Heinz</a></li>
+<li><a href="http://www.craftychess.com/hyatt/bitmaps.html">Rotated bitmaps, a new twist on an old idea</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, revisited version of the <a href="/ICGA_Journal">ICCA Journal</a> paper <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a></li>
+<li><a href="http://www.frayn.net/beowulf/theory.html#bitboards">Computer Chess Programming Theory - Bitboards</a> by <a href="/Colin_Frayn">Colin Frayn</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Herb_Alpert">Herb Alpert</a> - <a href="https://en.wikipedia.org/wiki/Rise_%28Herb_Alpert_album%29">Rotation</a> (1979), <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/4vACvafOvq0" title="YouTube video 4vACvafOvq0" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=4vACvafOvq0">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Sliding_Piece_Attacks">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/33c57503391f3a89">Speed of Move Generator</a> by <a href="/Valavan_Manohararajah">Valavan Manohararajah</a>, <a href="/Computer_Chess_Forums">rgcc</a>, August 15, 1995, post 5 by <a href="/Robert_Hyatt">Robert Hyatt</a> where he mentions on the fly generation with rotated bitboards<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://people.csail.mit.edu/heinz/dt/node8.html">Rotated Bitboards</a> in <a href="/Ernst_A._Heinz">Ernst A. Heinz</a> (<strong>1997</strong>). <em><a href="http://people.csail.mit.edu/heinz/dt/node2.html">How DarkThought Plays Chess.</a></em> <a href="/ICGA_Journal">ICCA Journal, Vol. 20, No. 3</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/00013e6c504ace86">Bitboard Representation</a> by Carl Tillotson, <a href="/Computer_Chess_Forums">rgcc</a>, September 18, 1997, post 23 by <a href="/Robert_Hyatt">Robert Hyatt</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://www.stmintz.com/ccc/index.php?id=31456">Re: Extracting information from rotated Bitboards</a> by <a href="/Roberto_Waldteufel">Roberto Waldteufel</a>, <a href="/CCC">CCC</a>, November 02, 1998<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="https://www.stmintz.com/ccc/index.php?id=71880">Bitboard user's information request</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, October 05, 1999<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="https://www.stmintz.com/ccc/index.php?id=95468">Nice Rotated-bitmaps Article by Hyatt in ICCA</a> by <a href="/Tom_Likens">Tom Likens</a>, <a href="/CCC">CCC</a>, February 07, 2000<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="/Robert_Hyatt">Robert Hyatt</a> (<strong>1999</strong>). <em><a href="http://www.craftychess.com/hyatt/bitmaps.html">Rotated Bitmaps, a New Twist on an Old Idea</a></em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 22, No. 4</a><a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p>The <a href="/ICGA_Journal">ICCA Journal</a> paper does not mention the <a href="/First_Rank_Attacks">outer square optimization</a> with the four fold table reduction<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Hyatt_Quotes">Hyatt Quotes</a> · <a href="/Category:Paul_Klee">Paul Klee</a> · <a href="/Category:Music">Music</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Rotated_Bitboards">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Squares - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Squares</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Chess">Chess</a> * Squares</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/3/36/Tableau_I%2C_by_Piet_Mondriaan.jpg" alt="Piet Mondrian - Tableau I 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Piet_Mondrian">Piet Mondrian</a> - Tableau I <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="/Category:Piet_Mondrian">Piet Mondrian</a> - <a href="https://commons.wikimedia.org/wiki/File:Tableau_I,_by_Piet_Mondriaan.jpg">Tableau I</a>, 1921, <a href="https://en.wikipedia.org/wiki/Gemeentemuseum_Den_Haag">Gemeentemuseum Den Haag</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p>A <strong>Square</strong> in chess is one of 64 elements of a <a href="/Chessboard">chessboard</a>, which might be empty or <a href="/Occupancy">occupied</a> by a chess <a href="/Pieces">man</a>. <strong>Square centric</strong> <a href="/Board_Representation">representations</a>, like <a href="/Mailbox">mailbox</a> or <a href="/0x88">0x88</a> board <a href="/Array">arrays</a>, contain <a href="/Pieces">piece codes</a>, the information, what piece, if any, resides on a particular square. The <strong>piece centric</strong> <a href="/Bitboards">bitboard</a>, as array of 64 bits, represent a boolean property of each square by a single bit.</p>
+<p>Depending on the underlying data structure of the <a href="/Board_Representation">board representation</a>, each square has an <a href="https://en.wikipedia.org/wiki/Memory_address">address</a> inside the <a href="/Chessboard">board</a>. Square centric representations keep arrays of squares, containing the information which piece (if any) resides on each square. That is why these representation is often called <a href="/Mailbox">mailbox</a> approach, since each square has a associated mailbox which is either empty or contains a chess piece. To find the address of a certain square index in the a1..h8 aka 0..63 range sometimes requires additional computation or lookup, for instance to map coordinates for <a href="/0x88">0x88</a> boards or surrounded mailbox boards.</p>
+<p>In <a href="/Bitboards">bitboards</a> the address of a square correspondents to a bit-index, containing a boolean property of that square (bit set), or not (bit clear). The <a href="/Square_Mapping_Considerations">square mapping</a> determines how bit-indices associate the squares on the <a href="/Chessboard">board</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#square-by-rank-and-file">Square by Rank and File</a></li>
+<li><a href="#algebraic-square-notation">Algebraic Square Notation</a></li>
+<li><a href="#square-definition">Square Definition</a></li>
+<li><a href="#square-properties">Square Properties</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#multiple-squares">Multiple Squares</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#lines">Lines</a></li>
+<li><a href="#two-squares">Two squares</a></li>
+<li><a href="#areas">Areas</a></li>
+<li><a href="#the-whole-board">The whole Board</a></li>
+</ol>
+</details></li>
+<li><a href="#pawn-squares">Pawn Squares</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="square-by-rank-and-file">Square by Rank and File</h2>
+<p>A Square, like a point inside a <a href="https://en.wikipedia.org/wiki/Cartesian_coordinates">cartesian coordinate system</a>, can be determined by x- and y-coordinates, here the labels of <a href="/Files">files</a> and <a href="/Ranks">ranks</a>. Since each rank and file has eight squares, the mentioned rank-file mapping implies following formulas to determine the the square address:</p>
+<pre><code>square = 8*rank + file;
+square = (rank &lt;&lt; 3) + file;</code></pre>
+<p>with the obvious relation to calculate rank- and file-indices from the square index:</p>
+<pre><code>rank = square &gt;&gt; 3; // div 8
+file = square  &amp; 7; // modulo 8</code></pre>
+<p><span id="Algebraic"></span></p>
+<h2 id="algebraic-square-notation">Algebraic Square Notation</h2>
+<p>In <a href="/Algebraic_Chess_Notation">algebraic chess notation</a> a <a href="/Target_Square">target square</a> of a <a href="/Moves">move</a> is specified by two characters for its <a href="https://en.wikipedia.org/wiki/Cartesian_coordinates">cartesian coordinate</a>, per convention a letter for the <a href="/Files">file</a> ('a'-'h'), followed by a digit for the <a href="/Ranks">rank</a> number ('1'-'8').</p>
+<h2 id="square-definition">Square Definition</h2>
+<p>A typical <a href="/Little-endian">little-endian</a> rank-file mapping enumeration in <a href="/Cpp">C++</a>:</p>
+<pre><code>enum enumSquare {
+  a1, b1, c1, d1, e1, f1, g1, h1,
+  a2, b2, c2, d2, e2, f2, g2, h2,
+  a3, b3, c3, d3, e3, f3, g3, h3,
+  a4, b4, c4, d4, e4, f4, g4, h4,
+  a5, b5, c5, d5, e5, f5, g5, h5,
+  a6, b6, c6, d6, e6, f6, g6, h6,
+  a7, b7, c7, d7, e7, f7, g7, h7,
+  a8, b8, c8, d8, e8, f8, g8, h8
+};</code></pre>
+<h2 id="square-properties">Square Properties</h2>
+<ul>
+<li><a href="/Center_Distance">Center Distance</a></li>
+<li><a href="/Center_Manhattan-Distance">Center Manhattan-Distance</a></li>
+<li><a href="/Color_of_a_Square">Color of a Square</a></li>
+<li><a href="/Occupancy">Occupancy</a></li>
+<li><a href="/Square_Attacked_By">Square Attacked By</a></li>
+<li><a href="/Square_Control">Square Control</a></li>
+</ul>
+<h2 id="multiple-squares">Multiple Squares</h2>
+<h3 id="lines">Lines</h3>
+<ul>
+<li><a href="/Ranks">Ranks</a></li>
+<li><a href="/Files">Files</a></li>
+<li><a href="/Diagonals">Diagonals</a></li>
+<li><a href="/Anti-Diagonals">Anti-Diagonals</a></li>
+<li><a href="/Rays">Rays</a> as subset of Lines</li>
+<li><a href="/On_an_empty_Board">Line-masks</a> from <a href="/Bitboards">Bitboards</a></li>
+</ul>
+<h3 id="two-squares">Two squares</h3>
+<p>Often, but not always related to a <a href="/Moves">move</a></p>
+<ul>
+<li><a href="/Origin_Square">Origin Square</a></li>
+<li><a href="/Target_Square">Target Square</a></li>
+<li><a href="/Distance">Distance</a></li>
+<li><a href="/Manhattan-Distance">Manhattan-Distance</a></li>
+<li><a href="/Knight-Distance">Knight-Distance</a></li>
+<li><a href="/Direction">Direction</a></li>
+<li><a href="/0x88">0x88 Square Relations</a></li>
+<li><a href="/Square_Attacked_By">In Between</a></li>
+<li><a href="/Intersection_Squares">Intersection Squares</a></li>
+<li><a href="/Butterfly_Boards">Butterfly Boards</a></li>
+<li><a href="/Files">Two Squares on a File</a></li>
+<li><a href="/Ranks">Two Squares on a Rank</a></li>
+<li><a href="/Diagonals">Two Squares on a Diagonal</a></li>
+<li><a href="/Anti-Diagonals">Two Squares on a Anti-Diagonal</a></li>
+</ul>
+<h3 id="areas">Areas</h3>
+<ul>
+<li><a href="/Center">Center</a></li>
+<li>Wings</li>
+</ul>
+<h3 id="the-whole-board">The whole Board</h3>
+<p>Lists, Arrays and Sets of Squares</p>
+<ul>
+<li><a href="/Chessboard">Chessboard</a></li>
+<li><a href="/Board_Representation">Board Representation</a>
+<ul>
+<li><a href="/Mailbox">Mailbox</a></li>
+<li><a href="/Vector_Attacks">Vector Attacks</a></li>
+<li><a href="/Bitboards">Bitboards</a>
+<ul>
+<li><a href="/Flipping_Mirroring_and_Rotating">Flipping Mirroring and Rotating</a></li>
+<li><a href="/Square_Mapping_Considerations">Square Mapping Considerations</a></li>
+<li><a href="/King_Pattern">Setwise Rule of the Square</a></li>
+</ul></li>
+<li><a href="/Quad-Bitboards">Quad-Bitboards</a></li>
+</ul></li>
+</ul>
+<h2 id="pawn-squares">Pawn Squares</h2>
+<ul>
+<li><a href="/En_passant">En passant</a>
+<ul>
+<li><a href="/Forsyth-Edwards_Notation">En passant target square</a> inside the <a href="/Forsyth-Edwards_Notation">Forsyth-Edwards Notation</a></li>
+</ul></li>
+<li><a href="/Promotion_Square">Promotion Square</a></li>
+<li><a href="/Stop_Square">Stop Square</a></li>
+<li><a href="/Pawn_Spans">Stop and Telestop</a></li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Corresponding_Squares">Corresponding Squares</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Square">Square from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Magic_square">Magic square from Wikipedia</a></li>
+<li><a href="https://www.chess.com/article/view/the-eulers-8x8-magic-square">The Euler's 8x8 magic square</a>, Chess.com</li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Chess">Up one Level</a></strong></p>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Piet_Mondrian">Piet Mondrian</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Squares">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

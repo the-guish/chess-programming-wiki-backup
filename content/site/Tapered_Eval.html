@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tapered Eval - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Tapered Eval</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Evaluation">Evaluation</a> * Tapered Eval</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Polyphony2.JPG" alt="Paul Klee - Ad Parnassum, 1932 1 2" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Paul_Klee">Paul Klee</a> - Ad Parnassum, 1932 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="/Category:Paul_Klee">Paul Klee</a> - <a href="https://en.wikipedia.org/wiki/File:Polyphony2.JPG">Ad Parnassum</a>, 1932, oil colors, stamped lines, dots stamped in white color and later repainted, on casein paint on canvas on stretcher frame, <a href="https://en.wikipedia.org/wiki/Museum_of_Fine_Arts_Berne">Museum of Fine Arts Berne</a>, <a href="https://en.wikipedia.org/wiki/Paul_Klee">Paul Klee from Wikipedia</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+<li id="fn2"><a href="https://en.wikipedia.org/wiki/Gradus_ad_Parnassum">Gradus ad Parnassum - Wikipedia</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Tapered Eval</strong>,<br />
+a technique used in evaluation to make a smooth transition between the <a href="/Game_Phases">phases of the game</a> using a fine grained numerical game phase value considering type of captured pieces so far. The technique requires aggregating two distinct <a href="/Score">scores</a> for the position, with weights corresponding to the <a href="/Opening">opening</a> and <a href="/Endgame">endgame</a>. The current game phase is then used to <a href="https://en.wikipedia.org/wiki/Interpolation">interpolate</a> between these values. The idea behind Tapered Eval is to remove <a href="/Evaluation_Discontinuity">evaluation discontinuity</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#history">History</a></li>
+<li><a href="#implementation-example">Implementation example</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#selected-publications">Selected Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="history">History</h2>
+<p>Though Tapered Eval has been used for many years (for example <a href="/The_King">The King</a>, as <a href="/The_King">described</a> in 1991 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> and <a href="/Phalanx">Phalanx</a>), and was already mentioned by <a href="/Hans_Berliner">Hans Berliner</a> in 1979 <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>, the technique gained massive popularity only during the past few years, with the release of <a href="/Fruit">Fruit</a> and the growing awareness among programmers of the sensitivity of the evaluation function to discontinuity. <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>. <a href="/Zurichess">Zurichess</a> by <a href="/Alexandru_Mosoi">Alexandru Moșoi</a> uses the <a href="https://en.wikipedia.org/wiki/TensorFlow">TensorFlow</a> library for <a href="/Automated_Tuning">automated tuning</a> - in a two layers <a href="/Neural_Networks">neural network</a>, the second layer is for phasing endgame and middlegame scores <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>.</p>
+<h2 id="implementation-example">Implementation example</h2>
+<p>Tapered Eval is done as follows in <a href="/Fruit">Fruit</a> (similar implementations can be found in engines like <a href="/Crafty">Crafty</a> and <a href="/Stockfish">Stockfish</a> etc.). The scaling looks like this:</p>
+<pre><code>eval = ((opening * (256 - phase)) + (endgame * phase)) / 256</code></pre>
+<p>Where <em>opening</em> is the evaluation of the position with middle game in mind (e.g. keep kings protected behind their pawn covers) and <em>endgame</em> is the evaluation with endgame in mind (e.g. activate the kings). Both these evaluations are done in parallel when evaluating a position.</p>
+<p>The <em>phase</em> is evaluated like this (code specifics left out):</p>
+<pre><code>PawnPhase = 0
+KnightPhase = 1
+BishopPhase = 1
+RookPhase = 2
+QueenPhase = 4
+TotalPhase = PawnPhase*16 + KnightPhase*4 + BishopPhase*4 + RookPhase*4 + QueenPhase*2
+
+phase = TotalPhase
+
+phase -= wp * PawnPhase // Where wp is the number of white pawns currently on the board
+phase -= wn * Knight    // White knights
+...
+phase -= br * RookPhase
+phase -= bq * QueenPhase
+
+phase = (phase * 256 + (TotalPhase / 2)) / TotalPhase</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Evaluation_Discontinuity">Evaluation Discontinuity</a></li>
+<li><a href="/Evaluation_Philosophy">Evaluation Philosophy</a></li>
+<li><a href="/Game_Phases">Game Phases</a></li>
+<li><a href="/Neural_Networks">Neural Networks</a></li>
+<li>PeSTO's Evaluation Function</li>
+<li><a href="/Stockfish">Stockfish Evaluation Guide</a></li>
+</ul>
+<h2 id="selected-publications">Selected Publications</h2>
+<ul>
+<li><a href="/Hans_Berliner">Hans Berliner</a> (<strong>1979</strong>). <em><a href="http://www.bkgm.com/articles/Berliner/EvaluationFunctionsLargeDomains/">On the Construction of Evaluation Functions for Large Domains</a></em>. <a href="http://www.bkgm.com/articles/Berliner/EvaluationFunctionsLargeDomains/#sec-3">III. Smoothness</a>, <a href="/Conferences">IJCAI 1979</a>, Tokyo, Vol. 1</li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=16162">designing neural networks</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/CCC">CCC</a>, August 31, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=220004&amp;t=23894">Re: Lemming Poll</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, September 22, 2008 » <a href="/Crafty">Crafty</a>, <a href="/LearningLemming">LearningLemming</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=23860">Superlinear interpolator: a nice novelity ?</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, September 20, 2008 » <a href="/SIMD_and_SWAR_Techniques">SIMD and SWAR Techniques</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?p=301746#301746">Re: talk about IPP's evaluation</a> by <a href="/Richard_Vida">Richard Vida</a>, <a href="/CCC">CCC</a>, November 07, 2009 » <a href="/Ippolit">Ippolit</a>, <a href="/SIMD_and_SWAR_Techniques">SIMD and SWAR Techniques</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38523">My experience with Linux/GCC</a> by <a href="/Richard_Vida">Richard Vida</a>, <a href="/CCC">CCC</a>, March 23, 2011 » <a href="/C">C</a>, <a href="/Linux">Linux</a>, <a href="/SIMD_and_SWAR_Techniques">SIMD and SWAR Techniques</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=42054">two values in one integer</a> by Pierre Bokma, <a href="/CCC">CCC</a>, January 18, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51656">Tapered evaluation</a> by <a href="/Marco_Pampaloni">Marco Pampaloni</a>, <a href="/CCC">CCC</a>, March 18, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53220">advanced tapered evalutation</a> by <a href="/Marco_Belli">Marco Belli</a>, <a href="/CCC">CCC</a>, August 08, 2014 » <a href="/SSE">SSE</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55519">Why do some programs evaluate MidGame and EndGame together?</a> by <a href="/Syed_Fahad">Syed Fahad</a>, <a href="/CCC">CCC</a>, March 01, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57181">Tapered Eval</a> by <a href="/Robert_Pope">Robert Pope</a>, <a href="/CCC">CCC</a>, August 05, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60565">is phase a good indicator of game progress?</a> by <a href="/Alexandru_Mosoi">Alexandru Mosoi</a>, June 23, 2016 » <a href="/Game_Phases">Game Phases</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60883&amp;start=4">Re: Deep Learning Chess Engine ?</a> by <a href="/Alexandru_Mosoi">Alexandru Mosoi</a>, <a href="/CCC">CCC</a>, July 21, 2016 » <a href="/Deep_Learning">Deep Learning</a>, <a href="/Zurichess">Zurichess</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61571">Tapered Evaluation Questions</a> by Jayakiran Akurathi, <a href="/CCC">CCC</a>, October 01, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61850">couple of questions about stockfish code ?</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, October 26, 2016 » <a href="/SIMD_and_SWAR_Techniques">SIMD and SWAR Techniques</a>, <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62153">Define end game</a> by <a href="/Laurie_Tunnicliffe">Laurie Tunnicliffe</a>, <a href="/CCC">CCC</a>, November 16, 2016 » <a href="/Endgame">Endgame</a></li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=3088">Early / middle / end game transitions?</a> by notachessplayer, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, February 19, 2017</li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/8h-TH6YckMI/uFUb6H6eDAAJ">Four game phases</a> by <a href="/Stefan_Geschwentner">Stefan Geschwentner</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, February 20, 2017 » <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65466">Tapered Eval between 4 phases</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, October 16, 2017</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=65466&amp;start=4">Re: Tapered Eval between 4 phases</a> by <a href="/Jonathan_Rosenthal">Jonathan Rosenthal</a>, <a href="/CCC">CCC</a>, October 16, 2017 » <a href="/Winter">Winter</a></p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?t=65466&amp;start=7">Re: Tapered Eval between 4 phases</a> by <a href="/Youri_Matiounine">Youri Matiounine</a>, <a href="/CCC">CCC</a>, October 16, 2017 » <a href="/AVX2">AVX2</a></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=68311&amp;start=19">Re: New uci engine: Rofchade</a> by <a href="/Ronald_Friederich">Ronald Friederich</a>, <a href="/CCC">CCC</a>, August 28, 2018 » <a href="/RofChade">RofChade</a>, <a href="/Piece-Square_Tables">Piece-Square Tables</a></li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/6grLq5OEr9g/ERbVn0uDBQAJ">Four-way evaluation trick?</a> by <a href="/Nick_Pelling">Nick Pelling</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, September 07, 2018 » <a href="/Stockfish">Stockfish</a></li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/znU1a7aZ2XI/yJDFtOQnAwAJ">mg vs eg eval</a> by <a href="/Joost_VandeVondele">Joost VandeVondele</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, October 06, 2019 » <a href="/Middlegame">Middlegame</a>, <a href="/Endgame">Endgame</a>, <a href="/Stockfish">Stockfish</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76265">Tapered Evaluation and MSE (Texel Tuning)</a> by <a href="/Michael_Hoffmann">Michael Hoffmann</a>, <a href="/CCC">CCC</a>, January 10, 2021 » Texel's Tuning Method</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77474">Evaluation tapering methods</a> by <a href="/Martin_Bryant">Martin Bryant</a>, <a href="/CCC">CCC</a>, June 12, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77546">Game Phase and tapered PSQT evaluation</a> by Jon12345, <a href="/CCC">CCC</a>, June 23, 2021 » PeSTO's Evaluation Function</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://hxim.github.io/Stockfish-Evaluation-Guide/">Stockfish Evaluation Guide</a> » <a href="/Stockfish">Stockfish Evaluation Guide</a></li>
+<li><a href="https://mediocrechess.blogspot.com/2011/10/guide-tapered-eval.html">Tapered Eval</a> from <a href="http://mediocrechess.varten.org/index.html">Mediocre Chess</a> by <a href="/Jonatan_Pettersson">Jonatan Pettersson</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Taper">Taper from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Cone_%28geometry%29">Cone (geometry) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Interpolation">Interpolation from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Fuzzy_logic">Fuzzy logic from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/T-norm_fuzzy_logics">T-norm fuzzy logics from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Potentiometer#Linear_taper_potentiometer">Linear taper potentiometer from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Sigmoid_function">Sigmoid function from Wikipedia</a></li>
+<li><a href="/Category:Association_P.C.">Association P.C.</a> - Frau Theunissen´s Kegel, <a href="http://www.discogs.com/Association-PC-Erna-Morena/master/248647">Erna Morena</a> (1973), <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p><a href="/Category:Pierre_Courbois">Pierre Courbois</a>, Jasper van 't Hof, <a href="/Category:Toto_Blanke">Toto Blanke</a>, <a href="https://de.wikipedia.org/wiki/Sigi_Busch">Sigi Busch</a>, and <a href="https://de.wikipedia.org/wiki/Heiner_Wiberny">Heiner Wiberny</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/YPFEcXTxcMA" title="YouTube video YPFEcXTxcMA" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=YPFEcXTxcMA">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Evaluation">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Don_Beal">Don Beal</a> (<strong>1991</strong>). <em>Report on the <a href="/WMCCC_1991">11th World Microcomputer Chess Championship</a></em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 14, No. 2</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Hans_Berliner">Hans Berliner</a> (<strong>1979</strong>). <em><a href="http://www.bkgm.com/articles/Berliner/EvaluationFunctionsLargeDomains/">On the Construction of Evaluation Functions for Large Domains</a></em>. <a href="http://www.bkgm.com/articles/Berliner/EvaluationFunctionsLargeDomains/#sec-3">III. Smoothness</a>, <a href="/Conferences">IJCAI 1979</a>, Tokyo, Vol. 1<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://www.stmintz.com/ccc/index.php?id=470681">Re: Secrets of Rybka and Fruit from my point of view</a> by <a href="/Stuart_Cracraft">Stuart Cracraft</a>, <a href="/CCC">CCC</a>, December 15, 2005<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=60883&amp;start=1">Re: Deep Learning Chess Engine ?</a> by <a href="/Alexandru_Mosoi">Alexandru Mosoi</a>, <a href="/CCC">CCC</a>, July 21, 2016<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Paul_Klee">Paul Klee</a> · <a href="/Category:Association_P.C.">Association P.C.</a> · <a href="/Category:Pierre_Courbois">Pierre Courbois</a> · <a href="/Category:Jasper_van_&">Jasper van &amp;</a> · <a href="/Category:Toto_Blanke">Toto Blanke</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Tapered_Eval">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

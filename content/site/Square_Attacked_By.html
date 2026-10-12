@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Square Attacked By - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Square Attacked By</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * Square Attacked By</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="https://www.chessprogramming.org/File:L%27Ange_du_Foyeur.jpg" target="_blank" rel="noopener noreferrer"><img src="/assets/L'Ange_du_Foyeur.jpg" alt="Max Ernst - L'Ange du Foyer, 1937 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Max_Ernst">Max Ernst</a> - L'Ange du Foyer, 1937 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://en.wikipedia.org/wiki/Max_Ernst">Max Ernst from Wikipedia</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Square Attacked By</strong>,<br />
+determines whether a <a href="/Squares">square</a> is <a href="/Attacks">attacked</a> and/or defended by various or specific <a href="/Pieces">pieces</a>. So far, as elaborated in <a href="/Pawn_Pattern_and_Properties">pawn</a>-, <a href="/Knight_Pattern">knight</a>- and <a href="/King_Pattern">king pattern</a>, as well as <a href="/Sliding_Piece_Attacks">sliding piece attacks</a>, we are able to generate all attacks and target-sets of all pieces, sufficient to <a href="/Move_Generation">generate</a> all <a href="/Pseudo-Legal_Move">pseudo legal moves</a>. It is often useful to generate <a href="/Attacks">attacks</a> <strong>to</strong> a certain square, or to look whether <a href="/Moves">moves</a> retrieved elsewhere are pseudo legal or <a href="/Legal_Move">legal</a>. Some programs maintain <a href="/Incremental_Updates">incremental updated</a> <a href="/Attack_and_Defend_Maps">attack tables</a> for that purpose. The techniques proposed on this page are intended to use on the fly.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#attacks-to-a-square">Attacks to a Square</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#by-all-pieces">By all Pieces</a></li>
+<li><a href="#any-attack-by-side">Any Attack by Side</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#legality-test">Legality Test</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#in-between">In Between</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#rectangular-lookup">Rectangular Lookup</a></li>
+<li><a href="#triangular-lookup">Triangular Lookup</a></li>
+<li><a href="#0x88-difference">0x88 Difference</a></li>
+<li><a href="#pure-calculation">Pure Calculation</a></li>
+</ol>
+</details></li>
+<li><a href="#attacked-by-piece-on-square">Attacked by Piece on Square</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="attacks-to-a-square">Attacks to a Square</h2>
+<p><span id="ByAllPieces"></span></p>
+<h3 id="by-all-pieces">By all Pieces</h3>
+<p>A common approach is to put a <strong>super-piece</strong> on the to-square, to look up all kind of piece-type attacks from there and to <a href="/General_Setwise_Operations">intersect</a> them with all appropriate pieces able to attack that square. Note that white pawn attacks intersect black pawns and vice versa. Knights, kings and sliders are considered as <a href="/General_Setwise_Operations">union</a> of both sides. The set of all attacking and defending pieces is the union of all piece-attack intersections. Assuming a <a href="/Cpp">C++</a> member function of a <a href="/Bitboard_Board-Definition">Bitboard Board-Definition</a> class. <a href="/Robert_Hyatt">Robert Hyatt</a> further checks whether there are any sliding pieces on relevant rays at all, in order to save calling the attack getter in case there are none <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>:</p>
+<pre><code>U64 CBoard::attacksTo(U64 occupied, enumSquare sq) {
+   U64 knights, kings, bishopsQueens, rooksQueens;
+   knights        = pieceBB[nWhiteKnight] | pieceBB[nBlackKnight];
+   kings          = pieceBB[nWhiteKing]   | pieceBB[nBlackKing];
+   rooksQueens    =
+   bishopsQueens  = pieceBB[nWhiteQueen]  | pieceBB[nBlackQueen];
+   rooksQueens   |= pieceBB[nWhiteRook]   | pieceBB[nBlackRook];
+   bishopsQueens |= pieceBB[nWhiteBishop] | pieceBB[nBlackBishop];
+
+   return (arrPawnAttacks[nWhite][sq] &amp; pieceBB[nBlackPawn])
+ (arrPawnAttacks[nBlack][sq] &amp; pieceBB[nWhitePawn])
+ (arrKnightAttacks      [sq] &amp; knights)
+ (arrKingAttacks        [sq] &amp; kings)
+ (bishopAttacks(occupied,sq) &amp; bishopsQueens)
+ (rookAttacks  (occupied,sq) &amp; rooksQueens)
+        ;
+}</code></pre>
+<p><span id="AnyAttackBySide"></span></p>
+<h3 id="any-attack-by-side">Any Attack by Side</h3>
+<p>If boolean information is required, whether a square is attacked by a side, one may use conditionals to return early. This might be useful to determine whether a <a href="/Checks_and_Pinned_Pieces_%28Bitboards%29">king is in check</a>. Assuming a <a href="/Cpp">C++</a> member function of a <a href="/Bitboard_Board-Definition">Bitboard Board-Definition</a> class:</p>
+<pre><code>bool CBoard::attacked(U64 occupied, enumSquare square, enumColor bySide) {
+   U64 pawns         = pieceBB[nWhitePawn   + bySide];
+   if ( arrPawnAttacks[bySide^1][square]    &amp; pawns )         return true;
+   U64 knights       = pieceBB[nWhiteKnight + bySide];
+   if ( arrKnightAttacks[square]            &amp; knights )       return true;
+   U64 king          = pieceBB[nWhiteKing   + bySide];
+   if ( arrKingAttacks[square]              &amp; king )          return true;
+   U64 bishopsQueens = pieceBB[nWhiteQueen  + bySide]
+ pieceBB[nWhiteBishop + bySide];
+   if ( bishopAttacks(occupied, square)     &amp; bishopsQueens ) return true;
+   U64 rooksQueens   = pieceBB[nWhiteQueen  + bySide]
+ pieceBB[nWhiteRook   + bySide];
+   if ( rookAttacks  (occupied, square)     &amp; rooksQueens )   return true;
+   return false;
+}</code></pre>
+<p><span id="LegalityTest"></span></p>
+<h2 id="legality-test">Legality Test</h2>
+<p>One application inside a chess program, is to test whether a certain move is <a href="/Pseudo-Legal_Move">psuedo-legal</a>. This could be a <a href="/Hash_Move">hash move</a> probed from the <a href="/Transposition_Table">transposition table</a>, or a <a href="/Killer_Move">killer move</a> supplied by the <a href="/Killer_Heuristic">killer heuristic</a>. In <a href="/Node_Types">cut-nodes</a> one may save the complete move-generation by one legality test. <span id="InBetween"></span></p>
+<h3 id="in-between">In Between</h3>
+<p>Assuming otherwise legal from-to coordinates, it is about distant moves of <a href="/Sliding_Pieces">sliding pieces</a> (and <a href="/Pawn_Push">double pawn push</a> and <a href="/Castling">castling</a>) - whether a square between from and to is obstructed or not. One obvious solution is to switch on piece-type and call the appropriate attack- or move-target getter by from-square, to see whether the target bit is set. For a queen that may take quite some instructions for up to four sliding lines, thus there seems to be a cheaper solution. <span id="Obstructed"></span></p>
+<h4 id="rectangular-lookup">Rectangular Lookup</h4>
+<p>The common approach is to lookup a two-dimensional 64 times 64 <a href="/Array">array</a>, initialized with empty sets and appropriate in-between sets for distant squares on the same line. If the intersection of in-between sets with the <a href="/Occupancy">occupancy</a> is empty, there are no obstructions, and the move is considered pseudo legal. This is implicitly true for squares in king- and knight distance as well, since they already contain zero.</p>
+<pre><code>U64 arrRectangular[64][64]; // 4096*8 = 32KByte
+
+U64 inBetween(enumSquare from, enumSquare to) {
+   return arrRectangular[from][to];
+}
+
+bool mayMove(enumSquare from, enumSquare to, U64 occ) {
+   return (inBetween(from, to) &amp; occ) == 0;
+}</code></pre>
+<p>That looks cheap, and likely is the fastest for recent processor architectures, but 32KByte is just another thing competing with the caches. Three further <a href="/Space-Time_Tradeoff">space-time tradeoffs</a> are mentioned, triangular lookup, 0x88 difference and rotate, and pure calculation. <span id="TriangularLookup"></span></p>
+<h4 id="triangular-lookup">Triangular Lookup</h4>
+<p>Due to the <a href="https://en.wikipedia.org/wiki/Commutative_property">commutative property</a> of from- and to-squares, each in-between set is stored twice in the 64x64 array. <a href="/Eugene_Nalimov">Eugene Nalimov</a> once suggested to roughly half the table-size by making the rectangle a triangle, and already noted "<em>Not sure that it will make sense, as index code will be more complex</em>" <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>. Applying <a href="/Avoiding_Branches">max</a> and <a href="/Avoiding_Branches">min</a> by sign-mask, and some packing with the <a href="https://en.wikipedia.org/wiki/Triangular_number">triangular number</a>, following index calculation may be used:</p>
+<pre><code>U64 arrTriangular[64*65/2];
+
+int triangularIndex(int a, int b) {
+   int d = a - b; /* difference */
+   d &amp;= d &gt;&gt; 31;  /* only if negative */
+   b += d;        /* min */
+   a -= d;        /* max */
+   b *= b ^ 127;  /* min * (127-min)  ... */
+   return (b&gt;&gt;1) + a; /* ... /2 + max */
+}
+
+U64 inBetween(enumSquare from, enumSquare to) {
+   return arrTriangular[ triangularIndex(from, to) ];
+}</code></pre>
+<p><span id="By0x88Difference"></span></p>
+<h4 id="0x88-difference">0x88 Difference</h4>
+<p>What about a translation of one square (the smallest) to a1 and shifting the occupancy right? Unfortunately, the square difference is ambiguous according to the 8 <a href="/Direction">ray-</a> and 8 knight directions, +-7 occurs as rank- or anti-diagonal-difference, +-6 occurs as rank- and knight-difference. If we keep other stuff like <a href="/Distance">distance</a>, <a href="/Manhattan-Distance">Manhattan-distance</a>, <a href="/Direction">ray-direction</a> and so on - it might be worth to rely on <a href="/Vector_Attacks">Vector Attacks</a> or the difference of <a href="/0x88">0x88</a> coordinates and their property of being unambiguous according to ray-direction and distance. By <a href="/General_Setwise_Operations">rotating left</a> the pre-calculated obstructions, the order of squares don't cares. <a href="/Don_Dailey">Don Dailey</a> reported the 64x64 array lookup slightly faster, apparently inside <a href="/Komodo">Komodo</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>.:</p>
+<pre><code>U64 arrInBetweenBy0x88Diff[240]; // 1920 bytes, 2KByte - 128 Byte
+
+unsigned int x88diff(enumSquare f, enumSquare t) {
+   return t - f + (t|7) - (f|7) + 120;
+}
+
+U64 inBetween(enumSquare from, enumSquare to) {
+   return rotateLeft(arrInBetweenBy0x88Diff[x88diff(from,to)], from);
+}</code></pre>
+<h4 id="pure-calculation">Pure Calculation</h4>
+<p>A branch-less solution without any lookups and some parallel gain is likely too expensive on the fly and may at most used for initialization purposes <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>:</p>
+<pre><code>U64 inBetween(enumSquare sq1, enumSquare sq2) {
+   const U64 m1   = C64(-1);
+   const U64 a2a7 = C64(0x0001010101010100);
+   const U64 b2g7 = C64(0x0040201008040200);
+   const U64 h1b7 = C64(0x0002040810204080); /* Thanks Dustin, g2b7 did not work for c1-a3 */
+   U64 btwn, line, rank, file;
+
+   btwn  = (m1 &lt;&lt; sq1) ^ (m1 &lt;&lt; sq2);
+   file  =   (sq2 &amp; 7) - (sq1   &amp; 7);
+   rank  =  ((sq2 | 7) -  sq1) &gt;&gt; 3 ;
+   line  =      (   (file  &amp;  7) - 1) &amp; a2a7; /* a2a7 if same file */
+   line += 2 * ((   (rank  &amp;  7) - 1) &gt;&gt; 58); /* b1g1 if same rank */
+   line += (((rank - file) &amp; 15) - 1) &amp; b2g7; /* b2g7 if same diagonal */
+   line += (((rank + file) &amp; 15) - 1) &amp; h1b7; /* h1b7 if same antidiag */
+   line *= btwn &amp; -btwn; /* mul acts like shift by smaller square */
+   return line &amp; btwn;   /* return the bits on that line in-between */
+}</code></pre>
+<p>First, the in-between set as superset of the possible line-bits is calculated, excluding the "greater" square but including the "smaller", e.g. f6 and c3.</p>
+<pre><code>                                        btwn including c3
+-1&lt;&lt;f6              -1&lt;&lt;c3                   excluding f6
+1 1 1 1 1 1 1 1     1 1 1 1 1 1 1 1     . . . . . . . .
+1 1 1 1 1 1 1 1     1 1 1 1 1 1 1 1     . . . . . . . .
+. . . . . 1 1 1     1 1 1 1 1 1 1 1     1 1 1 1 1 . . .
+. . . . . . . .     1 1 1 1 1 1 1 1     1 1 1 1 1 1 1 1
+. . . . . . . .  ^  1 1 1 1 1 1 1 1  =  1 1 1 1 1 1 1 1
+. . . . . . . .     . . 1 1 1 1 1 1     . . 1 1 1 1 1 1
+. . . . . . . .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .
+
+b2g7             *  LS1B(btwn)      =   line
+. . . . . . . .     . . . . . . . .     . . . . . . . 1
+. . . . . . 1 .     . . . . . . . .     . . . . . . 1 .
+. . . . . 1 . .     . . . . . . . .     . . . . . 1 . .
+. . . . 1 . . .     . . . . . . . .     . . . . 1 . . .
+. . . 1 . . . .  *  . . . . . . . .  =  . . . 1 . . . .
+. . 1 . . . . .     . . 1 . . . . .     . . . . . . . .
+. 1 . . . . . .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .
+
+line             &amp;  btwn             =  inBetween
+. . . . . . . 1     . . . . . . . .     . . . . . . . .
+. . . . . . 1 .     . . . . . . . .     . . . . . . . .
+. . . . . 1 . .     1 1 1 1 1 . . .     . . . . . . . .
+. . . . 1 . . .     1 1 1 1 1 1 1 1     . . . . 1 . . .
+. . . 1 . . . .  &amp;  1 1 1 1 1 1 1 1  =  . . . 1 . . . .
+. . . . . . . .     . . 1 1 1 1 1 1     . . . . . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .</code></pre>
+<p>If both squares share either a rank, file, diagonal or anti-diagonal, one <a href="/Byte">byte</a>-difference of the four lines becomes zero, which is (zero) extended to a bitboard, otherwise a value 1 ... 255. Subtracting '1' either leaves all bits (-1) set, otherwise 0..254. The a1-scaled mask is shifted left left by the "smallest" square, which can be done by multiplication with the isolated LS1B of the in-between set. The final intersection leaves the obstructed bits between two squares. <span id="AttackedByPieceOnSquare"></span></p>
+<h3 id="attacked-by-piece-on-square">Attacked by Piece on Square</h3>
+<p>The obstructed lookup idea may be advanced to determine one particular attack by one piece. To lookup whether a certain square is attacked by that piece on another square. Thus, we need a second obstructed-array dimension by piece code. All legal attacks by none sliding pieces are initialized by the empty set zero, all others with the universal set -1. Any intersection with the occupancy (which we need for the sliding pieces anyway) is either empty or not. Sliding pieces have the appropriate obstructed bits set for squares on a common diagonal for bishops and queens - and a common orthogonal for rooks and queens. To safe some memory we rely on the <a href="/Square_Attacked_By">0x88 trick</a>.</p>
+<p>Except pawns all white and black pieces have the same attacks - thus based on the piece enumeration mentioned in the <a href="/Bitboard_Board-Definition">Bitboard Board-Definition</a>, one may divide the piece code by two to shift right the least significant piece color bit: {1,2,3,4,5,6} for {pawn, knight, bishop, rook, queen, king}. In case of a black pawn we subtract one, to get a 0..6 range:</p>
+<pre><code>U64 attacksBy0x88DiffAndPiece[7][256];  // 14KByte
+
+/* is square &lt;to&gt; attacked by &lt;piece&gt; from square &lt;from&gt; */
+bool isAttacked(enumSquare from, enumSquare to, enumPiece piece, U64 occ) {
+   int isBlackPawn = (piece ^ nBlackPawn) - 1;
+   isBlackPawn &gt;&gt;= 31; /* -1 if black pawn, otherwise 0 */
+   return (attacksBy0x88DiffAndPiece [piece/2 + isBlackPawn] [x88diff(from,to)]
+           &amp; rotateRight (occ, from) ) == 0;
+}</code></pre>
+<p>See <a href="/General_Setwise_Operations">rotateRight</a>.</p>
+<p>If one considers white and black pawns as disjoint pieces even without color information, one may safe that isBlackPawn calculation obtaining the same table size. With a 11 or 12 array-range one may index by piece-2 or similar according to the piece definition.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Attack_and_Defend_Maps">Attack and Defend Maps</a></li>
+<li><a href="/InBetween">InBetween</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=516">Two questions for bitboard experts</a> by <a href="/Tord_Romstad">Tord Romstad</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, November 06, 2004 » <a href="/Piece-Lists">Piece-Lists</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=12499">Check idea + bittwiddler request</a> by J. Wesley Cleveland, <a href="/CCC">CCC</a>, March 19, 2007</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=6573">Bitboard of squares between</a> by <a href="/Onno_Garms">Onno Garms</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, June 15, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46240">bit boards - what is betwen</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, December 02, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48322">Extract direction (ray) informations from two squares</a> by <a href="/Mathieu_Pagé">Mathieu Pagé</a>, <a href="/CCC">CCC</a>, June 18, 2013 » <a href="/Rays">Rays</a>, <a href="/Direction">Direction</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50684">AttacksTo() bitboard</a> by Tony Soares, <a href="/CCC">CCC</a>, December 29, 2013</li>
+<li><a href="https://groups.google.com/forum/#!topic/fishcooking/RXLXONHPw-A">help with bitboards</a> by stefano.c... , <a href="/Computer_Chess_Forums">FishCooking</a>, December 06, 2017</li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Bitboards">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=50684&amp;start=2">Re: AttacksTo() bitboard</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, December 29, 2013<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://www.stmintz.com/ccc/index.php?id=72098">Re: Bitboard user's information request</a> by <a href="/Eugene_Nalimov">Eugene Nalimov</a>, <a href="/CCC">CCC</a>, October 06, 1999<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://www.talkchess.com/forum/viewtopic.php?start=0&amp;t=46240&amp;start=14">Re: bit boards - what is betwen</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, December 04, 2012<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=12499&amp;start=14">Re: Check idea + bittwiddler request</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/CCC">CCC</a>, April 06, 2007<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Max_Ernst">Max Ernst</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Square_Attacked_By">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

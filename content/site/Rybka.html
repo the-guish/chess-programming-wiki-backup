@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rybka - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Rybka</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Engines">Engines</a> * Rybka</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="http://rybkachess.com.www52.your-server.de/index.php?auswahl=Purchase+Rybka" target="_blank" rel="noopener noreferrer"><img src="/assets/Rybka4Logo.png" alt="Rybka 4 Logo 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Rybka 4 Logo <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://rybkachess.com.www52.your-server.de/index.php?auswahl=Purchase+Rybka">Rybka - for the serious chess player - Purchase Rybka</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Rybka</strong>,<br />
+a chess engine by primary author <a href="/Vasik_Rajlich">Vasik Rajlich</a>, from 2007 until 2010 dominating and reigning <a href="/World_Computer_Chess_Championship">World Computer Chess Champion</a> and holder of the <a href="/Shannon_Trophy">Shannon Trophy</a>, winning the <a href="/WCCC_2007">WCCC 2007</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> , <a href="/WCCC_2008">WCCC 2008</a>, <a href="/WCCC_2009">WCCC 2009</a> and <a href="/WCCC_2010">WCCC 2010</a>, but in June 2011 <a href="/Rybka">disqualified</a> by the <a href="/ICGA">ICGA</a> from all previous and future World Computer Chess Championships. Rybka further won various <a href="/IPCCC">IPCCC</a>, <a href="/Dutch_Open_Computer_Chess_Championship">Dutch Open Computer Chess Championships</a>, <a href="/International_CSVN_Tournament">International CSVN Tournaments</a> and on-line tournaments such as <a href="/CCT_Tournaments">CCT Tournaments</a> and ACCA Americas' Computer Chess Championships. Rybka is a standalone chess engine supporting the <a href="/UCI">UCI</a> protocol.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#team">Team</a></li>
+<li><a href="#versions">Versions</a></li>
+<li><a href="#achievements">Achievements</a></li>
+<li><a href="#program-internals">Program Internals</a></li>
+<li><a href="#release-dates">Release Dates</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#controversies">Controversies</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#rybka-10-and-fruit">Rybka 1.0 and Fruit</a></li>
+<li><a href="#ippolit">Ippolit</a></li>
+<li><a href="#open-letters">Open Letters</a></li>
+</ol>
+</details></li>
+<li><a href="#pre-beta-rybka-and-crafty">Pre-Beta Rybka and Crafty</a></li>
+<li><a href="#disqualification">Disqualification</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2004">2004</a></li>
+<li><a href="#2005">2005</a></li>
+<li><a href="#2006">2006</a></li>
+<li><a href="#2007">2007</a></li>
+<li><a href="#2008">2008</a></li>
+<li><a href="#2009">2009</a></li>
+<li><a href="#2010">2010</a></li>
+<li><a href="#2011">2011</a></li>
+<li><a href="#2012">2012</a></li>
+<li><a href="#2021">2021</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#rybka">Rybka</a></li>
+<li><a href="#controversy">Controversy</a></li>
+<li><a href="#misc">Misc</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="team">Team</h2>
+<p>The Rybka team consists of primary author and <a href="https://en.wikipedia.org/wiki/International_Master#International_Master_.28IM.29">International Master</a> <a href="/Vasik_Rajlich">Vasik Rajlich</a>, supported by <a href="https://en.wikipedia.org/wiki/Grandmaster_%28chess%29">Grandmaster</a> and <a href="/Evaluation">evaluation</a> expert <a href="/Larry_Kaufman">Larry Kaufman</a> (Rybka 3), Rybka's main tester and <a href="https://en.wikipedia.org/wiki/International_Master#Woman_Grandmaster_.28WGM.29">Women's GM (WGM)</a> and IM Iweta Rajlich, the <a href="/Category:Opening_Book_Author">opening book authors</a> <a href="/Jeroen_Noomen">Jeroen Noomen</a>, Dagh Nielsen, Jiří Dufek and Nick Carlin, as well as Rybka primary tournament operator <a href="/Hans_van_der_Zijden">Hans van der Zijden</a>, hardware expert Lukas Cimiotti and Webmaster and Webdesigner <em>Felix</em> and <em>Christoph Kling</em> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> .</p>
+<h2 id="versions">Versions</h2>
+<p>Vasik Rajlich started developing Rybka in about 2003, and worked full-time on it since 2005. The appearance of the free <em>Rybka 1 beta</em> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> and the first commercial version, <em>Rybka 1</em> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> end of 2005 was a sensation, and Rybka soon became the dominating program leading <a href="/Engine_Rating_Lists">rating lists</a> by a huge margin <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> . <em>Rybka 3</em> was developed in collaboration with <a href="/Larry_Kaufman">Larry Kaufman</a>, the most recent and strongest version <em>Rybka 4</em> and the parallel version <em>Deep Rybka 4</em> appeared in April 2010, market as standalone chess engine from RybkaChess.com <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> , from <a href="/ChessOK">ChessOK</a> optional with the <a href="/Aquarium">Aquarium</a> <a href="/GUI">GUI</a> <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> , or from <a href="/ChessBase">ChessBase</a> packaged with the <a href="/Fritz">Fritz</a> <a href="/GUI">GUI</a> <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a> . The demo version <em>Rybka 2.3.2a</em> can be downloaded for free <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a> .</p>
+<h2 id="achievements">Achievements</h2>
+<table>
+<thead>
+<tr>
+<th>Year</th>
+<th>Tournament</th>
+<th>Rank/From</th>
+<th>Title/Remarks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2004</td>
+<td><a href="/CCT6">CCT6</a></td>
+<td>50/54</td>
+<td></td>
+</tr>
+<tr>
+<td>2005</td>
+<td><a href="/IPCCC_2005_b">IPCCC 2005 b</a></td>
+<td>1/12</td>
+<td></td>
+</tr>
+<tr>
+<td>2006</td>
+<td><a href="/CCT8">CCT8</a></td>
+<td>1/38</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td><a href="/ICT_2006">ICT 2006</a></td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td><a href="/WCCC_2006">WCCC 2006</a></td>
+<td>3/18</td>
+<td><em>as Rajlich</em>, disqualified 2011</td>
+</tr>
+<tr>
+<td></td>
+<td><a href="/DOCCC_2006">DOCCC 2006</a></td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td><a href="/IPCCC_2006">IPCCC 2006</a></td>
+<td>1/10</td>
+<td></td>
+</tr>
+<tr>
+<td>2007</td>
+<td><a href="/ACCA_2007">ACCA 2007</a></td>
+<td>1/16</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td><a href="/CCT9">CCT9</a></td>
+<td>1/54</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td><a href="/ICT_2007">ICT 2007</a></td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td><a href="/WCCC_2007">WCCC 2007</a></td>
+<td>1/12</td>
+<td>World Computer Chess Champion, disqualified 2011</td>
+</tr>
+<tr>
+<td></td>
+<td><a href="/DOCCC_2007">DOCCC 2007</a></td>
+<td>1/14</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td><a href="/IPCCC_2007">IPCCC 2007</a></td>
+<td>2/10</td>
+<td></td>
+</tr>
+<tr>
+<td>2008</td>
+<td><a href="/ACCA_2008">ACCA 2008</a></td>
+<td>1/18</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td><a href="/ICT_2008">ICT 2008</a></td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td><a href="/WCCC_2008">WCCC 2008</a></td>
+<td>1/10</td>
+<td>World Computer Chess Champion, disqualified 2011</td>
+</tr>
+<tr>
+<td></td>
+<td><a href="/DOCCC_2008">DOCCC 2008</a></td>
+<td>1/10</td>
+<td></td>
+</tr>
+<tr>
+<td>2009</td>
+<td><a href="/ACCA_2009">ACCA 2009</a></td>
+<td>1/12</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td><a href="/WCCC_2009">WCCC 2009</a></td>
+<td>1/10</td>
+<td>World Computer Chess Champion, disqualified 2011</td>
+</tr>
+<tr>
+<td></td>
+<td><a href="/DOCCC_2009">DOCCC 2009</a></td>
+<td>1/9</td>
+<td></td>
+</tr>
+<tr>
+<td>2010</td>
+<td><a href="/ICT_2010">ICT 2010</a></td>
+<td>1/14</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td><a href="/WCCC_2010">WCCC 2010</a></td>
+<td>1/10</td>
+<td>World Computer Chess Champion, disqualified 2011</td>
+</tr>
+<tr>
+<td></td>
+<td><a href="/DOCCC_2010">DOCCC 2010</a></td>
+<td>1/20</td>
+<td></td>
+</tr>
+<tr>
+<td>2012</td>
+<td><a href="/ICT_2012">ICT 2012</a></td>
+<td>1/8</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="program-internals">Program Internals</h2>
+<p>Rybka is a <a href="/Bitboards">bitboard</a> engine, first versions <a href="/Rotated_Bitboards">rotated</a>, Rybka 4 apparently <a href="/Magic_Bitboards">magic bitboards</a> for <a href="/Sliding_Piece_Attacks">sliding piece attack</a> and <a href="/Move_Generation">move generation</a>. Vasik once posted a snippet of Rybka source-code, a typical <a href="/Bitboard_Serialization">bitboard serialization</a> loop to generate white knight captures <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a> .</p>
+<pre><code>for (bb_t knights = Board.pieces [WN]; knights; knights &amp;= knights-1)
+{
+    int knight_sq = bit_scan (knights);
+    for (bb_t captures = knight_moves [knight_sq] &amp; opponent_pieces; captures; captures &amp;= captures - 1)
+    {
+        int capture_sq = bit_scan (captures);
+        *moves ++ = move (knight_sq, capture_sq);
+        *values++ = Board.sq [capture_sq] * 256 + 192;
+    }
+}</code></pre>
+<p>Due to the disputed <a href="/Category:Open_Source">open source engines</a> <a href="/Strelka">Strelka 2.0</a> and later <a href="/Ippolit">Ippolit</a>, which accordant to Vasik Rajlich were both based on or heavily influenced by re-engineered Rybka executables <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a> <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a> , other implementation details were released to the public, such as <a href="/Material_Tables">material-</a> and material imbalance tables, aggressive <a href="/Late_Move_Reductions">LMR</a>, <a href="/Razoring">razoring</a> <a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a> and some variation of <a href="/Singular_Extensions">singular extensions</a> <a href="#fn15" class="footnote-ref" id="fnref15" role="doc-noteref"><sup>15</sup></a> . <a href="/Zach_Wegner">Zach Wegner</a> elaborated on <a href="/Evaluation">evaluation</a> issues, and compared <em>Rybka 1 beta</em> with <a href="/Fruit">Fruit's</a> evaluation <a href="#fn16" class="footnote-ref" id="fnref16" role="doc-noteref"><sup>16</sup></a> , continued by former anonymous author "BB+" alias <a href="/Mark_Watkins">Mark Watkins</a> in February 2011 <a href="#fn17" class="footnote-ref" id="fnref17" role="doc-noteref"><sup>17</sup></a> .</p>
+<h2 id="release-dates">Release Dates</h2>
+<ul>
+<li>Rybka 1.0 beta : 2005-12</li>
+<li>Rybka 1.0 :</li>
+<li>Rybka 1.1 : 2006-04</li>
+<li>Rybka 1.2 : 2006-06</li>
+<li>Rybka 1.5 :</li>
+<li>Rybka 1.6.1 :</li>
+<li>Rybka 2.0 :</li>
+<li>Rybka 2.2 : 2006</li>
+<li>Rybka 2.2n2 : 2006-12</li>
+<li>Rybka 2.3 : 2007-01</li>
+<li>Rybka 2.3.1 : 2007-02</li>
+<li>Rybka 2.3.2a : 2007-06</li>
+<li>Rybka 3 : 2008-08</li>
+<li>Rybka 4 : 2010-05</li>
+<li>Rybka 4.1 : 2011-3</li>
+</ul>
+<h2 id="controversies">Controversies</h2>
+<h3 id="rybka-10-and-fruit">Rybka 1.0 and Fruit</h3>
+<p>Rajlich's interpretation of <a href="/Nodes_per_Second">nodes</a> and <a href="/Depth">depth</a> <a href="#fn18" class="footnote-ref" id="fnref18" role="doc-noteref"><sup>18</sup></a> <a href="#fn19" class="footnote-ref" id="fnref19" role="doc-noteref"><sup>19</sup></a> <a href="#fn20" class="footnote-ref" id="fnref20" role="doc-noteref"><sup>20</sup></a> <a href="#fn21" class="footnote-ref" id="fnref21" role="doc-noteref"><sup>21</sup></a> <a href="#fn22" class="footnote-ref" id="fnref22" role="doc-noteref"><sup>22</sup></a> , and the <a href="https://en.wikipedia.org/wiki/Rybka#Strelka_controversy">controversy</a> about <a href="/Strelka">Strelka</a> <a href="#fn23" class="footnote-ref" id="fnref23" role="doc-noteref"><sup>23</sup></a> <a href="#fn24" class="footnote-ref" id="fnref24" role="doc-noteref"><sup>24</sup></a> raised suspicions about the initial origin of Rybka 1.0 <a href="#fn25" class="footnote-ref" id="fnref25" role="doc-noteref"><sup>25</sup></a> <a href="#fn26" class="footnote-ref" id="fnref26" role="doc-noteref"><sup>26</sup></a> , but Vasik Rajlich categorically denied Rybka 1.0 was based on <a href="/Fruit">Fruit</a> <a href="#fn27" class="footnote-ref" id="fnref27" role="doc-noteref"><sup>27</sup></a> <a href="#fn28" class="footnote-ref" id="fnref28" role="doc-noteref"><sup>28</sup></a> , as initially confirmed by <a href="/Chrilly_Donninger">Chrilly Donninger</a> in 2005 <a href="#fn29" class="footnote-ref" id="fnref29" role="doc-noteref"><sup>29</sup></a> after early rumors <a href="#fn30" class="footnote-ref" id="fnref30" role="doc-noteref"><sup>30</sup></a> and questions <a href="#fn31" class="footnote-ref" id="fnref31" role="doc-noteref"><sup>31</sup></a> arose, but despite confusing Fruit using <a href="/MTD%28f%29">MTD(f)</a>, Donninger claimed Rybka was basically Fruit in 2007 <a href="#fn32" class="footnote-ref" id="fnref32" role="doc-noteref"><sup>32</sup></a>.</p>
+<p>Vasik Rajlich's most quoted statement in these discussions was probably from an interview in <em>uciengines.de</em>, December 20, 2005 <a href="#fn33" class="footnote-ref" id="fnref33" role="doc-noteref"><sup>33</sup></a> :</p>
+<p><code>Yes, the publication of Fruit 2.1 was huge. Look at how many engines took a massive jump in its wake: Rybka, Hiarcs, Fritz, Zappa, Spike, List, and so on. I went through the Fruit 2.1 source code forwards and backwards and took many things.</code><br />
+<code>...</code><br />
+<code>Anyway, if I really had to give a number - my wild guess is that Rybka would be 20 rating points weaker had Fruit not appeared. </code></p>
+<h3 id="ippolit">Ippolit</h3>
+<p>The appearance of the <a href="/Ippolit">Ippolit</a> <a href="/Category:Open_Source">open source program</a> by pseudonymous authors in May 2009, and Rajlich's claim it is a <a href="/Category:Clone">clone</a> of <em>Rybka 3</em> <a href="#fn34" class="footnote-ref" id="fnref34" role="doc-noteref"><sup>34</sup></a> without any substantiation and evidence, caused further discussions <a href="#fn35" class="footnote-ref" id="fnref35" role="doc-noteref"><sup>35</sup></a> .</p>
+<h3 id="open-letters">Open Letters</h3>
+<p>In January 2011, <a href="/Fabien_Letouzey">Fabien Letouzey</a> confirmed that Strelka, the allegedly clone of Rybka, was not a verbatim copy of the source code from Fruit, but a <a href="/Bitboards">bitboard</a> re-write of Fruit with some other ideas, and not just an extraction of a couple of ideas <a href="#fn36" class="footnote-ref" id="fnref36" role="doc-noteref"><sup>36</sup></a> <a href="#fn37" class="footnote-ref" id="fnref37" role="doc-noteref"><sup>37</sup></a> <a href="#fn38" class="footnote-ref" id="fnref38" role="doc-noteref"><sup>38</sup></a> .</p>
+<p>On February 19, 2011 <a href="/ICGA">ICGA</a> president <a href="/David_Levy">David Levy</a> broached on <a href="/Category:Clone">cloning</a> issues in a <em>ChessVibes</em> column <a href="#fn39" class="footnote-ref" id="fnref39" role="doc-noteref"><sup>39</sup></a> . In March 2011, following computer chess programmers signed an open letter to <a href="/David_Levy">David Levy</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> and the board of the <a href="/ICGA">ICGA</a>, to support the claim Rybka 1.0 beta and subsequent versions were allegedly derivatives from <a href="/Fabien_Letouzey">Fabien Letouzey’s</a> program <a href="/Fruit">Fruit 2.1</a>:</p>
+<ul>
+<li><a href="/Fabien_Letouzey">Fabien Letouzey</a></li>
+<li><a href="/Zach_Wegner">Zach Wegner</a></li>
+<li><a href="/Mark_Uniacke">Mark Uniacke</a></li>
+<li><a href="/Stefan_Meyer-Kahlen">Stefan Meyer-Kahlen</a></li>
+<li><a href="/Ed_Schroder">Ed Schröder</a> <a href="#fn40" class="footnote-ref" id="fnref40" role="doc-noteref"><sup>40</sup></a> <a href="#fn41" class="footnote-ref" id="fnref41" role="doc-noteref"><sup>41</sup></a></li>
+<li><a href="/Don_Dailey">Don Dailey</a></li>
+<li><a href="/Christophe_Théron">Christophe Théron</a></li>
+<li><a href="/Richard_Pijl">Richard Pijl</a></li>
+<li><a href="/Amir_Ban">Amir Ban</a></li>
+<li><a href="/Anthony_Cozzie">Anthony Cozzie</a></li>
+<li><a href="/Tord_Romstad">Tord Romstad</a></li>
+<li><a href="/Ralf_Schäfer">Ralf Schäfer</a></li>
+<li><a href="/Gerd_Isenberg">Gerd Isenberg</a></li>
+<li><a href="/Johannes_Zwanzger">Johannes Zwanzger</a></li>
+<li><a href="/Shay_Bushinsky">Shay Bushinsky</a></li>
+<li><a href="/Volker_Böhm">Volker Böhm</a></li>
+</ul>
+<p>The letter was published in the private <a href="/ICGA_Investigations">ICGA Investigations Wiki</a> <a href="#fn42" class="footnote-ref" id="fnref42" role="doc-noteref"><sup>42</sup></a> and elsewhere <a href="#fn43" class="footnote-ref" id="fnref43" role="doc-noteref"><sup>43</sup></a> <a href="#fn44" class="footnote-ref" id="fnref44" role="doc-noteref"><sup>44</sup></a> . The German sites <a href="https://de.wikipedia.org/wiki/Heise_online">Heise online</a> <a href="#fn45" class="footnote-ref" id="fnref45" role="doc-noteref"><sup>45</sup></a> and <a href="https://en.wikipedia.org/wiki/Der_Spiegel#Spiegel_Online">Spiegel Online</a> broached the issue <a href="#fn46" class="footnote-ref" id="fnref46" role="doc-noteref"><sup>46</sup></a> .</p>
+<h2 id="pre-beta-rybka-and-crafty">Pre-Beta Rybka and Crafty</h2>
+<p>In February and March 2011, evidence was found by <a href="/Zach_Wegner">Zach Wegner</a> and <a href="/Mark_Watkins">Mark Watkins</a> that pre-Beta Rybka, which played the <a href="/CCT6">CCT6</a> in January 2004, and competed in tournaments of <a href="/Engine_Rating_Lists">Engine Rating Lists</a> such as <a href="/ChessWar">ChessWar</a> <a href="#fn47" class="footnote-ref" id="fnref47" role="doc-noteref"><sup>47</sup></a> <a href="#fn48" class="footnote-ref" id="fnref48" role="doc-noteref"><sup>48</sup></a> and <em>Le Fou numérique</em> <a href="#fn49" class="footnote-ref" id="fnref49" role="doc-noteref"><sup>49</sup></a> , contain a substantial amount of <a href="/Crafty">Crafty</a> code <a href="#fn50" class="footnote-ref" id="fnref50" role="doc-noteref"><sup>50</sup></a> , confirmed by <a href="/Robert_Hyatt">Robert Hyatt</a> <a href="#fn51" class="footnote-ref" id="fnref51" role="doc-noteref"><sup>51</sup></a> <a href="#fn52" class="footnote-ref" id="fnref52" role="doc-noteref"><sup>52</sup></a> . Beside other evidence there are the known bugs in the old Crafty code (if ms == 99999) <a href="#fn53" class="footnote-ref" id="fnref53" role="doc-noteref"><sup>53</sup></a> that caused <a href="/Chinito">El Chinito</a> by primary author <a href="/Eugenio_Castillo_Jiménez">Eugenio Castillo Jiménez</a> to be exposed as a clone <a href="#fn54" class="footnote-ref" id="fnref54" role="doc-noteref"><sup>54</sup></a> <a href="#fn55" class="footnote-ref" id="fnref55" role="doc-noteref"><sup>55</sup></a> . <span id="Disqualification"></span></p>
+<h2 id="disqualification">Disqualification</h2>
+<p>In June 2011, the <a href="/ICGA">ICGA</a> has disqualified and banned Rybka and its programmer <a href="/Vasik_Rajlich">Vasik Rajlich</a> from previous and future World Computer Chess Championships. The ICGA accuses Rajlich of plagiarizing two other programs, <a href="/Crafty">Crafty</a> and <a href="/Fruit">Fruit</a>, and demands that he returns the trophies and prize money of the World Computer Chess Championships in <a href="/WCCC_2007">2007</a>, <a href="/WCCC_2008">2008</a>, <a href="/WCCC_2009">2009</a> and <a href="/WCCC_2010">2010</a> <a href="#fn56" class="footnote-ref" id="fnref56" role="doc-noteref"><sup>56</sup></a> .</p>
+<p>In August 2011, the board of the Dutch Computer Chess Federation (<a href="/CSVN">CSVN</a>) declared the most serious doubts as to the rightfulness of ICGA's decision. Therefore, they have chosen not to abide by their sanctions against Rybka <a href="#fn57" class="footnote-ref" id="fnref57" role="doc-noteref"><sup>57</sup></a> , see <a href="/ICGA_Investigations">ICGA Investigations</a></p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Claims_that_Strelka_is_Rybka">Claims that Strelka is Rybka</a></li>
+<li><a href="/Crafty">Crafty</a></li>
+<li><a href="/Fritz">Fritz</a></li>
+<li><a href="/Fruit">Fruit</a></li>
+<li><a href="/ICGA_Investigations">ICGA Investigations</a></li>
+<li><a href="/Ippolit">Ippolit</a></li>
+<li><a href="/Rybka_Controversy">Rybka Controversy</a></li>
+<li><a href="/Strelka">Strelka</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Jeroen_Noomen">Jeroen Noomen</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2007</strong>). <em>The 15th World Computer Chess Championship</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 30, No. 2</a> » <a href="/WCCC_2007">WCCC 2007</a></li>
+<li><a href="/Matej_Guid">Matej Guid</a>, <a href="/Ivan_Bratko">Ivan Bratko</a> (<strong>2007</strong>). <em>Factors affecting diminishing returns for searching deeper</em>. <a href="/CGW_2007">CGW 2007</a> » <a href="/Crafty">Crafty</a>, <a href="/Rybka">Rybka</a>, <a href="/Shredder">Shredder</a>, <a href="/Depth">Diminishing Returns</a></li>
+<li><a href="/Matej_Guid">Matej Guid</a>, <a href="/Ivan_Bratko">Ivan Bratko</a> (<strong>2007</strong>). <em>Factors affecting diminishing returns for searching deeper</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 30, No. 2</a>, <a href="http://www.ailab.si/matej/doc/Factors_Affecting_Diminishing_Returns.pdf">pdf</a></li>
+<li><a href="/Hans_Secelle">Hans Secelle</a>. <a href="/Eric_van_Reem">Eric van Reem</a> (<strong>2007</strong>). <em>Golden Summer for RYBKA</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 30, No. 3</a></li>
+<li><a href="/Mark_Watkins">Mark Watkins</a> (<strong>2010</strong>). <em>A comparison of Rybka and IPPOLIT</em>. <a href="http://www.open-chess.org/download/file.php?id=13">pdf</a> <a href="#fn58" class="footnote-ref" id="fnref58" role="doc-noteref"><sup>58</sup></a> » <a href="/Ippolit">Ippolit</a></li>
+<li><a href="/Mark_Watkins">Mark Watkins</a> (<strong>2011</strong>). <em>A comparison of Rybka 1.0 Beta and Fruit 2.1</em>, <a href="http://www.open-chess.org/download/file.php?id=272">pdf, February 12, 2011 Version</a> <a href="#fn59" class="footnote-ref" id="fnref59" role="doc-noteref"><sup>59</sup></a></li>
+<li><a href="/Mark_Watkins">Mark Watkins</a> (<strong>2011</strong>). <em>A comparison of Rybka 1.0 Beta and Fruit 2.1</em>, <a href="http://www.open-chess.org/download/file.php?id=304">pdf, February 24, 2011 Version</a></li>
+<li><a href="/Mark_Watkins">Mark Watkins</a> (<strong>2011</strong>). <em>A comparison of Rybka 1.0 Beta and Fruit 2.1</em>, <a href="http://www.open-chess.org/download/file.php?id=332">pdf, March 11, 2011 Version</a> » <a href="/Fruit">Fruit</a></li>
+<li><a href="/Anthony_Cozzie">Anthony Cozzie</a> (<strong>2011</strong>). <em>The Future of Computer Chess</em>. <a href="/Selective_Search">Selective Search</a> 154, pp. 11, <a href="http://www.chesscomputeruk.com/SS_154.pdf">pdf</a> hosted by <a href="/Mike_Watters">Mike Watters</a></li>
+<li><a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, Krzysztof Siewicz (<strong>2011</strong>). <em>Open Source has a Price</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 34, No. 2</a></li>
+<li><a href="/David_Levy">David Levy</a> (<strong>2011</strong>). <em>Rybka Disqualified and Banned from World Computer Chess Championships</em>.<a href="/ICGA_Journal">ICGA Journal, Vol. 34, No. 2</a></li>
+<li><a href="/David_Levy">David Levy</a> (<strong>2011</strong>). <em>A Very Sad Case</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 34, No. 2</a></li>
+<li><a href="/Mark_Lefler">Mark Lefler</a>, <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Harvey_Williamson">Harvey Williamson</a>, ICGA panel (<strong>2011</strong>). <em>Rybka Investigations and Survey of Findings for the ICGA</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 34, No. 2</a></li>
+<li><a href="/Eric_Hallsworth">Eric Hallsworth</a> (<strong>2011</strong>). <em>Rybka disqualified and banned by ICGA from World Computer Chess Championships, Lifetime Ban for Vasik Rajlich</em>. <a href="/Selective_Search">Selective Search</a> 155, pp. 8, <a href="http://www.chesscomputeruk.com/SS_155.pdf">pdf</a> hosted by <a href="/Mike_Watters">Mike Watters</a></li>
+<li><a href="/Mark_Watkins">Mark Watkins</a> (<strong>2011</strong>). <em>Review of the Rybka case</em>. <a href="http://www.open-chess.org/download/file.php?id=489">pdf</a> from <a href="/Computer_Chess_Forums">OpenChess Forum</a> <a href="#fn60" class="footnote-ref" id="fnref60" role="doc-noteref"><sup>60</sup></a></li>
+<li><a href="/Søren_Riis">Søren Riis</a> (<strong>2012</strong>). <em>A Gross Miscarriage of Justice in Computer Chess</em>. <a href="http://www.chessbase.com/news/2011/riis01.pdf">pdf</a> hosted by <a href="/ChessBase">ChessBase</a></li>
+<li><a href="/Arno_Nickel">Arno Nickel</a> (<strong>2012</strong>). <em><a href="http://www.edition-marco-shop.de/epages/64079634.sf/de_DE/?ObjectPath=/Shops/64079634/Categories/Schachgeschehen/Computerschach">Die schöne neue Welt der Schachengines</a></em>. <a href="http://www.zeitschriftschach.de/">SCHACH</a> 2,3,5,6 2012, <a href="http://www.edition-marco-shop.de/WebRoot/Store14/Shops/64079634/5177/F0A3/C389/D0DD/3A71/C0A8/2935/25F6/Die_schoene_neue_Welt_der_Schachengines.pdf">pdf</a> (German) <a href="#fn61" class="footnote-ref" id="fnref61" role="doc-noteref"><sup>61</sup></a></li>
+<li><a href="/Ed_Schroder">Ed Schröder</a> (<strong>2012</strong>). <em>Rybka reloaded</em>. <a href="http://www.top-5000.nl/Rybka%20Reloaded.pdf">pdf</a></li>
+<li><a href="/Matej_Guid">Matej Guid</a>, <a href="/Ivan_Bratko">Ivan Bratko</a> (<strong>2012</strong>). <em>Detecting Fortresses in Chess</em>. <a href="http://ev.fe.uni-lj.si/">Elektrotehniški vestnik</a>, Vol. 79, Nos. 1-2, <a href="https://ailab.si/matej/doc/Detecting_Fortresses_in_Chess.pdf">pdf</a> » <a href="/Houdini">Houdini</a></li>
+<li><a href="/Mark_Watkins">Mark Watkins</a> (<strong>2013</strong>). <em>Review of the Rybka case</em>. <a href="http://magma.maths.usyd.edu.au/~watkins/papers/RybkaRecap.pdf">pdf</a></li>
+<li><a href="/Søren_Riis">Søren Riis</a> (<strong>2014</strong>). <em><a href="http://www.sciencedirect.com/science/article/pii/S1875952114000159">What makes a chess program original? Revisiting the Rybka case</a></em>. <a href="http://www.journals.elsevier.com/entertainment-computing/">Entertainment Computing</a>, Vol. 5, No. 3</li>
+<li><a href="/Don_Dailey">Don Dailey</a>, <a href="/Adam_Hair">Adam Hair</a>, <a href="/Mark_Watkins">Mark Watkins</a> (<strong>2014</strong>). <em><a href="http://www.sciencedirect.com/science/article/pii/S1875952113000177">Move Similarity Analysis in Chess Programs</a></em>. <a href="http://www.journals.elsevier.com/entertainment-computing/">Entertainment Computing</a>, Vol. 5, No. 3, <a href="http://magma.maths.usyd.edu.au/~watkins/papers/DHW.pdf">preprint as pdf</a> <a href="#fn62" class="footnote-ref" id="fnref62" role="doc-noteref"><sup>62</sup></a></li>
+<li><a href="/David_Levy">David Levy</a> (<strong>2014</strong>). <em>The RYBKA Case – Progress and Verdict</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 37, No. 4</a> » <a href="/Rybka_Controversy">Rybka Controversy</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2004">2004</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=345143">Re: CCT6: Rybka /Bodo ???</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/CCC">CCC</a>, January 27, 2004</li>
+</ul>
+<h3 id="2005">2005</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=465686">Rybka 1.0 beta release - need testers</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/CCC">CCC</a>, November 30, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=466792">Rybka 1.0 Announcement</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/CCC">CCC</a>, December 05, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=467208">Is Rybbka a fruit clone?</a> by Ziad Haddad, <a href="/CCC">CCC</a>, December 06, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=469130">Rybka - How much Fruit is inside?</a> by <a href="/Daniel_Mehrmann">Daniel Mehrmann</a>, <a href="/CCC">CCC</a>, December 11, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=469143">Rybka test position</a> by K. Burcham, <a href="/CCC">CCC</a>, December 11, 2005 » <a href="/Ktulu">Ktulu</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=469209">Rybka uses PVS and not MTD(f). Its no Fruit-Clone</a> by <a href="/Chrilly_Donninger">Chrilly Donninger</a>, <a href="/CCC">CCC</a>, December 12, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=469728">The Code for the Rybka-Mate-Bug</a> by <a href="/Chrilly_Donninger">Chrilly Donninger</a>, <a href="/CCC">CCC</a>, December 13, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=470607">Unmasking the Secrets of Rybka and Fruit</a> by <a href="/Stuart_Cracraft">Stuart Cracraft</a>, <a href="/CCC">CCC</a>, December 15, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=470647">Secrets of Rybka and Fruit from my point of view</a> by <a href="/Sergei_Markoff">Sergei S. Markoff</a>, <a href="/CCC">CCC</a>, December 15, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=474330">Spike-Rybka</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/CCC">CCC</a>, December 28, 2005 » <a href="/IPCCC_2005_b">IPCCC 2005 b</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=475888">The man behind Rybka and his thoughts as posted here on CCC</a> by Mike Byrne, <a href="/CCC">CCC</a>, December 31, 2005</li>
+</ul>
+<h3 id="2006">2006</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=479366">Rybka and Fruit on Chessbase</a> by <a href="/Walter_Faxon">Walter Faxon</a>, <a href="/CCC">CCC</a>, January 14, 2006 » <a href="/Fruit">Fruit</a>, <a href="/ChessBase">ChessBase</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=480599">The superior Rybka chess knowledge</a> by <a href="/Chrilly_Donninger">Chrilly Donninger</a>, <a href="/CCC">CCC</a>, January 18, 2006</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=487223">Rybka's NPS - one presumption</a> by <a href="/Vladan_Vučković">Vladan Vučković</a>, <a href="/CCC">CCC</a>, February 16, 2006 » <a href="/Nodes_per_Second">Nodes per Second</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=489891">Rybka @ CCT8</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/CCC">CCC</a>, February 26, 2006</li>
+</ul>
+<h3 id="2007">2007</h3>
+<ul>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=18">outlook and plans for Rybka 3</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, January 09, 2007</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=194">Rybka 2.3 release date now Monday February 12</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, February 04, 2007</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=246">Rybka 2.3 readme</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, February 13, 2007</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=1041">Rybka @ Leiden ICT7</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, May 20, 2007</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=1126">Open Letter and $100,000 Challenge to FIDE</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, May 31, 2007</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=1170">How secure is the source code of Rybka?</a> by SR, <a href="/Computer_Chess_Forums">Rybka Forum</a>, June 05, 2007</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=1360">Rybka 2.3.2a readme</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, June 18, 2007</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=1373">Rybka @ Amsterdam 15th WCCC</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, June 19, 2007</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=1655">Strelka = Rybka 1.0</a> by DarkAvenger, <a href="/Computer_Chess_Forums">Rybka Forum</a>, July 07, 2007 » <a href="/Strelka">Strelka</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=14959">What Strelka tells about Rybka's nodecount and depth</a> by Ernest Bonnem, <a href="/CCC">CCC</a>, July 09, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=14988">Longer comments by V. Rajlich</a> by Marc Lacrosse, <a href="/CCC">CCC</a>, July 10, 2007</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=1690">(Experimental) 64-bit Rybka on Linux</a> by <a href="/Steinar_H._Gunderson">Sesse</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, July 10, 2007 » <a href="/Linux">Linux</a></li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?pid=19118#pid19118">Re: Is Rybka a derivative of Fruit?</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, July 14, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=15076">Fruit, Rybka, Strelka final conclusion! (I hope)</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/CCC">CCC</a>, July 13, 2007</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=2297">Rybka vs Zappa in Mexico City</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, September 28, 2007</li>
+<li><a href="https://www.hiarcs.net/forums/viewtopic.php?t=398&amp;start=19">Re: I know something of Dr.Donninger</a> by <a href="/Harvey_Williamson">Harvey Williamson</a>, <a href="/Computer_Chess_Forums">Hiarcs Forum</a>, October 16, 2007 <a href="#fn63" class="footnote-ref" id="fnref63" role="doc-noteref"><sup>63</sup></a></li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=2510">Rybka @ Leiden 27th Dutch CCC</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, October 29, 2007</li>
+</ul>
+<h3 id="2008">2008</h3>
+<ul>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=3006">Strelka 2.0</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, January 11, 2008 » <a href="/Strelka">Strelka</a></li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=3006;pg=4">Re: Strelka 2.0 pg 4</a> by <a href="/Anthony_Cozzie">Anthony Cozzie</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, January 11, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=19008">Rajlich/Osipov/Rybka/Strelka/Answers by Convekta</a> by Eduard Nemeth, <a href="/CCC">CCC</a>, January 17, 2008 » <a href="/Strelka">Strelka</a>, <a href="/ChessOK">Convekta</a></li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=3172">Anthony Cozzie speak !</a> by Silvian, <a href="/Computer_Chess_Forums">Rybka Forum</a>, February 03, 2008 <a href="#fn64" class="footnote-ref" id="fnref64" role="doc-noteref"><sup>64</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=20531">Rybka 3 with new GUI: are they serious?!</a> by <a href="/Jouni_Uski">Jouni Uski</a>, <a href="/CCC">CCC</a>, April 05, 2008 » <a href="/Aquarium">Aquarium</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=20740">Retry: Rybka 1.0 Beta Node Count Patch</a> by Rick Fadden, <a href="/CCC">CCC</a>, April 19, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=20936">Strelka Reverse Engineered from Rybka: Details Examined</a> by Rick Fadden, <a href="/CCC">CCC</a>, May 01, 2008</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=4247">Rybka @ Leiden 8th ICT</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, June 01, 2008</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=4807">Rybka 3 -- a hundred elo!</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, July 08, 2008</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=5020">Rybka 3 - some info</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, July 19, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=22581">Rybka 3: The dark truth behind the hype</a> by <a href="/Albert_Silver">Albert Silver</a>, <a href="/CCC">CCC</a>, July 25, 2008</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=5547">Rybka 3 Release Notes</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, August 04, 2008</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=5576">Rybka 3 FAQ</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, August 05, 2008</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=5606">Rybka v2.2n2 download</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, August 06, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=23118">Rybka 1.0 vs. Strelka</a> by <a href="/Zach_Wegner">Zach Wegner</a>, <a href="/CCC">CCC</a>, August 19, 2008</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=23157">Rybka in the nolot suite</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, August 21, 2008 » <a href="/The_Nolot_Suite">The Nolot Suite</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=23249">Questions for Vas</a> by <a href="/Zach_Wegner">Zach Wegner</a>, <a href="/CCC">CCC</a>, August 25, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=23252">A very simple question to Vas that can end it all</a> by <a href="/Christophe_Théron">Christophe Théron</a>, <a href="/CCC">CCC</a>, August 25, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=23239">Rybka questions and answers</a> by <a href="/Chris_Whittington">Chris Whittington</a>, <a href="/CCC">CCC</a>, August 25, 2008</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=6772">question to vas on similarity of rybka 1.0 to fruit</a> by duncan, <a href="/Computer_Chess_Forums">Rybka Forum</a>, August 25, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=23307">split 3 from Zach technical thread</a> by <a href="/Christophe_Théron">Christophe Théron</a>, <a href="/CCC">CCC</a>, August 27, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=23313">My two cents</a> by <a href="/Anthony_Cozzie">Anthony Cozzie</a>, <a href="/CCC">CCC</a>, August 27, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=23341">To campaign or not</a> by <a href="/Ed_Schroder">Ed Schroder</a>, <a href="/CCC">CCC</a>, August 28, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=23386">How a court detects a derivative work</a> by <a href="/Christophe_Théron">Christophe Théron</a>, <a href="/CCC">CCC</a>, August 30, 2008</li>
+<li><a href="http://talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=214422&amp;t=23424">Is It Me or is the Source Comparison Page Rigged?</a> by RegicideX, <a href="/CCC">CCC</a>, September 01, 2008 <a href="#fn65" class="footnote-ref" id="fnref65" role="doc-noteref"><sup>65</sup></a> <a href="#fn66" class="footnote-ref" id="fnref66" role="doc-noteref"><sup>66</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=23474">Plagiarism and Rybka</a> by <a href="/Enrique_Irazoqui">Enrique Irazoqui</a>, <a href="/CCC">CCC</a>, September 03, 2008</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=7738">Rybka @ 16th WCCC in Beijing</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, October 04, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=24504">Strelka = Rybka 1.0 =Fruit 2.1 = Toga?? Oh how disappointing</a> by <a href="/Oliver_Brausch">Oliver Brausch</a>, <a href="/CCC">CCC</a>, October 21, 2008</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=8478">Rybka @ 28th Dutch CCC</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, November 18, 2008</li>
+</ul>
+<h3 id="2009">2009</h3>
+<ul>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=11022">Rybka @ Pamplona 17th ICGA World Computer Chess Championship</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a> from <a href="/Computer_Chess_Forums">Rybka Forum</a>, May 17, 2009 » <a href="/WCCC_2009">WCCC 2009</a></li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=12960">Rybka @ 29th Open Dutch Computer Chess Championship</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, October 19, 2009 » <a href="/DOCCC_2009">DOCCC 2009</a></li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=12995">Official statement on [Deleted</a>?] by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, October 21, 2009</li>
+</ul>
+<h3 id="2010">2010</h3>
+<ul>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=16262">Rybka 4 update</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, April 11, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=34497">Rybka 4 is final. (select games for fun)</a> by <a href="/Albert_Silver">Albert Silver</a>, <a href="/CCC">CCC</a>, May 25, 2010</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=17010">Rybka 4 Release Notes</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, May 26, 2010</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=17206">ICT Leiden 2010: Rybka wins with 8/9. Opening report</a> by <a href="/Jeroen_Noomen">Jeroen Noomen</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, May 30, 2010 » <a href="/ICT_2010">ICT 2010</a></li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=17240">Rybka @ 10th ICT Leiden 2010</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, May 31, 2010 » <a href="/ICT_2010">ICT 2010</a></li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=3&amp;t=119">BB's Rybka/Ippolit comparison</a> by <a href="/Zach_Wegner">Zach Wegner</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, June 13, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=36058">Deep Blue vs Rybka</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, September 13, 2010</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=18935">Kanazawa Diary (Rybka operator in Japan)</a> by <a href="/Hans_van_der_Zijden">Hans van der Zijden</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, September 24, 2010 » <a href="/WCCC_2010">WCCC 2010</a></li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=19026">WCCC 2010 in Kanzawa, Japan</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, October 2, 2010 » <a href="/WCCC_2010">WCCC 2010</a></li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=19574">Rybka @ 30th Dutch Computer Chess Championship</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, November 16, 2010 » <a href="/DOCCC_2010">DOCCC 2010</a></li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=3&amp;t=815">Brief Q&amp;A about Rybka 1.0 Beta and Fruit 2.1</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, December 14, 2010</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=20058">Rybka Cluster Rental Program</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, December 30, 2010</li>
+</ul>
+<h3 id="2011">2011</h3>
+<ul>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=1004">Node counting</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, January 20, 2011 » <a href="/Node">Node</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=37762">Fabien's open letter to the community</a> by <a href="/Tord_Romstad">Tord Romstad</a>, <a href="/CCC">CCC</a>, January 23, 2011</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=3&amp;t=1014">Fabien's open letter to the community</a> by <a href="/Tord_Romstad">Tord Romstad</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, January 23, 2011</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=3&amp;t=1023">Revisiting Strelka/Rybka</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, January 25, 2011</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=1104">Feb 12 version: Rybka 1.0 Beta / Fruit 2.1 document</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, February 12, 2011</li>
+<li><a href="https://web.archive.org/web/20180828211326/http://www.chessvibes.com/?q=reports/attack-of-the-clones">Attack of the clones | ChessVibes</a> by <a href="/David_Levy">David Levy</a>, February 19, 2011 (<a href="https://en.wikipedia.org/wiki/Wayback_Machine">Wayback Machine</a>)</li>
+<li><a href="http://www.hiarcs.net/forums/viewtopic.php?t=4038">Open letter to the ICGA about the Rybka-Fruit issue</a> by <a href="/Harvey_Williamson">Harvey Williamson</a>, <a href="/Computer_Chess_Forums">Hiarcs Forum</a>, March 01, 2011</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=3&amp;t=1175">Programmers Open Letter to ICGA on Rybka/Fruit</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, March 01, 2011</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=21216">Rybka 1.6.1</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, March 13, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38440">Longer Article</a> by <a href="/Anthony_Cozzie">Anthony Cozzie</a>, <a href="/CCC">CCC</a>, March 17, 2011</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=1281">History of eval changes in Rybka versions</a> by<a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, March 23, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=39520">Rybka disqualified and banned from World Computer Chess Cham</a> by Tim Chan, <a href="/CCC">CCC</a>, June 29, 2011</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=22232">Rybka disqualified and banned from World Computer Chess Cham</a> by TheHug, <a href="/Computer_Chess_Forums">Rybka Forum</a>, June 29, 2011</li>
+<li><a href="http://hiarcs.net/forums/viewtopic.php?t=4264&amp;sid=ec7a3d377b4ca501b364599914913668">Rybka disqualified and banned from WCCC</a> by <a href="/Harvey_Williamson">Harvey Williamson</a>, <a href="/Computer_Chess_Forums">Hiarcs Forum</a>, June 29, 2011</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=3&amp;t=1463">Rybka disqualified and banned from WCCC</a> by <a href="/Jeremy_Bernstein">Jeremy Bernstein</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, June 29, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=39531">Rybka ban thoughts</a> by <a href="/Dann_Corbit">Dann Corbit</a>, <a href="/CCC">CCC</a>, June 29, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=39544">My two cents on Rybka's disqualification</a> by <a href="/Joona_Kiiski">Joona Kiiski</a>, <a href="/CCC">CCC</a>, June 30, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=39546">Dismissed with prejudice</a> by <a href="/Dann_Corbit">Dann Corbit</a>, <a href="/CCC">CCC</a>, July 01, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=39545">Voir Dire</a> by <a href="/Dann_Corbit">Dann Corbit</a>, <a href="/CCC">CCC</a>, July 01, 2011 <a href="#fn67" class="footnote-ref" id="fnref67" role="doc-noteref"><sup>67</sup></a></li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=22265">Vas say something</a> by siam, <a href="/Computer_Chess_Forums">Rybka Forum</a>, July 01, 2011</li>
+<li><a href="http://open-chess.org/viewtopic.php?f=3&amp;t=1466">The ICGA Process</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, July 01, 2011</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=3&amp;t=1471">Progess (often) is ugly, a summary try</a> by <a href="/Ed_Schroder">Rebel</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, July 03, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=39593">Is Rybka that needs ICGA or the opposite ?</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, July 03, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?start=0&amp;t=39592">The Intellectual Property Oxymoron</a> by Gary Belton, <a href="/CCC">CCC</a>, July 03, 2011</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=1475">The Evidence against Rybka</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, July 04, 2011</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=22337">Why did the ICGA ignore this advice?</a> by John Sidles, <a href="/Computer_Chess_Forums">Rybka Forum</a>, July 06, 2011</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=22370">Minority Report Plagiarism - Quantifying Evaluation Features</a> by <a href="/Chris_Whittington">Trotsky</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, July 09, 2011</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=1497">Back to R3/IPPOLIT(/R4?)</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, July 14, 2011</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=22421">In retrospect</a> by <a href="/Ed_Schroder">Rebel</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, July 14, 2011</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=22486">Minority Report 2 - Unravelling the technical report</a> by <a href="/Chris_Whittington">Trotsky</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, July 22, 2011</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=22502">Minority Report 3, PST + other lookup tables are they legal?</a> by <a href="/Chris_Whittington">Trotsky</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, July 25, 2011</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=1519">On Rybka/Crafty and licensing/copyright</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, July 28, 2011</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=3&amp;t=1559">Thoughts on Fruit=Rybka EVAL</a> by <a href="/Ed_Schroder">Rebel</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, August 16, 2011</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=22679">Apology to Vas</a> by <a href="/Ed_Schroder">Rebel</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, August 17, 2011</li>
+</ul>
+<h3 id="2012">2012</h3>
+<ul>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=1772">Rybka evidence recapitulation</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, January 03, 2012</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=23957">A Big Thanks and a Small Update</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, January 08, 2012</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=1795">Fruit/Rybka timeline</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, January 09, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=42248">Rybka 1.0 source code</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, January 31, 2012 <a href="#fn68" class="footnote-ref" id="fnref68" role="doc-noteref"><sup>68</sup></a></li>
+</ul>
+<h3 id="2021">2021</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=78078">Rybka Forum Is Officially Closed?</a> by supersharp77, <a href="/CCC">CCC</a>, September 02, 2021</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<h3 id="rybka">Rybka</h3>
+<ul>
+<li><a href="http://www.rybkachess.com/index.php">Welcome to RybkaChess.com!</a></li>
+<li><a href="http://cluster.rybkachess.com/">Rybka Cluster - for the elite chess player</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Rybka">Rybka from Wikipedia</a></li>
+<li><a href="https://www.game-ai-forum.org/icga-tournaments/program.php?id=79">Rybka's ICGA Tournaments</a></li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/forum_show.pl">Rybka Chess Community Forum</a></li>
+<li><a href="http://www.top-5000.nl/int/rybka.htm">Interview with Vasik Rajlich</a> by Christopher Conkie, Michael Diosi, <a href="/Frank_Quisinsky">Frank Quisinsky</a> &amp; Alexander Schmidt, December 20, 2005, hosted by <a href="/Ed_Schroder">Ed Schröder</a></li>
+<li><a href="http://chessok.com/files/bobpawlak/News/RybkaReview.html">ChessAssistance.com Rybka Review</a> by <a href="/Robert_Pawlak">Robert Pawlak</a>, September 23, 2006</li>
+<li><a href="http://www.chessbase.com/newsdetail.asp?newsid=4772">Rybka 3.0 – Not just the strongest chess program in the world</a>, July 18, 2008, <a href="/ChessBase">ChessBase News</a></li>
+<li><a href="http://www.chessbase.com/newsdetail.asp?newsid=5075">Rybka's Monte Carlo analysis</a> by Steve Lopez, <a href="/ChessBase">ChessBase News</a>, February 03, 2009</li>
+</ul>
+<h3 id="controversy">Controversy</h3>
+<ul>
+<li><a href="http://chess.business-news-blog.eu/2011/rybka-banned-by-international-games-federation-rybka-ruling/">Rybka banned by International Games Federation – Rybka Ruling</a></li>
+<li><a href="http://www.extremetech.com/extreme/88610-rybka-the-worlds-best-chess-engine-outlawed-and-disqualified">Rybka, the world’s best chess engine, outlawed and disqualified | ExtremeTech</a> by <a href="http://www.mrseb.co.uk/">Sebastian Anthony</a> on June 29, 2011</li>
+<li><a href="http://m.washingtontimes.com/news/2011/jun/30/computer-chess-champ-stripped-of-its-four-titles/">Computer chess champ stripped of its four titles</a> by <a href="http://www.linkedin.com/pub/claire-courchane/2a/857/3b">Claire Courchane</a>, <a href="https://en.wikipedia.org/wiki/The_Washington_Times">Washington Times</a>, June 30, 2011</li>
+<li><a href="http://www.itproportal.com/2011/06/30/rybka-disqualified-banned-on-plagiarism-charges/">Rybka Disqualified, Banned On Plagiarism Charges | ITProPortal.com</a> by <a href="http://www.itproportal.com/staff/ravimandalia/">Ravi Mandalia</a>, June 30, 2011</li>
+<li><a href="https://boylston-chess-club.blogspot.com/2011/06/rybka-banned-from-computer-champs.html">Boylston Chess Club Weblog: Rybka banned from computer champs; stripped of all its titles</a>, June 30, 2011</li>
+<li><a href="http://www.spiegel.de/netzwelt/games/0,1518,771620,00.html">Weltmeisterprogramm Rybka verliert alle Titel</a> by <a href="http://www.spiegel.de/extra/0,1518,632080,00.html">Frank Patalong</a>, <a href="https://en.wikipedia.org/wiki/Der_Spiegel#Spiegel_Online">Spiegel Online</a>, July 01, 2011 (German)</li>
+<li><a href="http://diepresse.com/home/spectrum/spielundmehr/676421/Geklontes-Fischchen">Geklontes Fischchen</a> by Stefan Löffler, July 08, 2011, <a href="http://diepresse.com/home/index.do">DiePresse.com</a> (German)</li>
+<li><a href="http://www.top-5000.nl/Rybka.htm">Rybka vs ICGA a different view</a> by <a href="/Ed_Schroder">Ed Schröder</a>, November 09, 2011</li>
+<li><a href="http://www.top-5000.nl/evidence.htm">Rybka evidence</a> by <a href="/Ed_Schroder">Ed Schröder</a>, November 09, 2011</li>
+<li><a href="http://www.chessbase.com/newsdetail.asp?newsid=7791">A Gross Miscarriage of Justice in Computer Chess (part one)</a> by <a href="/Søren_Riis">Søren Riis</a>, <a href="/ChessBase">ChessBase News</a>, January 02, 2012 <a href="#fn69" class="footnote-ref" id="fnref69" role="doc-noteref"><sup>69</sup></a> <a href="#fn70" class="footnote-ref" id="fnref70" role="doc-noteref"><sup>70</sup></a> <a href="#fn71" class="footnote-ref" id="fnref71" role="doc-noteref"><sup>71</sup></a></li>
+</ul>
+<p><a href="http://www.chessbase.com/newsdetail.asp?newsid=7807">A Gross Miscarriage of Justice in Computer Chess (part two)</a> by <a href="/Søren_Riis">Søren Riis</a>, <a href="/ChessBase">ChessBase News</a>, January 03, 2012 <a href="#fn72" class="footnote-ref" id="fnref72" role="doc-noteref"><sup>72</sup></a></p>
+<p><a href="http://www.chessbase.com/newsdetail.asp?newsid=7811">A Gross Miscarriage of Justice in Computer Chess (part three)</a> by <a href="/Søren_Riis">Søren Riis</a>, <a href="/ChessBase">ChessBase News</a>, January 04, 2012</p>
+<p><a href="http://www.chessbase.com/newsdetail.asp?newsid=7813">A Gross Miscarriage of Justice in Computer Chess (part four)</a> by <a href="/Søren_Riis">Søren Riis</a>, <a href="/ChessBase">ChessBase News</a>, January 05, 2012 <a href="#fn73" class="footnote-ref" id="fnref73" role="doc-noteref"><sup>73</sup></a></p>
+<ul>
+<li><a href="http://www.chessbase.com/newsdetail.asp?newsid=7899">ICGA/Rybka controversy: An interview with David Levy (1)</a>, <a href="/ChessBase">ChessBase News</a>, February 06, 2012</li>
+</ul>
+<p><a href="http://www.chessbase.com/newsdetail.asp?newsid=7908">ICGA/Rybka controversy: An interview with David Levy (2)</a>, <a href="/ChessBase">ChessBase News</a>, February 10, 2012</p>
+<ul>
+<li><a href="http://www.chessbase.com/newsdetail.asp?newsid=7926">ICGA/Rybka controversy: Feedback</a>, <a href="/ChessBase">ChessBase News</a>, February 17, 2012</li>
+</ul>
+<h3 id="misc">Misc</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Rybka_%28disambiguation%29">Rybka (disambiguation) from Wikipedia</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Engines">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://www.game-ai-forum.org/icga-tournaments/news_item.php?id=25">Bulletin Day 7 WCCC 2007 (ICGA Tournaments)</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://rybkachess.com.www52.your-server.de/index.php?auswahl=Rybka+team">Rybka - for the serious chess player - Rybka team</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://www.stmintz.com/ccc/index.php?id=465686">Rybka 1.0 beta release - need testers</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/CCC">CCC</a>, November 30, 2005<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://www.stmintz.com/ccc/index.php?id=466792">Rybka 1.0 Announcement</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/CCC">CCC</a>, December 05, 2005<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=13289">SSDF Rating List 2007-04-21</a> by Thoralf Karlsson, <a href="/CCC">CCC</a>, April 21, 2007<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="http://www.husvankempen.de/nunn/40_120_ratinglist/Quad/qratinglist.html">CEGT Quad Versions 40/120 (AMD 3500+/4200+)</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="http://www.rybkachess.com/index.php?auswahl=Purchase+Rybka">Rybka - for the serious chess player - Purchase Rybka</a><a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="http://chessok.com/shop/index.php?main_page=index&amp;cPath=7_1">Rybka &amp; Aquarium - ChessOK shop</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="http://www.chessbase.com/shop/product.asp?pid=506">Chess software - Rybka 4</a> from <a href="/ChessBase">ChessBase</a><a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="http://www.rybkachess.com/index.php?auswahl=Demo+version">Rybka - for the serious chess player - Download Rybka 2.3.2a</a><a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?pid=20132#pid20132">re: rybka source code</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, July 24, 2007<a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=3006">Strelka 2.0</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, January 11, 2008<a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=34908">My recent correspondence with Vasik Rajlich</a> by <a href="/Sven_Schüle">Sven Schüle</a>, <a href="/CCC">CCC</a>, June 13, 2010<a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=3006;pg=4">Re: Strelka 2.0 pg 4</a> by <a href="/Anthony_Cozzie">Anthony Cozzie</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, January 11, 2008<a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn15"><p><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=14574">A question to Larry Kaufman</a>, by Erik, <a href="/Computer_Chess_Forums">Rybka Forum</a>, December 30/31, 2009<a href="#fnref15" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn16"><p><a href="http://www.open-chess.org/viewtopic.php?f=3&amp;t=301#p2658">Re: What do you folks make of this ?</a> by <a href="/Chris_Whittington">Chris Whittington</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, June 27, 2010<a href="#fnref16" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn17"><p><a href="/Mark_Watkins">Mark Watkins</a> (<strong>2011</strong>). <em>A comparison of Rybka 1.0 Beta and Fruit 2.1</em>, <a href="http://www.open-chess.org/download/file.php?id=304">pdf, February 24, 2011 Version</a><a href="#fnref17" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn18"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=14959">What Strelka tells about Rybka's nodecount and depth</a> by Ernest Bonnem, <a href="/CCC">CCC</a>, July 09, 2007<a href="#fnref18" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn19"><p><a href="http://www.johnljerz.com/superduper/tlxdownloadsiteMAIN/id18.html">Does Rybka Properly Count Positions Evaluated?</a> by <a href="/John_L._Jerz">John L. Jerz</a><a href="#fnref19" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn20"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=23037">To Jeroen and interested minds, re. Tiger node count</a> by <a href="/Christophe_Théron">Christophe Théron</a>, <a href="/CCC">CCC</a>, August 15, 2008<a href="#fnref20" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn21"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=328195&amp;t=32335">Re: Question to Larry Kaufman about Rybka</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, February 05, 2010<a href="#fnref21" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn22"><p><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=1004">Node counting</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, January 20, 2011<a href="#fnref22" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn23"><p><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=1655">Strelka = Rybka 1.0</a> by DarkAvenger, <a href="/Computer_Chess_Forums">Rybka Forum</a>, July 07, 2007<a href="#fnref23" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn24"><p><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=3006">Strelka 2.0</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, January 11, 2008<a href="#fnref24" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn25"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=23118">Rybka 1.0 vs. Strelka</a> by <a href="/Zach_Wegner">Zach Wegner</a>, <a href="/CCC">CCC</a>, August 19, 2008<a href="#fnref25" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn26"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=23249">Questions for Vas</a> by <a href="/Zach_Wegner">Zach Wegner</a>, <a href="/CCC">CCC</a>, August 25, 2008<a href="#fnref26" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn27"><p><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?pid=19118#pid19118">Re: Is Rybka a derivative of Fruit?</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, July 14, 2007<a href="#fnref27" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn28"><p><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=6772">question to vas on similarity of rybka 1.0 to fruit</a> by duncan, <a href="/Computer_Chess_Forums">Rybka Forum</a>, August 25, 2008<a href="#fnref28" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn29"><p><a href="https://www.stmintz.com/ccc/index.php?id=469209">Rybka uses PVS and not MTD(f). Its no Fruit-Clone</a> by <a href="/Chrilly_Donninger">Chrilly Donninger</a>, <a href="/CCC">CCC</a>, December 12, 2005<a href="#fnref29" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn30"><p><a href="https://www.stmintz.com/ccc/index.php?id=467208">Is Rybbka a fruit clone?</a> by Ziad Haddad, <a href="/CCC">CCC</a>, December 06, 2005<a href="#fnref30" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn31"><p><a href="https://www.stmintz.com/ccc/index.php?id=469130">Rybka - How much Fruit is inside?</a> by <a href="/Daniel_Mehrmann">Daniel Mehrmann</a>, <a href="/CCC">CCC</a>, December 11, 2005<a href="#fnref31" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn32"><p><a href="https://www.hiarcs.net/forums/viewtopic.php?t=398&amp;start=19">Re: I know something of Dr.Donninger</a> by <a href="/Harvey_Williamson">Harvey Williamson</a>, <a href="/Computer_Chess_Forums">Hiarcs Forum</a>, October 16, 2007, quoted with the kind permission of <a href="/Chrilly_Donninger">Chrilly</a> and <a href="/Enrique_Irazoqui">Enir</a><a href="#fnref32" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn33"><p><a href="http://www.top-5000.nl/int/rybka.htm">Interview with Vasik Rajlich</a> by Christopher Conkie, Michael Diosi, <a href="/Frank_Quisinsky">Frank Quisinsky</a> &amp; Alexander Schmidt, December 20, 2005, hosted by <a href="/Ed_Schroder">Ed Schröder</a><a href="#fnref33" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn34"><p><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=12995">Official statement on [Deleted</a>?] by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, October 21, 2009<a href="#fnref34" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn35"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=30296">I'm in doubt if RobboLito is a clone</a> by Volker Pittlik, <a href="/CCC">CCC</a>, October 24, 2009<a href="#fnref35" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn36"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=37762">Fabien's open letter to the community</a> by <a href="/Tord_Romstad">Tord Romstad</a>, <a href="/CCC">CCC</a>, January 23, 2011<a href="#fnref36" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn37"><p><a href="http://www.open-chess.org/viewtopic.php?f=3&amp;t=1014">Fabien's open letter to the community</a> by <a href="/Tord_Romstad">Tord Romstad</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, January 23, 2011<a href="#fnref37" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn38"><p><a href="http://www.thechessmind.net/blog/2011/1/24/more-computer-chess-controversy.html">The Chess Mind Blog - More Computer Chess Controversy</a><a href="#fnref38" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn39"><p><a href="https://web.archive.org/web/20180828211326/http://www.chessvibes.com/?q=reports/attack-of-the-clones">Attack of the clones | ChessVibes</a> by <a href="/David_Levy">David Levy</a>, February 19, 2011 (<a href="https://en.wikipedia.org/wiki/Wayback_Machine">Wayback Machine</a>)<a href="#fnref39" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn40"><p><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=22421">In retrospect</a> by <a href="/Ed_Schroder">Rebel</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, July 14, 2011<a href="#fnref40" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn41"><p><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=22679">Apology to Vas</a> by <a href="/Ed_Schroder">Rebel</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, August 17, 2011<a href="#fnref41" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn42"><p>ICGA Investigations Wiki<a href="#fnref42" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn43"><p><a href="http://www.hiarcs.net/forums/viewtopic.php?t=4038">Open letter to the ICGA about the Rybka-Fruit issue</a> by <a href="/Harvey_Williamson">Harvey Williamson</a>, <a href="/Computer_Chess_Forums">Hiarcs Forum</a>, March 01, 2011<a href="#fnref43" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn44"><p><a href="http://www.open-chess.org/viewtopic.php?f=3&amp;t=1175">Programmers Open Letter to ICGA on Rybka/Fruit</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, March 01, 2011<a href="#fnref44" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn45"><p><a href="http://www.heise.de/newsticker/meldung/Plagiatsvorwurf-gegen-Computerschach-Weltmeister-1200222.html">Plagiatsvorwurf gegen Computerschach-Weltmeister</a>, <a href="https://de.wikipedia.org/wiki/Heise_online">Heise online</a>, March 01, 2011 (German)<a href="#fnref45" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn46"><p><a href="http://www.spiegel.de/netzwelt/gadgets/0,1518,748616,00.html">Schach-Software Rybka - Programmierer vermuten Intelligenzklau</a> by <a href="http://www.spiegel.de/extra/0,1518,632080,00.html">Frank Patalong</a>, <a href="https://en.wikipedia.org/wiki/Der_Spiegel#Spiegel_Online">Spiegel Online</a>, March 03, 2011 (German)<a href="#fnref46" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn47"><p>RYBKA 1.6.1 in <a href="http://www.open-aurec.com/chesswar/Chesswar006/Chesswar006DSt.htm">Chess War V-VII</a><a href="#fnref47" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn48"><p><a href="http://www.open-chess.org/viewtopic.php?f=3&amp;t=1175&amp;start=160#p11099">Re: Programmers Open Letter to ICGA on Rybka/Fruit</a> by <a href="/Olivier_Deville">Olivier Deville</a>, <a href="/Computer_Chess_Forums">Openchess Forum</a>, March 05, 2011<a href="#fnref48" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn49"><p><a href="http://americanfoot.free.fr/echecs/suisse/sui/sui3top200.htm">Le Fou numérique - Le Système du Suisse 3 - T</a><a href="#fnref49" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn50"><p><a href="http://www.open-chess.org/viewtopic.php?f=3&amp;t=1175&amp;start=140#p11066">Re: Programmers Open Letter to ICGA on Rybka/Fruit</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, March 05, 2011<a href="#fnref50" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn51"><p><a href="http://www.open-chess.org/viewtopic.php?f=3&amp;t=1175&amp;start=160#p11081">Re: Programmers Open Letter to ICGA on Rybka/Fruit</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Computer_Chess_Forums">Openchess Forum</a>, March 05, 2011<a href="#fnref51" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn52"><p><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=21216">Rybka 1.6.1</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, March 13, 2011<a href="#fnref52" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn53"><p><a href="http://www.open-chess.org/viewtopic.php?f=3&amp;t=1175&amp;start=120#p10994">Re: Programmers Open Letter to ICGA on Rybka/Fruit</a> by<a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, March 04, 2011<a href="#fnref53" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn54"><p><a href="https://www.stmintz.com/ccc/index.php?id=383344">Re: Correction: List and ElChinito as Crafty clones, ... etc</a> by Paul H, <a href="/CCC">CCC</a>, August 21, 2004<a href="#fnref54" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn55"><p><a href="https://www.stmintz.com/ccc/index.php?id=384790">Open letter by Eugenio Castillo (ELChinito team) ...</a> by <a href="/Frank_Quisinsky">Frank Quisinsky</a>, <a href="/CCC">CCC</a>, August 28, 2004<a href="#fnref55" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn56"><p><a href="https://web.archive.org/web/20160419082204/http://www.chessvibes.com/?q=reports/rybka-disqualified-and-banned-from-world-computer-chess-championships">Rybka disqualified and banned from World Computer Chess Championships | ChessVibes</a> by <a href="/Peter_Doggers">Peter Doggers</a>, June 29, 2011 (<a href="https://en.wikipedia.org/wiki/Wayback_Machine">Wayback Machine</a>)<a href="#fnref56" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn57"><p><a href="http://www.computerschaak.nl/index.php?option=com_content&amp;view=article&amp;id=514%3Arybka-en-de-icga&amp;catid=18%3Avereniging&amp;Itemid=28&amp;lang=en">Rybka and the ICGA</a>, <a href="http://www.csvn.nl/">CSVN Computerschaak</a><a href="#fnref57" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn58"><p><a href="http://www.open-chess.org/viewtopic.php?f=3&amp;t=119">BB's Rybka/Ippolit comparison</a> by <a href="/Zach_Wegner">Zach Wegner</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, June 13, 2010<a href="#fnref58" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn59"><p><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=1104">Feb 12 version: Rybka 1.0 Beta / Fruit 2.1 document</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, February 12, 2011<a href="#fnref59" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn60"><p><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=1772">Rybka evidence recapitulation</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, January 03, 2012<a href="#fnref60" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn61"><p>Part 1 covers <a href="/Houdini">Houdini</a>, <a href="/Rybka">Rybka</a>, <a href="/Komodo">Komodo</a>, <a href="/Stockfish">Stockfish</a>, <a href="/Critter">Critter</a>, <a href="/Naum">Naum</a>, <a href="/Chiron">Chiron</a> and <a href="/Spike">Spike</a><a href="#fnref61" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn62"><p><a href="http://www.top-5000.nl/clone.htm">A Pairwise Comparison of Chess Engine Move Selections</a> by <a href="/Adam_Hair">Adam Hair</a>, hosted by <a href="/Ed_Schroder">Ed Schröder</a><a href="#fnref62" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn63"><p>quoted with the kind permission of <a href="/Chrilly_Donninger">Chrilly</a> and <a href="/Enrique_Irazoqui">Enir</a> » <a href="/Hydra">Hydra</a><a href="#fnref63" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn64"><p><a href="http://www.stevelim.com/blog/?p=470">Anthony Cozzie speaks about Rybka source code</a> from <a href="http://www.stevelim.com/">Steve Lim / SuperSteve3d - Home</a>, February 04, 2008<a href="#fnref64" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn65"><p><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=22337">Why did the ICGA ignore this advice?</a> by John Sidles, <a href="/Computer_Chess_Forums">Rybka Forum</a>, July 06, 2011<a href="#fnref65" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn66"><p><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=23957;pg=5">Re: A Big Thanks and a Small Update</a> by John Sidles, <a href="/Computer_Chess_Forums">Rybka Forum</a>, January, 08, 2012<a href="#fnref66" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn67"><p><a href="https://en.wikipedia.org/wiki/Voir_dire">Voir dire from Wikipedia</a><a href="#fnref67" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn68"><p><a href="http://www.top-5000.nl/sourcecode.htm">Fruit 2.1 and Rybka 1.0 Beta 1.0 decompiled source code</a> by <a href="/Ed_Schroder">Ed Schröder</a><a href="#fnref68" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn69"><p><a href="http://www.open-chess.org/viewtopic.php?f=3&amp;t=1771">ChessBase: A Gross Miscarriage of Justice in Computer Chess</a> by <a href="/Franklin_Titus">kingliveson</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, January 02, 2012<a href="#fnref69" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn70"><p><a href="http://www.open-chess.org/viewtopic.php?f=3&amp;t=1771#p15455">Re: ChessBase: A Gross Miscarriage of Justice in Computer Chess</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, January 02, 2012<a href="#fnref70" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn71"><p><a href="http://www.open-chess.org/viewtopic.php?f=3&amp;t=1763&amp;p=15497#p15459">Re: Hyatt Is Gone!</a> by <a href="/Mark_Watkins">BB+</a> <a href="/Computer_Chess_Forums">OpenChess Forum</a>, Jan 03, 2012<a href="#fnref71" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn72"><p><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=1772">Rybka evidence recapitulation</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, January 03, 2012<a href="#fnref72" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn73"><p><a href="/Søren_Riis">Søren Riis</a> (<strong>2012</strong>). <em>A Gross Miscarriage of Justice in Computer Chess</em>. <a href="http://www.chessbase.com/news/2011/riis01.pdf">pdf</a> hosted by <a href="/ChessBase">ChessBase</a><a href="#fnref73" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:UCI">UCI</a> · <a href="/Category:Commercial">Commercial</a> · <a href="/Category:ChessBase">ChessBase</a> · <a href="/Category:ChessOK">ChessOK</a> · <a href="/Category:X86">X86</a> · <a href="/Category:X64">X64</a> · <a href="/Category:PC">PC</a> · <a href="/Category:Windows">Windows</a> · <a href="/Category:Chess960">Chess960</a> · <a href="/Category:Fish">Fish</a> · <a href="/Category:Derivative">Derivative</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Rybka">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, Phhnguyen.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

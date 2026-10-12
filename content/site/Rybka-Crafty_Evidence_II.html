@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rybka-Crafty Evidence II - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Rybka-Crafty Evidence II</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Organizations">Organizations</a> * <a href="/ICGA">ICGA</a> * <a href="/ICGA_Investigations">Investigations</a> * <a href="/Rybka_Controversy">Rybka Controversy</a> * <a href="/Pre-Fruit_Rybka_and_Crafty">Pre-Fruit Rybka and Crafty</a> * Equality of Even Score with 99999</strong></p>
+<p><strong><a href="/Rybka-Crafty_Evidence">&lt; Prev</a> <a href="/Rybka-Crafty_Evidence_III">Next &gt;</a></strong></p>
+<p>by <a href="/Mark_Watkins">Mark Watkins</a></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#crafty-source">Crafty Source</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#rybka-assembly">Rybka Assembly</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#evaluatemate">EvaluateMate</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="crafty-source">Crafty Source</h2>
+<p>Here is the <a href="/Crafty">Crafty</a> 19.15 code. This code was also mentioned in the <a href="/Historical_Examples">ElChinito Case</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>:</p>
+<pre><code>  if ((TotalWhitePawns + TotalBlackPawns) == 0)
+    do {
+      int ms = EvaluateMate(tree);
+
+      if (ms == 99999)
+        break;
+      score += ms;
+#ifdef DEBUGEV
+      printf(&quot;score[mater]=  %4d (%+d)\n&quot;, score,
+          score - lastsc);
+#endif
+      if (score &gt; DrawScore(1) &amp;&amp; !(can_win &amp; 1))
+        score = score &gt;&gt; 2;
+      if (score &lt; DrawScore(1) &amp;&amp; !(can_win &amp; 2))
+        score = score &gt;&gt; 2;
+      return ((wtm) ? score : -score);
+    } while (0);</code></pre>
+<h2 id="rybka-assembly">Rybka Assembly</h2>
+<p>Here is the function call to something like __EvaluateMate__ in a pre-Beta Rybka disassembly (Zach will likely provide details of how EvaluateMate works, and the closeness of the Rybka/Crafty match there).</p>
+<pre><code>0x00402b4b:     test   %ebx,%ebx              # test TotalWhitePawns + TotalBlackPawns
+0x00402b59:     jne    0x402bca               # if nonzero, skip all this
+0x00402b5b:     push   %esi
+0x00402b5c:     call   0x404540               # function call: EvaluateMate
+0x00402b61:     mov    0x8(%ebp),%ecx         # load &quot;score&quot; variable to ecx
+0x00402b64:     add    $0x4,%esp
+0x00402b67:     cmp    $0x1869f,%eax          # compare above return value to 99999
+0x00402b6c:     je     0x402bcd               # if equal, then break
+0x00402b6e:     add    %eax,%ecx              # score += ms
+0x00402b70:     mov    0x6b8d7c,%eax          # load DrawScore(1)
+0x00402b75:     cmp    %eax,%ecx              # compare score to DrawScore(1)
+0x00402b77:     jle    0x402b84
+0x00402b79:     testb  $0x1,-0x1c(%ebp)       # can_win &amp; 1
+0x00402b7d:     jne    0x402b82
+0x00402b7f:     sar    $0x2,%ecx              # shift right by 2 if conditions met
+0x00402b82:     cmp    %eax,%ecx              # compare score to DrawScore(1)
+0x00402b84:     jge    0x402b8f
+0x00402b86:     testb  $0x2,-0x1c(%ebp)       # can_win &amp; 2
+0x00402b8a:     jne    0x402b8f
+0x00402b8c:     sar    $0x2,%ecx              # shift right by 2 if conditions met
+0x00402b8f:     mov    0x10(%ebp),%eax        # load wtm
+0x00402b92:     test   %eax,%eax              # determine by wtm whether score or -score
+0x00402b94:     jne    0x402b98
+0x00402b96:     neg    %ecx
+0x00402b98:     mov    %ecx,%eax              # et cetera</code></pre>
+<h3 id="evaluatemate">EvaluateMate</h3>
+<p>Here are some relevant parts of that function call (Zach may provide more), enough to show that the return value is always even.</p>
+<pre><code>FUNCTION_CALL:
+0x00404540:     mov    0x4(%esp),%ecx
+[...]
+0x004046b6:     lea    0x0(%ebp,%ebp,1),%eax     # add ebp to itself for the return value
+0x004046ba:     pop    %ebp
+0x004046bb:     pop    %ebx
+0x004046bc:     ret
+[...]
+0x00404717:     lea    (%edi,%edi,1),%eax        # double
+0x0040471a:     pop    %edi
+0x0040471b:     pop    %esi
+0x0040471c:     pop    %ebp
+0x0040471d:     pop    %ebx
+0x0040471e:     ret   
+[...]
+0x00404729:     lea    (%edi,%edi,1),%eax        # double
+0x0040472c:     pop    %edi
+0x0040472d:     pop    %esi
+0x0040472e:     pop    %ebp
+0x0040472f:     pop    %ebx
+0x00404730:     ret   
+0x00404731:     pop    %edi
+0x00404732:     lea    (%esi,%esi,1),%eax        # double
+0x00404735:     pop    %esi
+0x00404736:     pop    %ebp
+0x00404737:     pop    %ebx
+0x00404738:     ret    </code></pre>
+<p>This is the only calling of 0x404540 in the code, and I've listed all the returns, with no jumps to instructions between a doubling and returning. In particular, the return value is always even, but then is compared for equality with 99999.</p>
+<p>This code is largely relevant when mating KBN vs K.</p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Pre-Fruit_Rybka_and_Crafty">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://www.stmintz.com/ccc/index.php?id=383344">Re: Correction: List and ElChinito as Crafty clones, ... etc</a> by Paul H., <a href="/CCC">CCC</a>, August 21, 2004<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Rybka-Crafty_Evidence_II">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

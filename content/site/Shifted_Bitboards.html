@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shifted Bitboards - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Shifted Bitboards</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * <a href="/Sliding_Piece_Attacks">Sliding Piece Attacks</a> * Shifted Bitboards</strong></p>
+<p><strong>Shifted Bitboards</strong>,<br />
+an method to determine sliding piece attacks introduced by <a href="/Neels_Groenewald">Neels Groenewald</a> as implemented in his engine <a href="/NagaSkaki">NagaSkaki</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. The idea is original and does not need huge memory tables. However, with the proposed 56 64-bit operations for either rook and bishop attacks its <a href="/Space-Time_Tradeoff">space-time tradeoff</a> seems not that advantageous with respect to time, which looks more in the range of set-wise <a href="/Fill_Algorithms">fill algorithms</a> for multiple sliders, like <a href="/Dumb7Fill">dumb7fill</a> or its parallel prefix <a href="/Kogge-Stone_Algorithm">Kogge-Stone</a> pendant.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#description">Description</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="description">Description</h2>
+<p>Shifted Bitboards work ray-wise and uses pre-calculated <a href="/On_an_empty_Board">ray-attacks</a> on the otherwise empty board for each of the eight <a href="/Rays">ray-directions</a> for all <a href="/Origin_Square">origin squares</a>, and <a href="/General_Setwise_Operations">intersects</a> one of them with the <a href="/Occupancy">occupancy</a> to determine the blockers on the attacking <a href="/Rays">ray</a> in question, quite similar to the <a href="/Classical_Approach">Classical Approach</a>. While the Classical Approach performs a <a href="/BitScan">bitscan</a>, either <a href="/BitScan">forward</a> or <a href="/BitScan">reverse</a> to determine the first blocker (if any) for the covered ray-attack <a href="/General_Setwise_Operations">exclusion</a> by a ray-square lookup, Shifted Bitboards performs a <a href="/Fill_Algorithms">fill-like</a> <a href="/General_Setwise_Operations">union</a> of all six <a href="/General_Setwise_Operations">direction shifts</a> of the blocker(s) from one to six (the maximum amount of covered squares behind a blocker), which were then <a href="/General_Setwise_Operations">excluded</a> from the initial <a href="/On_an_empty_Board">empty board ray-wise attack set</a>.</p>
+<pre><code>U64 rayAttacks[8][64]; // requires initialization
+
+U64 getRightRayAttacks(U64 occupied, enumSquare square) {
+   U64 attacks = rayAttacks[right][square];
+   U64 blocker = attacks &amp; occupied;
+   if ( blocker ) {
+      blocker = (blocker &lt;&lt; 1) | (blocker &lt;&lt; 2)
+ (blocker &lt;&lt; 3) | (blocker &lt;&lt; 4)
+ (blocker &lt;&lt; 5) | (blocker &lt;&lt; 6);
+      attacks ^= (blocker &amp; attacks);
+   }
+   return attacks;
+}</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Classical_Approach">Classical Approach</a></li>
+<li><a href="/Bitfoot">Bitfoot - A/B Bitboards</a></li>
+<li><a href="/Blockers_and_Beyond">Blockers and Beyond</a></li>
+<li><a href="/Obstruction_Difference">Obstruction Difference</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://mayothi.com/nagaskakichess6.html">How NagaSkaki plays chess - Move generation</a></li>
+<li><a href="https://web.archive.org/web/20120104163142/http://www.mayothi.com/nagaskakichess6.html">How NagaSkaki plays chess - Move generation</a> (<a href="https://en.wikipedia.org/wiki/Wayback_Machine">Wayback Machine</a>, January 04, 2012)</li>
+<li><a href="http://mysite.mweb.co.za/residents/lollapot/nagaskaki_chess.html">How NagaSkaki plays chess</a> (2002, NagaSkaki 2.0)</li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Sliding_Piece_Attacks">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://mayothi.com/nagaskakichess6.html">How NagaSkaki plays chess - Move generation</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Shifted_Bitboards">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rule of the Square - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Rule of the Square</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Evaluation">Evaluation</a> * <a href="/Pawn_Structure">Pawn Structure</a> * <a href="/Passed_Pawn">Passed Pawn</a> * Rule of the Square</strong></p>
+<p>The <strong>Rule of the Square</strong> is a didactic auxiliary expedient in <a href="/King">king</a> versus opponent <a href="/Passed_Pawn">passed pawn</a> races in very late <a href="/Endgame">endings</a>, basically <a href="/Pawn_Endgame">pawn endgames</a> or even <a href="/KPK">KPK</a>, assuming the passer may not supported and the king has no obstructions otherwise. It is based on the <a href="/Distance">Chebyshev distance</a> due to possible diagonal king moves. If the king stays outside the <em>Square of the Pawn</em>, the passer <a href="/Side_to_move">to move</a> is guaranteed to <a href="/Promotions">promote</a> without being immediately <a href="/Captures">captured</a> by the king afterwards. <span id="TheSquareofthePawn"></span></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#the-square-of-the-pawn">The Square of the Pawn</a></li>
+<li><a href="#area-of-hope">Area of Hope</a></li>
+<li><a href="#implementation">Implementation</a></li>
+<li><a href="#sample-game">Sample Game</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="the-square-of-the-pawn">The Square of the Pawn</h2>
+<p>The <a href="https://en.wikipedia.org/wiki/Square_%28geometry%29">Square</a> (of <a href="/Squares">squares</a>) is defined vertically by the passer's <a href="/Pawn_Fills">front fill</a> with the horizontal edge in king <a href="/Direction">direction</a>, who is assumed on a different <a href="/Files">file</a> either on the <a href="/Pawn_Spans">luff- or lee side</a> of the passer. If the respective side span is shorter than the <a href="/Pawn_Spans">front span</a> due to border restrictions, the "Square" becomes oblong. The square of a pawn, usually including the pawn itself except the home <a href="/Ranks">rank</a>, due to <a href="/Pawn_Push">double step</a> ability, has a maximum size of six times six squares.</p>
+<p>King <a href="/Side_to_move">to move</a> may enter the "Square" to catch the passer: <div class="chess-fen" data-fen="...(+...)./...(+...)./...(+...)./...(P+++)./.......k/......../......../........"><code>...(+...)./...(+...)./...(+...)./...(P+++)./.......k/......../......../........</code></div></p>
+<h2 id="area-of-hope">Area of Hope</h2>
+<p>The whole area, where a king may catch the passer latest after <a href="/Promotions">queening</a>, is the union of both squares from both luff- and lee directions. <div class="chess-fen" data-fen="(...+...)./(...+...)./(...+...)./(+++P+++)./......../......../......../........"><code>(...+...)./(...+...)./(...+...)./(+++P+++)./......../......../......../........</code></div></p>
+<h2 id="implementation">Implementation</h2>
+<p>The complete area is already implicit in what most programs do, comparisons of absolute <a href="/Distance">Chebyshev distance</a> from king- and pawn squares to <a href="/Promotion_Square">promotion square</a> considering <a href="/Side_to_move">side to move</a> aka <a href="/Tempo">tempo</a> and possible <a href="/Pawn_Push">double step</a> of the passer.</p>
+<pre><code>if ( min( 5, distance(pawnSq, promoSq) ) &lt; (distance(kingSq, promoSq) - king2move) )
+   pawn can safely promote</code></pre>
+<p><span id="NuchessCrayBlitz"></span></p>
+<h2 id="sample-game">Sample Game</h2>
+<p>During the <a href="/ACM_1984">ACM 1984</a>, last round 4, in <a href="/Nuchess">Nuchess</a> (2/3) versus <a href="/Cray_Blitz">Cray Blitz</a> (3/3), it seemed as if Nuchess would win, forcing a massive tie for first place. The decisive position anatomized by <a href="/Boris_Baczynskyj">Boris Baczynskyj</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>:</p>
+<p><code>After 44... Nc8, the following position was found on the board.</code></p>
+<div class="chess-fen" data-fen="2n1k1r1/p7/3B1Rp1/2P2pKp/8/4P1P1/5P1P/8"><code>2n1k1r1/p7/3B1Rp1/2P2pKp/8/4P1P1/5P1P/8</code></div>
+
+<p><code>2n1k1r1/p7/3B1Rp1/2P2pKp/8/4P1P1/5P1P/8 w - - 17 45</code><br />
+<code>While Nuchess has hardly produced an immortal gem of chess, its performance so far has been fairly thematic - for a computer. White is up a Pawn, but an even more important factor in its favor is the superior activity of all three of its pieces. One good move is 45.Kh6, threatening to trap the black Rook with 46.Kh7. Another approach toward a win is 45.Be5, and the threat of 46.Rxg6 forces 46...Ne7, after which White shifts the Rook by 47.Ra6, and Black has to lose more material. Instead, Nuchess played</code><br />
+<code>45. Rxg6??</code><br />
+<code>This is the move which turned a win into a loss, and allowed Cray to clinch its undisputed first. White wins a second Pawn, but in the coming Pawn ending its material edge is worthless as the white King is too far removed to cope with Black's lone, but distant passed a-Pawn. </code><a href="/William_Blanchard"><code>William Blanchard</code></a><code> of the Nuchess team dejectedly confirmed that this program failed to include the principle of the King having to be inside the square of the Pawn to catch it. Of course, Nuchess's search did not extend so deeply that it could see the a-Pawn queening. </code><a href="/Robert_Hyatt"><code>Hyatt</code></a><code> said that Cray knew about the square of the Pawn rule, but that this was the first time he was aware the principle was relevant to the computer's move choice... </code></p>
+<p><a href="/ACM_1984">ACM 1984</a>, round 4, <a href="/Nuchess">Nuchess</a> - <a href="/Cray_Blitz">Cray Blitz</a></p>
+<pre><code>[Event &quot;ACM 1984&quot;]
+[Site &quot;San Francisco USA&quot;]
+[Date &quot;1984.10.09&quot;]
+[Round &quot;4&quot;]
+[White &quot;Nuchess&quot;]
+[Black &quot;Cray Blitz&quot;]
+[Result &quot;0-1&quot;]
+
+1.c4 e5 2.Nc3 Bb4 3.a3 Bxc3 4.dxc3 Ne7 5.g3 d5 6.cxd5 Qxd5 7.Qxd5 Nxd5 8.Bg2 Nb6 
+9.a4 O-O 10.a5 Nc4 11.Ra4 Nd6 12.a6 Nd7 13.Be3 Nb6 14.Rh4 Rd8 15.axb7 Bxb7 16.Bxb7 
+Nxb7 17.Nf3 Rd5 18.c4 Ra5 19.O-O Ra2 20.Rd1 Rxb2 21.c5 Nc8 22.Rd7 f6 23.Rg4 g6 
+24.Rh4 h5 25.Rxc7 Nd8 26.Ra4 Rb7 27.Rxb7 Nxb7 28.Ra6 Kf7 29.Nd2 Nd8 30.Ne4 f5 
+31.Ng5+ Kg7 32.Nf3 Nf7 33.Nxe5 Nxe5 34.Bd4 Kg8 35.Bxe5 Ne7 36.e3 Kf7 37.Rf6+ Kg8 
+38.Kg2 Rc8 39.Kf3 Re8 40.Ra6 Ra8 41.Kf4 Kf7 42.Kg5 Rg8 43.Rf6+ Ke8 44.Bd6 Nc8 
+45.Rxg6 Rxg6+ 46.Kxg6 Nxd6 47.cxd6 a5 48.g4 hxg4 49.Kxf5 a4 50.e4 a3 51.Kxg4 a2
+52.e5 a1=Q 53.f4 Qg1+ 54.Kf5 Qxh2 55.e6 Qc2+ 0-1</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Pawn_Race">Pawn Race</a></li>
+<li><a href="/Promotions">Promotions</a></li>
+<li><a href="/Réti_Endgame_Study">Réti Endgame Study</a></li>
+<li><a href="/King_Pattern">Set-wise Rule of the Square</a></li>
+<li><a href="/Unstoppable_Passer">Unstoppable Passer</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=14001">Square-of-the-pawn</a> by <a href="/Stuart_Cracraft">Stuart Cracraft</a>, <a href="/CCC">CCC</a>, January 13, 1998</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=21149">Rule of Square test position</a> by <a href="/Charles_Roberson">Charles Roberson</a>, <a href="/CCC">CCC</a>, May 15, 2008</li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/T7OFWxD4LK8/pzurkRQNLjwJ">Rule of the square</a> by <a href="/Mikael_Bäckman">Mikael</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, September 24, 2014 » <a href="/Stockfish">Stockfish</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/King_and_pawn_versus_king_endgame#Rule_of_the_square">Rule of the square</a> from <a href="https://en.wikipedia.org/wiki/King_and_pawn_versus_king_endgame">King and pawn versus king endgame from Wikipedia</a></li>
+<li><a href="https://en.wikibooks.org/wiki/Chess/The_Endgame/Pawn_Endings#The_Rule_of_the_Square">Rule of the Square from Chess/The Endgame/Pawn Endings - Wikibooks</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Square">Square from Wikipedia</a></li>
+<li><a href="/Category:Steps_Ahead">Steps Ahead</a> - <a href="https://stepsahead.bandcamp.com/album/steppin-out">Steppin Out</a> Album Preview, 2016, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p>feat. <a href="/Category:Mike_Mainieri">Mike Mainieri</a>, <a href="/Category:Bill_Evans">Bill Evans</a>, <a href="https://en.wikipedia.org/wiki/Chuck_Loeb">Chuck Loeb</a>, <a href="https://en.wikipedia.org/wiki/Tom_Kennedy_(musician)">Tom Kennedy</a>, <a href="/Category:Steve_Smith">Steve Smith</a> and the <a href="https://de.wikipedia.org/wiki/WDR_Big_Band_K%C3%B6ln">WDR Big Band</a> conducted by <a href="https://en.wikipedia.org/wiki/Mike_Abene">Mike Abene</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/a0XfBKTJMbo" title="YouTube video a0XfBKTJMbo" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=a0XfBKTJMbo">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Passed_Pawn">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Boris_Baczynskyj">Boris Baczynskyj</a> (<strong>1985</strong>). <em>The 15th ACM NACCC Anatomized</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 8, No. 3</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Steps_Ahead">Steps Ahead</a> · <a href="/Category:Mike_Mainieri">Mike Mainieri</a> · <a href="/Category:Bill_Evans">Bill Evans</a> · <a href="/Category:Steve_Smith">Steve Smith</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Rule_of_the_Square">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
