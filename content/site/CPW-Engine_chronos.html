@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CPW-Engine chronos - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">CPW-Engine chronos</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Engines">Engines</a> * <a href="/CPW-Engine">CPW-Engine</a> * Chronos</strong></p>
+<pre><code>#include &quot;stdafx.h&quot;
+
+enum etask {
+  TASK_NOTHING,
+  TASK_SEARCH,
+  TASK_PONDER
+} extern task;
+
+stime chronos;
+
+extern sSearchDriver sd;
+
+extern bool time_over;
+
+#define TIMEBUFFER 500
+#define MOVESTOGO 24
+
+#if defined(_MSC_VER) || defined(_WINDOWS_)
+#include &lt;Windows.h&gt;
+
+unsigned int gettime() {
+  FILETIME ft;
+  GetSystemTimeAsFileTime(&amp;ft);
+  return (unsigned int)((((U64)ft.dwHighDateTime &lt;&lt; 32) | ft.dwLowDateTime) / 10000);
+}
+#else
+#include &lt;sys/time.h&gt;
+
+unsigned int gettime() {
+  timeval t;
+  gettimeofday(&amp;t, 0);
+  return t.tv_usec;
+}
+#endif
+
+void time_uci_go(char * command) {
+
+  time_over = false;
+  task = TASK_SEARCH;
+
+  chronos.flags = 0;
+
+  if (strstr(command, &quot;infinite&quot;)) { chronos.flags |= FINFINITE; }
+  if (strstr(command, &quot;ponder&quot;)) { chronos.flags |= FINFINITE; task = TASK_PONDER; }
+
+  //not implemented (do an infinite search instead)
+  if (strstr(command, &quot;searchmoves&quot;)) { chronos.flags |= FINFINITE; }
+
+  if (strstr(command, &quot;wtime&quot;)) { chronos.flags |= FTIME; sscanf(strstr(command, &quot;wtime&quot;), &quot;wtime %d&quot;, &amp;chronos.time[WHITE]); }
+  if (strstr(command, &quot;btime&quot;)) { chronos.flags |= FTIME; sscanf(strstr(command, &quot;btime&quot;), &quot;%*s %d&quot;, &amp;chronos.time[BLACK]); }
+  if (strstr(command, &quot;winc&quot;)) { chronos.flags |= FINC; sscanf(strstr(command, &quot;winc&quot;), &quot;%*s %d&quot;, &amp;chronos.inc[WHITE]); }
+  if (strstr(command, &quot;binc&quot;)) { chronos.flags |= FINC; sscanf(strstr(command, &quot;binc&quot;), &quot;%*s %d&quot;, &amp;chronos.inc[BLACK]); }
+  if (strstr(command, &quot;movestogo&quot;)) { chronos.flags |= FMOVESTOGO; sscanf(strstr(command, &quot;movestogo&quot;), &quot;%*s %d&quot;, &amp;chronos.movestogo); }
+  if (strstr(command, &quot;depth&quot;)) { chronos.flags |= FDEPTH; sscanf(strstr(command, &quot;depth&quot;), &quot;%*s %d&quot;, &amp;chronos.depth); }
+  if (strstr(command, &quot;nodes&quot;)) { chronos.flags |= FNODES; sscanf(strstr(command, &quot;nodes&quot;), &quot;%*s %d&quot;, &amp;chronos.nodes); }
+
+  //not implemented (do an infinite search instead)
+  if (strstr(command, &quot;mate&quot;)) { chronos.flags |= FMATE; chronos.flags |= FINFINITE; sscanf(strstr(command, &quot;mate&quot;), &quot;%*s %d&quot;, &amp;chronos.mate); }
+
+  if (strstr(command, &quot;movetime&quot;)) { chronos.flags |= FMOVETIME; sscanf(strstr(command, &quot;movetime&quot;), &quot;%*s %d&quot;, &amp;chronos.movetime); }
+
+  if (chronos.flags == 0) chronos.flags |= FINFINITE;
+}
+
+int time_uci_ponderhit() {
+  if (task != TASK_PONDER) return 0;
+
+  /* switch from pondering mode to normal search */
+  chronos.flags &amp;= ~FINFINITE;
+  sd.starttime = gettime();
+  task = TASK_SEARCH;
+
+  return 0;
+}
+
+void time_xboard_go() {
+
+  time_over = false;
+  task = TASK_SEARCH;
+
+  if (!chronos.flags) chronos.flags = FINFINITE;
+}
+
+void time_nothing_go() {
+
+  time_over = false;
+  task = TASK_SEARCH;
+}
+
+void time_calc_movetime() {
+
+  /* no movetime to be calculated in these search types */
+
+  if (chronos.flags &amp; (FINFINITE | FDEPTH | FNODES)) return;
+
+  /* if the movetime is given */
+
+  if (chronos.flags &amp; FMOVETIME) {
+    if (chronos.movetime &gt; TIMEBUFFER) {
+      sd.movetime = chronos.movetime - TIMEBUFFER;
+    }
+    else {
+      sd.movetime = -1;
+    }
+    return;
+  }
+
+  /* in any other case we are given an ordinary timecontrol
+  (time + opt. movestogo + opt. incremental)
+
+  we take the total time left (chronos.time[sd.myside]), divide it
+  by the number of moves that are still to play (chronos.movestogo)
+  and we have the allowed time per move.
+  If we are given an incremental time control, we consider this
+  here as well.
+
+  In case we are not told how many moves we are supposed to play
+  with the time left, we assume a constant. This results in a
+  slower play in the beginning and more rapid towards the end.
+
+  as a little buffer we always assume that there are more moves
+  to be played than we actually have to. This should avoid loosing on time.
+  */
+
+  sd.movetime = 0;
+  int movestogo = MOVESTOGO;
+  if (chronos.flags &amp; FMOVESTOGO) movestogo = chronos.movestogo + 2;
+
+  if (chronos.time[sd.myside] &lt; 0) chronos.time[sd.myside] = 0;
+  if (chronos.inc[sd.myside]  &lt; 0) chronos.inc[sd.myside] = 0;
+
+  if (chronos.flags &amp; FTIME) sd.movetime += chronos.time[sd.myside] / movestogo;
+  if (chronos.flags &amp; FINC) sd.movetime += chronos.inc[sd.myside];
+
+  if (sd.movetime &gt; TIMEBUFFER)
+    sd.movetime -= TIMEBUFFER;
+  else
+    sd.movetime = -1;
+
+  return;
+
+}
+
+bool time_stop_root() {
+
+  if (time_over) return 1;
+
+  /* in the root function we check at the beginning of every iteration,
+  whether we should start calculating another cycle.
+  */
+
+  /* first check for any new commands (e.g. the stop command,
+  which would set task to TASK_NOTHING)
+  */
+  com();
+  if (task == TASK_NOTHING) return 1;
+
+  /* in case we are supposed to search to a certain depth, nodes count,
+  fixed time or infinite, check whether we have finished the task.
+  */
+
+  if (chronos.flags &amp; FINFINITE) return 0;
+  if (chronos.flags &amp; FDEPTH) return (sd.depth &gt; chronos.depth);
+  if (chronos.flags &amp; FNODES) return (sd.nodes &gt; chronos.nodes);
+  if (chronos.flags &amp; FMOVETIME) return ((int)(gettime() - sd.starttime) &gt; sd.movetime);
+
+  /* none of the other types of search-duration controls were triggered.
+  This means we are given an ordinary timecontrol.
+
+  Now we ask the question, whether it is worth to search another
+  ply, risk running out of time and having to abort  the search
+  or if we should just stop the search now and save the time for
+  another move.
+
+  based on some tests in average positions (where the hash isn&#39;t full yet,
+  there are not too many captures - resulting in a longer quiescence search)
+  the time for searching a ply is about the duration of the search
+  of the previous plies.
+
+  So:
+  timeused = (gettime() - sd.starttime);
+  predictedtime = timeused;
+  timeleft = movetime - timeused;
+
+  if (predictedtime &gt; timeleft) we stop the search now
+
+  Simplifying the equations:
+  (predictedtime &gt; timeleft)
+  ( timeused &gt; (movetime - timeused) )
+  ( (timeused * 2) &gt; movetime )
+
+  */
+
+  return (((int)(gettime() - sd.starttime) * 2) &gt; sd.movetime);
+
+}
+
+bool time_stop() {
+
+  /* time_stop() function is similar to time_stop_root(), only that
+  this function is not called every time we reach another ply,
+  but every couple thousand nodes. This function is very time
+  consuming, so calling it too often will slow down the search.
+  Calling it to seldom results in a slower response to input
+  through the console and it might overlook the running out of
+  time in faster games.
+  */
+
+  if (sd.depth &lt;= 1) return 0;
+
+  /* the first few lines are the same as in time_stop_root().
+  for more comments see that function
+  */
+
+  com();
+  if (task == TASK_NOTHING) return 1;
+
+  if (chronos.flags &amp; FINFINITE) return 0;
+  if (chronos.flags &amp; FDEPTH) return (sd.depth &gt; chronos.depth);
+  if (chronos.flags &amp; FNODES) return (sd.nodes &gt; chronos.nodes);
+  if (chronos.flags &amp; FMOVETIME) return ((int)(gettime() - sd.starttime) &gt; chronos.movetime);
+
+  /* again we are not doing one of the easier to manage time controls
+
+  other than the function before we are now already in the middle of
+  a search. Actually if our prediction was right, we wouldn&#39;t have
+  entered this ply if we weren&#39;t able to finish it.
+
+  so ( (gettime() - sd.starttime) &lt; movetime ) should always be given.
+
+  Anyway there are some situations where our prediction method fails.
+  The problem is that should we return true here and stop the search
+  a lot of information gathered gets useless, as the different lines
+  searched are not verfied.
+
+  if possible give in such cases a little overdraft and hope that
+  the misprediction was only small
+  */
+
+  if ((int)(gettime() - sd.starttime) &gt; sd.movetime) {
+
+    int movestogo = MOVESTOGO;
+    if (chronos.flags &amp; FMOVESTOGO) movestogo = chronos.movestogo;
+
+    if ((movestogo &gt; 5) &amp;&amp;
+      ((int)(gettime() - sd.starttime) &lt; (sd.movetime * 2)) &amp;&amp;
+      (sd.movetime &gt; 5000)) {
+      return 0;
+    }
+    else {
+      return 1;
+    }
+
+  }
+  return 0;
+}</code></pre>
+<p><strong><a href="/CPW-Engine">Up one Level</a></strong></p>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/CPW-Engine_chronos">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

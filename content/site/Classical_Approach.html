@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Classical Approach - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Classical Approach</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * <a href="/Sliding_Piece_Attacks">Sliding Piece Attacks</a> * Classical Approach</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/a/ac/Classical_Grotesque_MET_DT7804.jpg" alt="Paul Klee - Classical Grotesque, 1923 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Paul_Klee">Paul Klee</a> - Classical Grotesque, 1923 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="/Category:Paul_Klee">Paul Klee</a> - <a href="https://commons.wikimedia.org/wiki/File:Classical_Grotesque_MET_DT7804.jpg">Classical Grotesque</a>, 1923, <a href="https://en.wikipedia.org/wiki/Wikimedia_Commons">Wikimedia Commons</a>, <a href="https://en.wikipedia.org/wiki/Metropolitan_Museum_of_Art">Metropolitan Museum of Art</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p>The classical approach to generate <a href="/Sliding_Pieces">sliding piece</a> attacks was probably first used by <a href="/Chess_%28Program%29">Chess</a> and <a href="/Kaissa">Kaissa</a>.</p>
+<table>
+<tbody>
+<tr>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6" style="--wiki-img-w:220px"><a href="/Square_Mapping_Considerations"><img src="/assets/Cpwmappinghint.JPG" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></a></span></td>
+<td><p><em>Code samples and bitboard diagrams rely on <a href="/Square_Mapping_Considerations">Little endian file and rank mapping</a></em>.</p></td>
+</tr>
+</tbody>
+</table>
+
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#ray-attacks">Ray Attacks</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#positive-rays">Positive Rays</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#conditional">Conditional</a></li>
+<li><a href="#branchless">Branchless</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#negative-rays">Negative Rays</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#conditional-1">Conditional</a></li>
+<li><a href="#branchless-1">Branchless</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#generalized">Generalized</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#conditional-2">Conditional</a></li>
+<li><a href="#branchless-2">Branchless</a></li>
+</ol>
+</details></li>
+<li><a href="#zero-count">Zero Count</a></li>
+</ol>
+</details></li>
+<li><a href="#line-attacks">Line Attacks</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#piece-attacks">Piece Attacks</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#union-of-line-attacks">Union of Line Attacks</a></li>
+<li><a href="#in-one-run">In one Run</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="ray-attacks">Ray Attacks</h2>
+<p>The classical approach works ray-wise and uses pre-calculated <a href="/On_an_empty_Board">ray-attacks</a> for each of the eight <a href="/Rays">ray-directions</a> and each of the 64 <a href="/Squares">squares</a>. It has to distinguish between <a href="/On_an_empty_Board">positive</a> and <a href="/On_an_empty_Board">negative</a> directions, because it has to <a href="/BitScan">bitscan</a> the ray-attack intersection with the <a href="/Occupancy">occupancy</a> in different orders. That usually don't cares for getting line- or piece attacks, since one likely unrolls all directions needed for a particular line or piece - otherwise one may rely on a <a href="/BitScan">generalized bitscan</a>.</p>
+<p><em>We rely on the compass rose to enumerate ray-directions:</em></p>
+<pre><code>  noWe         nort         noEa
+          +7    +8    +9
+              \  |  /
+  west    -1 &lt;-  0 -&gt; +1    east
+              /  |  \
+          -9    -8    -7
+  soWe         sout         soEa</code></pre>
+<h3 id="positive-rays">Positive Rays</h3>
+<p>Attacks of Positive Ray-Directions:</p>
+<pre><code>East (+1)           North (+8)           NorthEast (+9)      NorthWest (+7)
+. . . . . . . .     . . . 1 . . . .      . . . . . . . 1     . . . . . . . .
+. . . . . . . .     . . . 1 . . . .      . . . . . . 1 .     1 . . . . . . .
+. . . . . . . .     . . . 1 . . . .      . . . . . 1 . .     . 1 . . . . . .
+. . . . . . . .     . . . 1 . . . .      . . . . 1 . . .     . . 1 . . . . .
+. . . R 1 1 1 1     . . . R . . . .      . . . B . . . .     . . . B . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .     . . . . . . . .</code></pre>
+<h4 id="conditional">Conditional</h4>
+<p>The first step gets the <a href="/On_an_empty_Board">ray-attack</a> on the otherwise empty board. Potential blockers are then determined by intersection with the <a href="/Occupancy">occupancy</a>, the set of all pieces. The first blocker, if any, is the least significant one-bit of the intersection. A <a href="/BitScan">bitscan forward</a> determines the square of the first blocker, to reset it's ray-bits from the attack set. For instance a bishop on g2:</p>
+<pre><code>occupied         &amp;  NorthWest(g2)       {a8, c6}
+1 . 1 1 1 1 1 1     1 . . . . . . .     1 . . . . . . .
+1 . 1 1 1 1 1 1     . 1 . . . . . .     . . . . . . . .
+. 1 1 . . . . .     . . 1 . . . . .     . . 1 . . . . .
+. . . . . . . .     . . . 1 . . . .     . . . . . . . .
+. . . . . . . .  &amp;  . . . . 1 . . .  =  . . . . . . . .
+. . . . . . 1 .     . . . . . 1 . .     . . . . . . . .
+1 1 1 1 1 1 B 1     . . . . . . . .     . . . . . . . .
+1 1 1 1 1 . 1 1     . . . . . . . .     . . . . . . . .
+
+                    xor NorthWest(c6 = bitscanForward{a8,c6}
+                    1 . . . . . . .
+                    . 1 . . . . . .
+                    . . . . . . . .
+                    . . . . . . . .
+                    . . . . . . . .
+                    . . . . . . . .
+                    . . . . . . . .
+                    . . . . . . . .
+
+                    =  final northWest Attacks
+                    . . . . . . . .
+                    . . . . . . . .
+                    . . 1 . . . . .
+                    . . . 1 . . . .
+                    . . . . 1 . . .
+                    . . . . . 1 . .
+                    . . . . . . . .
+                    . . . . . . . .
+
+U64 rayAttacks[8][64];
+
+U64 getPositiveRayAttacks(U64 occupied, enumDir dir8, enumSquare square) {
+   U64 attacks = rayAttacks[dir8][square];
+   U64 blocker = attacks &amp; occupied;
+   if ( blocker ) {
+      square = bitScanForward(blocker);
+      attacks ^= rayAttacks[dir8][square];
+   }
+   return attacks;
+}</code></pre>
+<p><span id="Branchless"></span></p>
+<h4 id="branchless">Branchless</h4>
+<p>Branches are evil with todays super pipelined processors. Even if branch-prediction heuristics become smarter, <a href="/Avoiding_Branches">branch-less</a> solutions allow better scheduling and parallel speedup of independent instruction chains, like processing several directions.</p>
+<p>Considering todays fast <a href="/X86-64">x86-64</a> <a href="/X86-64">bsf-instruction</a> of <a href="https://en.wikipedia.org/wiki/Intel_Core_2">Core 2</a> or <a href="https://en.wikipedia.org/wiki/AMD_K10">K10</a>, a branch-less solution may be worth a try. Due to the fact the <a href="/Occupancy">occupancy</a> of <a href="/First_Rank_Attacks">the outer squares</a> doesn't affect the attack set, setting the most significant bit ensures to scan at least an outer square, which would address an empty ray set anyway, therefor not affecting the final result with no blocker or a most outer one.</p>
+<pre><code>U64 getRayAttacks(U64 occupied, enumDir dir8, unsigned long square) {
+   U64 attacks    = rayAttacks[dir8][square];
+   U64 blocker    =  attacks &amp; occupied;
+   _BitScanForward64 (&amp;square, blocker | C64(0x8000000000000000));
+   return attacks ^ rayAttacks[dir8][square];
+}</code></pre>
+<h3 id="negative-rays">Negative Rays</h3>
+<p>Attacks of Negative Ray-Directions:</p>
+<pre><code>West (-1)           South (-8)           SouthWest (-9)      SouthEast (-7)
+. . . . . . . .     . . . . . . . .      . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .     . . . . . . . .
+1 1 1 R . . . .     . . . R . . . .      . . . B . . . .     . . . B . . . .
+. . . . . . . .     . . . 1 . . . .      . . 1 . . . . .     . . . . 1 . . .
+. . . . . . . .     . . . 1 . . . .      . 1 . . . . . .     . . . . . 1 . .
+. . . . . . . .     . . . 1 . . . .      1 . . . . . . .     . . . . . . 1 .</code></pre>
+<h4 id="conditional-1">Conditional</h4>
+<p>Works the same way, but needs <a href="/BitScan">reverse bitscan</a> to find the first blocking piece, if any.</p>
+<pre><code>U64 getNegativeRayAttacks(U64 occupied, enumDir dir8, enumSquare square) {
+   U64 attacks = rayAttacks[dir8][square];
+   U64 blocker = attacks &amp; occupied;
+   if ( blocker ) {
+      square = bitScanReverse(blocker);
+      attacks ^= rayAttacks[dir8][square];
+   }
+   return attacks;
+}</code></pre>
+<h4 id="branchless-1">Branchless</h4>
+<p>The branch-less solution with a fast <a href="/X86-64">x86-64</a> <a href="/X86-64">bsr-instruction</a> allows better scheduling and parallel speedup of independent instruction chains, like processing several directions. Setting the least significant bit ensures to scan at least an outer square, which would address an empty ray set anyway, therefor not affecting the final result with no blocker or a most outer one.</p>
+<pre><code>U64 getRayAttacks(U64 occupied, enumDir dir8, unsigned long square) {
+   U64 attacks    = rayAttacks[dir8][square];
+   U64 blocker    =  attacks &amp; occupied;
+   _BitScanReverse64 (&amp;square, blocker | 1);
+   return attacks ^ rayAttacks[dir8][square];
+}</code></pre>
+<p><span id="Generalized"></span></p>
+<h3 id="generalized">Generalized</h3>
+<p>The idea of the <a href="/BitScan">generalized bitscan</a> may be used to share the same code for all directions. The implementation of isNegative(dir8), a macro or inline-function, depends on the definition or enumeration of the directions and is likely a compare or test instruction.</p>
+<h4 id="conditional-2">Conditional</h4>
+<p>The conditional by a good predictable branch on blocker is favorable - specially for slow bitscans with some chance to skip it, e.g. in endings.</p>
+<pre><code>U64 getRayAttacks(U64 occupied, enumDir dir8, enumSquare square) {
+   U64 attacks = rayAttacks[dir8][square];
+   U64 blocker = attacks &amp; occupied;
+   if ( blocker ) {
+      square = bitScan(blocker, isNegative(dir8));
+      attacks ^= rayAttacks[dir8][square];
+   }
+   return attacks;
+}</code></pre>
+<h4 id="branchless-2">Branchless</h4>
+<p>The branch-less routine provides a dirMask as universal set for negative rays and the empty set for positive rays, to implement the <a href="/BitScan">generalized bitscan</a>. The dirBit-or ensures to scan at least outer square with empty ray sets.</p>
+<pre><code>U64 getRayAttacks(U64 occupied, enumDir dir8, unsigned long square) {
+   U64 attacks    = rayAttacks[dir8][square];
+   U64 blocker    =  attacks &amp; occupied;
+   blocker       &amp;= -blocker | dirMask[dir8];
+   blocker       |=            dirBit [dir8]
+   _BitScanReverse64 (&amp;square, blocker | dirBit[dir8]);
+   return attacks ^ rayAttacks[dir8][square];
+}</code></pre>
+<h3 id="zero-count">Zero Count</h3>
+<p>If available, Leading- or Trailing Zero Count instructions may be used instead of bitscan for another branch-less solution of the classical attack getter. Since they leave 64 for empty sets, it needs to make the ray attack <a href="/Array">arrays</a> one greater to allow index by 64 which contains an empty set - or one needs to map 64 to 63 for positive directions.</p>
+<pre><code>U64 rayAttacks[8][65];
+
+U64 getPositiveRayAttacks(U64 occupied, enumDir dir8, enumSquare square) {
+   U64 attacks = rayAttacks[dir8][square];
+   U64 blocker = attacks &amp; occupied;
+   int firstBlockingSquare = trailingZeroCount(blocker);
+   attacks ^= rayAttacks[dir8][firstBlockingSquare];
+   return attacks;
+}</code></pre>
+<p>LeadingZeroCount instead of bitscanReverse may be done similarly, considering the reversed order.</p>
+<p><span id="Wrapper"></span></p>
+<h2 id="line-attacks">Line Attacks</h2>
+<p>As mentioned, line attacks are the <a href="/General_Setwise_Operations">union</a> of positive and opposite negative <a href="/Rays">ray-directions</a> - since they are disjoint one may also use 'xor' or 'add':</p>
+<pre><code>U64 diagonalAttacks(U64 occ, enumSquare sq) {
+  return getPositiveRayAttacks(occ, noEa, sq)
+ getNegativeRayAttacks(occ, soWe, sq); // ^ +
+}
+
+U64 antiDiagAttacks(U64 occ, enumSquare sq) {
+  return getPositiveRayAttacks(occ, noWe, sq)
+ getNegativeRayAttacks(occ, soEa, sq); // ^ +
+}
+
+U64 fileAttacks (U64 occ, enumSquare sq) {
+  return getPositiveRayAttacks(occ, nort, sq)
+ getNegativeRayAttacks(occ, sout, sq); // ^ +
+}
+
+U64 rankAttacks (U64 occ, enumSquare sq) {
+  return getPositiveRayAttacks(occ, east, sq)
+ getNegativeRayAttacks(occ, west, sq); // ^ +
+}</code></pre>
+<h2 id="piece-attacks">Piece Attacks</h2>
+<h3 id="union-of-line-attacks">Union of Line Attacks</h3>
+<p>Of course piece attacks are the union of the line attacks:</p>
+<pre><code>U64 rookAttacks (U64 occ, enumSquare sq) {
+  return fileAttacks(occ, sq)
+ rankAttacks(occ, sq); // ^ +
+}
+
+U64 bishopAttacks (U64 occ, enumSquare sq) {
+  return diagonalAttacks(occ, sq)
+ antiDiagAttacks(occ, sq); // ^ +
+}
+
+U64 queenAttacks (U64 occ, enumSquare sq) {
+  return rookAttacks  (occ, sq)
+ bishopAttacks(occ, sq); // ^ +
+}</code></pre>
+<p><span id="InOneRun"></span></p>
+<h3 id="in-one-run">In one Run</h3>
+<p>As mentioned by <a href="/Robert_Hyatt">Robert Hyatt</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>, instead of fetching four <a href="/On_an_empty_Board">ray-attacks</a> on the otherwise empty board, one may already use the <a href="/On_an_empty_Board">rook- or bishop attacks</a> to reset outer squares from that union set.</p>
+<p>A further improvement was suggested by <a href="/Michael_Sherwin">Michael Sherwin</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>, to union the occupancy with the outer bits 0 and 63. Together with appropriate bits set in separate ray-masks, this yields to an efficient branchless solution with 13 64-bit operations in total and 4.5 KByte for the lookup tables for both rooks and bishops each.</p>
+<pre><code>struct {
+  U64 bitsN;  // bits North, including MSB (bit 63)
+  U64 bitsE;  // bits East, including MSB
+  U64 bitsS;  // bits South, including LSB (bit 0 == 1)
+  U64 bitsW;  // bits West, including LSB 
+} CACHE_ALIGN rayWstop[64]; 
+
+U64 attacksEmpty[64];
+U64 rayN[64];
+U64 rayE[64];
+U64 rayS[64];
+U64 rayW[64];
+
+U64 rookAttacks(U64 occ, unsigned int sq) {
+   unsigned long ulN, ulE, ulS, ulW;
+   occ |= C64(0x8000000000000001);
+   _BitScanForward64(&amp;ulN, occ &amp; rayWstop[sq].bitsN);
+   _BitScanForward64(&amp;ulE, occ &amp; rayWstop[sq].bitsE);
+   _BitScanReverse64(&amp;ulS, occ &amp; rayWstop[sq].bitsS);
+   _BitScanReverse64(&amp;ulW, occ &amp; rayWstop[sq].bitsW);
+   return attacksEmpty[sq]^rayN[ulN]^rayE[ulE]^rayS[ulS]^rayW[ulW];
+} </code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Bitfoot">Bitfoot - A/B Bitboards</a></li>
+<li><a href="/Blockers_and_Beyond">Blockers and Beyond</a></li>
+<li><a href="/CFish">CFish - AVX2 Attacks</a></li>
+<li><a href="/Obstruction_Difference">Obstruction Difference</a></li>
+<li><a href="/Pieces_versus_Directions">Pieces versus Directions</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Stuart_Cracraft">Stuart Cracraft</a> (<strong>1984</strong>). <em>Bitmap move generation in Chess</em>. <a href="/ICGA_Journal">ICCA Journal</a>, Vol. 7, No. 3, pp. 146–153</li>
+<li><a href="/Fridel_Fainshtein">Fridel Fainshtein</a> (<strong>2006</strong>). <em>An Orthodox k-Move Problem-Composer for Chess Directmates</em>. M.Sc. thesis, <a href="/Bar-Ilan_University">Bar-Ilan University</a>, <a href="http://www.problemschach.de/KMOVEComposer.pdf">pdf</a>, Appendix D - 64-bit Representation, pp. 105</li>
+<li><a href="/Fridel_Fainshtein">Fridel Fainshtein</a>, <a href="/Yaakov_HaCohen-Kerner">Yaakov HaCohen-Kerner</a> (<strong>2006</strong>). <em>A Chess Composer of Two-Move Mate Problems</em>. <a href="/ICGA_Journal">ICGA Journal</a>, Vol. 29, No. 1, <a href="http://homedir.jct.ac.il/~kerner/pdf_docs/ICGA_computer_composer.pdf">pdf</a>, Appendix E: 64-bit representation</li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=257692&amp;t=27113">Re: Thinker output</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, March 25, 2009</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=30356&amp;start=14">Re: Yet another bitboard attack generator</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, October 28, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=30971">Modified old 64 bit attack getter</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/CCC">CCC</a>, December 06, 2009</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=78562">Bob used to do it this way</a> by <a href="/Michael_Sherwin">Mike Sherwin</a>, <a href="/CCC">CCC</a>, October 31, 2021</li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Sliding_Piece_Attacks">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=30356&amp;start=14">Re: Yet another bitboard attack generator</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, October 28, 2009<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=30971">Modified old 64 bit attack getter</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/CCC">CCC</a>, December 06, 2009<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Paul_Klee">Paul Klee</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Classical_Approach">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

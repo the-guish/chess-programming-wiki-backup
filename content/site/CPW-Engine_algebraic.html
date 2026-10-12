@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CPW-Engine algebraic - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">CPW-Engine algebraic</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Engines">Engines</a> * <a href="/CPW-Engine">CPW-Engine</a> * Algebraic</strong></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#description">Description</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#code">Code</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#int-convert_0x88_asq-a">int convert_0x88_a(sq, a)</a></li>
+<li><a href="#int-convert_a_0x88a">int convert_a_0x88(a)</a></li>
+<li><a href="#int-algebraic_movesa">int algebraic_moves(a)</a></li>
+</ol>
+</details></li>
+</ol>
+</details><h2 id="description">Description</h2>
+<p>When communicating with the <a href="/GUI">GUI</a>, the Engine is supposed to use the <a href="/Algebraic_Chess_Notation">algebraic game notation</a>. The code on this page is used to translate the positions in the engine native form to the GUI friendly representation and back again.</p>
+<p>The algebraic game notation first has 2 characters representing the square the piece comes from (eg.: "e2"). Then 2 characters to indicate the square the piece moves to (eg.: "e4"). And finally, in case of a promotion, the piece the pawn is promoted to ( q | r | b | n ). So a possible starting move for white could be "e2e4". And a possible promotion move could be "a7a8n".</p>
+<h2 id="code">Code</h2>
+<h3 id="int-convert_0x88_asq-a">int convert_0x88_a(sq, a)</h3>
+<pre><code>int convert_0x88_a(int sq, char * a) {
+  a[0] = COL(sq) + &#39;a&#39;;
+  a[1] = ROW(sq) + &#39;1&#39;;
+  a[2] = 0;
+  return 0;
+}</code></pre>
+<h3 id="int-convert_a_0x88a">int convert_a_0x88(a)</h3>
+<pre><code>int convert_a_0x88(char * a) {
+  int sq = 0;
+  sq = a[0] - &#39;a&#39;;
+  sq += (a[1] - &#39;1&#39;) * 16;
+  return sq;
+}</code></pre>
+<h3 id="int-algebraic_movesa">int algebraic_moves(a)</h3>
+<pre><code>int algebraic_moves(char * a) {
+
+  smoves m;
+
+  while ((a[0] &gt;= &#39;a&#39;) &amp;&amp; (a[0] &lt;= &#39;h&#39;)) {
+
+    m.from = convert_a_0x88(a);
+    m.to = convert_a_0x88(a + 2);
+
+    m.piece_from = b.pieces[m.from];
+    m.piece_to = b.pieces[m.from];
+    m.piece_cap = b.pieces[m.to];
+
+    m.flags = 0;
+    m.castle = 0;
+    m.ep = 0;
+    m.ply = 0;
+    m.score = 0;
+
+    switch (a[4]) {
+    case &#39;q&#39;: m.piece_to = PIECE_QUEEN; a++; break;
+    case &#39;r&#39;: m.piece_to = PIECE_ROOK; a++; break;
+    case &#39;b&#39;: m.piece_to = PIECE_BISHOP; a++; break;
+    case &#39;n&#39;: m.piece_to = PIECE_KNIGHT; a++; break;
+    }
+
+    //castling
+    if ((m.piece_from == PIECE_KING) &amp;&amp;
+      ((m.from == E1 &amp;&amp; (m.to == G1 || m.to == C1)) ||
+      (m.from == E8 &amp;&amp; (m.to == G8 || m.to == C8)))) {
+      m.flags = MFLAG_CASTLE;
+    }
+
+    /*ep
+    if the moving-piece is a Pawn, the square it moves to is empty and
+    it was a diagonal move it has to be an en-passant capture.
+    */
+    if ((m.piece_from == PIECE_PAWN) &amp;&amp;
+      (m.piece_cap == PIECE_EMPTY) &amp;&amp;
+      ((abs(m.from - m.to) == 15) || (abs(m.from - m.to) == 17))) {
+      m.flags = MFLAG_EPCAPTURE;
+    }
+
+    move_make(m);
+    a += 4;
+
+    while (a[0] == &#39; &#39;) a++;
+  }
+
+  return 0;
+}</code></pre>
+<p><strong><a href="/CPW-Engine">Up one Level</a></strong></p>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/CPW-Engine_algebraic">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

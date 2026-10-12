@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Color Flipping - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Color Flipping</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Chess">Chess</a> * <a href="/Chess_Position">Position</a> * Color Flipping</strong></p>
+<p><strong>Color Flipping</strong> a chess position refers to the <a href="/Vertical_Flipping">vertical flipping</a> or mirroring of all <a href="/Pieces">pieces</a> along the horizontal axis between the 4th and 5th <a href="/Ranks">rank</a> also swapping the <a href="/Color">color</a> of the flipped pieces from White to Black and vice versa, the <a href="/Side_to_move">side to move</a>, the <a href="/Castling_Rights">castling rights</a> and the rank of a possible <a href="/En_passant">en passant</a> target square from six to three or vice versa accordantly. The resulting position is mirror equivalent, pawn and pieces have the same <a href="/Pawn_Spans">span length</a> or home rank relation. A white pawn on the light square c2 becomes a black pawn on the dark square c7. Color flipping a vertical symmetrical or mirror position (same castling rights, no en passant possible) results in the same position as if the side to move performed a <a href="/Null_Move">null move</a>:</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#sample">Sample</a></li>
+<li><a href="#book-transpositions">Book Transpositions</a></li>
+<li><a href="#flipping-an-8x8-board">Flipping an 8x8 Board</a></li>
+<li><a href="#looking-for-bugs">Looking for Bugs</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#monochrome">Monochrome</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#microchess">MicroChess</a></li>
+<li><a href="#quad-bitboards">Quad-Bitboards</a></li>
+<li><a href="#six-two-bitboards">Six-Two Bitboards</a></li>
+<li><a href="#keeping-two-boards">Keeping two Boards</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="sample">Sample</h2>
+<table>
+<thead>
+<tr>
+<th>Giuoco Piano</th>
+<th>Giuoco Piano Symmetrical</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><div class="chess-fen" data-fen="r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R"><code>r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R</code></div></td>
+<td><div class="chess-fen" data-fen="r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/2N2N2/PPPP1PPP/R1BQK2R"><code>r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/2N2N2/PPPP1PPP/R1BQK2R</code></div></td>
+</tr>
+<tr>
+<td>r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq -</td>
+<td>r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/2N2N2/PPPP1PPP/R1BQK2R w KQkq -</td>
+</tr>
+<tr>
+<td><div class="chess-fen" data-fen="rnbqk2r/pppp1ppp/5n2/2b1p3/2B1P3/2N5/PPPP1PPP/R1BQK1NR"><code>rnbqk2r/pppp1ppp/5n2/2b1p3/2B1P3/2N5/PPPP1PPP/R1BQK1NR</code></div></td>
+<td><div class="chess-fen" data-fen="r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/2N2N2/PPPP1PPP/R1BQK2R"><code>r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/2N2N2/PPPP1PPP/R1BQK2R</code></div></td>
+</tr>
+<tr>
+<td>rnbqk2r/pppp1ppp/5n2/2b1p3/2B1P3/2N5/PPPP1PPP/R1BQK1NR b KQkq -</td>
+<td>r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/2N2N2/PPPP1PPP/R1BQK2R b KQkq -</td>
+</tr>
+</tbody>
+</table>
+<p><span id="BookTransposition"></span></p>
+<h2 id="book-transpositions">Book Transpositions</h2>
+<p>During the <a href="/Opening">opening</a>, in some lines, White may intentionally lose a <a href="/Tempo">tempo</a>, to <a href="/Transposition">transpose</a> into a color flipped position of an opening White likes to play the "Black" side, which might be considered in chess programs <a href="/Opening_Book">book</a> access code, see for instance <a href="/WMCCC_1988">WMCCC 1988, Pandix-Y!88</a>.</p>
+<h2 id="flipping-an-8x8-board">Flipping an 8x8 Board</h2>
+<p>An <a href="/8x8_Board">8x8 Board</a> with a <a href="/Squares">rank-file mapping</a>, needs to perform an <a href="/General_Setwise_Operations">exclusive or</a> with 56 (A8 in <a href="/Square_Mapping_Considerations">LERF</a>) to vertically flip square coordinates. Assuming piece color is least significant bit and empty square is zero, a pure 8x8 Board may be color flipped that way in <a href="/C">C</a>:</p>
+<pre><code>int board[64], sq, s, f;
+
+for (sq = 0; sq &lt; 32; ++sq) {
+    s = board[sq];
+    f = board[sq^56];
+    board[sq] = f ^ (f != 0);
+    board[sq^56] = s ^ (s != 0);
+}</code></pre>
+<p><span id="Debugging"></span></p>
+<h2 id="looking-for-bugs">Looking for Bugs</h2>
+<p>A side to move relative, bug free static <a href="/Evaluation">evaluation</a> should have the same <a href="/Score">score</a> for both positions. <a href="/Search">Search</a> is a different issue, since <a href="/Move_Ordering">move ordering</a> might be slightly different for instance in bitboard programs due to different order in <a href="/Bitboard_Serialization">bitboard serialization</a> if one doesn't use a <a href="/Bitboard_Serialization">symmetrical bitscan</a> by side to move. Similar to the <a href="https://en.wikipedia.org/wiki/Butterfly_effect">butterfly effect</a> in <a href="https://en.wikipedia.org/wiki/Chaos_theory">chaos theory</a> a minor initial difference might amplify to enormous effects during the search. However, if the search behavior of a <a href="/Tactics">tactical</a> <a href="/Test-Positions">test position</a> of a most deterministic chess engine (e.g. no <a href="/Parallel_Search">parallel search</a>), varies by magnitudes in solution <a href="/Depth">depth</a> and time between original and color flipped position, one may take a closer look performing some <a href="/Logging">logging</a> and/or <a href="/Debugging">debugging</a>. <span id="Monochrome"></span></p>
+<h2 id="monochrome">Monochrome</h2>
+<p>An idea to unify and simplify <a href="/Move_Generation">move generation</a> and to get rid of order dependencies, is to perform a color flip of the position and its internal <a href="/Board_Representation">board representation</a> directly after <a href="/Make_Move">making a move</a>, to make the engine white to move only, that is only generating white moves, or similar, to keep a normal and flipped board to <a href="/Incremental_Updates">update them incrementally</a>. <span id="MicroChess"></span></p>
+<h3 id="microchess">MicroChess</h3>
+<p><a href="/Peter_Jennings">Jennings'</a> <a href="/6502">approach</a> with <a href="/MicroChess">MicroChess</a> was similar <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>, but instead of vertical flipping (xor 56) he reversed or rotated the board by 180 degrees (xor 63), like players changing places and looking the board alternately from White's or Black's point of view, with some considerations of the additional horizontal mirroring, concerning <a href="/Castling">castling</a> and <a href="/En_passant">en passant</a>.</p>
+<h3 id="quad-bitboards">Quad-Bitboards</h3>
+<p><a href="/Gerd_Isenberg">Gerd Isenberg</a> proposed a make move - color flipping approach using <a href="/Quad-Bitboards">Quad-Bitboards</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> . The black <a href="/Zobrist_Hashing">Zobrist keys</a> were the byte-swapped white Zobrist keys from the vertically flipped squares (xor 56). In symmetrical positions this gains some additional hits while probing the <a href="/Transposition_Table">transposition table</a>. But symmetrical mirror positions, or symmetrical subsets have the property, their <a href="/General_Setwise_Operations">xored</a> hashkey has only 32 distinct bits since hashkey equals <a href="/Flipping_Mirroring_and_Rotating">flipVertical</a>(hashkey), for instance:</p>
+<pre><code>  01020304|50607080  // white pieces
+^ 80706050|04030201  // black pieces of a mirror position
+= 81726354|54637281</code></pre>
+<h3 id="six-two-bitboards">Six-Two Bitboards</h3>
+<p>The common <a href="/Bitboard_Board-Definition">six piece kind and two color bitboard</a> board representation takes eight byte swaps to color flip the whole board.</p>
+<h3 id="keeping-two-boards">Keeping two Boards</h3>
+<p>Rather than flipping the board after each make, <a href="/Reinhard_Scharnagl">Reinhard Scharnagl</a> proposed monochrome move generation by keeping a normal and a color flipped board, both <a href="/Incremental_Updates">incremental updated</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> . He further suggested asymmetrical <a href="/Pieces">piece coding</a> with less piece codes (only one or two) for the pieces of the side not to move. His approach has also the advantage to keep independent Zobrist keys for all squares and pieces.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Color">Color</a></li>
+<li><a href="/Diagonal_Mirroring">Diagonal Mirroring</a></li>
+<li><a href="/Flipping_Mirroring_and_Rotating">Flipping, Mirroring and Rotating</a> of <a href="/Bitboards">Bitboards</a></li>
+<li><a href="/Horizontal_Mirroring">Horizontal Mirroring</a></li>
+<li><a href="/Side_to_move">Side to move</a></li>
+<li><a href="/Vertical_Flipping">Vertical Flipping</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Fernand_Gobet">Fernand Gobet</a> (<strong>1993</strong>). <em><a href="http://people.brunel.ac.uk/%7Ehsstffg/papers/ModelChessMem/Chess%20Memory.html">A Computer Model of Chess Memory</a>.</em> Proceedings of the 15th Annual Meeting of the Cognitive Science Society, pp. 463-468.</li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=199005">Conversion to dual positions for EPD testsuites?</a> by <a href="/Leen_Ammeraal">Leen Ammeraal</a>, <a href="/CCC">CCC</a>, November 26, 2001</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=13923">fen to fen functions</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, May 21, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=14168">Comparison data of Crafty vs Rybka that I promised 2 days ago</a> by Les, <a href="/CCC">CCC</a>, June 01, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=17589">color-flipped perft</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, November 04, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=30423">Board without color flags</a> by <a href="/Fritz_Reul">Fritz Reul</a>, <a href="/CCC">CCC</a>, October 31, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48843">Position flipping</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, August 05, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54465">Black/White symmetry in move generation</a> by Jeffery A Esposito, <a href="/CCC">CCC</a>, November 25, 2014 » <a href="/Move_Generation">Move Generation</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54704">Symmetric move generation using bitboards</a> by <a href="/Lasse_Hansen">Lasse Hansen</a>, <a href="/CCC">CCC</a>, December 20, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?p=663148">reversed-color transpositions</a> by <a href="/John_Philip_Fishburn">John Fishburn</a>, <a href="/CCC">CCC</a>, March 11, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64003">FEN - Flipper for Windows</a> by <a href="/Matthias_Gemuh">Matthias Gemuh</a>, <a href="/CCC">CCC</a>, May 17, 2017 » <a href="/Forsyth-Edwards_Notation">FEN</a>, <a href="/Extended_Position_Description">EPD</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="http://www.jimloy.com/chess/mirror1.htm">A "Mirror" Chess Problem</a> from <a href="http://www.jimloy.com/chess/chess.htm">Jim Loy's Chess Pages</a></li>
+<li><a href="http://www.chessvariants.org/other.dir/mirror.html">Playing Chess Against Its Mirror Image</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Chess_Position">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Peter_Jennings">Peter Jennings</a> (<strong>1976</strong>). <em><a href="http://www.computerhistory.org/chess/full_record.php?iid=doc-431614f6d8478">MicroChess, a Chess playing program for the 6502 Microcomputer</a></em>. <a href="http://archive.computerhistory.org/projects/chess/related_materials/text/4-1.MicroChess_%20Manual_for_6502.Micro-Ware/MicroChessManual.PETER_JENNINGS.062303071.sm.pdf">pdf</a>, Courtesy of <a href="/Peter_Jennings">Peter Jennings</a>, <a href="/The_Computer_History_Museum">The Computer History Museum</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=17589">color-flipped perft</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, November 04, 2007<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://www.open-chess.org/viewtopic.php?f=39&amp;t=1039">Computerschach mit monochromen Methoden ?</a> by <a href="/Reinhard_Scharnagl">Reinhard Scharnagl</a>, <a href="/Computer_Chess_Forums">OpenChess - Deutsches Forum</a>, January 27, 2011 (German)<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Color_Flipping">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

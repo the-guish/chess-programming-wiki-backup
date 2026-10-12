@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Candidates (Bitboards) - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Candidates (Bitboards)</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * <a href="/Pawn_Pattern_and_Properties">Pawn Pattern and Properties</a> * Candidates</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:240px"><a href="http://chgs.elevator.umn.edu/asset/viewAsset/57f3b6787d58ae5f74bf8ba9#57f3b6d77d58ae5574bf8bc1" target="_blank" rel="noopener noreferrer"><img src="/assets/Designated.jpg" alt="Samuel Bak - The Designated 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Samuel_Bak">Samuel Bak</a> - The Designated <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://chgs.elevator.umn.edu/asset/viewAsset/57f3b6787d58ae5f74bf8ba9#57f3b6d77d58ae5574bf8bc1">Chess in the Art of Samuel Bak</a>, <a href="http://www.chgs.umn.edu/">Center for Holocaust &amp; Genocide Studies</a>, <a href="/University_of_Minnesota">University of Minnesota</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Candidates</strong>,<br />
+pawns that can force themselves to become <a href="/Passed_Pawn">passed pawns</a> simply with a series of pawn moves. Candidates are half-open pawns with no mechanical but dynamical obstructions. Specifially, the pawn must be on a half-open file, and the number of defender pawns that can help the pawn advance are greater than or equal to the number of pawns which attack the pawn or squares in front of it. <span id="Faker"></span></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#candidate-and-faker">Candidate and Faker</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#advanced-candidates">Advanced Candidates</a></li>
+<li><a href="#less-advanced">Less Advanced</a></li>
+</ol>
+</details></li>
+<li><a href="#the-sneaker">The Sneaker</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="candidate-and-faker">Candidate and Faker</h2>
+<p>While the intersection of the <a href="/Pawn_Spans">frontspan</a> with opposing pawns is empty, the intersection of <a href="/Attack_Spans">front attackspans</a> with opposing pawns is not (otherwise it would already a passer). The opposing pawns as member of the front attackspan(s), stand sentinel over one or more squares in the <a href="/Pawn_Fills">frontfill</a> of the open pawn, and are about to <strong>capture</strong> the open pawn, if it may advance into - or already is - a <a href="/Pawn_Levers_%28Bitboards%29">lever</a>. Those opposing pawns are called <a href="/Sentry">sentries</a>.</p>
+<p>If the open pawn has one or more <strong>helper-pawns</strong> on adjacent files, which are able to <strong>recapture</strong> the <strong>sentry</strong>, the candidate is a real one and is guaranteed to force a passer. Otherwise, without enough support from helpers, the candidate is only a <a href="/Faker">faker</a>.</p>
+<p>The following diagrams shows advanced candidates and fakers, assuming black to move:</p>
+<pre><code>candidates b6, f4   fakers -
+sentries   c7, g2   more sentries
+helper     c5, g4   than helpers
+. . . . | . . .     . . . . | . . .
+. . b . . . . .     b . b . . . . .
+. w . . . . . .     . w . . . . . .
+. . w . . . . .     . . w . . . . .
+. . . . . b b .     . . . . . b b .
+. . . . . . . .     . . . . . . . .
+. . . . . . w .     . . . . w . w .
+. . . | . . . .     . . . | . . . .</code></pre>
+<p>The white candidate on b6 is already in lever-distance with the sentry c7. The sentry c7 is likely forced to capture - otherwise b6 captures or pushes to become a passer. The white helper immediately recaptures and takes the role of the former candidate and becomes a passer. The black candidate on f4 can also force a passer. The helper on g4 compensates the sentry on g2. Usually, the <strong>candidate</strong> has to push forward, not the <strong>helper</strong>.</p>
+<p>In the second diagram both candidates are pseudo-candidates or <strong>fakers</strong>, since there are <strong>more</strong> sentries than helpers - a7xb6 is required - otherwise, after c7xb6, c5-c6 would allow the helper to advance to a passer.</p>
+<h3 id="advanced-candidates">Advanced Candidates</h3>
+<p>Advanced candidates, already inside or about to enter the opponent side of the board are the most important to consider in evaluation. Even more if the <a href="/Pawn_Spans">interspan</a> of sentries and helper is already one - and it is only about the control of the stop-square - or if the candidate is already part of a lever, the number of attacks and defenses.</p>
+<p>In such cases, due to the forced nature of exchanging candidate, sentry and helper, only two or up to five plies are necessary to establish a passer. In fact those candidates may even be more worth than pawns already a passer - specially if the opponent king is outside the candidates square - or if the outside candidate may deflect the opponent king.</p>
+<p>One may argue that a candidate already in lever distance with the sentry should be covered by quiescence search - since it is a capture/recapture sequence. Therefor more important to evaluate are the candidate-helper-duo/trio against one or two sentries, which is likely a kind of static exchange evaluation of the candidate's stop-square.</p>
+<pre><code>. . . . . . . .
+. . s . . s . s   sentries
+. . . . . . . .
+. c h . . h c h   candidates with helpers
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .</code></pre>
+<p>To cover sets of advanced white candidates with attacked but sufficient defended stops already on the on the 5th rank, one may use some code like this. Feel free to introduce branches, e.g. if there are no white pawns on the fifth rank. Anyway, <a href="/Pawn_Attacks_%28Bitboards%29">wSafePawnSquares</a> might be used elsewhere, e.g. to decide whether helper pawns may advance to defend candidate's stop.</p>
+<pre><code>U64 wCandidatesOn5th(U64 wpawns, U64 bpawns) {
+   const U64 rank5     = C64(0x000000ff00000000);
+   U64 bPawnAnyAttacks = bPawnAnyAttacks(bpawns);
+   U64 wSafeSquares    = wSafePawnSquares(wpawns, bpawns);
+   U64 wSafeAttacked   = bPawnAnyAttacks  &amp;  wSafeSquares;
+   U64 blackFrontSpan  = (bpawns &gt;&gt; 8)    | (bpawns &gt;&gt; 16); // only for 5th rank
+   return wpawns &amp; rank5 &amp;~blackFrontSpan &amp; (wSafeAttacked &gt;&gt; 8);
+}</code></pre>
+<h3 id="less-advanced">Less Advanced</h3>
+<p>If it is about the long-term evaluation of <a href="/Pawn_Spans">telestop</a> -squares - or the need of advancement of helper(s) to defend the stop-square, things become more complicated and one probably better relies on search and some general bonus to advance half-free pawns and advanced duos. Feel free to cover attackspan-related stuff for less advanced candidates respectively helpers and helper's helpers.</p>
+<pre><code>d4 is candidate     d4 is faker         d4 faker due to     d4 is candidate
+                                        helper&#39;s sentry     due to helper&#39;s helper f2
+. . . . . . . .     . . . . . . . .     . . . . . . . .     . . . . . . . .
+. . s . s . . .     . . s . s . . .     . . s . s . . .     . . s . s . . .
+. . . . . . . .     . . . . . . . .     . . . . . hs. .     . . . . . hs. .
+. . . . . . . .     . . . . . . . .     . . . . . . . .     . . . . . . . .
+. . . c . . . .     . . . f . . . .     . . . f . . . .     . . . c . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .     . . . . . . . .
+. . h . h . . .     . . h . . . . .     . . h . h . . .     . . h . h hh. .
+. . . . . . . .     . . . . . . . .     . . . . . . . .     . . . . . . . .</code></pre>
+<p><span id="Sneaker"></span></p>
+<h2 id="the-sneaker">The Sneaker</h2>
+<p>Also known as a <a href="/Hidden_Passed_Pawn">hidden passed pawn</a>. A kind of candidate in disguise is an <a href="/Unfree_Pawns_%28Bitboards%29">unfree pawn</a> or faker that may become a passer through a sacrificial combination. In the diagram white may sacrifice the faker with b5-b6 - allowing black to establish a passer on b6 - but the sneaker on c6 becomes a much more advanced passer with a frontspan of only two against five:</p>
+<pre><code>. . . . . . . .
+. . b . . . . .
+. . w . . . . .
+. w . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .</code></pre>
+<p>A sneaker is likely advanced (opponent side of the board), <a href="/Pawn_Rams_%28Bitboards%29">rammed</a> and defended, but no lever. No other opposing pawn controls it's stop or telestop squares.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Candidate_Passed_Pawn">Candidate Passed Pawn</a></li>
+<li><a href="/Hidden_Passed_Pawn">Hidden Passed Pawn</a></li>
+<li><a href="/Passed_Pawn">Passed Pawn</a></li>
+<li><a href="/Passed_Pawns_%28Bitboards%29">Passed Pawns (Bitboards)</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="https://groups.google.com/d/msg/fishcooking/sx7QLbtbEOg/f_rJP6bZiCcJ">Candidate passers</a> by <a href="/Stefan_Geschwentner">Stefan Geschwentner</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, October 14, 2013 » <a href="/Stockfish">Stockfish</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://www.chess.com/forum/view/chess-equipment/pawn-power-in-chess-by-hans-kmoch-glossary-of-terms">Pawn Power in Chess by Hans Kmoch - Glossary of Terms - Chess Forums</a> - Chess.com <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></li>
+<li><a href="https://en.wikipedia.org/wiki/Candidates_Tournament">Candidates Tournament from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Jango_Edwards">Jango Edwards</a> - Harry Christmas, September 10, 2009, <a href="https://en.wikipedia.org/wiki/Zeche_Carl">Zeche Carl</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>, <a href="https://en.wikipedia.org/wiki/Essen">Essen</a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/3t8JUmEspUs" title="YouTube video 3t8JUmEspUs" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=3t8JUmEspUs">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Pawn_Pattern_and_Properties">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Hans_Kmoch">Hans Kmoch</a> (<strong>1959, 1990</strong>). <em>Pawn Power in Chess</em>. New York: Dover, 1990. Previous ed.: New York: McKay, 1959. ISBN 0-486-26486-6<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://en.wikipedia.org/wiki/Zeche_Carl">Zeche Carl</a> is part of <a href="/Category:Industrial_Heritage_Trail">The Industrial Heritage Trail</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Samuel_Bak">Samuel Bak</a> · <a href="/Category:Hans_Kmoch">Hans Kmoch</a> · <a href="/Category:Industrial_Heritage_Trail">Industrial Heritage Trail</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Candidates_(Bitboards)">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

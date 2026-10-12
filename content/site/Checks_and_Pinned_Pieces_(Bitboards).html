@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Checks and Pinned Pieces (Bitboards) - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Checks and Pinned Pieces (Bitboards)</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * Checks and Pinned Pieces</strong></p>
+<p>This is about whether the <a href="/King">king</a> is in <a href="/Check">check</a>. If so, one likely uses a specialized check evasion <a href="/Move_Generation">move generator</a>. One may also trigger search <a href="/Extensions">extensions</a> - based on the king is in check - or based on the check evasion move generator only reports one valid move. Related to determining <a href="/Discovered_Check">discovered check</a> is to look for <a href="/Pin">absolute pins</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#checks">Checks</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#on-the-fly">On the Fly</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#by-move">By Move</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#direct-check">Direct Check</a></li>
+<li><a href="#discovered-check">Discovered Check</a></li>
+</ol>
+</details></li>
+</ol>
+</details></li>
+<li><a href="#absolute-pins">Absolute Pins</a></li>
+<li><a href="#opposite-ray-directions">Opposite Ray-Directions</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="checks">Checks</h2>
+<p>Whether the king is in check may be determined on the fly by looking up attacks to the king square - or based on the last move made by the other, probably checking side. Another option is to determine check giving moves already at generation time, and to flag moves accordantly. <span id="ChecksOnTheFly"></span></p>
+<h3 id="on-the-fly">On the Fly</h3>
+<p>Whether a king is in check can be determined by the attacked-routine mentioned in <a href="/Square_Attacked_By">Square Attacked By</a>. We pass the square of the king and opposite <a href="/Color">color</a> for the potential attackers.</p>
+<p>If one needs the set of attackers, either empty, single or double populated - one likely better relies on a specialized <a href="/Square_Attacked_By">attacksTo-routine</a> for each side, e.g. as member of the <a href="/Bitboard_Board-Definition">standard bitboard board-definition</a>:</p>
+<pre><code>U64 CBoard::attacksToKing(enumSquare squareOfKing, enumColor colorOfKing) {
+   U64 opPawns, opKnights, opRQ, opBQ;
+   opPawns     = pieceBB[nBlackPawn   - colorOfKing];
+   opKnights   = pieceBB[nBlackKnight - colorOfKing];
+   opRQ = opBQ = pieceBB[nBlackQueen  - colorOfKing];
+   opRQ       |= pieceBB[nBlackRook   - colorOfKing];
+   opBQ       |= pieceBB[nBlackBishop - colorOfKing];
+   return (arrPawnAttacks[colorOfKing][squareOfKing] &amp; opPawns)
+ (arrKnightAttacks[squareOfKing]            &amp; opKnights)
+ (bishopAttacks (occupiedBB, squareOfKing)  &amp; opBQ)
+ (rookAttacks   (occupiedBB, squareOfKing)  &amp; opRQ)
+        ;
+}</code></pre>
+<h3 id="by-move">By Move</h3>
+<p>Another idea is to determine the check inside the search-routine by the last <a href="/Moves">move</a> done by the opponent. It might be a direct or discovered <a href="/Check">check</a> - or in case of <a href="/Double_Check">double check</a>, both. With bitboards the possible savings to determine checks by last move seems negligible - and one probably better relies on the branch-less <a href="/Checks_and_Pinned_Pieces_%28Bitboards%29">on the fly solution</a>, since we may reuse the rook-wise and bishop-wise attacks for other purposes - like determining absolute pinned pieces, kingsafety-evaluation, and/or whether the opponent side threatens checks or discovered checks.</p>
+<h4 id="direct-check">Direct Check</h4>
+<p>For the direct check we may use the routine mentioned in <a href="/Square_Attacked_By">Square Attacked By</a>:</p>
+<pre><code>if ( isAttacked(squareOfKing, move.to, move.piece(), occupiedBB) ) -&gt; direct check</code></pre>
+<h4 id="discovered-check">Discovered Check</h4>
+<p>One solution is to determine the <a href="/Direction">direction</a> between the <a href="/Origin_Square">from-square</a> and the king square (e.g. by 0x88 difference). If both squares share a common line, one calls an appropriate sliding ray- or line-attack getter with king square and occupancy, to look whether this set intersects the possible opponing sliders of that ray. One also has to prove, whether a possible true result was not caused by a direct check of a sliding capture. <span id="AbsolutePins"></span></p>
+<h2 id="absolute-pins">Absolute Pins</h2>
+<p>To detect <a href="/Pin">absolute pins</a> is necessary for <a href="/Legal_Move">legal</a> <a href="/Move_Generation">move generation</a> and may be considered in <a href="/Evaluation">evaluation</a>. While there are different approaches, the most common for programs based on single sliding piece attacks rather than direction wise set-wise attack getter, relies on the <a href="/X-ray_Attacks_%28Bitboards%29">xrayRookAttacks</a> or <a href="/X-ray_Attacks_%28Bitboards%29">xrayBishopAttacks</a> routines - called with square of own king and own pieces as blockers. An <a href="/Square_Attacked_By">in-between lookup</a> (Obstructed) determines the set of pinned pieces while <a href="/Bitboard_Serialization">traversing</a> the pinning pieces <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>.</p>
+<pre><code>pinned = 0;
+pinner = xrayRookAttacks(occupiedBB, ownPieces, squareOfKing) &amp; opRQ;
+while ( pinner ) {
+   int sq  = bitScanForward(pinner);
+   pinned |= obstructed(sq, squareOfKing) &amp; ownPieces;
+   pinner &amp;= pinner - 1;
+}
+pinner = xrayBishopAttacks(occupiedBB, ownPieces, squareOfKing) &amp; opBQ;
+while ( pinner ) {
+   int sq  = bitScanForward(pinner);
+   pinned |= obstructed(sq, squareOfKing) &amp; ownPieces;
+   pinner &amp;= pinner - 1;
+}</code></pre>
+<p><span id="OppositeRay"></span></p>
+<h2 id="opposite-ray-directions">Opposite Ray-Directions</h2>
+<p>Another idea to determine absolute pins as well as distant check block-targets, or possible discovered check origins, is to apply disjoint direction-wise attacks, as demonstrated in the <a href="/DirGolem">DirGolem</a> proposal, where this technique is used for all eight ray-directions. The intersection of direction attacks of potential pinning sliding pieces with the opposite ray-direction attacks of the king treated as sliding super piece, gains enough information if further intersected by empty squares, own, or opponent pieces. For instance as illustrated with a black rook and white king on the same rank, with no, one and two pieces inbetween:</p>
+<p>No obstruction, king in check. In-between intersection consists of empty squares as target set to block the distant check:</p>
+<pre><code>     . r . . . . K .     
+r-&gt;  . . 1 1 1 1 1 .      
+&lt;-K  . 1 1 1 1 1 . .
+&amp;    . . 1 1 1 1 . .  </code></pre>
+<p>One piece in-between. Intersection leaves a pinned piece if of king color, otherwise a possible discovered checker:</p>
+<pre><code>     . r . . x . K .  
+r-&gt;  . . 1 1 1 . . .             
+&lt;-K  . . . . 1 1 . .
+&amp;    . . . . 1 . . .</code></pre>
+<p>Two (or more) pieces in-between. Intersection is null:</p>
+<pre><code>      . r . x x . K .  
+r-&gt;   . . 1 1 . . . .
+&lt;-K   . . . . 1 1 . .
+&amp;     . . . . . . . .   </code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Check">Check</a></li>
+<li><a href="/DirGolem">DirGolem</a></li>
+<li><a href="/Discovered_Check">Discovered Check</a></li>
+<li><a href="/Double_Check">Double Check</a></li>
+<li><a href="/Pin">Pin</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=334869">Fast check detection in bitboard engine</a> by <a href="/Jean-Francois_Romang">Jean-Francois Romang</a>, <a href="/CCC">CCC</a>, December 10, 2003</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=6064&amp;p=29127">Bitboards and inCheck</a> by <a href="/Andreas_Guettinger">Andreas Guettinger</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, January 03, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=22550">Bitboard of Pinned Pieces</a> by <a href="/Grant_Osborne">Grant Osborne</a>, <a href="/CCC">CCC</a>, July 24, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41351">Check detection and move generation using bitboards</a> by <a href="/Lasse_Hansen">Lasse Hansen</a>, <a href="/CCC">CCC</a>, December 06, 2011</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79617">Pinned Pieces With Bitboards</a> by Andrew Zhuo, <a href="/CCC">CCC</a>, April 01, 2022</li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><a href="/Bitboards">Up one Level</a></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79617&amp;start=2">Re: Pinned Pieces With Bitboards</a> by tcusr, <a href="/CCC">CCC</a>, April 01, 2022<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Checks_and_Pinned_Pieces_(Bitboards)">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

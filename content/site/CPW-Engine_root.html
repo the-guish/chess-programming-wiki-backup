@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CPW-Engine root - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">CPW-Engine root</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Engines">Engines</a> * <a href="/CPW-Engine">CPW-Engine</a> * Root</strong></p>
+<pre><code>/* this structure is meant to include data determining performance
+of the search routine, such as timing method, available time
+or depth, as well as boolean flags for additional heuristics
+*/
+
+struct sSearchDriver {
+  int DEPTH;
+};
+extern sSearchDriver d;
+
+/* this structure contains some statistical data about current search */
+
+struct sSearchStat {
+  int nodes;
+  int qnodes;
+}
+extern sSearchStat stat;
+#include &quot;stdafx.h&quot;
+#define MAX_DEPTH 100
+#define LEAVES_IN_TT 1
+
+/* symbols used to enhance readability */
+#define DO_NULL    1
+#define NO_NULL    0
+#define IS_PV      1
+#define NO_PV      0
+
+sSearchDriver sd;
+int contempt = 0;
+bool time_over = 0;
+
+enum ettflag {
+  TT_EXACT,
+  TT_ALPHA,
+  TT_BETA
+};
+
+enum eproto {
+  PROTO_NOTHING,
+  PROTO_XBOARD,
+  PROTO_UCI
+} extern mode;
+
+int search() {
+  int in_check;
+
+  smove m[256];
+  int bestmove = -1;
+  int val = 0;
+
+  ageHistoryTable();
+
+  if (mode == PROTO_NOTHING) printSearchHeader();
+  for (sd.depth = 1; sd.depth &lt;= MAX_DEPTH; sd.depth++) {
+    if (sd.depth &gt; 1) {
+      if (time_over) break;
+      if (time_stop_root()) break;
+    }
+    /* Check  extension is done also at  the  root */
+    in_check = isAttacked(!b.stm, p.KingLoc[b.stm]);
+    if (in_check) ++sd.depth;
+    int mcount = movegen(m, bestmove);
+
+    int alpha = -INFINITY;
+
+    for (int i = 0; i &lt; mcount; i++) {
+      movegen_sort(mcount, m, i);
+      if (m[i].piece_cap == PIECE_KING) {
+        alpha = INFINITY;
+        bestmove = m[i].id;
+      }
+      //info_currmove(m[i],i);
+      move_make(m[i]);
+      /* the &quot;if&quot; line introduces PVS at root */
+      if (i == 0 || -AlphaBeta(sd.depth - 1, -alpha - 1, -alpha, 1, 0) &gt; alpha)
+        val = -AlphaBeta(sd.depth - 1, -INFINITY, -alpha, 1, 1);
+      move_unmake(m[i]);
+      if (time_over) break;
+      if (val &gt; alpha) {
+        alpha = val;
+        bestmove = m[i].id;
+          tt_save(sd.depth, alpha, TT_ALPHA, m[i].id);
+          info_pv(val);
+      }
+    }
+    tt_save(sd.depth, alpha, TT_EXACT, bestmove);
+  }
+  int mcount = movegen(m, -1);
+  for (int i = 0; i&lt;mcount; i++) {
+    if (m[i].id == bestmove)
+      com_sendmove(m[bestmove]);
+  }
+  return 0;
+}
+
+int AlphaBeta(int depth, int alpha, int beta, int can_null, int is_pv) {
+  int  val;
+  char bestmove;
+  char tt_move;
+  int  tt_flag = TT_ALPHA;
+  int  in_check;
+  int  legal_move = 0;
+  int  raised_alpha = 0;
+  /* Check for timeout */
+  if (!time_over &amp;&amp; !(sd.nodes &amp; 0x3FF))
+    time_over = time_stop();
+
+  /***************************************************************
+  *  Are we in check? If so, extend. It also means that program  *
+  *  will never enter quiescence search while in check.          *
+  ***************************************************************/
+  in_check = (isAttacked(!b.stm, p.KingLoc[b.stm]));
+  if (in_check) ++depth;
+
+  /***************************************************************
+  *  At leaf nodes we do quiescence search (captures only)       *
+  *  to make sure that only relatively quiet positions           *
+  *  with no hanging pieces will be evaluated.                   *
+  ***************************************************************/
+  if (depth == 0) {
+    val = Quiesce(alpha, beta);
+    if (LEAVES_IN_TT)
+      tt_saveLeaf(alpha, beta, val);
+    return val;
+  }
+  sd.nodes++;
+  if (isRepetition()) return contempt;
+  if ((val = tt_probe(depth, alpha, beta, &amp;tt_move)) != INVALID)
+    return val;
+
+  /***************************************************************
+  *  Here  we introduce  null move pruning. It  means  allowing  *
+  *  opponent  to  execute two moves in a row,  i.e.  capturing  *
+  *  something  and escaping a recapture. If this cannot  wreck  *
+  *  our  position,  then it is so good that there&#39;s  no  point  *
+  *  in searching further. The flag &quot;can_null&quot; ensures we don&#39;t  *
+  *  do  two null moves in a row. Null move is not used in  the  *
+  *  endgame because of the risk of zugzwang.                    *
+  ***************************************************************/
+  if ((depth &gt; 2) &amp;&amp;
+      (can_null) &amp;&amp;
+      (eval(alpha, beta) &gt; beta) &amp;&amp;
+      (p.PieceMaterial[b.stm] &gt; 1300) &amp;&amp;
+      (!in_check))
+  {
+    char ep_old = b.ep;
+    move_makeNull();
+
+    val = -AlphaBeta(depth - 3, -beta, -beta + 1, NO_NULL, NO_PV);
+    move_unmakeNull(ep_old);
+    if (time_over) return 0;
+    if (val &gt;= beta) return beta;
+  }
+  /* end of null move code */
+  smove m[256];
+  int mcount = movegen(m, tt_move);
+
+#ifdef USE_KILLERS
+  /* reorder killer moves */
+  for (int j = 1; j&lt;mcount; j++) {
+      if ((m[j].from == sd.killers[depth][1].from) &amp;&amp;
+        (m[j].to == sd.killers[depth][1].to) &amp;&amp;
+        (m[j].score &lt; SORT_KILL - 1)  // don&#39;t lower the move value
+        )
+        m[j].score = SORT_KILL - 1;
+
+    if ((m[j].from == sd.killers[depth][0].from) &amp;&amp;
+      (m[j].to == sd.killers[depth][0].to) &amp;&amp;
+      (m[j].score &lt; SORT_KILL)
+      )
+      m[j].score = SORT_KILL;
+  }
+#endif
+  bestmove = m[0].id;
+  /**************************************************
+  *  Now it&#39;s time to loop through the move list    *
+  ***************************************************/
+
+  for (int i = 0; i &lt; mcount; i++) {
+    movegen_sort(mcount, m, i);
+    if (m[i].piece_cap == PIECE_KING) return INFINITY;
+    // problem: we do this test several times, even though
+    // king capture is sorted fist
+
+    move_make(m[i]);
+
+    /*******************************************************************
+    *  The code below introduces principle variation search. It  means *
+    *  that once we are in a PV-node (indicated by IS_PV flag) and  we *
+    *  have  found a move that raises alpha, we assume that  the  rest *
+    *  of moves ought to be refuted. This is done  relatively  cheaply *
+    *  by using  a null-window search centered around alpha.  Only  if *
+    *  this search fails high, we are forced to do a real one. This is *
+    *  not done when the remaining depth is less than 2 plies.         *
+    *******************************************************************/
+    if (!is_pv || depth &lt; 3) // non-pv node or low depth - don&#39;t use pvs
+      val = -AlphaBeta(depth - 1, -beta, -alpha, DO_NULL, NO_PV);
+    else {
+      if (!raised_alpha) // alpha isn&#39;t raised - full width search
+        val = -AlphaBeta(depth - 1, -beta, -alpha, DO_NULL, IS_PV);
+      else {
+        // first try to refute a move - if this fails, do a real search
+        if (-AlphaBeta(depth - 1, -alpha - 1, -alpha, DO_NULL, NO_PV) &gt; alpha)
+          val = -AlphaBeta(depth - 1, -beta, -alpha, DO_NULL, IS_PV);
+      }
+    }
+
+    move_unmake(m[i]);
+
+    /********************************************************************
+    *  If  the  move doesn&#39;t return -INFINITY, it means that the King   *
+    *  couldn&#39;t be captured immediately. So the move was legal. In this *
+    *  case we increase the legal_move counter, to look afterwards,     *
+    *  whether there were any legal moves on the board at all.          *                                      *
+    ********************************************************************/
+    legal_move += (val != -INFINITY);
+    if (time_over) return 0;
+
+    /********************************************************************
+    *  Beta cutoff - the position is so good that the score will not    *
+    *  be accepted  one ply below.                                      *
+    ********************************************************************/
+    if (val &gt;= beta) {
+      bestmove = m[i].id; // bugfix 2008-07-18
+      sd.history[m[i].from][m[i].to] += depth*depth;
+
+#ifdef USE_KILLERS
+      /* if a move isn&#39;t a capture, save it as a killer move */
+      if (m[i].piece_cap == PIECE_EMPTY) {
+          /* make sure killer moves are different
+          before saving secondary killer move */
+          if (m[i].from != sd.killers[depth][0].from ||
+            m[i].to != sd.killers[depth][0].to
+            )
+            sd.killers[depth][1] = sd.killers[depth][0];
+          /* save primary killer move */
+          sd.killers[depth][0] = m[i];
+      }
+#endif
+      tt_save(depth, beta, TT_BETA, bestmove);
+      return beta;
+    }
+
+    /****************************************************************
+    *  We  can  improve  over alpha, so we change the  node  value  *
+    *  together with the expected move. Also the raised_alpha flag, *
+    *  used to decide about PVS, is set.                            *
+    ****************************************************************/
+    if (val &gt; alpha) {
+      raised_alpha = 1;
+      tt_flag = TT_EXACT;
+      alpha = val;
+      bestmove = m[i].id;
+    }
+
+  }   // end of looping through the moves
+  /* Checkmate and stalemate detection */
+
+  if (!legal_move) {
+    bestmove = -1;
+      if (in_check)
+        alpha = -INFINITY + sd.depth - depth;
+      else
+        alpha = contempt;
+  }
+  /* tt_save() does not save anything when the search is timed out */
+  tt_save(depth, alpha, tt_flag, bestmove);
+  return alpha;
+}
+
+int info_currmove(smove m, int nr) {
+    switch (mode) {
+    case PROTO_UCI:
+      char buffer[64];
+      char move[6];
+      algebraic_writemove(m, move);
+      sprintf(buffer, &quot;info depth %d currmove %s currmovenumber %d&quot;, sd.depth, move, nr);
+      com_send(buffer);
+    }
+  return 0;
+}
+
+int info_pv(int val) {
+  char buffer[2048];
+  char score[10];
+  char pv[2048];
+  if (abs(val) &lt; INFINITY - 2000) {
+    sprintf(score, &quot;cp %d&quot;, val);
+  }
+  else {
+    //the mating value is returned in moves not plies
+    if (val &gt; 0)
+      sprintf(score, &quot;mate %d&quot;, (INFINITY - val + 1) / 2);
+    else
+      sprintf(score, &quot;mate %d&quot;, (-INFINITY - val + 1) / 2);
+  }
+  unsigned int nodes = (unsigned int)sd.nodes;
+  unsigned int time = gettime() - sd.starttime + 1;
+  util_pv(pv);
+  if (mode == PROTO_NOTHING)
+    sprintf(buffer, &quot; %2d. %9d  %5d %5d %s&quot;, sd.depth, nodes, time / 10, val, pv);
+  else
+    sprintf(buffer, &quot;info depth %d score %s time %u nodes %u nps %u pv %s&quot;, sd.depth, score, time, nodes, countNps(nodes, time), pv);
+  com_send(buffer);
+  return 0;
+}
+
+/* this function guards against overflow and allows to display
+correct nps for longer searches. */
+
+unsigned int countNps(unsigned int nodes, unsigned int time) {
+  if (time &gt; 20000)
+    return nodes / (time / 1000);
+  else
+    return (nodes * 1000) / time;
+}
+
+int isRepetition() {
+  for (int i = 0; i &lt; b.rep_index; i++) {
+    if (b.rep_stack[i] == b.hash)
+      return 1;
+  }
+  return 0;
+}
+
+void clearHistoryTable() {
+  for (int i = 0; i &lt; 128; i++)
+    for (int j = 0; j &lt; 128; j++) {
+      sd.history[i][j] = 0;
+    }
+}
+
+void ageHistoryTable() {
+  for (int i = 0; i &lt; 128; i++)
+    for (int j = 0; j &lt; 128; j++) {
+      sd.history[i][j] = sd.history[i][j] / 8;
+    }
+}</code></pre>
+<h2 id="external-calls">External Calls</h2>
+<ul>
+<li><a href="/CPW-Engine_movegen%280x88%29">int movegen();</a></li>
+<li><a href="/CPW-Engine_move%280x88%29">int move_make(move);</a></li>
+<li><a href="/CPW-Engine_move%280x88%29">int move_unmake(move);</a></li>
+</ul>
+<p><strong><a href="/CPW-Engine">Up one Level</a></strong></p>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/CPW-Engine_root">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

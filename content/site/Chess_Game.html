@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chess Game - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Chess Game</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Chess">Chess</a> * Game</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="/assets/ChessIsenburgII20150928.jpg" alt="A Game of Chess 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">A Game of Chess <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1">A Game of Chess in the <a href="https://en.wikipedia.org/wiki/Middle_Ages">Middle Ages</a>, Image photographed from an explanation table labeled "Die Essener Isenburg" at the <a href="https://de.wikipedia.org/wiki/Neue_Isenburg">Isenburg Castle</a> in <a href="https://en.wikipedia.org/wiki/Essen">Essen</a>, Germany, by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, September 28, 2015<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p>The <strong>Game of Chess</strong> which is actually played (or analyzed) by a chess program via its <a href="/GUI">user interface</a> requires a <a href="/Game_Notation">game record</a>, or game history, which is a <a href="/Move_List">list</a> or <a href="/Array">array</a> of <a href="/Moves">moves</a> or a tree of alternative move variants even containing comments. While the game record is necessary to take back moves f.i. after operator errors, the game history needs to be considered if it is about to claim or accepts <a href="/Draw">draws</a> by <a href="/Repetitions">three fold repetitions</a>, and might therefor be referred by the <a href="/Search">search algorithm</a> as well.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#start-of-the-game">Start of the Game</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#end-of-the-game">End of the Game</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#winloss">Win/Loss</a></li>
+<li><a href="#draw">Draw</a></li>
+</ol>
+</details></li>
+<li><a href="#game-record">Game Record</a></li>
+<li><a href="#game-header">Game Header</a></li>
+<li><a href="#longest-game">Longest Game</a></li>
+<li><a href="#mvc">MVC</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#the-game-loop">The Game Loop</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#cli">CLI</a></li>
+<li><a href="#event-driven-guis">Event driven GUIs</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="start-of-the-game">Start of the Game</h2>
+<p>The game of chess starts with the <a href="/Initial_Position">initial position</a>, white to move. Both sides alternately move their pieces until the game is finished. <span id="endofgame"></span></p>
+<h2 id="end-of-the-game">End of the Game</h2>
+<p>There are three possible outcomes of the game, white wins (1-0), black wins (0-1) or <a href="/Draw">draw</a> (1/2-1/2). Unfinished games may be <a href="https://en.wikipedia.org/wiki/Adjournment#Chess">adjudicated</a>, which was common until the 80s in <a href="/Tournaments_and_Matches">computer chess tournaments</a>, for instance the adjudicated win of <a href="/Cray_Blitz">Cray Blitz</a> against <a href="/Schach">Schach 2.7</a> during <a href="/WCCC_1986">WCCC 1986</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> . <a href="/Checkmate">Checkmate</a> and <a href="/Stalemate">stalemate</a> finish the game immediately. Other occurrences usually require communication with the opponent and admission or adjudication of an arbiter instance (i.e. Tournament director), which in computer chess requires a protocol and/or interaction, like claiming a <a href="/Repetitions">threefold repetition</a> draw in over the board computer chess.</p>
+<p><em>see main article <a href="/Rules_of_Chess">Rules of Chess</a></em></p>
+<h3 id="winloss">Win/Loss</h3>
+<p>Since chess is a <a href="https://en.wikipedia.org/wiki/Zero-sum_game">Zero-sum game</a>, the win of one player is the loss of the other player.</p>
+<ul>
+<li><a href="/Checkmate">Checkmate</a> - if in <a href="/Check">check</a> with an empty set of <a href="/Legal_Move">legal moves</a></li>
+<li><a href="/Time_Management">Loss on time</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Resignation">Resignation</a> (to resign)</li>
+</ul>
+<h3 id="draw">Draw</h3>
+<p>The game of chess ends and is <a href="/Draw">draw</a> after either</p>
+<ul>
+<li><a href="/Stalemate">Stalemate</a> - if <strong>not</strong> in <a href="/Check">check</a> but no <a href="/Legal_Move">legal moves</a></li>
+<li>Correct <a href="/Repetitions">threefold repetition</a> claim</li>
+<li>Correct <a href="/Fifty-move_Rule">fifty-move rule</a> claim</li>
+<li><a href="/Material">Insufficient material</a></li>
+<li>Draw offer accepted</li>
+</ul>
+<p><span id="GameRecord"></span></p>
+<h2 id="game-record">Game Record</h2>
+<p>Chess programs (not necessarily the pure (search) engine) keep track of all <a href="/Moves">moves</a> played in the game from the <a href="/Initial_Position">initial starting position</a> stored inside a <a href="/Move_List">move list</a>, often in conjunction with a <a href="/Move_List">list</a> of <a href="/Zobrist_Hashing">Zobrist</a> or <a href="/BCH_Hashing">BCH signatures</a> of the up to 100 last <a href="/Reversible_Moves">reversible moves</a> for the purpose to detect twofold or threefold <a href="/Repetitions">repetitions</a>.</p>
+<ul>
+<li><a href="/Game_Notation">Game Notation</a>
+<ul>
+<li><a href="/Algebraic_Chess_Notation">Algebraic Chess Notation</a></li>
+<li><a href="/Portable_Game_Notation">Portable Game Notation</a></li>
+</ul></li>
+<li><a href="/Move_List">Move List</a></li>
+</ul>
+<p><span id="Header"></span></p>
+<h2 id="game-header">Game Header</h2>
+<p>The game header keeps <a href="https://en.wikipedia.org/wiki/Metadata">metadata</a> of a game, such as player names, date of the game and site of the event and result. For instance, the <a href="/Portable_Game_Notation">PGN</a> game header consists of a set of <a href="https://en.wikipedia.org/wiki/Attribute%E2%80%93value_pair">attribute value pairs</a>. The so called <strong>Seven Tag Roster</strong> (STR) is mandatory <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>:</p>
+<ol type="1">
+<li>Event (the name of the tournament or match event)</li>
+<li>Site (the location of the event)</li>
+<li>Date (the starting date of the game)</li>
+<li>Round (the playing round ordinal of the game)</li>
+<li>White (the player of the white pieces)</li>
+<li>Black (the player of the black pieces)</li>
+<li>Result (the result of the game)</li>
+</ol>
+<h2 id="longest-game">Longest Game</h2>
+<p>In 1966, Eero Bonsdorff, <a href="https://en.wikipedia.org/wiki/Karl_Fabel">Karl Fabel</a>, and Olvai Riihimaa gave 5899 as the maximum number of <a href="/Moves">moves</a> in a chess game, considering the <a href="/Fifty-move_Rule">Fifty-move Rule</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>.</p>
+<h2 id="mvc">MVC</h2>
+<p>The chess program and its <a href="/User_Interface">user interface</a> can be interpreted as a <a href="https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller">Model–view–controller</a> (MVC), an <a href="https://en.wikipedia.org/wiki/Architectural_pattern_%28computer_science%29">architectural pattern</a> that isolates <a href="https://en.wikipedia.org/wiki/Business_logic">business logic</a> f.i. game administration, <a href="/Time_Management">time management</a> and searching a move inside a chess program from input and presentation. The game model represents the domain-specific <a href="/Data">data</a> on which the application operates - Inside a chess program, the information about the <a href="/Initial_Position">initial position</a> and the game record to reproduce the current positions, likely subject of <a href="/Search">search</a> or <a href="/Pondering">pondering</a> during game play. The model and controller implement a <a href="https://en.wikipedia.org/wiki/Finite-state_machine">finite-state machine</a> which controls the game, its <a href="https://en.wikipedia.org/wiki/State_%28computer_science%29">states</a>, state transitions and actions considering various <a href="https://en.wikipedia.org/wiki/Mode_%28computer_interface%29">modes</a>. The view displays the <a href="/Game_Notation">game notation</a>, a <a href="/Move_List">list of moves</a>, and likely the board with the current <a href="/Chess_Position">position</a>, suitable for <a href="https://en.wikipedia.org/wiki/Interaction">interaction</a> inside a <a href="/User_Interface">user interface</a>. The controller receives input from various sources and devices, such as <a href="https://en.wikipedia.org/wiki/Keyboard_%28computing%29">keyboard</a>, <a href="https://en.wikipedia.org/wiki/Mouse_%28computing%29">mouse</a>, <a href="https://en.wikipedia.org/wiki/Serial_port">serial port</a> and <a href="https://en.wikipedia.org/wiki/Internet_socket">internet socket</a>, and initiates a response by making calls on model objects. <span id="GameLoop"></span></p>
+<h2 id="the-game-loop">The Game Loop</h2>
+<p>Early chess programs without <a href="/Pondering">Pondering</a> used a simple sequential control structure to play the whole game for instance via a <a href="https://en.wikipedia.org/wiki/Teleprinter">teleprinter</a> or any <a href="https://en.wikipedia.org/wiki/Computer_terminal">Computer terminals</a> in a sequential manner.</p>
+<pre><code>state := playGame;
+initialize position
+print board
+while (state != gameover)
+   wait for input of a move by the user
+   make move (if legal)
+   if (mate or stalemate) {
+      state := gameOver;
+      break;
+   }
+   search move with allocated time
+   make move
+   print move and update board
+   if (mate or stalemate)
+      state := gameOver;
+}
+print &quot;thank you for playing the game&quot;;</code></pre>
+<h3 id="cli">CLI</h3>
+<p>Most current chess engines communicate via a sequential <a href="/CLI">command-line interface</a>, available in all common <a href="https://en.wikipedia.org/wiki/Operating_system">operating systems</a>. <a href="/Pondering">Pondering</a> and the need to <a href="/Entering_Moves">enter moves</a> and commands even if the program is "thinking", requires a more complicated control structure and an interruptible search routine. Often engines used <a href="https://en.wikipedia.org/wiki/Coroutine">coroutines</a> to implement internal <a href="https://en.wikipedia.org/wiki/Context_switch">context switching</a> between search and user interaction. Today, it is more common to rely on <a href="https://en.wikipedia.org/wiki/Multi-threading">multithreading</a> abilities of recent operating systems, and to use an explicit I/O-thread, while the search routine is regularly pondering whether it needs to be interrupted by pending input received by another thread, with the option to asynchronous stop the search.</p>
+<h3 id="event-driven-guis">Event driven GUIs</h3>
+<p>With the advent of operating systems with <a href="https://en.wikipedia.org/wiki/Graphical_user_interface">graphical user interfaces</a>, also encouraged by additional input devices such as a <a href="https://en.wikipedia.org/wiki/Mouse_%28computing%29">computer mouse</a> for asynchronous user interaction, the embedding of a chess engine with a classical CLI inside the <a href="https://en.wikipedia.org/wiki/Event-driven_architecture">event-driven architecture</a> of a graphical user interface became more difficult. Today, most programmers rely on external event driven <a href="/GUI">graphical user interface</a> applications using <a href="https://en.wikipedia.org/wiki/Standard_streams">standard streams</a> or <a href="https://en.wikipedia.org/wiki/Pipeline_%28Unix%29">pipelines</a> to communicate with the GUI via protocols such as the <a href="/Chess_Engine_Communication_Protocol">Chess Engine Communication Protocol</a> and the <a href="/UCI">Universal Chess Interface</a>. The external GUI application constitutes the MVC view and controller, and more or less even parts of a (redundant) game model (or even multi-game model), to make the GUI aware of its own game states to even make decisions on behalf of the engine, such as move selection from opening books and <a href="/Endgame_Tablebases">endgame tablebases</a>, draw claims and offers and to finally declare the game over. These game interacting features of the external GUI application in conjunction with certain protocols such as UCI by far exceeds what a pure chess user interface was initially designed for - controller and view only, enter legal moves and render the state of the game, which has become disputed issue in playing official <a href="/Tournaments_and_Matches">tournament</a> games.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Board_Representation">Board Representation</a></li>
+<li><a href="/Chess_Engine_Communication_Protocol">Chess Engine Communication Protocol</a></li>
+<li><a href="/Chess_Position">Chess Position</a></li>
+<li><a href="/Contempt_Factor">Contempt Factor</a></li>
+<li><a href="/GUI">Graphical User Interface</a></li>
+<li><a href="/Match_Statistics">Match Statistics</a></li>
+<li><a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">Pawn Advantage, Win Percentage, and Elo</a></li>
+<li><a href="/Strategy">Strategy</a></li>
+<li><a href="/Tactics">Tactics</a></li>
+<li><a href="/Time_Management">Time Management</a></li>
+<li><a href="/UCI">UCI</a></li>
+<li><a href="/User_Interface">User Interface</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Ingo_Althöfer">Ingo Althöfer</a> (<strong>1990</strong>). <em>Compressing Chess Games with the Help of a fast Deterministic Chess Program.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 13, No. 4</a></li>
+<li><a href="/Ingo_Althöfer">Ingo Althöfer</a> (<strong>1991</strong>): <em><a href="http://www.sciencedirect.com/science/article/pii/000437029190026G">Data compression using an intelligent generator: The storage of chess games as an example</a></em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 52, No. 1</li>
+<li><a href="/Borko_Bošković">Borko Bošković</a>, <a href="/Sašo_Greiner">Sašo Greiner</a>, <a href="/Janez_Brest">Janez Brest</a>, <a href="/Viljem_Žumer">Viljem Žumer</a> (<strong>2005</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/freeabs_all.jsp?arnumber=1491153">The Representation of Chess Game</a></em>. Proceedings of the 27th International Conference on Information Technology Interfaces</li>
+<li><a href="/Nick_Pelling">Nick Pelling</a> (<strong>2013</strong>). <em><a href="https://www.amazon.co.uk/Chess-Superminiatures-Nick-Pelling-ebook/dp/B00HEOZ8B6">Chess Superminiatures</a></em>. <a href="https://en.wikipedia.org/wiki/E-book">eBook</a>, <a href="https://en.wikipedia.org/wiki/Amazon_Kindle">Kindle edition</a>, <a href="https://en.wikipedia.org/wiki/Amazon.com">Amazon</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40193">One billion random games</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, August 27, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48542">One billion random games</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, July 03, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56328">Revised source for the random game generator</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, May 12, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59483">Random game mating probabilities</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, March 12, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59841&amp;start=14">This should be in the wiki</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, April 13, 2016 » <a href="/Repetitions">Repetitions</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61672">Photographing Chess Clock</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, October 10, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63572">What can be said about 1 - 0 score?</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, March 28, 2017 » <a href="/Match_Statistics">Match Statistics</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=78464">Open Chess Game Database Standard (OCGDB)</a> by <a href="/Pham_Hong_Nguyen">Nguyen Pham</a>, <a href="/CCC">CCC</a>, October 20, 2021 » <a href="/Databases">Chess Databases</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="http://c2.com/cgi/wiki?GameOfChess">Game Of Chess</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Chess_notation">Chess notation from Wikipedia</a></li>
+<li><a href="http://labraj.uni-mb.si/en/Representation_of_Chess_Game">Representation of Chess Game - Computer Architecture and Languages Laboratory</a>, <a href="/University_of_Maribor">University of Maribor</a></li>
+<li>How many chess games are possible? by <a href="http://singingbanana.com/">Dr James Grime</a>, <a href="http://numberphile.com/team/index.html">numberphile</a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a></li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/Km024eldY1A" title="YouTube video Km024eldY1A" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=Km024eldY1A">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Chess">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Helmut_Horacek">Helmut Horacek</a>, (<strong>1986</strong>) <em>The Fifth World Computer Chess Championship Cologne, 1986</em>, Research Unit for Information Science and Artificial Intelligence, <a href="/University_of_Hamburg">University of Hamburg</a>, from <em><strong>Kings move</strong> Welcome to the 1989 AGT World Computer Chess Championship.</em> pg 21, <a href="http://archive.computerhistory.org/projects/chess/related_materials/text/3-1%20and%203-2%20and%203-3%20and%204-3.1989_WCCC/1989%20WCCC.062302028.sm.pdf">pdf</a> from <a href="/The_Computer_History_Museum">The Computer History Museum</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.thechessdrum.net/PGN_Reference.txt">Standard: Portable Game Notation Specification and Implementation Guide</a> by <a href="/Steven_Edwards">Steven Edwards</a>, 8.1.1: Seven Tag Roster<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>Eero Bonsdorff, <a href="https://en.wikipedia.org/wiki/Karl_Fabel">Karl Fabel</a>, Olvai Riihimaa (<strong>1966</strong>) <em>Schach und Zahl - Unterhaltsame Schachmathematik</em>. Seite 11-13, Walter Rau Verlag, Düsseldorf (German)<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://de.wikipedia.org/wiki/50-Z%C3%BCge-Regel#Schachmathematik">50-Züge-Regel - Schachmathematik from Wikipedia.de</a> (German)<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://www.xs4all.nl/~timkr/chess2/honor.htm">Defending Humanity's Honor</a> by <a href="https://en.wikipedia.org/wiki/Tim_Krabb%C3%A9">Tim Krabbé</a>, see game <a href="/Rival">NewRival</a> - <a href="/Faile">Faile</a> with 493 moves, and playing 402 moves with bare kings!<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="/Claude_Shannon">Claude Shannon</a>, <a href="https://en.wikipedia.org/wiki/Shannon_number">Shannon number</a>, <a href="/Mathematician">Godfrey Harold Hardy</a>, <a href="/Matthieu_Walraet">A googolplex of Go games</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Chess_Game">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cilk - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Cilk</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Programming">Programming</a> * <a href="/Languages">Languages</a> * Cilk</strong></p>
+<p><strong>Cilk</strong> (pronounced "silk") is a <a href="/C">C</a>-based, general-purpose programming language designed for <a href="https://en.wikipedia.org/wiki/Multithreading_%28computer_architecture%29">multithreaded</a> parallel computing. Cilk started as in the mid 90s as a project at the Supertech research group in the <a href="/Massachusetts_Institute_of_Technology">MIT Labroratory</a> headed by <a href="/Charles_Leiserson">Charles E. Leiserson</a>. Important milestones in Cilk technology include the original Cilk-1, which provided a provably efficient work-stealing runtime support but little linguistic support, the later Cilk-5, which provided simple linguistic extensions for multithreading to <a href="https://en.wikipedia.org/wiki/ANSI_C">ANSI C</a>, the commercial <em>Cilk++</em> by <em>Cilk Arts</em>, which extended the Cilk model to <a href="/Cpp">C++</a>, and after <a href="/Intel">Intel</a> acquired <em>Cilk Arts</em> in 2009, <a href="https://en.wikipedia.org/wiki/Intel_Cilk_Plus">Intel Cilk Plus</a>. In November 2010, Intel published a language and an <a href="https://en.wikipedia.org/wiki/Application_binary_interface">ABI</a> specification to enable other compilers to implement Cilk Plus <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#parallel-chess">Parallel Chess</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#cilk-5-linguistic-extensions">Cilk-5 Linguistic Extensions</a></li>
+<li><a href="#parallel-alpha-beta">Parallel Alpha-Beta</a></li>
+<li><a href="#quote">Quote</a></li>
+</ol>
+</details></li>
+<li><a href="#cilk">Cilk++</a></li>
+<li><a href="#intel-cilk-plus">Intel Cilk Plus</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#publications">Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#manuals">Manuals</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="parallel-chess">Parallel Chess</h2>
+<p>Cilk's testbeds in the 90s were chess programs using a <a href="/Parallel_Search">parallel search</a>. <a href="/Star_Socrates">*Socrates</a> used the <a href="/Jamboree">Jamboree</a> algorithm to search game trees in parallel and uses the Cilk 1.0 language and run-time system to express and to schedule the computation. <a href="/CilkChess">CilkChess</a> was written using the Cilk-5 linguistic extensions.</p>
+<h3 id="cilk-5-linguistic-extensions">Cilk-5 Linguistic Extensions</h3>
+<p>Cilk-5.4.6 is the latest official MIT Cilk released under the <a href="/Free_Software_Foundation">GNU General Public License</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>.</p>
+<p>The keyword "<strong>cilk</strong>" defines a function which can <a href="https://en.wikipedia.org/wiki/Spawn_%28computing%29">spawned</a> as a new <a href="https://en.wikipedia.org/wiki/Thread_%28computer_science%29">thread</a>, by using the "<strong>spawn</strong>" keyword. A cilk procedure cannot safely return values of the children it has spawned until it executes a "<strong>sync</strong>" statement, which acts like a local barrier. <strong>Inlets</strong>, a kind of local function with access to local variables of its parent frame, are used to return values to its parent with the option to <strong>abort</strong> all of the already spawned descendants of the procedure to terminate immediately. Inlets are guaranteed to operate <a href="https://en.wikipedia.org/wiki/Atomic_%28computer_science%29">atomically</a> with regards to each other and to the parent procedure, thus avoiding the bugs that could occur if the multiple returning procedures tried to update the same variables in the parent frame at the same time.</p>
+<p><span id="ParallelAlphaBeta"></span></p>
+<h3 id="parallel-alpha-beta">Parallel Alpha-Beta</h3>
+<p>This is how an <a href="/Alpha-Beta">alpha-beta</a> search routine was implemented with Cilk-5 <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>, using the five keywords <strong>cilk</strong>, <strong>spawn</strong>, <strong>sync</strong>, <strong>inlet</strong> and <strong>abort</strong>:</p>
+<pre><code>cilk int search( position *prev, int move, int depth ) {
+   position cur; int bestscore = -oo, num_moves, mv, sc, cutoff = false;
+  
+   inlet void catch( int child_sc ) {
+      child_sc = -child_sc; /* negamax */
+      if ( child_sc &gt; bestscore ) {
+         bestscore = child_sc;
+         if ( child_sc &gt; cur.alpha ) {
+            cur.alpha = child_sc;
+            if ( child_sc &gt;= cur.beta ) { 
+               cutoff = true;
+               abort;
+            }
+         }
+      }
+   } /* end inlet */
+
+   /* create current position and set up for search */
+   make_move( prev, move, &amp;cur );
+   if ( depth &lt;= 0 ) return eval( &amp;cur );
+   cur.alpha = -prev-&gt;beta;  /* negamax */
+   cur.beta  = -prev-&gt;alpha;
+   num_moves = gen_moves( &amp;cur );
+
+   /* search the moves */
+   for ( mv = 0; !cutoff &amp;&amp; mv &lt; num_moves; mv++) {
+      catch ( spawn search( &amp;cur, mv, depth-1 ) );
+      if ( mv == 0 ) sync; /* young brothers wait */
+   }
+   sync; /* this sync is outside the loop so that
+            older brothers execute in parallel */
+   return bestscore;
+}</code></pre>
+<h3 id="quote">Quote</h3>
+<p>by <a href="/Vincent_Diepeveen">Vincent Diepeveen</a> after <a href="/WCCC_1999">WCCC 1999</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>:</p>
+<p><code>Actually the big professor who has written so many books that i have in my possession was there too: </code><a href="/Charles_Leiserson"><code>Leiserson</code></a><code>. Lucky i could exchange a few words during the game with him. </code></p>
+<p><code>Cilk really is a very promising language. In contradiction to all my big efforts to parallellize </code><a href="/Diep"><code>DIEP</code></a><code>, writing in Cilk this goes a lot simpler. Regrettably when starting the parallel version of DIEP, there was no port of CILK to windows (the first demand for something is that it must work both in windows and linux before i can use it; interface is of course something different) otherwise i might have done better in paderborn. </code></p>
+<p><code>Anyone who still must start his parallel project here gets a free tip from me:</code><br />
+<code>Don't go fiddle with difficult parallellization, simply use CILK, let that language handle the parallellism and keep only busy making a good program!</code></p>
+<p><code>The alternative to Cilk is years of bugfixing the parallel code. </code></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="/assets/ParallelExperts1999.jpg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span> Talking Cilk at <a href="/WCCC_1999">WCCC 1999</a>: <a href="/Vincent_Diepeveen">Vincent Diepeveen</a>, <a href="/Don_Dailey">Don Dailey</a> and <a href="/Charles_Leiserson">Charles Leiserson</a></p>
+<h2 id="cilk">Cilk++</h2>
+<p>MIT licensed Cilk technology to <em>Cilk Arts, Inc.</em>, a venture-funded start-up founded by <a href="/Charles_Leiserson">Charles Leiserson</a> and <a href="/Matteo_Frigo">Matteo Frigo</a>. Cilk Arts developed <em>Cilk++,</em> a quantum improvement over MIT Cilk, which includes full support for <a href="/Cpp">C++</a>, parallel loops, and superior interoperability with serial code.</p>
+<h2 id="intel-cilk-plus">Intel Cilk Plus</h2>
+<p>In July 2009 <a href="/Intel">Intel Corporation</a> acquired <em>Cilk Arts</em> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>. Intel Cilk Plus adopts simplifications, proposed by <em>Cilk Arts</em> in Cilk++, to eliminate the need for several of the original Cilk keywords while adding the ability to spawn functions and to deal with variables involved in reduction operations. Intel Cilk Plus differs from Cilk and Cilk++ by adding array extensions, being incorporated in a commercial compiler, and compatibility with existing debuggers <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/ABDADA">ABDADA</a></li>
+<li><a href="/CilkChess">CilkChess</a></li>
+<li><a href="/Jamboree">Jamboree</a></li>
+<li><a href="/Parallel_Search">Parallel Search</a></li>
+<li><a href="/Shared_Hash_Table">Shared Hash Table</a></li>
+<li><a href="/Star_Socrates">*Socrates</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<p><a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a></p>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li><a href="/Robert_Blumofe">Robert D. Blumofe</a>, <a href="/Chris_Joerg">Christopher F. Joerg</a>, <a href="/Bradley_Kuszmaul">Bradley C. Kuszmaul</a>, <a href="/Charles_Leiserson">Charles E. Leiserson</a>, <a href="/Keith_H._Randall">Keith H. Randall</a>, <a href="/Yuli_Zhou">Yuli Zhou</a> (<strong>1995</strong>). <em>Cilk: An Efficient Multithreaded Runtime System</em> Proceedings of the Fifth ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming (PPoPP) Santa Barbara, California Pg. 207–216, <a href="http://supertech.csail.mit.edu/papers/PPoPP95.pdf">pdf</a></li>
+<li><a href="/Phil_Lisiecki">Philip Andrew Lisiecki</a> (<strong>1996</strong>). <em>Macro-Level Scheduling in the Cilk Network of Workstations Environment</em>, Masters Thesis, Department of Electrical Engineering and Computer Science, <a href="/Massachusetts_Institute_of_Technology">Massachusetts Institute of Technology</a>, <a href="http://supertech.csail.mit.edu/papers/lisiecki-msthesis.pdf">pdf</a></li>
+<li><a href="/Chris_Joerg">Christopher F. Joerg</a> (<strong>1996</strong>). <em>The Cilk System for Parallel Multithreaded Computing</em>. Ph. D. Thesis, Department of Electrical Engineering and Computer Science, <a href="/Massachusetts_Institute_of_Technology">Massachusetts Institute of Technology</a>, <a href="http://supertech.csail.mit.edu/papers/joerg-phd-thesis.pdf">pdf</a></li>
+<li><a href="/Matteo_Frigo">Matteo Frigo</a>, <a href="/Charles_Leiserson">Charles E. Leiserson</a>, <a href="/Keith_H._Randall">Keith H. Randall</a> (<strong>1998</strong>). <em>The Implementation of the Cilk-5 Multithreaded Language</em>. Proceedings of the ACM SIGPLAN '98 Conference on Programming Language Design and Implementation, Montreal, Quebec, Canada, Pg 212–223, <a href="http://supertech.csail.mit.edu/papers/cilk5.pdf">pdf</a></li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="/Don_Dailey">Don Dailey</a>, <a href="/Charles_Leiserson">Charles E. Leiserson</a> (<strong>2001</strong>). <em>Using Cilk to Write Multiprocessor Chess Programs</em>, <a href="/Advances_in_Computer_Games_9">Advances in Computer Games 9</a>, <a href="http://supertech.csail.mit.edu/papers/icca99.pdf">pdf</a></li>
+<li><a href="/Siddhartha_Sen">Siddhartha Sen</a> (<strong>2004</strong>). <em><a href="https://dspace.mit.edu/handle/1721.1/33355">Dynamic processor allocation for adaptively parallel work-stealing jobs</a></em>. Master's thesis, <a href="/Massachusetts_Institute_of_Technology">MIT</a>, advisor <a href="/Charles_Leiserson">Charles Leiserson</a> <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a></li>
+<li><a href="http://www.cs.rice.edu/~vs3/home/Vivek_Sarkar.html">Vivek Sarkar</a> (<strong>2008</strong>). <em>Shared-Memory Parallel Programming with OpenMP</em>. <a href="https://en.wikipedia.org/wiki/Rice_University">Rice University</a>, <a href="http://www.cs.rice.edu/~vs3/comp422/lecture-notes/comp422-lec7-s08-v1.pdf">slides as pdf</a></li>
+<li><a href="/Matteo_Frigo">Matteo Frigo</a>, <a href="http://www.plaxo.com/profile/show/227634457468?pk=a7b8fd342887637e7e469951fbfa6ed308f28640">Pablo Halpern</a>, <a href="/Charles_Leiserson">Charles E. Leiserson</a>, <a href="http://venturebeatprofiles.com/person/profile/stephen-lewin-berlin">Stephen Lewin-Berlin</a> (<strong>2009</strong>). <em>Reducers and Other Cilk++ Hyperobjects</em>. Cilk Arts, Inc., <a href="http://www.fftw.org/~athena/papers/hyper.pdf">pdf</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://ai.arizona.edu/people/alumni/milind/">Milind Chabbi</a> (<strong>2010</strong>). <em>Cilk and Cilk++ Multithreaded Languages</em>. <a href="http://www.cs.rice.edu/~johnmc/comp522/lecture-notes/COMP522-2010-Lecture8-Cilk.pdf">pdf</a></li>
+<li><a href="http://www.cs.rice.edu/~johnmc/">John Mellor-Crummey</a> (<strong>2011</strong>). <em>Shared-memory Parallel Programming with Cilk</em>. <a href="https://en.wikipedia.org/wiki/Rice_University">Rice University</a>, <a href="http://www.clear.rice.edu/comp422/lecture-notes/comp422-2011-Lecture4-Cilk.pdf">slides as pdf</a></li>
+</ul>
+<h2 id="manuals">Manuals</h2>
+<ul>
+<li><a href="http://supertech.csail.mit.edu/cilk/manual-5.4.6.pdf">Cilk 5.4.6. Reference Manual</a> (pdf)</li>
+<li><a href="http://software.intel.com/sites/products/cilk-plus/cilk_plus_language_specification.pdf">Intel® Cilk™ Plus Language Specification</a> (pdf)</li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=29601">Cilk++</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/CCC">CCC</a>, August 30, 2009</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Cilk">Cilk from Wikipedia</a></li>
+<li><a href="http://supertech.csail.mit.edu/cilk/">The Cilk Project</a> from <a href="/Massachusetts_Institute_of_Technology">MIT</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Intel_Cilk_Plus">Intel Cilk Plus from Wikipedia</a></li>
+<li><a href="http://software.intel.com/en-us/articles/intel-cilk-plus-specification/">Intel® Cilk™ Plus Specification - Intel® Software Network</a></li>
+<li>Commercializing MIT's Cilk Project by <a href="/Charles_Leiserson">Charles Leiserson</a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/XCO5-3Md4LI" title="YouTube video XCO5-3Md4LI" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=XCO5-3Md4LI">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Languages">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://software.intel.com/en-us/articles/intel-cilk-plus-specification/">Intel® Cilk™ Plus Specification - Intel® Software Network</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://supertech.csail.mit.edu/cilk/cilk-5.4.6.tar.gz">cilk-5.4.6.tar.gz</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="/Don_Dailey">Don Dailey</a>, <a href="/Charles_Leiserson">Charles E. Leiserson</a> (<strong>2001</strong>). <em>Using Cilk to Write Multiprocessor Chess Programs</em>, <a href="/Advances_in_Computer_Games_9">Advances in Computer Games 9</a>, <a href="http://supertech.csail.mit.edu/papers/icca99.pdf">pdf</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://www.stmintz.com/ccc/index.php?id=58505">DIEP parallel in Paderborn - technical and detailed story</a> by <a href="/Vincent_Diepeveen">Vincent Diepeveen</a>, <a href="/CCC">CCC</a>, June 28, 1999<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://www.ddj.com/cpp/218900367">Intel Acquires Cilk++ Technology</a>, <a href="http://www.ddj.com/">Dr. Dobb's</a>, August 01, 2009<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="https://en.wikipedia.org/wiki/Intel_Cilk_Plus">Intel Cilk Plus from Wikipedia</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="https://en.wikipedia.org/wiki/Cilk">Cilk from Wikipedia</a><a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="http://supertech.csail.mit.edu/papers.html">SuperTech Paper Listing</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="https://en.wikipedia.org/wiki/Work_stealing">Work stealing from Wikipedia</a><a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Cilk">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

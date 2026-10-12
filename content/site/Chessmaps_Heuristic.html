@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chessmaps Heuristic - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Chessmaps Heuristic</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Search">Search</a> * <a href="/Move_Ordering">Move Ordering</a> * Chessmaps Heuristic</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/2/25/Polyphony.JPG" alt="Paul Klee - Polyphony, 1922 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Paul_Klee">Paul Klee</a> - Polyphony, 1922 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="/Category:Paul_Klee">Paul Klee</a> - Polyphony, 1922, <a href="https://en.wikipedia.org/wiki/Wikimedia_Commons">Wikimedia Commons</a>, <a href="https://en.wikipedia.org/wiki/Kunstmuseum_Basel">Kunstmuseum Basel</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Chessmaps Heuristic</strong>,<br />
+a move ordering heuristic proposed in 1999 by <a href="/Kieran_Greer">Kieran Greer</a> et al. <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>, which uses a board vector of 64 <a href="/Square_Control">square controls</a> {dominated by White (1), Black (-1), or neutral (0)}, the <strong>Chessmap</strong>, along with king locations, to determine an importance vector of <a href="/Squares">square</a> areas or <strong>sectors</strong> by probing a <a href="/Neural_Networks">neural network</a>. <a href="/Quiet_Moves">Quiet moves</a> are then sorted by the number and ranking of areas, they influence.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#sectors">Sectors</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#neural-network">Neural Network</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#topology">Topology</a></li>
+<li><a href="#training">Training</a></li>
+</ol>
+</details></li>
+<li><a href="#results">Results</a></li>
+<li><a href="#résumé">Résumé</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="sectors">Sectors</h2>
+<p>Following square sector definition with arbitrary enumeration had most promising results.</p>
+<pre><code>  ╔════╤════╤════╦════╤════╦════╤════╤════╗
+8 ║    │    │    ║    │    ║    │    │    ║
+  ╟────┼─11─┼────║────┼────║────┼─ 9 ┼────╢
+7 ║    │    │    ║    7    ║    │    │    ║
+  ╠══════════════╣────┼────╠══════════════╣
+6 ║    │    │    ║    │    ║    │    │    ║
+  ╟────┼─10─┼────╠═════════╣────┼─ 8─┼────╢
+5 ║    │    │    ║    │    ║    │    │    ║
+  ╠══════════════╣─── 6 ───╠══════════════╣
+4 ║    │    │    ║    │    ║    │    │    ║
+  ╟────┼─ 2─┼────╠═════════╣────┼─ 4─┼────╢
+3 ║    │    │    ║    │    ║    │    │    ║
+  ╠══════════════╣────┼────╠══════════════╣
+2 ║    │    │    ║    5    ║    │    │    ║
+  ╟────┼─ 1─┼────║────┼────║────┼─ 3─┼────╢
+1 ║    │    │    ║    │    ║    │    │    ║
+  ╚════╧════╧════╩════╧════╩════╧════╧════╝
+     A    B    C    D    E    F    G    H</code></pre>
+<h2 id="neural-network">Neural Network</h2>
+<h3 id="topology">Topology</h3>
+<p>The input layer has 70 neurons, 64 for each square of the chessmap, and six for the relative king positions concerning sectors. Each of the 12 output neurons correspondents to one sector. Testing suggested that a 3-layer architecture with 16 hidden nodes being a good number <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>.</p>
+<h3 id="training">Training</h3>
+<p>The <a href="/Supervised_Learning">supervised learning</a> <a href="/Neural_Networks">backpropagation algorithm</a> on a 10000 position training set, generated from complete and randomly chosen chess games taken from master and grandmaster play, was used to train the neural network. For each position in the set, the Chessmap was calculated, and the desired output was a vector quantifying the sector influences of the move played in that position, that is for each sector whether the move increased (+1), decreased (-1) the control, or was neutral (0). All positions were considered from the White side, so when it was Black to move the position was <a href="/Color_Flipping">color flipped</a>.</p>
+<p>Backpropagation algorithm for a 3-layer network <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>:</p>
+<pre><code>   initialize the weights in the network (often small random values)
+   do
+      for each example e in the training set
+         O = neural-net-output(network, e)  // forward pass
+         T = teacher output for e
+         compute error (T - O) at the output units
+         compute delta_wh for all weights from hidden layer to output layer  // backward pass
+         compute delta_wi for all weights from input layer to hidden layer   // backward pass continued
+         update the weights in the network
+   until all examples classified correctly or stopping criterion satisfied
+   return the network</code></pre>
+<h2 id="results">Results</h2>
+<p>Various experiments were conducted to compare the performance of the Chessmaps Heuristic with the <a href="/History_Heuristic">History Heuristic</a> on the 24 positions of the <a href="/Bratko-Kopec_Test">Bratko-Kopec Test</a>. Both reduce a randomly ordered tree by about 80%, in favor to HH which can perform the search in much less time. However, along with <a href="/Iterative_Deepening">iterative deepening</a>, and more refined move ordering strategies concerning <a href="/Captures">captures</a>, forced and unsafe moves, the Chessmaps Heuristic got the upper hand in node reductions, specially in combination of an additional heuristic to store the last sector that caused a cutoff at each <a href="/Ply">ply</a>, quite similar to a killer slot. This sector was then retrieved and ordered first in any sector ordering, overriding the output of the neural network <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>. The Chessmaps Heuristic is applied in <a href="/Kieran_Greer">Kieran Greer's</a> chess playing program <a href="/ChessMaps">ChessMaps</a>, written in <a href="/C_sharp">C#</a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>.</p>
+<h2 id="résumé">Résumé</h2>
+<p>In his 2012 paper <em>Tree Pruning for New Search Techniques in Computer Games</em>, <a href="/Kieran_Greer">Kieran Greer</a> further outlines the Chessmaps Heuristic <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>:</p>
+<p><code>This research has been carried out using an existing computer chess game-playing program called </code><a href="/ChessMaps"><code>Chessmaps</code></a><code>. The Chessmaps Heuristic  was created as part of a DPhil research project that was completed in 1998. The intention was to try and add some intelligence into a chess game-playing program. If the goal is to build the best possible chess program, then the experience-based approach has probably solved the problem already, as the best programs are now better or at least equal to the best human players. Computer chess can also be used, however, simply as a domain for testing AI-related algorithms. It is still an interesting platform for trying to mimic the human thought process or add human-like intelligence to a game-playing program. Exactly this argument, along with some other points made in this paper, are also written or thought about. While chess provides too much variability for the whole game to be defined, it is still a small enough domain to make it possible to accurately evaluate different kinds of search and evaluation processes. It provides complete information about its environment, meaning that the evaluation functions can be reliable, and is not so complex that trying to encapsulate the process in a comprehensive manner would be impossible. </code></p>
+<p>and further</p>
+<p><code>The Chessmaps Heuristic is therefore used as the move-ordering heuristic at each position in the tree search. The neural network was really only used to order the moves in the “other” moves category, although this would still be a large majority of the moves. The research therefore resulted in a heuristic that was knowledge based, but also still lightweight enough to be used as part of a brute-force alpha-beta (α-β) search. Test results showed that it would reduce the search by more than the History Heuristic, but because of its additional computational requirements; it would use more time to search for a move and would ultimately be inferior. The heuristic, however, proved difficult to optimize in code, for example, trying to create quick move generators through bitmap boards, and so the only way to reduce the search time would probably be to introduce more AI-related techniques into the program. This has led to the following new suggestion for dynamic move sequences. </code></p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Chunking">Chunking</a></li>
+<li><a href="/Guard_Heuristic">Guard Heuristic</a></li>
+<li><a href="/History_Heuristic">History Heuristic</a></li>
+<li><a href="/Learning">Learning</a></li>
+<li><a href="/Neural_MoveMap_Heuristic">Neural MoveMap Heuristic</a></li>
+<li><a href="/Neural_Networks">Neural Networks</a></li>
+<li><a href="/Pattern_Recognition">Pattern Recognition</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Kieran_Greer">Kieran Greer</a> (<strong>1998</strong>). <em>A Neural Network Based Search Heuristic and its Application to Computer Chess</em>. D.Phil. Thesis, <a href="https://en.wikipedia.org/wiki/University_of_Ulster">University of Ulster</a></li>
+<li><a href="/Kieran_Greer">Kieran Greer</a>, Piyush Ojha, David A. Bell (<strong>1999</strong>). <em>A Pattern-Oriented Approach to Move Ordering: the Chessmaps Heuristic</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 22, No. 1</a></li>
+<li><a href="/Kieran_Greer">Kieran Greer</a> (<strong>2000</strong>). <em><a href="http://www.sciencedirect.com/science?_ob=ArticleURL&amp;_udi=B6TYF-40TY77M-3&amp;_user=10&amp;_rdoc=1&amp;_fmt=&amp;_orig=search&amp;_sort=d&amp;view=c&amp;_acct=C000050221&amp;_version=1&amp;_urlVersion=0&amp;_userid=10&amp;md5=7858eb0d6e100295c197661d1d454e26">Computer chess move-ordering schemes using move influence</a></em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 120, No. 2</li>
+<li><a href="/Levente_Kocsis">Levente Kocsis</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Eric_Postma">Eric Postma</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2002</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-40031-8_11">The Neural MoveMap Heuristic in Chess</a></em>. <a href="/CG_2002">CG 2002</a></li>
+<li><a href="/Kieran_Greer">Kieran Greer</a> (<strong>2012</strong>). <em><a href="http://www.hindawi.com/journals/aai/2013/357068/">Tree Pruning for New Search Techniques in Computer Games</a></em>. Advances in Artificial Intelligence, Vol. 2013</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Backpropagation">Backpropagation from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Feedforward_neural_network">Feedforward neural network from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Probabilistic_neural_network">Probabilistic neural network from Wikipedia</a></li>
+<li><a href="http://www.distributedcomputingsystems.co.uk/chessmapsdownload.html">ChessMaps Download</a> by <a href="/Kieran_Greer">Kieran Greer</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Move_Ordering">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Kieran_Greer">Kieran Greer</a>, Piyush Ojha, David A. Bell (<strong>1999</strong>). <em>A Pattern-Oriented Approach to Move Ordering: the Chessmaps Heuristic</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 22, No. 1</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Kieran_Greer">Kieran Greer</a> (<strong>2000</strong>). <em><a href="http://www.sciencedirect.com/science?_ob=ArticleURL&amp;_udi=B6TYF-40TY77M-3&amp;_user=10&amp;_rdoc=1&amp;_fmt=&amp;_orig=search&amp;_sort=d&amp;view=c&amp;_acct=C000050221&amp;_version=1&amp;_urlVersion=0&amp;_userid=10&amp;md5=7858eb0d6e100295c197661d1d454e26">Computer chess move-ordering schemes using move influence</a></em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 120, No. 2<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://en.wikipedia.org/wiki/Backpropagation#Algorithm">Backpropagation algorithm from Wikipedia</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="/Kieran_Greer">Kieran Greer</a> (<strong>2000</strong>). <em><a href="http://www.sciencedirect.com/science?_ob=ArticleURL&amp;_udi=B6TYF-40TY77M-3&amp;_user=10&amp;_rdoc=1&amp;_fmt=&amp;_orig=search&amp;_sort=d&amp;view=c&amp;_acct=C000050221&amp;_version=1&amp;_urlVersion=0&amp;_userid=10&amp;md5=7858eb0d6e100295c197661d1d454e26">Computer chess move-ordering schemes using move influence</a></em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 120, No. 2<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://www.distributedcomputingsystems.co.uk/chessmapsdownload.html">ChessMaps Download</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="/Kieran_Greer">Kieran Greer</a> (<strong>2012</strong>). <em><a href="http://www.hindawi.com/journals/aai/2013/357068/">Tree Pruning for New Search Techniques in Computer Games</a></em>. Advances in Artificial Intelligence, Vol. 2013<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Paul_Klee">Paul Klee</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Chessmaps_Heuristic">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

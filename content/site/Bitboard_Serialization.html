@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bitboard Serialization - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Bitboard Serialization</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * Bitboard Serialization</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:276px"><a href="http://www.mcescher.com/Gallery/back-bmp/LW331.jpg" target="_blank" rel="noopener noreferrer"><img src="/assets/EschersEncounter.jpg" alt="M. C. Escher, Encounter, 1944 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:M._C._Escher">M. C. Escher</a>, Encounter, 1944 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://www.mcescher.com/Gallery/gallery-back.htm">Picture gallery "Back in Holland 1941 - 1954"</a> from <a href="http://www.mcescher.com/">The Official M.C. Escher Website</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Bitboard Serialization</strong> refers to the transformation of a bitboard with up to 64 one-bits set into a list of up to 64 bit-indices aka <a href="/Squares">square indices</a> of a <a href="/8x8_Board">8x8 board</a> - for instance to process <a href="/Target_Square">move-target</a> sets for <a href="/Move_Generation">move generation</a>. This is done in two phases, isolating none-empty <a href="https://en.wikipedia.org/wiki/Subset">subsets</a> and then transforming those more versatile subsets into lists, either bit by bit, by applying a <a href="https://en.wikipedia.org/wiki/Bisection">bisection</a> scheme, where finally <a href="/Word">words</a> or <a href="/Byte">bytes</a> may act as index of a pre-calculated database, or by <a href="/Hash_Table">perfect hashing</a> of square lists by subsets with a limited maximum popularity, for instance move-target sets of a <a href="/King">king</a> or <a href="/Knight">knight</a> even with <a href="/Hash_Table">minimal perfect hashing</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#isolating-subsets">Isolating Subsets</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#single-bits">Single Bits</a></li>
+<li><a href="#multiple-bits">Multiple Bits</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#converting-sets-to-lists">Converting Sets to Lists</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#square-index-serialization">Square Index Serialization</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#scanning-forward">Scanning Forward</a></li>
+<li><a href="#scanning-reverse">Scanning Reverse</a></li>
+<li><a href="#scanning-with-reset">Scanning with Reset</a></li>
+<li><a href="#intrinsic-version">Intrinsic Version</a></li>
+<li><a href="#black-or-white">Black or White</a></li>
+<li><a href="#stl-iterator">STL Iterator</a></li>
+</ol>
+</details></li>
+<li><a href="#hashing-multiple-bits">Hashing Multiple Bits</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="isolating-subsets">Isolating Subsets</h2>
+<p>The process of isolating subsets is performed by <a href="/General_Setwise_Operations">intersection</a>, for single populated subsets with the <a href="/General_Setwise_Operations">two's complement</a>.</p>
+<h3 id="single-bits">Single Bits</h3>
+<p>This obvious loop approach is similar to <a href="/Population_Count">Brian Kernighan's way</a> to count the number of one-bits by consecutively isolating and clearing the LS1B:</p>
+<pre><code>while ( x ) {
+   U64 ls1b = x &amp; -x; // isolate LS1B
+   ...
+   x &amp;= x-1; // reset LS1B
+}</code></pre>
+<p>or with likely the same generated assembly:</p>
+<pre><code>if ( x ) do {
+   U64 ls1b = x &amp; -x; // isolate LS1B
+   ...
+} while ( x &amp;= x-1 );</code></pre>
+<p>Of course we may also reset the LS1B by</p>
+<pre><code>   x ^= ls1b; // reset LS1B</code></pre>
+<p>but todays processors like to gain more parallelism to calculate independent expressions.</p>
+<h3 id="multiple-bits">Multiple Bits</h3>
+<p>Isolating none-empty subsets with possibly multiple one-bits can be applied by <a href="https://en.wikipedia.org/wiki/Divide_and_conquer_algorithm">divide and conquer</a>, that is to divide the bitboard or <a href="/Quad_Word">quad word</a> <a href="/Recursion">recursively</a> into smaller items, two <a href="/Double_Word">double words</a>, consisting of two <a href="/Word">words</a> and those again of two <a href="/Byte">bytes</a>. Word and byte-wide isolated subsets may then act as an index of a pre-calculated lookup table to convert those subsets to adequate data-structures, most likely lists with up to sixteen or eight elements.</p>
+<h2 id="converting-sets-to-lists">Converting Sets to Lists</h2>
+<h3 id="square-index-serialization">Square Index Serialization</h3>
+<p>For most applications LS1B-isolation alone is not appropriate, but the conversion from the exponential bitboard centric world to the scalar square centric world, also called <a href="/BitScan">bit-scanning</a>.</p>
+<h4 id="scanning-forward">Scanning Forward</h4>
+<pre><code>if ( x ) do {
+   int idx = bitScanForward(x); // square index from 0..63
+   *list++ = foo(idx, ...);
+} while (x &amp;= x-1); // reset LS1B</code></pre>
+<p>Per definition bitScanForward reveals the index of LS1B.</p>
+<h4 id="scanning-reverse">Scanning Reverse</h4>
+<p>If - for some reason - we like to traverse the sets in reverse or unknown order anyway, we can not (or don't want to) rely on the independent LS1B reset.</p>
+<pre><code>if ( x ) do {
+   int idx = bitScanReverse(x); // square index from 0..63
+   *list++ = foo(idx, ...);
+} while (x ^= powOf2[idx]) ; // or 1ULL &lt;&lt; idx -&gt; reset found bit</code></pre>
+<h4 id="scanning-with-reset">Scanning with Reset</h4>
+<p>A win of abstraction is to use a combined <a href="/BitScan">bitscan with reset</a> found bit routine. This is fine. But probably harder for compilers to generate optimal code in the if-do-while-sense, where reset last bit already sets the zero-flag. If you don't care on such micro-optimizations, this is the preferred control structure <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>.</p>
+<pre><code>while ( x ) {
+   int idx = bitScanAndReset(&amp;x); // square index from 0..63
+   *list++ = foo(idx, ...);
+}</code></pre>
+<p>One may even don't care about the order.</p>
+<h4 id="intrinsic-version">Intrinsic Version</h4>
+<p>If bitscan is able to properly handle empty sets - leaving an value outside the 0..63 range (like leading or trailing zero count), we may think about to skip the leading while condition and to break on bitscan(x) &gt; 63 for instance. That was not recommend - since the reset leaves the condition en-passant, and the computational cost of an additional bitscan or zero count was higher. If you like to play the optimization game, it might be fine for <a href="/X86-64">x86-64</a> <a href="https://en.wikipedia.org/wiki/Intel_Core_2">Core 2 duo</a> thought - using <a href="/X86-64">bitscan</a> and <a href="/X86-64">bittestandreset</a> intrinsics or wrappers - if kept all in registers of course.</p>
+<pre><code>while (_BitScanForward64(&amp;idx, x)) { // or reverse
+   *list++ = foo(idx, ...);
+   _bittestandreset64(&amp;x, idx);
+}</code></pre>
+<p>The loop is intended to look like this in <a href="/X86-64">x86-64</a> <a href="/Assembly">assembly</a>:</p>
+<pre><code>; input rdx - move target set
+;       ecx - move from aspects
+;       rdi - pointer to movelist
+   std           ; set direction flag
+   bsf  rax, rdx ; scan first to-bit
+   jz   over     ; jump if no more moves
+loop:
+   btr  rdx, rax ; reset found bit
+   or   eax, ecx ; combine to- with from-square
+   stosw         ; store 16-bit move *rdi++ = move
+   bsf  rax, rdx ; scan next to-bit
+   jnz  loop     ; jump if more moves
+over:</code></pre>
+<p><span id="BlackorWhite"></span></p>
+<h4 id="black-or-white">Black or White</h4>
+<p>With bitboard serialization one minor problem is the relative order in <a href="/Move_Generation">move generation</a> considering <a href="/Side_to_move">side to move</a>. Bsf scans the board in a1..h1, a2..h2, a8..h8 order, assuming <a href="/Square_Mapping_Considerations">little-endian rank-file mapping</a>, which might be the desired order for an attacking black player. Traversing white pieces and target squares the same way may result in asymmetries and different search behavior of <a href="/Color_Flipping">color flipped positions</a>. Despite other features considered in <a href="/Move_Ordering">move ordering</a>, the initial order in generation has more or less influence. Therefore, it is desired to traverse the "white" bitboards with priority for the black back-rank as well <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> . This might be done by bitscan reverse, which covers the rank symmetry, but also mirrors the files. Another alternative is to traverse a <a href="/Flipping_Mirroring_and_Rotating">vertically flipped</a> "white" bitboard, which can be done outside the do-while loop by a "conditional" <a href="/X86-64">x86-64</a> <a href="/X86-64">byte swap</a>, and requires one further register and xor per loop cycle, which might be combined with other stuff, f.i. the <a href="/Origin_Square">from square</a> of a move:</p>
+<pre><code>if ( x ) {
+   U64 m = (U64)color - 1; // e.g. -1 if white, 0 for black
+   int o = (int)m &amp; 56;
+   x = x ^ ((x ^ flipVertical(x)) &amp; m); // conditional flip
+   do {
+      int idx = bitScanForward(x) ^ o; // square index from 0..63
+      *list++ = foo(idx , ...);
+   } while (x &amp;= x-1); // reset LS1B
+}</code></pre>
+<p><span id="STLIterator"></span></p>
+<h4 id="stl-iterator">STL Iterator</h4>
+<p><a href="/Rein_Halbersma">Rein Halbersma</a> has written a prototype of a <a href="/Generic_Programming">generic</a> <a href="/Cpp">C++11</a> bitset <a href="/Cpp">template</a> that can be used to traverse a set in <a href="https://en.wikipedia.org/wiki/Iterator#C.2B.2B">STL iterator</a> style, hiding bitscan and reset <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> ...</p>
+<pre><code>typedef bit_set&lt;int64_t, 1&gt; bitset;
+
+void testLoop(int* p, const bitset &amp; x) {
+  for (auto it = x.begin(); it != x.end(); ++it)
+    *p++ = *it;
+}
+/* or std::copy */
+void testCopy(int* p, const bitset &amp; x) {
+  std::copy(x.begin(), x.end(), p); 
+}</code></pre>
+<p>... which yields in following <a href="/X86-64">X86-64</a> <a href="/Assembly">assembly</a>, almost identical for the iterator loop and std::copy <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>:</p>
+<pre><code>; testLoop(int*, bit_set&lt;long, 1ul&gt;):
+  test  rsi, rsi
+  jne   .L13
+.L7:
+  ret
+.L13:
+  bsf   rax, rsi
+  mov   DWORD PTR [rdi], eax
+  lea   rax, [rsi-1]
+  add   rdi, 4
+  and   rsi, rax
+  jne   .L13
+  jmp   .L7</code></pre>
+<p><span id="HashingMultipleBits"></span></p>
+<h3 id="hashing-multiple-bits">Hashing Multiple Bits</h3>
+<p>Similar to the idea to hash occupancies in <a href="/Kindergarten_Bitboards">kindergarten bitboards</a> and <a href="/Magic_Bitboards">magic bitboards</a>, one may hash certain move-target subsets of one piece in one run, to lookup tables with pre-calculated moves-lists <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> . Sounds like doing up to eight bitscans in parallel. The idea is to muliply-shift-lookup a move-target bitboard, to do an almost branch-less <a href="/Move_Generation">move-generation</a> with pre-calculated moves inside <a href="/Move_List">move-lists</a>. For instance king- and knight-moves <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> as well as moves of sliding pieces per line:</p>
+<pre><code>moveTarget = KingAttacks[sq] &amp; ~(ownPieces | attackedSquares);
+idx = (moveTarget * kingMagic[sq]) &gt;&gt; kingShift[sq]);
+movelists = kingMoveLists[sq];
+movelist  = movelists[idx];
+moveCpy(target, movelist, movelist-&gt;n);</code></pre>
+<p>A king in a corner may have up to three moves. Thus there are 2^3 == 8 possible move-lists. For instance for a king on a1 (number of moves: vector of moves):</p>
+<pre><code>0:{empty}
+1:{a1-b1}
+1:{a1-a2}
+1:{a1-b2}
+2:{a1-b1,a1-a2}
+2:{a1-b1,a1-b2}
+2:{a1-a2,a1-b2}
+3:{a1-b1,a1-a2,a1-b2}</code></pre>
+<p>Kings on edges have 5 potential target squares, thus there are 32 possible move-lists. All other kings have 8 all the 8 neighbors with up to 256 move-lists. Similar move-list enumeration is possible with knights and others. All possible move-target subsets of kings and knights for all 64 from-squares are <a href="/Hash_Table">perfectly minimal hashable</a> with a magic factor of four one-bits set. 10016 possible king-move-lists and 5520 knight-move-lists. To reduce memory one may offset the sets to a "normalized" source square per king, knight and sliding piece line, implying some vector arithmetic in the board centric world considering the offset.</p>
+<p>The less populated move-target subsets are, the less efficient this hashing technique. This might become a problem since bitboard move-generation is essentially about subsets of moves with certain properties, like most importantly fast winning captures at <a href="/Node_Types">Cut-nodes</a>.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Move_Generation">Move Generation</a></li>
+</ul>
+<p><a href="/Belle">Belle | Hardware Move Generation</a></p>
+<ul>
+<li><a href="/Move_Ordering">Move Ordering</a></li>
+<li><a href="/Pieces_versus_Directions">Pieces versus Directions</a></li>
+<li><a href="/Table-driven_Move_Generation">Table-driven Move Generation</a></li>
+<li><a href="/Traversing_Subsets_of_a_Set">Traversing Subsets of a Set</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=487844">Subject: sliding move generation idea with bitboards</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/CCC">CCC</a>, February 19, 2006</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=6099">Magic Knight- and King-Move Generation</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, Januar 11, 2007</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=19837">compact bitboard move generator</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, February 25, 2008 » <a href="/Move_Generation">Move Generation</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2228">Extracting moves from bitboards</a> by <a href="/Christian_Daley">CDaley11</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, January 18, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47414&amp;start=4">Re: C vs ASM</a> by <a href="/Rein_Halbersma">Rein Halbersma</a>, <a href="/CCC">CCC</a>, March 05, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54704">Symmetric move generation using bitboards</a> by <a href="/Lasse_Hansen">Lasse Hansen</a>, <a href="/CCC">CCC</a>, December 20, 2014 » <a href="/BitScan">BitScan</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70065">An improvement to classic Chess4.5 style bitboards</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/CCC">CCC</a>, March 01, 2019</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Serialization">Serialization from Wikipedia</a></li>
+<li><a href="/Category:The_United_Jazz_+_Rock_Ensemble">The United Jazz + Rock Ensemble</a> - <a href="https://www.allmusic.com/song/steps-of-mc-escher-mt0012121605">Steps of M.C. Escher</a>, <a href="https://www.allmusic.com/album/live-im-schutzenhaus-mw0000062412">Live Im Schutzenhaus</a> (1978), <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p><a href="/Category:Eberhard_Weber">Eberhard Weber</a>, <a href="/Category:Jon_Hiseman">Jon Hiseman</a>, <a href="/Category:Barbara_Thompson">Barbara Thompson</a>, <a href="/Category:Volker_Kriegel">Volker Kriegel</a>, <a href="/Category:Wolfgang_Dauner">Wolfgang Dauner</a>,</p>
+<p><a href="/Category:Charlie_Mariano">Charlie Mariano</a>, <a href="/Category:Albert_Mangelsdorff">Albert Mangelsdorff</a>, <a href="/Category:Ian_Carr">Ian Carr</a>, <a href="https://en.wikipedia.org/wiki/Ack_van_Rooyen">Ack van Rooyen</a>, <a href="https://en.wikipedia.org/wiki/Kenny_Wheeler">Kenny Wheeler</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/XKToNeW7r9s" title="YouTube video XKToNeW7r9s" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=XKToNeW7r9s">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Bitboards">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70202">CPW bitscan with reset could someone explain this line?</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, March 14, 2019<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=289344&amp;t=29611&amp;sid=74848128f12e45f8883a87c3e6729f75">Re: Alternatives to History Heuristics</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, September 02, 2009<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://liveworkspace.org/code/41EaZl$203">LiveWorkSpace(IDE online): C++-3.2 (clang++): 41EaZl</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=47414&amp;start=4">Re: C vs ASM</a> by <a href="/Rein_Halbersma">Rein Halbersma</a>, <a href="/CCC">CCC</a>, March 05, 2013<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://gcc.godbolt.org/">GCC Explorer</a> with g++ 4.7 compiler, options -std=c++11 -O3 -march=k8-sse3 -fverbose-asm<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="https://www.stmintz.com/ccc/index.php?id=487844">Subject: sliding move generation idea with bitboards</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/CCC">CCC</a>, February 19, 2006<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=6099">Magic Knight- and King-Move Generation</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, Januar 11, 2007<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:M._C._Escher">M. C. Escher</a> · <a href="/Category:The_United_Jazz_+_Rock_Ensemble">The United Jazz + Rock Ensemble</a> · <a href="/Category:Ian_Carr">Ian Carr</a> · <a href="/Category:Wolfgang_Dauner">Wolfgang Dauner</a> · <a href="/Category:Jon_Hiseman">Jon Hiseman</a> · <a href="/Category:Volker_Kriegel">Volker Kriegel</a> · <a href="/Category:Albert_Mangelsdorff">Albert Mangelsdorff</a> · <a href="/Category:Charlie_Mariano">Charlie Mariano</a> · <a href="/Category:Barbara_Thompson">Barbara Thompson</a> · <a href="/Category:Eberhard_Weber">Eberhard Weber</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Bitboard_Serialization">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

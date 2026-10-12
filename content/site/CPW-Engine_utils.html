@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CPW-Engine utils - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">CPW-Engine utils</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Engines">Engines</a> * <a href="/CPW-Engine">CPW-Engine</a> * Utils</strong></p>
+<pre><code>#include &quot;stdafx.h&quot;
+#include &quot;0x88_math.h&quot;
+#include &quot;transposition.h&quot;
+
+enum etask {
+  TASK_NOTHING,
+  TASK_SEARCH,
+  TASK_PONDER
+} extern task;
+
+extern bool time_over;
+
+unsigned int gettime();
+
+int util_pv(char * pv) {
+
+  sboard rootb = b;
+
+  char best;
+  smove m[256];
+  int mcount = 0;
+
+  for (U8 depth = 1; depth &lt;= sd.depth; depth++) {
+
+    best = -1;
+    tt_probe(0, 0, 0, &amp;best);
+
+    if (best == -1) break;
+
+    mcount = movegen(m, 0xFF);
+
+    for (int i = 0; i&lt;mcount; i++) {
+      if (m[i].id == best) {
+        move_make(m[i]);
+
+        pv = algebraic_writemove(m[i], pv);
+        pv[0] = &#39; &#39;;
+        pv++;
+
+        break;
+      }
+    }
+  }
+
+  pv[0] = 0;
+  b = rootb;
+  return 0;
+}
+
+void perft_start(char * command) {
+
+  unsigned int starttime = gettime();
+
+  int depth;
+  sscanf(command + 6, &quot;%d&quot;, &amp;depth);
+
+  printf(&quot;Performance Test\n&quot;);
+  for (U8 d = 1; d &lt;= depth; d++) {
+    printf(&quot;%d:\t%d\t%d\n&quot;, d, gettime() - starttime, perft(d));
+  }
+}
+
+U64 perft(U8 depth) {
+
+  U64 nodes = 0;
+
+  if (depth == 0) return 1;
+
+  smove m[256];
+  int mcount = movegen(m, 0xFF);
+
+  for (int i = 0; i &lt; mcount; i++) {
+    move_make(m[i]);
+
+    if (!isAttacked(b.stm, b.KingLoc[!b.stm]))
+      nodes += perft(depth - 1);
+
+    move_unmake(m[i]);
+  }
+
+  return nodes;
+}
+
+void util_bench(char * command) {
+
+  unsigned int starttime = gettime();
+
+  int depth;
+  sscanf(command + 6, &quot;%d&quot;, &amp;depth);
+
+  time_over = false;
+
+  sd.myside = b.stm;
+  sd.starttime = gettime();
+  sd.depth = 0;
+  sd.nodes = 0;
+
+  task = TASK_SEARCH;
+
+  chronos.depth = depth;
+  chronos.flags = FDEPTH;
+
+  search_run();
+
+  task = TASK_NOTHING;
+
+  if (gettime() - starttime &lt; 1000) starttime = gettime() - 1000;
+
+  printf(&quot;Nodes:\t%d\nTime:\t%d ms\nNPS:\t%d\n&quot;, (int)sd.nodes, gettime() - starttime, (int)sd.nodes / ((gettime() - starttime) / 1000));
+
+  return;
+}
+
+smove strToMove(char * a) {
+  smove m;
+
+  m.from = convert_a_0x88(a);
+  m.to = convert_a_0x88(a + 2);
+
+  m.piece_from = b.pieces[m.from];
+  m.piece_to = b.pieces[m.from];
+  m.piece_cap = b.pieces[m.to];
+
+  m.flags = 0;
+  m.castle = 0;
+  m.ep = -1;
+  m.ply = 0;
+  m.score = 0;
+
+  /* default promotion to queen */
+
+  if ((m.piece_to == PAWN) &amp;&amp;
+    (ROW(m.to) == ROW_1 || ROW(m.to) == ROW_8))
+    m.piece_to = QUEEN;
+
+  switch (a[4]) {
+  case &#39;q&#39;: m.piece_to = QUEEN; a++; break;
+  case &#39;r&#39;: m.piece_to = ROOK; a++; break;
+  case &#39;b&#39;: m.piece_to = BISHOP; a++; break;
+  case &#39;n&#39;: m.piece_to = KNIGHT; a++; break;
+  }
+
+  //castling
+  if ((m.piece_from == KING) &amp;&amp;
+    ((m.from == E1 &amp;&amp; (m.to == G1 || m.to == C1)) ||
+    (m.from == E8 &amp;&amp; (m.to == G8 || m.to == C8)))) {
+    m.flags = MFLAG_CASTLE;
+  }
+
+  /* ep
+  if the moving-piece is a Pawn, the square it moves to is empty and
+  it was a diagonal move it has to be an en-passant capture.
+  */
+  if ((m.piece_from == PAWN) &amp;&amp;
+    (m.piece_cap == PIECE_EMPTY) &amp;&amp;
+    ((abs(m.from - m.to) == 15) || (abs(m.from - m.to) == 17))) {
+    m.flags = MFLAG_EPCAPTURE;
+  }
+
+  if ((m.piece_from == PAWN) &amp;&amp; (abs(m.from - m.to) == 32)) {
+    m.flags |= MFLAG_EP;
+  }
+
+  return m;
+}
+
+int algebraic_moves(char * a) {
+
+  smove m;
+  int found_match = 0;
+
+  while (a[0]) {
+
+    if (!((a[0] &gt;= &#39;a&#39;) &amp;&amp; (a[0] &lt;= &#39;h&#39;))) {
+      a++;
+      continue;
+    }
+
+    m = strToMove(a);
+
+    found_match = move_isLegal(m);
+
+    if (found_match) {
+
+      move_make(m);
+
+      if ((m.piece_from == PAWN) ||
+        (move_iscapt(m)) ||
+        (m.flags == MFLAG_CASTLE))
+        b.rep_index = 0;
+
+    }
+    else {
+
+      break;
+
+    }
+
+    a += 4;
+    if (a[0] == 0) break;
+    if (a[0] != &#39; &#39;) a++;
+
+  }
+
+  return found_match;
+}
+
+//returns new pointer
+char * algebraic_writemove(smove m, char * a) {
+  char parray[5] = { 0,&#39;q&#39;,&#39;r&#39;,&#39;b&#39;,&#39;n&#39; };
+
+  convert_0x88_a(m.from, a);
+  convert_0x88_a(m.to, a + 2);
+  a += 4;
+  if (m.piece_to != m.piece_from) {
+    a[0] = parray[m.piece_to];
+    a++;
+  }
+  a[0] = 0;
+  return a;
+}
+
+void convert_0x88_a(S8 sq, char * a) {
+  a[0] = COL(sq) + &#39;a&#39;;
+  a[1] = ROW(sq) + &#39;1&#39;;
+  a[2] = 0;
+}
+
+U8 convert_a_0x88(char * a) {
+  S8 sq;
+  sq = a[0] - &#39;a&#39;;
+  sq += (a[1] - &#39;1&#39;) * 16;
+
+  return sq;
+}</code></pre>
+<p><strong><a href="/CPW-Engine">Up one Level</a></strong></p>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/CPW-Engine_utils">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

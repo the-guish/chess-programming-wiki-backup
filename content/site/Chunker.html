@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chunker - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Chunker</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Engines">Engines</a> * Chunker</strong></p>
+<p><strong>Chunker</strong>,<br />
+a chess program by <a href="/Murray_Campbell">Murray Campbell</a> and <a href="/Hans_Berliner">Hans Berliner</a> in the domain of certain <a href="/Pawn_Endgame">pawn endgames</a>, using <a href="/Chunking">chunked</a> <a href="/Knowledge">knowledge</a>. Chunks were defined as groups of pawns and king that can be handled relatively independently of each other. Chunker <a href="https://en.wikipedia.org/wiki/Shallow_parsing">parses</a> a <a href="/Chess_Position">position</a> into chunks, and reasons about the position using information obtained from chunk libraries. There are several chunk libraries, each corresponding to a fixed group of <a href="/Pieces">pieces</a> (a chunk type). Each chunk type has certain properties, and each chunk instance (a particular configuration of the chunk type) has values attached to the properties. These are used both in evaluation, by allowing reasoning with chunk property values to produce an <a href="/Evaluation">evaluation</a> of the whole position, and in move selection, to facilitate reaching positions where this is possible.</p>
+<p>Some types of chunks that could occur are so complex and rare that to build libraries for all possibilities would require unrealistically large memories. Fur such chunks (containing double pawns for instance) it will be necessary to do the analysis to produce properties on the fly. However, once such an analysis is done, these properties can be retained in a temporary chunk library for the duration of the solution process <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. <span id="SzenPosition"></span></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#szén-position">Szén Position</a></li>
+<li><a href="#abstract">Abstract</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="szén-position">Szén Position</h2>
+<p>Due to its chunk library of king versus three <a href="/Connected_Passed_Pawns">connected passers</a>, Chunker is an expert in playing the <strong>Szén position</strong>, popularized by the Hungarian chess player <a href="https://en.wikipedia.org/wiki/J%C3%B3zsef_Sz%C3%A9n">József Szén</a> in the first half of the nineteenth century, with a lineage dating from <a href="https://en.wikipedia.org/wiki/Gioachino_Greco">Gioacchino Greco</a> two centuries before with wK and bK on e1 and e8 respectively <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>:</p>
+<div class="chess-fen" data-fen="4k3/5ppp/8/8/8/8/PPP5/3K4"><code>4k3/5ppp/8/8/8/8/PPP5/3K4</code></div>
+
+<p><code>4k3/5ppp/8/8/8/8/PPP5/3K4 w - - </code></p>
+<h2 id="abstract">Abstract</h2>
+<p><em>Using Chunking to Solve Chess Pawn Endgames</em> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>:</p>
+<p><code>CHUNKER is a chess program that uses chunked knowledge to improve its performance. Its domain is a subset of king and pawn endings in chess that has been studied for over 300 years. CHUNKER has a large library of chunk instances where each chunk type has a property list and each instance has a set of values for these properties. This allows CHUNKER to reason about positions that come up in the search that would otherwise have to be handled by means of additional search. Thus the program is able to solve the most difficult problem of its present domain (a problem that would require 45 ply of search and on the order of 1013 years of CPU time to be solved by the best of present day chess programs) in 18 ply and one minute of CPU time. Further, CHUNKER is undoubtedly the world's foremost expert in its domain, and has discovered 2 mistakes in the literature and has been instrumental in discovering a new theorem about the domain that allows the assessing of positions with a new degree of ease and confidence. In this paper we show how the libraries are compiled, how CHUNKER works, and discuss our plans for extending it to play the whole domain of king and pawn endings. </code></p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/PawnKing">PawnKing</a></li>
+<li><a href="/Peasant">Peasant</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Murray_Campbell">Murray Campbell</a>, <a href="/Hans_Berliner">Hans Berliner</a> (<strong>1983</strong>). <em>A Chess Program That Chunks</em>. AAAI 1983 49-53, <a href="http://www.aaai.org/Papers/AAAI/1983/AAAI83-012.pdf">pdf</a></li>
+<li><a href="/Hans_Berliner">Hans Berliner</a>, <a href="/Murray_Campbell">Murray Campbell</a> (<strong>1984</strong>). <em><a href="http://www.sciencedirect.com/science/article/pii/0004370284900067">Using Chunking to Solve Chess Pawn Endgames</a></em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 23, No. 1, pp. 97-120. ISSN 0004-3702</li>
+<li><a href="/Murray_Campbell">Murray Campbell</a> (<strong>1988</strong>). <em>Chunking as an Abstraction Mechanism</em>. Ph.D. thesis, <a href="/Carnegie_Mellon_University">Carnegie Mellon University</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Shallow_parsing">Shallow parsing from Wikipedia</a></li>
+<li><a href="/Category:The_Lounge_Lizards">The Lounge Lizards</a> - <a href="https://en.wikipedia.org/wiki/Voice_of_Chunk">Voice of Chunk</a> (1988), <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/John_Lurie">John Lurie</a>, <a href="https://en.wikipedia.org/wiki/Evan_Lurie">Evan Lurie</a>, <a href="https://en.wikipedia.org/wiki/Roy_Nathanson">Roy Nathanson</a>, <a href="https://en.wikipedia.org/wiki/Curtis_Fowlkes">Curtis Fowlkes</a>, <a href="/Category:Marc_Ribot">Marc Ribot</a>, <a href="https://www.facebook.com/dougie.bowne?_fb_noscript=1">Dougie Bowne</a>, <a href="https://en.wikipedia.org/wiki/Erik_Sanko">Erik Sanko</a>, <a href="http://www.jazzpassengers.com/?_escaped_fragment_=ej-rodriguez/c1tzv#!ej-rodriguez/c1tzv">E.J. Rodriguez</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/COc8SPzz-aI" title="YouTube video COc8SPzz-aI" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=COc8SPzz-aI">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Engines">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Murray_Campbell">Murray Campbell</a>, <a href="/Hans_Berliner">Hans Berliner</a> (<strong>1983</strong>). <em>A Chess Program That Chunks</em>. AAAI 1983 49-53, <a href="http://www.aaai.org/Papers/AAAI/1983/AAAI83-012.pdf">pdf</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://en.wikipedia.org/wiki/Jon_Speelman">Jon Speelman</a> (<strong>1983</strong>). <em>The Szen Position</em>. <a href="http://www.gadycosteff.com/eg/eg.html">EG73</a>, <a href="http://www.gadycosteff.com/eg/eg73.pdf">pdf</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=48125">At a glance you may think this is a draw. White wins</a> by Robert Flesher, <a href="/CCC">CCC</a>, May 26, 2013<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=60802">Now Szén position solved in 15 seconds by regular Stockfish!</a> by Vincent Lejeune, <a href="/CCC">CCC</a>, July 12, 2016<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="/Hans_Berliner">Hans Berliner</a>, <a href="/Murray_Campbell">Murray Campbell</a> (<strong>1984</strong>). <em><a href="http://www.sciencedirect.com/science/article/pii/0004370284900067">Using Chunking to Solve Chess Pawn Endgames</a></em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 23, No. 1, pp. 97-120. ISSN 0004-3702, Abstract<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:The_Lounge_Lizards">The Lounge Lizards</a> · <a href="/Category:Marc_Ribot">Marc Ribot</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Chunker">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, Vincentlejeune.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

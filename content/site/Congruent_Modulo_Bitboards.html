@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Congruent Modulo Bitboards - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Congruent Modulo Bitboards</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * <a href="/Sliding_Piece_Attacks">Sliding Piece Attacks</a> * Congruent Modulo Bitboards</strong></p>
+<p><strong>Congruent Modulo Bitboards</strong> was introduced by <a href="/Trevor_Fenner">Trevor Fenner</a> and <a href="/Mark_Levene">Mark Levene</a> in the <a href="/ICGA_Journal">ICGA Journal, Vol. 31, No. 1</a> in 2008 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. While their <a href="/Hash_Table">Perfect Hashing</a> approach provides great mathematical insights in <a href="https://en.wikipedia.org/wiki/Modulo">Congruent Modulo</a> arithmetic, their final conclusion in comparison with <a href="/Hashing_Dictionaries">Hashing Dictionaries</a>, <a href="/Rotated_Bitboards">Rotated Bitboards</a> and <a href="/Magic_Bitboards">Magic Bitboards</a> was criticized by the obvious comparison with <a href="/Kindergarten_Bitboards">Kindergarten Bitboards</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#modulo-vs-multiplication">Modulo vs. Multiplication</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#modulo">Modulo</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#congruence-relation">Congruence relation</a></li>
+<li><a href="#casting-out-255">Casting out 255</a></li>
+<li><a href="#reciprocal-multiplication">Reciprocal Multiplication</a></li>
+</ol>
+</details></li>
+<li><a href="#multiplication">Multiplication</a></li>
+</ol>
+</details></li>
+<li><a href="#fenners-and-levenes-conclusion">Fenner's and Levene's conclusion</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="modulo-vs-multiplication">Modulo vs. Multiplication</h2>
+<p><a href="/BitScan">BitScan</a> broaches the issue of <a href="/Hash_Table">Perfect Hashing</a> with <a href="/General_Setwise_Operations">Modulo</a> versus <a href="/General_Setwise_Operations">Multiplication</a> as well:</p>
+<ul>
+<li><a href="/BitScan">Bitscan by Modulo</a></li>
+<li><a href="/BitScan">De Bruijn Multiplication</a></li>
+</ul>
+<p>So does the <a href="/Population_Count">SWAR-Popcount</a>, when it is about to finally add byte-wise populations:</p>
+<ul>
+<li><a href="/Population_Count">Casting out</a></li>
+<li><a href="/Population_Count">Multiplication</a></li>
+</ul>
+<h3 id="modulo">Modulo</h3>
+<h4 id="congruence-relation">Congruence relation</h4>
+<p>Fenner and Levene use masked lines (not necessarily excluding the sliding piece), that is bitboards with N=8 active bits with k={7,8,9} bits apart, starting with bit zero</p>
+<p><code>A</code><span style="vertical-align: sub;"><code>kN</code></span><code> = {0, k, 2k, ...,(N-1)k}</code></p>
+<p>Based on <a href="https://en.wikipedia.org/wiki/Congruence_relation">Congruence relation</a></p>
+<p><code>b ≡ c (mod m)</code></p>
+<p>or equivalently</p>
+<p><code>b mod m = c mod m</code></p>
+<p>they deduced two general perfect hashing functions. The case N &lt;= k with</p>
+<p><code>h</code><span style="vertical-align: sub;"><code>1</code></span><code>(a) = a mod (2</code><span style="vertical-align: super;"><code>k</code></span><code> + 2)</code></p>
+<p>and the case N &lt;= k + 1</p>
+<p><code>h</code><span style="vertical-align: sub;"><code>2</code></span><code>(a) = a mod (2</code><span style="vertical-align: super;"><code>k+1</code></span><code> + 1)</code></p>
+<p>This results in modulo 514 for <a href="/Diagonals">diagonals</a>, modulo 257 for <a href="/Anti-Diagonals">anti-diagonals</a>, and modulo 258 for <a href="/Files">files</a>, to calculate the occupied index. Tables could made denser by storing indices, but that would require a second indirection. While Fenner and Levene used a <a href="https://en.wikipedia.org/wiki/MATLAB">Matlab</a> 32-bit implementation to conclude their approach might be competitive, this is how it may be implemented in <a href="/C">C</a> by looking up pre-calculated attack-bitboards:</p>
+<pre><code>U64 arrCmodDiaAttacks [514][64];  // 257 K
+U64 arrCmodAntiAttacks[257][64];
+U64 arrCmodFileAttacks[258][64];
+
+U64 diagonalAttacks(U64 occ, enumSquare sq) {
+   const U64 aDia = C64(0x8040201008040201);
+   occ = ( (occ &gt;&gt; diashift[sq]) &amp; aDia) % 514;
+   return arrCmodDiaAttacks[occ][sq];
+}
+
+U64 antiDiagAttacks(U64 occ, enumSquare sq) {
+   const U64 aAntiDiaShr7 = C64(0x0002040810204081);
+   occ = ( (occ &gt;&gt; antishift[sq]) &amp; aAntiDiaShr7 ) % 257;
+   return arrCmodAntiAttacks[occ][sq];
+}
+
+U64 fileAttacks(U64 occ, enumSquare sq) {
+   const U64 aFile = C64(0x0101010101010101);
+   occ = ( (occ &gt;&gt; (sq&amp;7)) &amp; aFile) % 258;
+   return arrCmodFileAttacks[occ][sq];
+}</code></pre>
+<p><span id="Castingout255"></span></p>
+<h4 id="casting-out-255">Casting out 255</h4>
+<p>For ranks, diagonals or anti-diagonals, where the occupancy mask excludes the sliding piece, and the rank-or byte-wise sum of disjoint bits is therefor less than 255, <a href="/Population_Count">Casting out</a> 256-1 works as well, without any shifts required, and with more space saving options for the lookup table, i. e. similar to Kindergarten Bitboards with shared multiples of first rank attacks and an trailing post-mask with the same line <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>.</p>
+<pre><code>masked occupany  %  256-1            =  A-H    
+. . . . . . . H     . . . . . . . .     . . . . . . . .
+. . . . . . G .     . . . . . . . .     . . . . . . . . 
+. . . . . F . .     . . . . . . . .     . . . . . . . . 
+. . . . E . . .     . . . . . . . .     . . . . . . . . 
+. . . . . . . .  %  . . . . . . . .  =  . . . . . . . . 
+. . C . . . . .     . . . . . . . .     . . . . . . . . 
+. B . . . . . .     . . . . . . . .     . . . . . . . . 
+A . . . . . . .     1 1 1 1 1 1 1 1     A B C . E F G H </code></pre>
+<h4 id="reciprocal-multiplication">Reciprocal Multiplication</h4>
+<p>The 64-bit modulo by a constant can be done most efficiently by <a href="/General_Setwise_Operations">reciprocal fixed point multiplication</a>, this is how <a href="/Microsoft">Microsoft</a> <a href="https://en.wikipedia.org/wiki/Visual_C%2B%2B">Visual C++</a> 2005 compiler implements the mod constant for <a href="/X86-64">x86-64</a> processors. One 64*64=128 bit multiplication, one shift, one further 32-bit multiplication , one subtraction. Of course using 64-bit <a href="/General_Setwise_Operations">division</a> to get the remainder burns even more cycles.</p>
+<pre><code>Code:
+% 514
+ mov    r11d, r10 ; masked diagonal
+ mov    rax, ff00ff00ff00ff01H
+ mul    r10
+ shr    rdx, 9
+ imul   edx, 514 ; 00000202H
+ sub    r11d, edx
+
+% 257
+ mov    r11d, r10 ; masked diagonal
+ mov    rax, ff00ff00ff00ff01H
+ mul    r10
+ shr    rdx, 8
+ imul   edx, 257 ; 00000101H
+ sub    r11d, edx</code></pre>
+<h3 id="multiplication">Multiplication</h3>
+<p>A Kindergarten like approach might look like this (not considering <a href="/First_Rank_Attacks">inner six bits</a>):</p>
+<pre><code>U64 arrDiagonalAttacks[256][64];  // 128 K
+
+U64 diagonalAttacks(U64 occ, enumSquare sq) {
+   occ = (diagonalMask[sq] &amp; occ) * C64(0x0101010101010101) &gt;&gt; 56;
+   return arrDiagonalAttacks[occ][sq];
+}</code></pre>
+<p>and uses one 64*64=64-bit multiplication, with this <a href="/X86-64">x86-64</a> assembly for calculating an eight-bit occupied index:</p>
+<pre><code> mov    rax, 0101010101010101H
+ imul   rdx, rax
+ shr    rdx, 56</code></pre>
+<p>Even <a href="/Kindergarten_Bitboards">Kindergarten File-Attacks</a> are cheaper and faster, not to mention <a href="/Magic_Bitboards">Magic Bitboards</a>, which covers two lines of a rook or bishop in one run.</p>
+<h2 id="fenners-and-levenes-conclusion">Fenner's and Levene's conclusion</h2>
+<p>Quote from their paper, pp 11<br />
+<strong>3.5. Comparison with other Methods</strong></p>
+<p><code>As reported in Hyatt (2007), the rotated and magic bitboard methods are of comparable performance, and Tannous (2007) claims just a small improvement of the direct lookup method over rotated bitboards. It is easy to see that, in terms of the number of computer operations, the efficiency of our method will be similar to that of direct lookup. Thus we are justified in claiming that the computational efficiency of our method is comparable to the others.</code></p>
+<p>Their conclusion was based on following statement of <a href="/Robert_Hyatt">Robert Hyatt</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> <strong>...</strong></p>
+<p><code>I had reported this earlier. Magic was no faster than rotated. I switched because of two things...</code></p>
+<p><code>1. Magic is simpler, and simpler is better as I get older.</code><br />
+<code>2. Magic gives you the opportunity to update the occupied_squares and then generate moves easily.</code></p>
+<p><code>To do this with rotated bitboards first requires that all rotated bitboards be updated in addition to the normal occupied_squares bitboard. This is faster, if you use the feature (I don't yet, but well might at times).</code></p>
+<p><strong>...</strong> and this claim of <a href="/Sam_Tannous">Sam Tannous</a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>:</p>
+<p><code>The results shown indicate that directly looking up the attacking moves for sliding pieces in hash tables improves the move generation speeds from 10% to 15% depending on computer architecture. Further efficiencies can be expected in a full implementation where the overhead of maintaining rotated bitboards is eliminated. The implementation and test code is made available in an Open-Source, interactive, chess programming module called “Shatranj” (Tannous, 2006).</code></p>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="http://sun.aei.polsl.pl/~zjc/">Zbigniew J. Czech</a>, <a href="http://itee.uq.edu.au/~havas/">George Havas</a>, <a href="http://www.informatik.uni-trier.de/~ley/db/indices/a-tree/m/Majewski:Bohdan_S=.html">Bohdan S. Majewski</a> (<strong>1997</strong>). <em>Perfect Hashing</em>. Theoretical Computer Science, Vol. 182, Nos. 1-2, pp. 1-143</li>
+<li><a href="/Trevor_Fenner">Trevor Fenner</a>, <a href="/Mark_Levene">Mark Levene</a> (<strong>2008</strong>). <em>Move Generation with Perfect Hashing Functions.</em> <a href="/ICGA_Journal">ICGA Journal, Vol. 31, No. 1</a>, pp. 3-12. <a href="http://www.dcs.bbk.ac.uk/~mark/download/bitboard_sliding_icga_final.pdf">pdf</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=20913">Nice Math - Strange Conclusions</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/CCC">CCC</a>, April 29, 2008</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=51996">Low memory usage attack bitboard generation</a> by crystalclear, <a href="/Computer_Chess_Forums">Winboard Forum</a>, October 06, 2011</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Congruence_relation">Congruence relation from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Linear_congruence_theorem">Linear congruence theorem from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Modular_arithmetic">Modular arithmetic from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Modulo_operation">Modulo operation from Wikipedia</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Sliding_Piece_Attacks">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Trevor_Fenner">Trevor Fenner</a>, <a href="/Mark_Levene">Mark Levene</a> (<strong>2008</strong>). <em>Move Generation with Perfect Hashing Functions.</em> <a href="/ICGA_Journal">ICGA Journal, Vol. 31, No. 1</a>, pp. 3-12. <a href="http://www.dcs.bbk.ac.uk/~mark/download/bitboard_sliding_icga_final.pdf">pdf</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=20913">Nice Math - Strange Conclusions</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/CCC">CCC</a>, April 29, 2008<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=51996">Low memory usage attack bitboard generation</a> by crystalclear, <a href="/Computer_Chess_Forums">Winboard Forum</a>, October 06, 2011<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=140141&amp;t=16002">Re: BitBoard Tests Magic v Non-Rotated 32 Bits v 64 Bits</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a> August 25, 2007<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="/Sam_Tannous">Sam Tannous</a> (<strong>2007</strong>). <em>Avoiding Rotated Bitboards with Direct Lookup</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 30, No. 2</a>, pp. 85-91, <a href="http://arxiv.org/PS_cache/arxiv/pdf/0704/0704.3773v2.pdf">pdf</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Congruent_Modulo_Bitboards">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

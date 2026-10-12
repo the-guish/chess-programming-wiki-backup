@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blockers and Beyond - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Blockers and Beyond</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * <a href="/Sliding_Piece_Attacks">Sliding Piece Attacks</a> * Blockers and Beyond</strong></p>
+<p><strong>Blockers and Beyond</strong>,<br />
+a general bitboard technique to determine not only sliding piece attacks, but also <a href="/King_Pattern">king</a> and <a href="/Knight_Pattern">knight attacks</a>. The technique was introduced by <a href="/Fabien_Letouzey">Fabien Letouzey</a> within his first release of the <a href="/Category:Open_Source">open source engine</a> <a href="/Senpai">Senpai 1.0</a> in March 2014 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>, but already devised in the mid 2000s, and applied in Fabien's private bitboard engine <a href="/Chess-64">Chess-64</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>. He found it simple and elegant with the endgame in mind <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>, and dubbed it "blocker loop", a term already coined by <a href="/Fritz_Reul">Fritz Reul</a> in the context of his <a href="/Vector_Attacks">non bitboard architecture</a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>, thus the editor's proposal of "Blockers and Beyond" <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> .</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#how-it-works">How it works</a></li>
+<li><a href="#sample-c-source">Sample C Source</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="how-it-works">How it works</h2>
+<p>The routine gets the pre-calculated <a href="/On_an_empty_Board">attack-set on the otherwise empty board</a> by looking up a two-dimensional array indexed by <a href="/Pieces">piece kind</a> and <a href="/Origin_Square">origin square</a>. Further, the <a href="/Occupancy">occupancy</a> of the whole board is <a href="/General_Setwise_Operations">intersected</a> by a piece-kind and origin square specific blocker and beyond (b&amp;b) mask, which is always empty for none sliding pieces. For sliders, the b&amp;b mask almost equals the attack-set, except that the redundant most outer squares with no more ray-squares behind are cleared. <a href="/Bitboard_Serialization">Serializing</a> the intersection with clearing all bits on the <a href="/Rays">ray</a> from the origin behind the potential blocker square finally determines the sliding attack set, whether it is a bishop, rook or queen.</p>
+<p>Of course, if there are multiple pieces on a ray, the routine performs multiple ray-resets with different lengths, which are redundant for the outer pieces beyond the first blocker without affecting the result. Despite the loop and branch issues, the routine has a tiny loop body, skips empty rays, has no conditional code on the (sign of) the <a href="/Rays">ray-direction</a>, and is quite competitive, specially in rook, bishop and queen endings with high mobility.</p>
+<h2 id="sample-c-source">Sample C Source</h2>
+<p><a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a></p>
+<pre><code>U64 arrPieceAttacks[6][64];
+U64 arrBlockersAndBeyond[6][64];
+U64 arrBehind[64][64];
+
+U64 pieceAttacks(int pc, int f, U64 occupied) {
+   assert(pc != piece::PAWN);
+
+   U64 ts = arrPieceAttacks[pc][f];
+   for (U64 b = occupied &amp; arrBlockersAndBeyond[pc][f]; b != 0; b &amp;= (b - 1)) {
+      int sq = bitScanForward(b);
+      ts &amp;= ~arrBehind[f][sq];
+   }
+   return ts;
+} </code></pre>
+<p>For a queen on d4, with up to 27 attacked squares, the blockers and beyond cardinality of all eight rays is 19:</p>
+<pre><code> pieceAttacks[q][d4]   blockers&amp;beyond[q][d4]
+ . . . 1 . . . 1       . . . . . . . .
+ 1 . . 1 . . 1 .       . . . 1 . . 1 .
+ . 1 . 1 . 1 . .       . 1 . 1 . 1 . .
+ . . 1 1 1 . . .       . . 1 1 1 . . .
+ 1 1 1 Q 1 1 1 1       . 1 1 Q 1 1 1 .
+ . . 1 1 1 . . .       . . 1 1 1 . . .
+ . 1 . 1 . 1 . .       . 1 . 1 . 1 . .
+ 1 . . 1 . . 1 .       . . . . . . . .</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Chess-64">Chess-64</a></li>
+<li><a href="/Classical_Approach">Classical Approach</a></li>
+<li><a href="/Senpai">Senpai</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51637&amp;start=26">Re: Senpai 1.0 (new engine)</a> by <a href="/Fabien_Letouzey">Fabien Letouzey</a>, <a href="/CCC">CCC</a>, March 17, 2014</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=67693">Small improve for Blockers and Beyond Bitboard</a> by <a href="/Tamás_Kuzmics">Tamás Kuzmics</a>, <a href="/CCC">CCC</a>, June 10, 2018</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Blocker">Blocker from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Alpha_blocker">Alpha blocker from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Beta_blocker">Beta blocker from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Beyond">Beyond from Wikipedia</a></li>
+<li><a href="/Category:Mahavishnu_Orchestra">Mahavishnu Orchestra</a> - <a href="https://en.wikipedia.org/wiki/Birds_of_Fire">Miles Beyond</a>, <a href="http://www.musicinn.org/">Music Inn</a>, <a href="https://en.wikipedia.org/wiki/Lenox,_Massachusetts">Lenox, Ma</a> - July 21, 1973, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p><a href="/Category:John_McLaughlin">John McLaughlin</a>, <a href="/Category:Billy_Cobham">Billy Cobham</a>, <a href="/Category:Rick_Laird">Rick Laird</a>, <a href="/Category:Jan_Hammer">Jan Hammer</a>, <a href="https://en.wikipedia.org/wiki/Jerry_Goodman">Jerry Goodman</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/CTybDy8xxGI" title="YouTube video CTybDy8xxGI" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=CTybDy8xxGI">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Sliding_Piece_Attacks">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=51637">Senpai 1.0 (new engine)</a> by <a href="/Fabien_Letouzey">Fabien Letouzey</a>, <a href="/CCC">CCC</a>, March 17, 2014<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.chessprogramming.net/senpai/">Senpai Chess Engine - Computer Chess Programming</a> hosted by <a href="/Steve_Maughan">Steve Maughan</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>Personal communication with <a href="/Fabien_Letouzey">Fabien Letouzey</a>, March 20, 2014<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=51637&amp;start=26">Re: Senpai 1.0 (new engine)</a> by <a href="/Fabien_Letouzey">Fabien Letouzey</a>, <a href="/CCC">CCC</a>, March 17, 2014<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="/Fritz_Reul">Fritz Reul</a> (<strong>2009</strong>). <em>New Architectures in Computer Chess</em>. Ph.D. Thesis, <em>Chapter 2 Non-Bitboard Architectures</em>.<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=51637&amp;start=39">Re: Senpai 1.0 (new engine)</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/CCC">CCC</a>, March 17, 2014<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p>adapted to common CPW types and style from Senpai 1.0 source bit_t piece_attacks_from(int pc, int f, const board::Board &amp; bd), senpai_10.cpp, line 1867<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Mahavishnu_Orchestra">Mahavishnu Orchestra</a> · <a href="/Category:Billy_Cobham">Billy Cobham</a> · <a href="/Category:Jan_Hammer">Jan Hammer</a> · <a href="/Category:Rick_Laird">Rick Laird</a> · <a href="/Category:John_McLaughlin">John McLaughlin</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Blockers_and_Beyond">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CHUMP - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">CHUMP</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Engines">Engines</a> * CHUMP</strong></p>
+<p><strong>CHUMP</strong>, (CHUnking of Moves and Patterns)<br />
+was an experimental chess program by <a href="/Fernand_Gobet">Fernand Gobet</a> and <a href="/Peter_Jansen">Peter Jansen</a> that <a href="/Learning">learned</a> to <a href="/Pattern_Recognition">recognize</a> piece patterns and associated move sequences, introduced at the <a href="/Advances_in_Computer_Chess_7">Advances in Computer Chess 7</a> conference in 1993. The aim was to model human 'computational' mechanisms, not only to understand better those machanisms in human beings, but to yield techniques and algorithms that could lead to valuable additions to competitive game playing programs, for instance in improving <a href="/Move_Ordering">move ordering</a> and in learning search control aka <a href="/Selectivity">selectivity</a> of classical <a href="/Alpha-Beta">alpha-beta</a> searchers <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>.</p>
+<p>CHUMP is based on <a href="/CHREST">CHREST</a> (Chunk Hierarchy and REtrieval STructures), a computer model of human chess memory and perception <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>. CHREST was inspired by earlier programs <a href="/MAPP">MAPP</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> and <a href="/Perceiver">Perceiver</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> by <a href="/Herbert_Simon">Herbert Simon</a> and colleages. CHREST was not conceived as a component of a game playing program - its knowledge was limited to pattern of chess positions and had no concept of moves, goals and values. In learning about moves and when to make them, CHUMP was the first step towards a game playing, pattern learning chess program. In 1997, <a href="/Fernand_Gobet">Fernand Gobet</a> developed a second simulation of move-selection called <strong>SEARCH</strong>, which begins to incorporate <a href="/Search">search</a> processes <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#structure-of-chump">Structure of CHUMP</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#eye-movements">Eye Movements</a></li>
+<li><a href="#discrimination-and-familiarization">Discrimination and Familiarization</a></li>
+<li><a href="#short-term-memory">Short-term Memory</a></li>
+<li><a href="#retrieval-structure">Retrieval Structure</a></li>
+</ol>
+</details></li>
+<li><a href="#learning">Learning</a></li>
+<li><a href="#move-proposal">Move Proposal</a></li>
+<li><a href="#experiments">Experiments</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#chess-program">Chess Program</a></li>
+<li><a href="#misc">Misc</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="structure-of-chump">Structure of CHUMP</h2>
+<p>CHUMP consists of the following components:</p>
+<ol type="1">
+<li><a href="/Eye_Movements">Eye movement</a> simulator module</li>
+<li><a href="/EPAM">EPAM like</a> discrimination nets, one for piece patterns, one for move sequences</li>
+<li><a href="https://en.wikipedia.org/wiki/Short-term_memory">Short-term memory</a> (STM)</li>
+<li><a href="/CHREST">Retrieval structure</a></li>
+</ol>
+<h3 id="eye-movements">Eye Movements</h3>
+<p>The <a href="/Eye_Movements">eye movement</a> simulator is the only part of the system where the rules of the game influence the learning process. It scans the board, and directs its attention to <a href="/Pieces">pieces</a> and <a href="/Squares">squares</a> it expects, given the current node in its discrimination net, attack, defense and <a href="/Distance">proximity relations</a> between pieces. It is hoped, that this leads to the formation of meaningful chunks.</p>
+<h3 id="discrimination-and-familiarization">Discrimination and Familiarization</h3>
+<p>The discrimination nets are based o the <a href="/EPAM">EPAM</a> model of memory and perception, with some differences in the way uses recursion in encoding chunks and in the nature of the discrimination data structure - EPAM uses a tree, CHUMP a graph. Each node in the net contains the image of the object that lead to its creation, and a list of descendants. There are two different types of learning, depending on whether is new or not. If an objcet is new, that is does not match the image of the chunk found in the discrimination net, a new branch is created - dubbed <em>discrimination</em>. Otherwise, CHUMP extends the image - called <em>familiarization</em>.</p>
+<h3 id="short-term-memory">Short-term Memory</h3>
+<p><a href="https://en.wikipedia.org/wiki/Short-term_memory">Short-term memory</a> (STM) is a n-pointer structure (n ≡ 7 for human simulations), in which each pointer refers to a single piece pattern recognized in the position. In CHUMP, to obtain faster learning, an STM size of n = 20 was applied.</p>
+<h3 id="retrieval-structure">Retrieval Structure</h3>
+<p>The retrieval structure is an intermediate memory structure that, in humans, allows a rapid access to <a href="https://en.wikipedia.org/wiki/Long-term_memory">long-term memory</a>. In CHUMP. the retrieval structure consists of an internal <a href="/Board_Representation">board representation</a> - a representation augmented with information about lines, diagonals and directions of movement of the pieces - and the hypothesis - the most information-rich pattern recognized so far, linking for instance to relevant plans.</p>
+<h2 id="learning">Learning</h2>
+<p>CHUMP builds its discrimination nets for pieces and moves based on the patterns it recognizes when scanning the set of training positions. For each position three learning steps take place.</p>
+<ol type="1">
+<li>The eye movement recognizes piece pattern, which are discriminated or familiarized inside the piece patterns net.</li>
+<li>The move actually played is learned inside its move sequence discrimination net.</li>
+<li>The current move (sequence) is associated with those piece patterns that contain the moving piece on its correct <a href="/Origin_Square">from square</a>; a link is created between the piece pattern and the move entry in the move sequence discrimination net. If this move has already been associated with the same pattern earlier, its activation (a counter that keeps track of how often a particular move has been associated with a given pattern) is increased.</li>
+</ol>
+<h2 id="move-proposal">Move Proposal</h2>
+<p>After (or during) learning, CHUMP can use its discrimination nets to suggests moves in certain positions. Again, three steps were applied.</p>
+<ol type="1">
+<li>The eye movement simulator iterates over all relevant piece patterns.</li>
+<li>The moves associated with every piece pattern are retrieved from the net, along with the number of chunks associating it and its activation.</li>
+<li>The move with the greatest number of chunks is prefered, if equal, the move with higher activation is considered best</li>
+</ol>
+<h2 id="experiments">Experiments</h2>
+<p>CHUMP's proposed moves were compared with actual moves in several different learning and testing situations, e.g. games by <a href="https://en.wikipedia.org/wiki/Mikhail_Tal">Mikhail Tal</a> and positions from the KQKR domain. The experiments show that CHUMP improves performance with learning in all cases.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/CHREST">CHREST</a></li>
+<li><a href="/Chunker">Chunker</a></li>
+<li><a href="/Chunking">Chunking</a></li>
+<li><a href="/EPAM">EPAM</a></li>
+<li><a href="/Eye_Movements">Eye Movements</a></li>
+<li><a href="/Learning">Learning Chess Programs</a></li>
+<li><a href="/MAPP">MAPP</a></li>
+<li>Pattern Learning</li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Fernand_Gobet">Fernand Gobet</a>, <a href="/Peter_Jansen">Peter Jansen</a> (<strong>1994</strong>). <em>Towards a Chess Program Based on a Model of Human Memory.</em> <a href="/Advances_in_Computer_Chess_7">Advances in Computer Chess 7</a></li>
+<li>Roy W. Roring III (<strong>2008</strong>). <em>Reviewing Expert Chess Performance: A Production-Based Theory of Chess Skill</em>. Ph.D. thesis, advisor Neil Charness, <a href="https://en.wikipedia.org/wiki/Florida_State_University">Florida State University</a></li>
+<li>Andrew Cook (<strong>2008</strong>). <em>Chunk Learning and Move Prompting: Making Moves in Chess</em>. Technical Report CSR-08-12, <a href="https://en.wikipedia.org/wiki/University_of_Birmingham">University of Birmingham</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<h3 id="chess-program">Chess Program</h3>
+<ul>
+<li><a href="http://www.chrest.info/projects.html">CHREST projects - CHUMP</a></li>
+</ul>
+<h3 id="misc">Misc</h3>
+<ul>
+<li><a href="https://en.wiktionary.org/wiki/chump">chump Wiktionary</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Chump">Chump from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/A_Chump_at_Oxford">A Chump at Oxford from Wikipedia</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Engines">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p>This article incorporates text from <a href="/Fernand_Gobet">Fernand Gobet</a>, <a href="/Peter_Jansen">Peter Jansen</a> (<strong>1994</strong>). <em>Towards a Chess Program Based on a Model of Human Memory.</em> <a href="/Advances_in_Computer_Chess_7">Advances in Computer Chess 7</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Fernand_Gobet">Fernand Gobet</a> (<strong>1993</strong>). <em><a href="http://bura.brunel.ac.uk/handle/2438/2129">A Computer Model of Chess Memory</a>.</em> Proceedings of the 15th Annual Meeting of the Cognitive Science Society<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="/Herbert_Simon">Herbert Simon</a>, <a href="/Kevin_J._Gilmartin">Kevin J. Gilmartin</a> (<strong>1973</strong>). <em>A Simulation of Memory for Chess Positions</em>. Cognitive Psychology, Vol. 5, pp. 29-46, reprinted in <a href="/Herbert_Simon">Herbert Simon</a> (<strong>1979</strong>). <em><a href="http://yalepress.yale.edu/yupbooks/book.asp?isbn=9780300024326">Models of Thought</a></em>. <a href="https://en.wikipedia.org/wiki/Yale_University_Press">Yale University Press</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="/Herbert_Simon">Herbert Simon</a>, <a href="/Michael_Barenfeld">Michael Barenfeld</a> (<strong>1968</strong>). <em>Information Processing in the Perception of Chess Positions</em>. <a href="/Carnegie_Mellon_University">Carnegie Mellon University</a>, Paper #127<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="/Fernand_Gobet">Fernand Gobet</a> (<strong>1997</strong>). <em>A Pattern-Recognition Theory of Search in Expert Problem Solving.</em> Thinking and Reasoning, Vol. 3, No. 4<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Acronym">Acronym</a> · <a href="/Category:Experimental">Experimental</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/CHUMP">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

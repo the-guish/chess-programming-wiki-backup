@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chinese Chess - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Chinese Chess</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Games">Games</a> * Chinese Chess</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/1/1c/Xiangqi_Board.svg" alt="Xiangqi board, with pieces in their starting positions 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Xiangqi board, with pieces in their starting positions <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://en.wikipedia.org/wiki/Xiangqi">Xiangqi from Wikipedia</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Chinese Chess</strong>, or <strong>Xiangqi</strong> 象棋 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>,<br />
+is a chess variant which is very popular in East Asia, especially in China and Vietnam. The Chinese Chess set includes a board and 32 pieces for two players. The board has ten horizontal lines called <a href="/Ranks">ranks</a> and nine vertical lines called <a href="/Files">files</a>. Pieces are located not in the cells but intersectional points of ranks and files which are 90 in total. In the middle of the board the central seven files are interrupted by a horizontal space called the “River”, which splits the board into two parts. <span id="Palace"></span>Each side of the board has a “Palace” a 3x3 area in the central base. The two sides are usually distinguished by colors, traditional names are red or black <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> but now they can be called white and black as chess. Sometimes the Xiangqi board could be considered as the presentation of the war between two countries when the standard chess presents for a battle only.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#pieces">Pieces</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#rules">Rules</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#basic">Basic</a></li>
+<li><a href="#3-folk-rules">3-Folk Rules</a></li>
+</ol>
+</details></li>
+<li><a href="#notations">Notations</a></li>
+<li><a href="#programming">Programming</a></li>
+<li><a href="#sub-variants">Sub variants</a></li>
+<li><a href="#engines">Engines</a></li>
+<li><a href="#computer-olympiads">Computer Olympiads</a></li>
+<li><a href="#photos">Photos</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#publications">Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1981-">1981 ...</a></li>
+<li><a href="#1990-">1990 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1994">1994</a></li>
+<li><a href="#2000--1">2000 ...</a></li>
+<li><a href="#2010--1">2010 ...</a></li>
+<li><a href="#2015--1">2015 ...</a></li>
+<li><a href="#2020--1">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#chinese-chess">Chinese Chess</a></li>
+<li><a href="#computer-chinese-chess">Computer Chinese Chess</a></li>
+<li><a href="#source-code">Source Code</a></li>
+<li><a href="#xiangqi-cloud-database">Xiangqi Cloud Database</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="pieces">Pieces</h2>
+<p>There are 7 types: King, Advisor, Elephant, Rook, Cannon, Horse, and Pawn. Typically those pieces are made from small, simple wood pieces which some symbols (new way) or Chinese characters (traditional way) written on them. As the Chinese characters, pieces on the white side may use different characters than their counterparts on the black side. They are the same pieces, but names on the White side are subtly more noble than those on the Black side <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>.</p>
+<p>Cannon is the most interesting piece in Chinese chess.</p>
+<table>
+<thead>
+<tr>
+<th><p>Images</p></th>
+<th colspan="2"><p>Name</p></th>
+<th><p>Notation <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p></th>
+<th><p>Value <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></p></th>
+<th><p>Movement</p></th>
+<th><p>Restriction</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><figure>
+<span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="https://upload.wikimedia.org/wikipedia/commons/8/89/Xiangqi_General_%28Trad%29.svg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span>
+</figure></td>
+<td style="text-align:center;"><p>帥、將</p></td>
+<td style="text-align:center;"><p><span id="King"></span>King<br />
+(General)</p></td>
+<td style="text-align:center;"><p>K</p></td>
+<td style="text-align:center;"></td>
+<td><p>moves and captures<br />
+one orthogonal step</p></td>
+<td><p>may not leave the palace<br />
+The two kings may not face<br />
+each other along the same file<br />
+with no intervening piece</p></td>
+</tr>
+<tr>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="https://upload.wikimedia.org/wikipedia/commons/4/48/Xiangqi_Advisor_%28Trad%29.svg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+<td style="text-align:center;"><p>仕, 士</p></td>
+<td style="text-align:center;"><p><span id="Advisor"></span>Advisor (Guard)</p></td>
+<td style="text-align:center;"><p>A</p></td>
+<td style="text-align:center;"><p>2</p></td>
+<td><p>moves and captures<br />
+one diagonal step</p></td>
+<td><p>may not leave the palace</p></td>
+</tr>
+<tr>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="https://upload.wikimedia.org/wikipedia/commons/0/0f/Xiangqi_Elephant_%28Trad%29.svg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+<td style="text-align:center;"><p>相、象</p></td>
+<td style="text-align:center;"><p><span id="Elephant"></span>Elephant</p></td>
+<td style="text-align:center;"><p>E</p></td>
+<td style="text-align:center;"><p>2</p></td>
+<td><p>moves and captures<br />
+two diagonal points</p></td>
+<td><p>may not jump over intervening<br />
+pieces,may not cross the river</p></td>
+</tr>
+<tr>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="https://upload.wikimedia.org/wikipedia/commons/6/60/Xiangqi_Horse_%28Trad%29.svg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+<td style="text-align:center;"><p>傌, 馬</p></td>
+<td style="text-align:center;"><p><span id="Horse"></span>Horse</p></td>
+<td style="text-align:center;"><p>H</p></td>
+<td style="text-align:center;"><p>4</p></td>
+<td><p>moves and captures<br />
+one orthogonal step<br />
+plus one diagonal step</p></td>
+<td><p>blocked by orthogonal adjacent<br />
+pieces</p></td>
+</tr>
+<tr>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="https://upload.wikimedia.org/wikipedia/commons/3/35/Xiangqi_Chariot_%28Trad%29.svg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+<td style="text-align:center;"><p>俥, 車</p></td>
+<td style="text-align:center;"><p><span id="Rook"></span>Rook<br />
+(ChaRiot)</p></td>
+<td style="text-align:center;"><p>R</p></td>
+<td style="text-align:center;"><p>9</p></td>
+<td><p>moves and captures<br />
+any distance orthogonally</p></td>
+<td><p>may not jump over intervening<br />
+pieces</p></td>
+</tr>
+<tr>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="https://upload.wikimedia.org/wikipedia/commons/2/2e/Xiangqi_Cannon_%28Trad%29.svg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+<td style="text-align:center;"><p>炮, 炮</p></td>
+<td style="text-align:center;"><p><span id="Cannon"></span>Cannon</p></td>
+<td style="text-align:center;"><p>C</p></td>
+<td style="text-align:center;"><p>4½</p></td>
+<td colspan="2"><p>moves any distance orthogonally - captures by jumping a<br />
+single piece, friend or foe, in-between the orthogonal path<br />
+of attack towards the captured piece</p></td>
+</tr>
+<tr>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="https://upload.wikimedia.org/wikipedia/commons/d/dc/Xiangqi_Soldier_%28Trad%29.svg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+<td style="text-align:center;"><p>兵、卒</p></td>
+<td style="text-align:center;"><p><span id="Pawn"></span>Pawn<br />
+(Soldier)</p></td>
+<td style="text-align:center;"><p>P<br />
+(S)</p></td>
+<td style="text-align:center;"><p>1<br />
+2</p></td>
+<td colspan="2"><p>moves and captures one step forward -<br />
+once crossed the river, also one point sideways</p></td>
+</tr>
+</tbody>
+</table>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://wxf.ca/xq/computer/wxf_notation.html">WXF Notation</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+<li id="fn2"><a href="https://en.wikipedia.org/wiki/Xiangqi#Approximate_relative_values_of_the_pieces">Xiangqi - Approximate relative values of the pieces - Wikipedia</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<h2 id="rules">Rules</h2>
+<h3 id="basic">Basic</h3>
+<p>Basic rules are similar to chess with some modifications. Pieces can move and capture according to their individual ability and restriction along the lines including the “Riverbanks”. Xiangqi doesn’t have rules such as castles, en-passants, promotions. Instead it has some limitations such as King, Advisors must move inside their own Palaces, Horses and Elephants can be blocked (from moving), two King cannot “face” each other (stands in the same column without any piece between). The object of the game is to <a href="/Checkmate">checkmate</a> or <a href="/Stalemate">stalemate</a> (is a win as well) the opponent King aka General.</p>
+<h3 id="3-folk-rules">3-Folk Rules</h3>
+<p>When a position repeated 3 time (3 folks) the game will be terminated too. However, partly due to the freedom and power of the Rook over other pieces, and the limited freedom of the King, it is forbidden to <a href="/Repetitions">repeat</a> perpetually a direct thread (i.e. a perpetual check 長將, perpetual thread of capture 長捉, a check and then a threat of mate 一將一殺, or a combination of these). If no side violates the forbidden, game will be ruled as a draw.</p>
+<p>Ruling the game when 3 forks happen is the hardest thing for fully understanding, installing for both players and software.</p>
+<h2 id="notations">Notations</h2>
+<ul>
+<li><a href="/FEN">FEN</a>: Chinese Chess can use <a href="/Forsyth-Edwards_Notation">Forsyth-Edwards Notation</a> to save down positions, ignored some fields such as Castling and En passant target square. Here is FEN of the starting position: rheakaehr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RHEAKAEHR w - - 0 1</li>
+</ul>
+<!-- -->
+
+<ul>
+<li>Traditional Chinese Chess Notation</li>
+<li>SAN</li>
+<li>WXF</li>
+</ul>
+<h2 id="programming">Programming</h2>
+<p>Chinese chess is quite similar to chess in multi-aspects thus its software can be developed and tested in similar ways. It can use almost all chess techniques, from traditional methods using <a href="/Board_Representation">Board Representation</a>, <a href="/Alpha-Beta">Alpha-Beta</a> <a href="/Search">search</a>, <a href="/Evaluation">Evaluation</a>, <a href="/Opening_Book">Opening Book</a>, <a href="/Endgame_Tablebases">Endgame Tablebases</a>... to new ones using <a href="/NNUE">NNUE</a>, <a href="/AlphaZero">AlphaZero</a> methods...</p>
+<p>However its programming is a bit harder to gain high levels due to some reasons:</p>
+<p>a) The board is significantly larger (90 vs 64, 40% larger)</p>
+<p>b) Even there’s no diagonal slide moves (such as Bishops), its pieces have more limitations, been blockable, Cannons have a special way to capture... The board size (90) can't fit 64-bit integer either, the number of columns 9 can't help quick devices... All may make move generators be more complex and slower</p>
+<p>c) The search trees are usually larger. For example, when comparing Perft results at deep 7, Xiangqi number is 72 times as large</p>
+<p>d) Evaluation of positions may require more knowledge, especially endgame positions</p>
+<p>e) Rules 3-fork repetitions are hard to implement and maybe so slow</p>
+<ul>
+<li><a href="/Chinese_Chess_Board_Representation">Chinese Chess Board Representation</a></li>
+<li><a href="/Chinese_Chess_Perft_Results">Chinese Chess Perft Results</a></li>
+</ul>
+<h2 id="sub-variants">Sub variants</h2>
+<ul>
+<li>Banqi</li>
+<li><a href="/Jeiqi">Jeiqi</a></li>
+</ul>
+<p><span id="Engines"></span></p>
+<h2 id="engines">Engines</h2>
+<ul>
+<li><a href="/Category:Xiangqi">Xiangqi Engines</a></li>
+</ul>
+<h2 id="computer-olympiads"><a href="/Computer_Olympiad">Computer Olympiads</a></h2>
+<ul>
+<li><a href="/1st_Computer_Olympiad">1st Computer Olympiad, London 1989</a></li>
+<li><a href="/2nd_Computer_Olympiad">2nd Computer Olympiad, London 1990</a></li>
+<li><a href="/3rd_Computer_Olympiad">3rd Computer Olympiad, Maastricht 1991</a></li>
+<li><a href="/4th_Computer_Olympiad">4th Computer Olympiad, London 1992</a></li>
+<li><a href="/6th_Computer_Olympiad">6th Computer Olympiad, Maastricht 2001</a></li>
+<li><a href="/7th_Computer_Olympiad">7th Computer Olympiad, Maastricht 2002</a></li>
+<li><a href="/8th_Computer_Olympiad">8th Computer Olympiad, Graz 2003</a></li>
+<li><a href="/9th_Computer_Olympiad">9th Computer Olympiad, Ramat Gan 2004</a></li>
+<li><a href="/10th_Computer_Olympiad">10th Computer Olympiad, Taipei 2005</a></li>
+<li><a href="/11th_Computer_Olympiad">11th Computer Olympiad, Turin 2006</a></li>
+<li><a href="/12th_Computer_Olympiad">12th Computer Olympiad, Amsterdam 2007</a></li>
+<li><a href="/13th_Computer_Olympiad">13th Computer Olympiad, Beijing 2008</a></li>
+<li><a href="/14th_Computer_Olympiad">14th Computer Olympiad, Pamplona 2009</a></li>
+<li><a href="/15th_Computer_Olympiad">15th Computer Olympiad, Kanazawa 2010</a></li>
+<li><a href="/16th_Computer_Olympiad">16th Computer Olympiad, Tilburg 2011</a></li>
+<li><a href="/17th_Computer_Olympiad">17th Computer Olympiad, Yokohama 2013</a></li>
+<li><a href="/18th_Computer_Olympiad">18th Computer Olympiad, Leiden 2015</a></li>
+<li><a href="/19th_Computer_Olympiad">19th Computer Olympiad, Leiden 2016</a></li>
+<li><a href="/20th_Computer_Olympiad">20th Computer Olympiad, Leiden 2017</a></li>
+</ul>
+<h2 id="photos">Photos</h2>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]" style="--wiki-img-w:640px"><a href="http://www.yss-aya.com/photo/graz2003/1126/Htmls/PICT1282.html" target="_blank" rel="noopener noreferrer"><img src="/assets/XiangqiGraz2003.jpg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></a></span> Xiangqi winners in <a href="/8th_Computer_Olympiad">Graz 2003</a>, <a href="/Pascal_Tang">Pascal Tang</a>, Zhi-Jian Tu and <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> <span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]" style="--wiki-img-w:640px"><a href="http://icga.leidenuniv.nl/icga/news/Olympiad/Olympiad2005/fotos/IMG_0232.JPG" target="_blank" rel="noopener noreferrer"><img src="/assets/ChineseChessOlympiad2005.JPG" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></a></span> Xiangqi winners <a href="/10th_Computer_Olympiad">Taipei 2005</a> with TD <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> and representative of the sponsor [<a href="https://en.wikipedia.org/wiki/Acer_Inc">https://en.wikipedia.org/wiki/Acer_Inc</a>. Acer Inc.],<br />
+Mingyang Zhao (Gold), Ming-Cheng Cheng (Silver) and <a href="/Jiao_Wang">Jiao Wang</a> (Bronze) <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> <span id="Yokohama2013"></span><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]" style="--wiki-img-w:640px"><a href="http://icga.org//?page_id=800&amp;wppa-album=3&amp;wppa-cover=0&amp;wppa-occur=1&amp;wppa-photo=45" target="_blank" rel="noopener noreferrer"><img src="/assets/ChineseChess2013.jpg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></a></span> <a href="/17th_Computer_Olympiad">Yokohama 2013</a>, <a href="/Wen-Jie_Tseng">Wen-Jie Tseng</a>, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a>, <a href="/Harm_Geert_Muller">Harm Geert Muller</a> and <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a></p>
+<h2 id="publications">Publications</h2>
+<h3 id="1981-">1981 ...</h3>
+<ul>
+<li>Y.T. Zhang (<strong>1981</strong>). <em>Application of Artificial Intelligence in Computer Chinese Chess</em>. M.Sc. thesis, Department of Electrical Engineering, <a href="/National_Taiwan_University">National Taiwan University</a> (Chinese)</li>
+<li><a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a>, D.H. Huang (<strong>1985</strong>). <em>Design and Implementation of a Chinese Chess Knowledge Base.</em> Proceedings of NCS, pp. 505-509. (Chinese)</li>
+<li>Robert Nisonoff, M. Stephanie Ricks (<strong>1988</strong>). <em>To Catch a King: East Meets West in the Game of Chess</em>. <a href="/PC_Magazine">PC Magazine</a>, October 31, 1988, pp. 506 » <a href="/EGA_Chess">EGA Chess</a>, Xian</li>
+<li>Nick Jacobs (<strong>1989</strong>). <em>Xian, a Chinese Chess Program</em>. <a href="/1st_Computer_Olympiad">Heuristic Programming in AI 1</a></li>
+</ul>
+<h3 id="1990-">1990 ...</h3>
+<ul>
+<li><a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a> (<strong>1990</strong>). <em>Introduction to Computer Chess and Computer Chinese Chess.</em> Journal of Computer, Vol. 2, No. 2, pp. 1-8. (in Chinese)</li>
+<li>Kuo-Ming Tsao, Jen-Hsuan Li, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a> (<strong>1991</strong>). <em>Design and Implementation of a Chinese Chess Program</em>. <a href="/2nd_Computer_Olympiad">Heuristic Programming in AI 2</a></li>
+<li><a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a>, Kuo-Ming Tsao (<strong>1991</strong>). <em>Design and Implementation of an Opening Game Knowledge-Base System for Computer Chinese Chess.</em> Bulletin of the College of Engineering, N.T.U., No. 53, pp. 75-86. (in Chinese)</li>
+<li><a href="/Chun_Ye">Chun Ye</a> (<strong>1992</strong>). <em>Experiments in Selective Search Extensions</em>. MSc. thesis, Department of Computing Science, <a href="/University_of_Alberta">University of Alberta</a>, <a href="https://era.library.ualberta.ca/public/datastream/get/uuid:e4fbf48d-7603-490f-85cc-5497bbecf5a8/DS1">pdf</a></li>
+<li><a href="/Chun_Ye">Chun Ye</a>, <a href="/Tony_Marsland">Tony Marsland</a> (<strong>1992</strong>). <em>Experiments in Forward Pruning with Limited Extensions.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 15, No. 2</a>, <a href="http://webdocs.cs.ualberta.ca/~tony/RecentPapers/Experiments-FP-YeMars-1992.pdf">pdf</a></li>
+<li><a href="/Chun_Ye">Chun Ye</a>, <a href="/Tony_Marsland">Tony Marsland</a> (<strong>1992</strong>). <em>Selective Extensions in Game-Tree Search.</em> <a href="/3rd_Computer_Olympiad">Heuristic Programming in AI 3</a>, <a href="https://webdocs.cs.ualberta.ca/~tony/RecentPapers/SelectiveExten-YeMars.pdf">pdf</a></li>
+<li><a href="/Yi-Fan_Ke">Yi-Fan Ke</a>, <a href="/Tai-Ming_Parng">Tai-Ming Parng</a> (<strong>1993</strong>). <em>The Guard Heuristic: Legal Move Ordering with Forward Game-Tree Pruning</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 16, No. 2</a></li>
+<li>Mei-En Chen, Yo-Ping Huang (<strong>1995</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=527751">Guard heuristic by dynamic fuzzy reasoning model for Chinese chess</a></em>. Proceedings of ISUMA-NAFIPS '95</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="/Jr-Chang_Chen">Jr-Chang Chen</a>, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a> (<strong>2001</strong>). <em>ELP wins Chinese Chess tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 24, No. 3</a> » <a href="/6th_Computer_Olympiad">6th Computer Olympiad#ChineseChess</a></li>
+<li><a href="/Haw-ren_Fang">Haw-ren Fang</a>, <a href="/Tsan-sheng_Hsu">Tsan-sheng Hsu</a>, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a> (<strong>2001</strong>). <em>Construction of Chinese Chess Endgame Databases by Retrograde Analysis</em>. <a href="/CG_2000">CG 2000</a></li>
+</ul>
+<p><strong>2002</strong></p>
+<ul>
+<li><a href="/Ren_Wu">Ren Wu</a>, <a href="/Don_Beal">Don Beal</a> (<strong>2002</strong>). <em>A memory efficient retrograde algorithm and its application to solve Chinese Chess endgames.</em> <a href="http://library.msri.org/books/Book42/">More Games of No Chance</a> edited by <a href="/Richard_J._Nowakowski">Richard J. Nowakowski</a></li>
+<li><a href="/Jr-Chang_Chen">Jr-Chang Chen</a>, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a>, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a> (<strong>2002</strong>). <em>ELP wins Chinese Chess tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 25, No. 3</a> » <a href="/7th_Computer_Olympiad">7th Computer Olympiad#ChineseChess</a></li>
+<li><a href="/Haw-ren_Fang">Haw-ren Fang</a>, <a href="/Tsan-sheng_Hsu">Tsan-sheng Hsu</a>, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a> (<strong>2002</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-40031-8_18">Indefinite Sequence of Moves in Chinese Chess Endgames</a></em>. <a href="/CG_2002">CG 2002</a></li>
+</ul>
+<p><strong>2003</strong></p>
+<ul>
+<li><a href="/Jr-Chang_Chen">Jr-Chang Chen</a>, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a>, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a> (<strong>2003</strong>). <em>ZMBL wins Chinese Chess tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 26, No. 4</a> » <a href="/8th_Computer_Olympiad">8th Computer Olympiad#ChineseChess</a></li>
+</ul>
+<p><strong>2004</strong></p>
+<ul>
+<li><a href="/Haw-ren_Fang">Haw-ren Fang</a>, <a href="/Tsan-sheng_Hsu">Tsan-sheng Hsu</a>, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a> (<strong>2004</strong>). <em>Checking Indefinitely in Chinese-Chess Endgames</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 27, No. 1</a></li>
+<li><a href="/Shi-Jim_Yen">Shi-Jim Yen</a>, <a href="/Jr-Chang_Chen">Jr-Chang Chen</a>, Tai-Ning Yang, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a> (<strong>2004</strong>). <em><a href="https://www.researchgate.net/publication/220174553_Computer_Chinese_Chess">Computer Chinese Chess</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 27, No. 1</a>, <a href="https://pdfs.semanticscholar.org/223d/ef59c884503f18610bba314034157f55aacd.pdf">pdf</a></li>
+<li><a href="/Haw-ren_Fang">Haw-ren Fang</a> (<strong>2004</strong>). <em><a href="http://link.springer.com/chapter/10.1007/11674399_9">Rule-Tolerant Verification Algorithms for Completeness of Chinese-Chess Endgame Databases</a></em>. <a href="/CG_2004">CG 2004</a></li>
+<li>Kuang-Che Wu, Tsan-Sheng Hsu, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a> (<strong>2004</strong>). <em>Contemplation wins Chinese Chess tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 27, No. 3</a> » <a href="/9th_Computer_Olympiad">9th Computer Olympiad#ChineseChess</a></li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="/Haw-ren_Fang">Haw-ren Fang</a> (<strong>2005</strong>). <em>The Nature of Retrograde Analysis for Chinese Chess, Part I</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 28, No. 2</a></li>
+<li><a href="/Haw-ren_Fang">Haw-ren Fang</a> (<strong>2005</strong>). <em>Nature of Retrograde Analysis for Chinese Chess, Part II</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 28, No. 3</a></li>
+<li><a href="/Jr-Chang_Chen">Jr-Chang Chen</a>, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a>, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a> (<strong>2005</strong>). <em>XQMaster wins Chinese Chess tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 28, No. 3</a> » <a href="/10th_Computer_Olympiad">10th Computer Olympiad#ChineseChess</a></li>
+</ul>
+<p><strong>2006</strong></p>
+<ul>
+<li>Kuang-Che Wu, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a>, <a href="/Tsan-sheng_Hsu">Tsan-sheng Hsu</a> (<strong>2006</strong>). <em>The Graph-History Interaction Problem in Chinese Chess.</em> <a href="/Advances_in_Computer_Games_11">Advances in Computer Games 11</a></li>
+<li><a href="/Xinhe_Xu">Xinhe Xu</a> (<strong>2006</strong>). <em>Principle and Methodology of Computer Games of Chinese Chess</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/isda/isda2006-1.html#Xu06">ISDA 2006</a></li>
+<li><a href="/Bo-Nian_Chen">Bo-Nian Chen</a>, <a href="/Pangfeng_Liu">Pangfeng Liu</a>, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a>, <a href="/Tsan-sheng_Hsu">Tsan-sheng Hsu</a> (<strong>2008</strong>). <em>Abstracting Knowledge from Annotated Chinese-Chess Game Records</em>. <a href="/CG_2006">CG 2006</a></li>
+<li><a href="/Shi-Jim_Yen">Shi-Jim Yen</a>, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a> (<strong>2006</strong>). <em>NEUChess wins Chinese Chess tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 29, No. 2</a> » <a href="/11th_Computer_Olympiad">11th Computer Olympiad#ChineseChess</a></li>
+<li><a href="/Chun-Bin_Hsu">Chun-Bin Hsu</a> (<strong>2006</strong>). <em>Pattern Recognition in Chinese Chess</em>. Master thesis, <a href="/National_Chiao_Tung_University">National Chiao Tung University</a>, <a href="https://ir.nctu.edu.tw/bitstream/11536/78749/1/753801.pdf">pdf</a> (Chinese)</li>
+</ul>
+<p><strong>2007</strong></p>
+<ul>
+<li>Changming Xu (<strong>2007</strong>). <em>NEUChess wins Chinese Chess tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 30, No. 2</a> » <a href="/12th_Computer_Olympiad">12th Computer Olympiad#ChineseChess</a></li>
+<li>Chin Soon Ong, Hanyang Quek, Kay Chen Tan, Arthur Tay (<strong>2007</strong>). <em><a href="https://www.semanticscholar.org/paper/Discovering-Chinese-Chess-Strategies-through-Coevo-Ong-Quek/489e4f258766855943c941cd65ca2989ad64ed14">Discovering Chinese Chess Strategies through Coevolutionary Approaches</a></em>. <a href="/IEEE">IEEE Symposium on Computational Intelligence and Games</a>, <a href="http://wxf.ca/xq/book/2011.pdf">pdf</a></li>
+</ul>
+<p><strong>2008</strong></p>
+<ul>
+<li><a href="/Bo-Nian_Chen">Bo-Nian Chen</a>, <a href="/Pangfeng_Liu">Pangfeng Liu</a>, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a>, <a href="/Tsan-sheng_Hsu">Tsan-sheng Hsu</a> (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_17">Knowledge Inferencing on Chinese Chess Endgames</a></em>. <a href="/CG_2008">CG 2008</a></li>
+<li><a href="/Jiao_Wang">Jiao Wang</a>, <a href="/Xinhe_Xu">Xinhe Xu</a> (<strong>2008</strong>). <em>Intella wins Chinese Chess tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 31, No. 3</a> » <a href="/13th_Computer_Olympiad">13th Computer Olympiad#ChineseChess</a></li>
+</ul>
+<p><strong>2009</strong></p>
+<ul>
+<li><a href="/Bo-Nian_Chen">Bo-Nian Chen</a>, <a href="/Pangfeng_Liu">Pangfeng Liu</a>, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a>, <a href="/Tsan-sheng_Hsu">Tsan-sheng Hsu</a> (<strong>2009</strong>). <em>Conflict Resolution of Chinese Chess Endgame Knowledge Base</em>. <a href="/Advances_in_Computer_Games_12">Advances in Computer Games 12</a>, <a href="http://ticc.uvt.nl/icga/acg12/proceedings/Contribution108.pdf">pdf</a></li>
+<li>Guofeng Tong, <a href="http://www.informatik.uni-trier.de/~ley/pers/hd/q/Qu:Ying.html">Ying Qu</a>, <a href="http://www.informatik.uni-trier.de/~ley/pers/hd/c/Cheng:Tong.html">Tong Cheng</a> (<strong>2009</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=1733531">Human-computer interactive gaming system - a chinese chess robot</a></em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/iros/iros2009.html#TongQC09">IROS 2009</a>, pp. 984-987 » <a href="/Robots">Robots</a></li>
+<li><a href="/Jr-Chang_Chen">Jr-Chang Chen</a>, <a href="/Bo-Nian_Chen">Bo-Nian Chen</a>, <a href="/Tsan-sheng_Hsu">Tsan-sheng Hsu</a> (<strong>2009</strong>). <em>TMSK wins the Chinese-Chess tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 32, No. 2</a> » <a href="/14th_Computer_Olympiad">14th Computer Olympiad#ChineseChess</a></li>
+<li><a href="/Wei-Lun_Kao">Wei-Lun Kao</a> (<strong>2009</strong>). <em>The Automatically Tuning System of Evaluation Function for Computer Chinese Chess</em>. Master thesis, <a href="/National_Chiao_Tung_University">National Chiao Tung University</a>, <a href="https://ir.nctu.edu.tw/bitstream/11536/43333/1/553001.pdf">pdf</a> (Chinese)</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="/Jiao_Wang">Jiao Wang</a>, Si-Zhong Li, <a href="/Xinhe_Xu">Xin-He Xu</a> (<strong>2010</strong>). <em>A Minors Hash Table in Chinese-Chess Programs</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 33, No. 1</a></li>
+<li><a href="/Bo-Nian_Chen">Bo-Nian Chen</a>, <a href="/Bing-Jie_Shen">Bing-Jie Shen</a>, <a href="/Tsan-sheng_Hsu">Tsan-sheng Hsu</a> (<strong>2010</strong>). <em>Chinese Dark Chess</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 33, No. 2</a></li>
+<li><a href="/Bo-Nian_Chen">Bo-Nian Chen</a>, <a href="/Pangfeng_Liu">Pangfeng Liu</a>, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a>, <a href="/Tsan-sheng_Hsu">Tsan-sheng Hsu</a> (<strong>2010</strong>). <em><a href="http://www.springerlink.com/content/6374711454584j73/">Knowledge Abstraction in Chinese Chess Endgame Databases</a></em>. <a href="/CG_2010">CG 2010</a></li>
+</ul>
+<p><strong>2011</strong></p>
+<ul>
+<li><a href="http://www.informatik.uni-trier.de/~ley/pers/hd/g/Guo:Jr=Hung.html">Jr-Hung Guo</a>, <a href="http://www.informatik.uni-trier.de/~ley/pers/hd/s/Su:Kuo=Lan.html">Kuo-Lan Su</a>, <a href="http://arnetminer.org/person/sheng-ven-shiau-1028081.html">Sheng-Ven Shiau</a> (<strong>2011</strong>). <em>Path Searching Algorithms of Multiple Robot System Applying in Chinese Chess Game</em>. <a href="http://www.intechopen.com/books/recent-advances-in-mobile-robotics">Recent Advances in Mobile Robotics</a>, <a href="http://www.intechopen.com/profiles/557/Andon-Topalov">Dr. Andon Topalov</a> (Ed.), ISBN: 978-953-307-909-7, <a href="http://cdn.intechopen.com/pdfs/24923/InTech-Path_searching_algorithms_of_multiple_robot_system_applying_in_chinese_chess_game.pdf">pdf</a> » <a href="/Robots">Robots</a></li>
+</ul>
+<p><strong>2013</strong></p>
+<ul>
+<li><a href="/Wen-Jie_Tseng">Wen-Jie Tseng</a>, <a href="/Jr-Chang_Chen">Jr-Chang Chen</a>, <a href="/I-Chen_Wu">I-Chen Wu</a>, <a href="/Ching-Hua_Kuo">Ching-Hua Kuo</a>, Bo-Han Lin (<strong>2013</strong>). <em><a href="https://kaigi.org/jsai/webprogram/2013/paper-138.html">A Supervised Learning Method for Chinese Chess Programs</a></em>. <a href="http://2013.conf.ai-gakkai.or.jp/english-info">JSAI2013</a>, <a href="https://kaigi.org/jsai/webprogram/2013/pdf/138.pdf">pdf</a></li>
+<li><a href="/Jr-Chang_Chen">Jr-Chang Chen</a>, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a>, Tsan-Cheng Su (<strong>2013</strong>). <em>SHIGA Wins Chinese Chess Tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 36, No. 3</a> » <a href="/17th_Computer_Olympiad">17th Computer Olympiad#ChineseChess</a></li>
+<li><a href="/Bo-Nian_Chen">Bo-Nian Chen</a>, <a href="/Hung-Jui_Chang">Hung-Jui Chang</a>, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a>, <a href="/Jr-Chang_Chen">Jr-Chang Chen</a>, <a href="/Tsan-sheng_Hsu">Tsan-sheng Hsu</a> (<strong>2013</strong>). <em>Multilevel Inference in Chinese Chess Endgame Knowledge Bases</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 36, No. 4</a> » <a href="/Endgame_Tablebases">Endgame Tablebases</a></li>
+</ul>
+<p><strong>2014</strong></p>
+<ul>
+<li><a href="/Bo-Nian_Chen">Bo-Nian Chen</a>, <a href="/Hung-Jui_Chang">Hung-Jui Chang</a>, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a>, <a href="/Jr-Chang_Chen">Jr-Chang Chen</a>, <a href="/Tsan-sheng_Hsu">Tsan-sheng Hsu</a> (<strong>2014</strong>). <em>Advanced Meta-knowledge for Chinese Chess Endgame Knowledge Bases</em>. <a href="/ICGA_Journal">ICGA Journal, Vol 37, No. 1</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="/Qiang_Gao">Qiang Gao</a>, <a href="/Xinhe_Xu">Xinhe Xu</a> (<strong>2015</strong>). <em>Research on the Computational Complexity of n x n Chinese Chess</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 38, No. 1</a></li>
+<li><a href="/Pascal_Tang">Pascal Tang</a> (<strong>2015</strong>). <em>SHIGA wins Chinese Chess Tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 38, No. 4</a> » <a href="/18th_Computer_Olympiad">18th Computer Olympiad#ChineseChess</a></li>
+<li><a href="/Pham_Hong_Nguyen">Nguyen Hong Pham</a> (<strong>2018</strong>). <em>A completed implementation for Xiangqi rules</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 40, No. 3</a></li>
+<li>Ting-Yu Lin, <a href="/Jr-Chang_Chen">Jr-Chang Chen</a>, <a href="/Tsan-sheng_Hsu">Tsan-sheng Hsu</a> (<strong>2018</strong>). <em>The number of effective moves for Chinese chess</em>. <a href="/CG_2018">CG 2018</a>, <a href="/ICGA_Journal">ICGA Journal, Vol. 40, No. 4</a></li>
+<li><a href="/Wen-Jie_Tseng">Wen-Jie Tseng</a>, <a href="/Jr-Chang_Chen">Jr-Chang Chen</a>, <a href="/I-Chen_Wu">I-Chen Wu</a>, Tinghan Wei (<strong>2018</strong>). <em>Comparison Training for Computer Chinese Chess</em>. <a href="https://arxiv.org/abs/1801.07411">arXiv:1801.07411</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="/Maximilian_Langer">Maximilian Langer</a> (<strong>2021</strong>). <em>Evaluation of Monte-Carlo Tree Search for Xiangqi</em>. B.Sc. thesis, <a href="/Darmstadt_University_of_Technology">TU Darmstadt</a>, <a href="https://ml-research.github.io/papers/langer2021xiangqi.pdf">pdf</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1994">1994</h3>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chinese-chess/4lorUoAbEME/FAmEa1DpSakJ">rec.games.chinese-chess FAQ</a> by Stephen Leary, <a href="/Computer_Chess_Forums">rec.games.chinese-chess</a>, January 04, 1994, also from <a href="http://www.chessvariants.com/chinfaq.html">chessvariants</a></li>
+<li><a href="https://groups.google.com/d/msg/rec.games.chinese-chess/gcreEzzU3yQ/HvWOlP7yaYkJ">Xiang Qi Is Not The Elephant Game</a> by Stephen Leary, <a href="/Computer_Chess_Forums">rec.games.chinese-chess</a>, November 18, 1994</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=60304">Machine vs. IGM in Chinese Chess</a> by <a href="/Ren_Wu">Ren Wu</a>, <a href="/CCC">CCC</a>, July 13, 1999</li>
+</ul>
+<h3 id="2000--1">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=243199">Tony Marsland and Chinese Chess in Maastricht (slightly O.T.)</a> by <a href="/Eli_David">Omid David</a>, <a href="/CCC">CCC</a>, July 30, 2002 » <a href="/7th_Computer_Olympiad">7th Computer Olympiad, Maastricht 2002</a></li>
+</ul>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=243231">Re: Tony Marsland and Chinese Chess in Maastricht (slightly O.T.)</a> by <a href="/Pham_Hong_Nguyen">Pham Hong Nguyen</a>, <a href="/CCC">CCC</a>, July 30, 2002</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=26527">Bitboard techniques in Xiangqi</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, February 12, 2009 » <a href="/Bitboards">Bitboards</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=27903">Computer Olympiad (XQ)</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, May 14, 2009 » <a href="/14th_Computer_Olympiad">14th Computer Olympiad, Pamplona 2009</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=31348">Kindergarten bitboards and Xiangqi move genaration?</a> by Han Chengye, <a href="/CCC">CCC</a>, December 30, 2009 » <a href="/Kindergarten_Bitboards">Kindergarten Bitboards</a></li>
+</ul>
+<h3 id="2010--1">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=35356">Xiangqi evaluation function</a> by <a href="/Gregory_Strong">Gregory Strong</a>, <a href="/CCC">CCC</a>, July 09, 2010 » <a href="/Evaluation">Evaluation</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41110">Xiangqi chase algorithm</a> by <a href="/Evert_Glebbeek">Evert Glebbeek</a>, <a href="/CCC">CCC</a>, November 16, 2011 » <a href="/Sjaak_%28Glebbeek%29">Sjaak</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51019">Interesting (Chinese) Chess variant</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, January 23, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54162">UCCI2WB</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, October 27, 2014 » <a href="/Protocols">Protocols</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54167">UCI protocol for chess variants</a> by <a href="/Evert_Glebbeek">Evert Glebbeek</a>, <a href="/CCC">CCC</a>, October 28, 2014 » <a href="/UCI">UCI</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54258">Xiangqi chase - again</a> by <a href="/Evert_Glebbeek">Evert Glebbeek</a>, <a href="/CCC">CCC</a>, November 06, 2014 » <a href="/Sjaak_%28Glebbeek%29">Sjaak</a></li>
+</ul>
+<h3 id="2015--1">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56885">Evaluation in Xiangqi</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, July 06, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60255">11-men tablebases (XQ)</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, May 23, 2016 » <a href="/Endgame_Tablebases">Endgame Tablebases</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60303">Xiangqi piece value model</a> by <a href="/Evert_Glebbeek">Evert Glebbeek</a>, <a href="/CCC">CCC</a>, May 29, 2016 » <a href="/Point_Value">Point Value</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60445">Perft for Xiangqi &amp; Shogi</a> by <a href="/Patrice_Duhamel">Patrice Duhamel</a>, <a href="/CCC">CCC</a>, June 12, 2016 » <a href="/Shogi">Shogi</a>, <a href="/Perft">Perft</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62639">Cumulative building of a shared search tree</a> by <a href="/Bojun_Guo">Bojun Guo</a>, <a href="/CCC">CCC</a>, December 28, 2016 » <a href="/Opening_Book">Opening Book</a>, <a href="/Persistent_Hash_Table">Persistent Hash Table</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64030">Probe EGT in quiescence?</a> by <a href="/Pham_Hong_Nguyen">Nguyen Pham</a>, <a href="/CCC">CCC</a>, May 20, 2017 » <a href="/Endgame_Tablebases">Endgame Tablebases</a>, <a href="/Quiescence_Search">Quiescence Search</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66337">A new design for Xianqgi (Chinese chess) Endgame Tablebase</a> by <a href="/Pham_Hong_Nguyen">Nguyen Pham</a>, <a href="/CCC">CCC</a>, January 16, 2018 » <a href="/Endgame_Tablebases">Endgame Tablebases</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=67534">Chinese Chess</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, May 22, 2018</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=67877">Xiangqi evaluation</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, July 01, 2018</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69386">A proposal for Jeiqi notation</a> by <a href="/Pham_Hong_Nguyen">Nguyen Pham</a>, <a href="/CCC">CCC</a>, December 26, 2018</li>
+</ul>
+<h3 id="2020--1">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76400">Xiangqi chess engine in javascript - YouTube tutorial series</a> by <a href="/Maksim_Korzh">Maksim Korzh</a>, <a href="/CCC">CCC</a>, January 24, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76391">Did anyone write a xiangqi chess engine?</a> by <a href="/Maksim_Korzh">Maksim Korzh</a>, <a href="/CCC">CCC</a>, January 27, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76430">Chinese chess Xiangqi perft results</a> by <a href="/Maksim_Korzh">Maksim Korzh</a>, <a href="/CCC">CCC</a>, January 27, 2021 » <a href="/Chinese_Chess_Perft_Results">Chinese Chess Perft Results</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76464">Wukong Xiangqi - Chinese chess engine</a> by <a href="/Maksim_Korzh">Maksim Korzh</a>, <a href="/CCC">CCC</a>, January 31, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=80642">SEE test suite for Xiangqi (Chinese chess)</a> by <a href="/Pham_Hong_Nguyen">Nguyen Pham</a>, <a href="/CCC">CCC</a>, September 08, 2022</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<h3 id="chinese-chess">Chinese Chess</h3>
+<ul>
+<li><a href="http://www.wxf.org/xq/in.htm">World Xiangqi Federation</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Xiangqi">Xiangqi from Wikipedia</a></li>
+<li><a href="http://www.chessvariants.com/xiangqi.html">Xiangqi: Chinese Chess</a> from <a href="http://www.chessvariants.com/">The Chess Variant Pages</a></li>
+<li><a href="http://ancientchess.com/page/play-xiangqi.htm">How to Play Xiangqi - Chinese Chess</a></li>
+<li><a href="http://www.chinasage.info/chess.htm">Chinese Chess or Xiangqi</a> from <a href="http://www.chinasage.info/index.htm">Chinasage</a></li>
+<li><a href="https://en.chessbase.com/post/why-you-need-to-learn-xiangqi-for-playing-better-chess">How XiangQi can improve your chess</a> by <a href="https://en.chessbase.com/author/davide-nastasio">Davide Nastasio</a>, <a href="/ChessBase">ChessBase</a>, December 06, 2017</li>
+<li><a href="https://groups.google.com/forum/#!forum/rec.games.chinese-chess">rec.games.chinese-chess</a></li>
+</ul>
+<h3 id="computer-chinese-chess">Computer Chinese Chess</h3>
+<ul>
+<li><a href="http://icga.leidenuniv.nl/icga/games/chinesechess/">ICGA: Chinese Chess</a></li>
+<li><a href="https://www.game-ai-forum.org/icga-tournaments/game.php?id=13">Chinese Chess</a> at the <a href="/Computer_Olympiad">Computer Olympiad</a></li>
+<li><a href="http://www.iis.sinica.edu.tw/~tshsu/projects/che.html">Computer Chinese Chess</a> by <a href="/Tsan-sheng_Hsu">Tsan-sheng Hsu</a></li>
+<li><a href="http://home.hccnet.nl/h.g.muller/XQ.html">XiangQi (Chinese Chess)</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a></li>
+</ul>
+<p><a href="http://home.hccnet.nl/h.g.muller/XQwinboard.html">WinBoard and XiangQi</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a></p>
+<ul>
+<li><a href="http://lpforth.forthfreak.net/endgame-en.html">Chinese Chess Endgame Databases Query System</a> by Jih Tung Pai</li>
+<li><a href="http://www.xqbase.com/protocol/cchess_ucci.htm">中国象棋电脑应用规范(五)：中国象棋通用引擎协议</a> Universal Chinese Chess Protocol (UCCI)</li>
+<li><a href="http://www.xqbase.com/league.htm">电脑象棋联赛 - 象棋百科全书 - Computer Chess League - Chess Encyclopedia</a></li>
+<li><a href="https://www.youtube.com/watch?v=r3g2wxFLTVY&amp;list=PLmN0neTso3Jw59oLgLUwSTZ_AO_u-pwWt">Discovering Chinese chess Xiangqi to create game engine for it</a> by <a href="/Maksim_Korzh">Maksim Korzh</a>, January 22, 2021, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Videos</li>
+</ul>
+<h3 id="source-code">Source Code</h3>
+<ul>
+<li><a href="https://github.com/NeymarL/ChineseChess-AlphaZero">GitHub - NeymarL/ChineseChess-AlphaZero: Implement AlphaZero/AlphaGo Zero methods on Chinese chess</a> » <a href="/AlphaZero">AlphaZero</a></li>
+<li><a href="https://github.com/maksimKorzh/wukong-xiangqi">GitHub - maksimKorzh/wukong-xiangqi: Didactic Chinese chess Xiangqi engine</a> by <a href="/Maksim_Korzh">Code Monkey King</a></li>
+</ul>
+<h3 id="xiangqi-cloud-database">Xiangqi Cloud Database</h3>
+<ul>
+<li><a href="https://www.chessdb.cn/query_en/">Xiangqi Cloud Database Query Interface</a> by <a href="/Bojun_Guo">noobpwnftw</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Games">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://groups.google.com/d/msg/rec.games.chinese-chess/gcreEzzU3yQ/HvWOlP7yaYkJ">Xiang Qi Is Not The Elephant Game</a> by Stephen Leary, <a href="/Computer_Chess_Forums">rec.games.chinese-chess</a>, November 18, 1994<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Shi-Jim_Yen">Shi-Jim Yen</a>, <a href="/Jr-Chang_Chen">Jr-Chang Chen</a>, Tai-Ning Yang, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a> (<strong>2004</strong>) <em><a href="https://www.researchgate.net/publication/220174553_Computer_Chinese_Chess">Computer Chinese Chess</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 27, No. 1</a>, <a href="https://pdfs.semanticscholar.org/223d/ef59c884503f18610bba314034157f55aacd.pdf">pdf</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://ancientchess.com/page/play-xiangqi.htm">How to Play Xiangqi - Chinese Chess</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.yss-aya.com/photo/graz2003/1126/index01.html">Computer Olympiad 2003 in Graz, Austria, November 26</a> by <a href="/Hiroshi_Yamashita">Hiroshi Yamashita</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p>Clipped from <a href="http://icga.leidenuniv.nl/icga/news/Olympiad/Olympiad2005/fotos/IMG_0232.JPG">Image</a> by <a href="/Johanna_Hellemons">Joke Hellemons</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="http://icga.org//?page_id=800">Photos 2013 Events: day 3</a>, <a href="/ICGA">ICGA</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Chinese_Chess">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, Phhnguyen.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

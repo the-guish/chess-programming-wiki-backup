@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CPW-Engine transposition - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">CPW-Engine transposition</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Engines">Engines</a> * <a href="/CPW-Engine">CPW-Engine</a> * Transposition</strong></p>
+<p>For definitions, see <a href="/CPW-Engine_transposition_h">CPW-Engine_transposition_h</a></p>
+<pre><code>#include &quot;stdafx.h&quot;
+#include &quot;transposition.h&quot;
+
+extern bool time_over;
+
+szobrist zobrist;
+
+stt_entry * tt;
+spawntt_entry * ptt;
+sevaltt_entry * ett;
+
+int tt_size = 0;
+int ptt_size = 0;
+int ett_size = 0;
+
+/* function taken from Sungorus chess engine */
+U64 rand64() {
+  static U64 next = 1;
+
+  next = next * 1103515245 + 12345;
+  return next;
+}
+
+int tt_init() {
+
+  /* fill the zobrist struct with random numbers */
+
+  for (int pnr = 0; pnr &lt;= 5; pnr++) {
+    for (int cnr = 0; cnr &lt;= 1; cnr++) {
+      for (int snr = 0; snr &lt;= 127; snr++) {
+        zobrist.piecesquare[pnr][cnr][snr] = rand64();
+      }
+    }
+  }
+
+  zobrist.color = rand64();
+
+  for (int castling = 0; castling &lt;= 15; castling++) {
+    zobrist.castling[castling] = rand64();
+  }
+
+  for (int ep = 0; ep &lt;= 127; ep++) {
+    zobrist.ep[ep] = rand64();
+  }
+
+  return 0;
+}
+
+int tt_setsize(int size) {
+
+  /* check if size is a power of 2
+  if not, make it the next lower power of 2
+  this allows for a faster access of the entry needed:
+
+  as sizeof(stt_entry) in our case is 16 Bytes long (see definition of stt_entry),
+  we are creating size / 16 tt entries. The idea of making the size a power of 2
+  is important when accessing the table. By &#39;anding&#39; the hash value and the number
+  of entries -1 (tt_size), we get a number in the range of 0 and the number of
+  entries very quickly, this is used to index the entry.
+  */
+
+  free(tt);
+
+  if (size &amp; (size - 1)) {
+
+    size--;
+    for (int i = 1; i&lt;32; i = i * 2)
+      size |= size &gt;&gt; i;
+    size++;
+    size &gt;&gt;= 1;
+
+  }
+
+  if (size &lt; 16) {
+    tt_size = 0;
+    return 0;
+  }
+
+  tt_size = (size / sizeof(stt_entry)) - 1;
+  tt = (stt_entry *)malloc(size);
+
+  return 0;
+}
+
+int tt_probe(U8 depth, int alpha, int beta, char * best) {
+
+  if (!tt_size) return INVALID;
+
+  /**************************************************************************
+  *   Before  searching  a certain position, look whether we have  done  so *
+  *   before. This is done by comparing the hashkey of the current position *
+  *   to the hashkey of the specific tt entry. If they are the same, we may *
+  *   use the move stored in the hash table to enhance move ordering.  When *
+  *   the previous search was not shallower then the one needed now, we may *
+  *   use  the  information present in the transposition table  to  replace *
+  *   search altogether. We do it only if the value found is in the  proper *
+  *   relation  to alpha and beta, i.e. when it would cause a cutoff.  Some *
+  *   programs  do  use these informations to narrow the window,  but  then *
+  *   you have to be extra careful to avoid search instability.             *
+  **************************************************************************/
+
+  stt_entry * phashe = &amp;tt[b.hash &amp; tt_size];
+
+  if (phashe-&gt;hash == b.hash) {
+
+    /***************************************************
+    *   The  position  matches, so  we  may  retrieve  *
+    *   a move that will be used for sorting purposes  *
+    ***************************************************/
+
+    *best = phashe-&gt;bestmove;
+
+    /***************************************************
+    *   Now test if we can retrieve position value     *
+    *  ( saved depth greater than current depth )      *
+    ***************************************************/
+
+    if (phashe-&gt;depth &gt;= depth) {
+
+      if (phashe-&gt;flags == TT_EXACT)
+        return phashe-&gt;val;
+
+      if ((phashe-&gt;flags == TT_ALPHA) &amp;&amp; (phashe-&gt;val &lt;= alpha))
+        return alpha;
+
+      if ((phashe-&gt;flags == TT_BETA) &amp;&amp; (phashe-&gt;val &gt;= beta))
+        return beta;
+
+    }
+
+  }
+
+  return INVALID;
+
+}
+
+void tt_save(U8 depth, int val, char flags, char best) {
+
+  if (!tt_size) return;
+  if (time_over) return;
+
+  stt_entry * phashe = &amp;tt[b.hash &amp; tt_size];
+
+  if ((phashe-&gt;hash == b.hash) &amp;&amp; (phashe-&gt;depth &gt; depth)) return;
+
+  phashe-&gt;hash = b.hash;
+  phashe-&gt;val = val;
+  phashe-&gt;flags = flags;
+  phashe-&gt;depth = depth;
+  phashe-&gt;bestmove = best;
+}
+
+int ttpawn_setsize(int size) {
+
+  /* see tt_setsize for more details */
+
+  free(ptt);
+
+  if (size &amp; (size - 1)) {
+
+    size--;
+    for (int i = 1; i&lt;32; i = i * 2)
+      size |= size &gt;&gt; i;
+    size++;
+    size &gt;&gt;= 1;
+
+  }
+
+  if (size &lt; 8) {
+    ptt_size = 0;
+    return 0;
+  }
+
+  ptt_size = (size / sizeof(spawntt_entry)) - 1;
+  ptt = (spawntt_entry *)malloc(size);
+
+  return 0;
+}
+
+int ttpawn_probe() {
+
+  if (!ptt_size) return INVALID;
+
+  spawntt_entry * phashe = &amp;ptt[b.phash &amp; ptt_size];
+
+  if (phashe-&gt;hash == b.phash) return phashe-&gt;val;
+
+  return INVALID;
+
+}
+
+void ttpawn_save(int val) {
+
+  if (!ptt_size) return;
+
+  spawntt_entry * phashe = &amp;ptt[b.phash &amp; ptt_size];
+
+  phashe-&gt;hash = b.phash;
+  phashe-&gt;val = val;
+}
+
+int tteval_setsize(int size) {
+
+  /* see tt_setsize for more details */
+
+  free(ett);
+
+  if (size &amp; (size - 1)) {
+
+    size--;
+    for (int i = 1; i&lt;32; i = i * 2)
+      size |= size &gt;&gt; i;
+    size++;
+    size &gt;&gt;= 1;
+
+  }
+
+  if (size &lt; 16) {
+    ett_size = 0;
+    return 0;
+  }
+
+  ett_size = (size / sizeof(sevaltt_entry)) - 1;
+  ett = (sevaltt_entry *)malloc(size);
+
+  return 0;
+}
+
+int tteval_probe() {
+
+  if (!ett_size) return INVALID;
+
+  sevaltt_entry * phashe = &amp;ett[b.hash &amp; ett_size];
+
+  if (phashe-&gt;hash == b.hash) return phashe-&gt;val;
+
+  return INVALID;
+
+}
+
+void tteval_save(int val) {
+
+  if (!ett_size) return;
+
+  sevaltt_entry * phashe = &amp;ett[b.hash &amp; ett_size];
+
+  phashe-&gt;hash = b.hash;
+  phashe-&gt;val = val;
+}</code></pre>
+<p><strong><a href="/CPW-Engine">Up one Level</a></strong></p>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/CPW-Engine_transposition">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

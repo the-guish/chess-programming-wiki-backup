@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Best-First - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Best-First</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Search">Search</a> * Best-First</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/3/33/Breadth-first-tree.svg" alt="Breadth-First Node order 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Breadth-First Node order <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://en.wikipedia.org/wiki/Breadth-first_search">Breadth-first search from Wikipedia</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Best-First Search</strong> is a <a href="https://en.wikipedia.org/wiki/State_space_search">state space search</a> to traverse <a href="/Node">nodes</a> of tree-like data structures (i. e. <a href="/Search_Tree">search trees</a>) in <a href="https://en.wikipedia.org/wiki/Breadth-first_search">breadth-first</a> manner. It is usually implemented with a priority queue instead of the <a href="/Queue">FIFO</a> of breadth-first <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> , to expand the most promising node of one level first. Best-first turns a uninformed breadth-first into an informed search. Since all nodes of one level must be saved until their child nodes at the next level have been generated, the space complexity and memory requirement is proportional to the number of nodes at the deepest level.</p>
+<p>Best-first algorithms like <a href="https://en.wikipedia.org/wiki/A*_search_algorithm">A*</a> are used for path finding in <a href="https://en.wikipedia.org/wiki/Combinatorial_search">combinatorial search</a> and <a href="https://en.wikipedia.org/wiki/Puzzle">puzzles</a>. <a href="/Iterative_Deepening">Iterative deepening</a> is a technique to turn <a href="/Depth-First">depth-first searches</a> into best-first with the advantage space grows <a href="https://en.wikipedia.org/wiki/Linear_growth">linear</a> rather than <a href="https://en.wikipedia.org/wiki/Exponential_growth">exponential</a> with increasing <a href="/Depth">search depth</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>, as applied for instance in [<a href="https://en.wikipedia.org/wiki/IDA">https://en.wikipedia.org/wiki/IDA</a>* IDA*].</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#two-player">Two-Player</a></li>
+<li><a href="#some-chess-programs">Some Chess Programs</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#publications">Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1960-">1960 ...</a></li>
+<li><a href="#1970-">1970 ...</a></li>
+<li><a href="#1980-">1980 ...</a></li>
+<li><a href="#1990-">1990 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="two-player">Two-Player</h2>
+<p>Following best-first algorithms were invented and implemented for computer chess programs as well for other two-player <a href="https://en.wikipedia.org/wiki/Zero-sum_(game_theory)">zero-sum</a> board <a href="/Games">game</a> players with <a href="https://en.wikipedia.org/wiki/Perfect_information">perfect information</a>:</p>
+<ul>
+<li><a href="/B%252A">B*</a></li>
+<li>Bandwidth Search</li>
+<li><a href="/Best-First_Minimax_Search">Best-First Minimax Search</a></li>
+<li><a href="/Conspiracy_Number_Search">Conspiracy Number Search</a></li>
+<li><a href="/Ari_Weinstein">FSSS-Minimax</a></li>
+<li><a href="/Richard_P._Cochran">LCF</a></li>
+<li><a href="/MCαβ">MCαβ</a></li>
+<li><a href="/Monte-Carlo_Tree_Search">Monte-Carlo Tree Search</a></li>
+<li><a href="/James_R._Slagle">M &amp; N Procedure</a></li>
+<li><a href="/Proof-Number_Search">Proof-Number Search</a></li>
+<li><a href="/SSS%252A_and_Dual%252A">SSS* and Dual*</a></li>
+<li><a href="/UCT">UCT</a></li>
+</ul>
+<h2 id="some-chess-programs">Some Chess Programs</h2>
+<ul>
+<li><a href="/Centaur">Centaur</a></li>
+<li><a href="/HiTech">HiTech B*</a></li>
+<li><a href="/Leela_Chess_Zero">Leela Chess Zero</a></li>
+<li><a href="/Rocinante">Rocinante</a></li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Depth-First">Depth-First</a></li>
+<li><a href="/MTD%28f%29">MTD(f)</a></li>
+<li><a href="/NegaC%252A">NegaC*</a></li>
+<li><a href="/Perft">Perft(15)</a></li>
+<li>Priority Queue</li>
+<li><a href="/Queue">Queue</a></li>
+<li><a href="/SSS%252A_and_Dual%252A">SSS* and Dual* as MT</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<h3 id="1960-">1960 ...</h3>
+<ul>
+<li><a href="/James_R._Slagle">James R. Slagle</a> (<strong>1963</strong>). <em>Game Trees, M &amp; N Minimaxing, and the M &amp; N alpha-beta procedure.</em> Artificial Intelligence Group Report 3, UCRL-4671, University of California</li>
+<li><a href="https://en.wikipedia.org/wiki/Peter_E._Hart">Peter Hart</a>, <a href="https://en.wikipedia.org/wiki/Nils_John_Nilsson">Nils Nilsson</a>, <a href="https://en.wikipedia.org/wiki/Bertram_Raphael">Bertram Raphael</a> (<strong>1968</strong>). <em>A Formal Basis for the Heuristic Determination of Minimum Cost Paths</em>. <a href="/IEEE">IEEE Transactions on Systems Science and Cybernetics</a>, Vol. SSC-4, No. 2, <a href="https://www.cs.auckland.ac.nz/courses/compsci709s2c/resources/Mike.d/astarNilsson.pdf">pdf</a>, introducing <a href="https://en.wikipedia.org/wiki/A*_search_algorithm">A*</a></li>
+</ul>
+<h3 id="1970-">1970 ...</h3>
+<ul>
+<li><a href="/Larry_Harris">Larry Harris</a> (<strong>1973</strong>). <em>The bandwidth heuristic search</em>. <a href="/Conferences">3. IJCAI 1973</a>, <a href="http://www.ijcai.org/Past%20Proceedings/IJCAI-73/PDF/004.pdf">pdf</a></li>
+<li><a href="/Larry_Harris">Larry Harris</a> (<strong>1974</strong>). <em>Heuristic Search under Conditions of Error</em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_(journal)">Artificial Intelligence</a>, Vol. 5, No. 3, also as (<strong>1977</strong>). <em>The heuristic search: An alternative to the alpha-beta minimax procedure.</em> <a href="/Chess_Skill_in_Man_and_Machine">Chess Skill in Man and Machine</a></li>
+<li><a href="/Larry_Harris">Larry Harris</a> (<strong>1975</strong>). <em>The Heuristic Search And The Game Of Chess - A Study Of Quiescence, Sacrifices, And Plan Oriented Play</em>. <a href="/Conferences">4. IJCAI 1975</a>, reprinted (<strong>1988</strong>) in <a href="/Computer_Chess_Compendium">Computer Chess Compendium</a></li>
+<li><a href="/Larry_Harris">Larry Harris</a> (<strong>1977</strong>). <em>The heuristic search: An alternative to the alpha-beta minimax procedure.</em> <a href="/Chess_Skill_in_Man_and_Machine">Chess Skill in Man and Machine</a></li>
+</ul>
+<h3 id="1980-">1980 ...</h3>
+<ul>
+<li><a href="/Judea_Pearl">Judea Pearl</a> (<strong>1981</strong>). <em>Heuristic search theory: A survey of recent results</em>. <a href="/Conferences">IJCAI-81</a>, <a href="http://ijcai.org/Past%20Proceedings/IJCAI-81-VOL%201/PDF/100.pdf">pdf</a></li>
+<li><a href="/Judea_Pearl">Judea Pearl</a> (<strong>1984</strong>). <em>Heuristics: Intelligent Search Strategies for Computer Problem Solving</em>. <a href="https://en.wikipedia.org/wiki/Addison-Wesley">Addison-Wesley</a></li>
+<li><a href="/Alexander_Reinefeld">Alexander Reinefeld</a>, <a href="/Tony_Marsland">Tony Marsland</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a> (<strong>1985</strong>). <em>Is Best First Search Really Best?</em> Technical Report TR 85-16, Department of Computer Science, <a href="/University_of_Alberta">University of Alberta</a>.</li>
+<li><a href="/Hermann_Kaindl">Hermann Kaindl</a>, <a href="/Helmut_Horacek">Helmut Horacek</a>, <a href="/Marcus_Wagner">Marcus Wagner</a> (<strong>1986</strong>). <em>Selective Search versus Brute Force.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 9, No. 3</a></li>
+<li><a href="/Richard_Karp">Richard Karp</a>, <a href="/Yanjun_Zhang">Yanjun Zhang</a> (<strong>1988</strong>). <em><a href="https://dl.acm.org/citation.cfm?id=62212.62240">A randomized parallel branch-and-bound procedure</a></em>. <a href="https://dblp.uni-trier.de/db/conf/stoc/stoc88.html">STOC '88</a></li>
+<li>Anup K. Sen, <a href="/Amitava_Bagchi">Amitava Bagchi</a> (<strong>1989</strong>). <em>Fast Recursive Formulations for Best-First Search that allow Controlled use of Memory</em>. <a href="/Conferences">IJCAI 1989</a>, <a href="http://www.ijcai.org/Past%20Proceedings/IJCAI-89-VOL1/PDF/047.pdf">pdf</a></li>
+</ul>
+<h3 id="1990-">1990 ...</h3>
+<ul>
+<li><a href="/Steven_Skiena">Steven Skiena</a> (<strong>1990</strong>). <em>Breadth-First and Depth-First Search.</em> §3.2.5 in <a href="https://www.amazon.com/exec/obidos/ASIN/0521806860/ref=nosim/weisstein-20">Implementing Discrete Mathematics: Combinatorics and Graph Theory with Mathematica</a>, <a href="https://en.wikipedia.org/wiki/Addison-Wesley">Addison-Wesley</a></li>
+<li>Nageshwara Rao Vempaty, Vipin Kumar, <a href="/Richard_Korf">Richard Korf</a> (<strong>1991</strong>). <em>Depth-First vs Best-First Search</em>. <a href="/Conferences">AAAI-91</a>, <a href="https://www.aaai.org/Papers/AAAI/1991/AAAI91-067.pdf">pdf</a></li>
+<li><a href="/Richard_Korf">Richard Korf</a> (<strong>1993</strong>). <em>Linear-Space Best-First Search.</em> <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 62, No. 1, <a href="http://www.aaai.org/Papers/AAAI/1992/AAAI92-082.pdf">pdf</a></li>
+<li><a href="/Richard_Korf">Richard Korf</a>, <a href="/Max_Chickering">Max Chickering</a> (<strong>1993</strong>). <em><a href="http://www.aaai.org/Library/Symposia/Fall/1993/fs93-02-006.php">Best-first Minimax Search: First Results</a>.</em> <a href="/Conferences">AAAI-93</a></li>
+<li><a href="/Mathematician">Weixiong Zhang</a>, <a href="/Richard_Korf">Richard Korf</a> (<strong>1993</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=1867385">Depth-first vs. best-first search: New results</a></em>. <a href="/Conferences">AAAI-93</a></li>
+<li><a href="/Deniz_Yuret">Deniz Yuret</a> (<strong>1994</strong>). <em><a href="https://scholar.google.com/citations?view_op=view_citation&amp;hl=en&amp;user=EJurXJ4AAAAJ&amp;cstart=40&amp;citation_for_view=EJurXJ4AAAAJ:TQgYirikUcIC">The Principle of Pressure in Chess</a></em>. TAINN 1994</li>
+<li><a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, <a href="/Wim_Pijls">Wim Pijls</a>, <a href="/Arie_de_Bruin">Arie de Bruin</a> (<strong>1995, 2015</strong>). <em>Best-First Fixed Depth Game Tree Search in Practice.</em> <a href="/Conferences">IJCAI-95</a>, <a href="https://arxiv.org/abs/1505.01603">arXiv:1505.01603</a></li>
+<li><a href="/Richard_Korf">Richard Korf</a>, <a href="/Max_Chickering">Max Chickering</a> (<strong>1996</strong>). <em><a href="https://www.microsoft.com/en-us/research/publication/best-first-minimax-search/">Best-first minimax search</a></em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_(journal)">Artificial Intelligence</a>, Vol. 84, Nos 1-2</li>
+<li><a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, <a href="/Wim_Pijls">Wim Pijls</a>, <a href="/Arie_de_Bruin">Arie de Bruin</a> (<strong>1996</strong>). <em>Best-First Fixed-Depth Minimax Algorithms.</em> <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_(journal)">Artificial Intelligence</a>, Vol. 87</li>
+<li><a href="/Ayumu_Nagai">Ayumu Nagai</a>, <a href="/Hiroshi_Imai">Hiroshi Imai</a> (<strong>1999</strong>). <em>Proof for the Equivalence Between Some Best-First Algorithms and Depth-First Algorithms for AND/OR Trees</em>. Proceedings of the Korea-Japan Joint Workshop on Algorithms and Computation</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="/Paul_E._Utgoff">Paul E. Utgoff</a>, <a href="/Richard_P._Cochran">Richard P. Cochran</a> (<strong>2000</strong>). <em><a href="http://link.springer.com/chapter/10.1007/3-540-45579-5_1">A Least-Certainty Heuristic for Selective Search</a></em>. <a href="/CG_2000">CG 2000</a>, <a href="http://people.cs.umass.edu/~utgoff/papers/springer-lcf.pdf">pdf</a> » <a href="/Richard_P._Cochran">LCF</a></li>
+<li><a href="/Ayumu_Nagai">Ayumu Nagai</a>, <a href="/Hiroshi_Imai">Hiroshi Imai</a> (<strong>2002</strong>). <em><a href="http://ci.nii.ac.jp/naid/110006376599">Proof for the Equivalence Between Some Best-First Algorithms and Depth-First Algorithms for AND/OR Trees</a></em>. <a href="http://ci.nii.ac.jp/vol_issue/nels/AA10826272/ISS0000408668_en.html">IEICE transactions on information and systems</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, Alex Fukunaga, <a href="/Adi_Botea">Adi Botea</a> (<strong>2012</strong>). <em>Evaluation of a Simple, Scalable, Parallel Best-First Search Strategy</em>. <a href="https://arxiv.org/abs/1201.3204">arXiv:1201.3204</a></li>
+<li><a href="/Ari_Weinstein">Ari Weinstein</a>, <a href="/Michael_L._Littman">Michael L. Littman</a>, Sergiu Goschin (<strong>2013</strong>). <em><a href="http://proceedings.mlr.press/v24/weinstein12a.html">Rollout-based Game-tree Search Outprunes Traditional Alpha-beta</a></em>. <a href="http://proceedings.mlr.press/">PMLR</a>, Vol. 24 » <a href="/Ari_Weinstein">FSSS-Minimax</a></li>
+<li><a href="/Jr-Chang_Chen">Jr-Chang Chen</a>, <a href="/I-Chen_Wu">I-Chen Wu</a>, <a href="/Wen-Jie_Tseng">Wen-Jie Tseng</a>, Bo-Han Lin, <a href="/Chia-Hui_Chang">Chia-Hui Chang</a> (<strong>2015</strong>). <em><a href="https://ir.nctu.edu.tw/handle/11536/124541">Job-Level Alpha-Beta Search</a></em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 7, No. 1</li>
+<li>Tom Everitt, <a href="/Marcus_Hutter">Marcus Hutter</a> (<strong>2015</strong>). <em>Analytical Results on the BFS vs. DFS Algorithm Selection Problem. Part I: Tree Search</em>. Australasian Conference on Artificial Intelligence, <a href="https://pdfs.semanticscholar.org/1b4b/c878b2d068214e39b258ee250e5b8889e84c.pdf">pdf</a></li>
+<li>Tom Everitt, <a href="/Marcus_Hutter">Marcus Hutter</a> (<strong>2015</strong>). <em>Analytical Results on the BFS vs. DFS Algorithm Selection Problem: Part II: Graph Search</em>. Australasian Conference on Artificial Intelligence</li>
+<li>Alex Fukunaga, <a href="/Adi_Botea">Adi Botea</a>, Yuu Jinnai, <a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a> (<strong>2017</strong>). <em>A Survey of Parallel A*</em>. <a href="https://arxiv.org/abs/1708.05296">arXiv:1708.05296</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li>Quentin Cohen-Solal (<strong>2021</strong>). <em>Completeness of Unbounded Best-First Game Algorithms</em>. <a href="https://arxiv.org/abs/2109.09468">arXiv:2109.09468</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40384">Breadth-first search: revisiting</a> by <a href="/Sergei_Markoff">Sergei S. Markoff</a>, <a href="/CCC">CCC</a>, September 13, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=44165">Help with Best-First Select-Formula</a> by <a href="/Srdja_Matovic">Srdja Matovic</a>, <a href="/CCC">CCC</a>, June 23, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64983&amp;start=9">Re: Perft(15): comparison of estimates with Ankan's result</a> by <a href="/Ankan_Banerjee">Ankan Banerjee</a>, <a href="/CCC">CCC</a>, August 26, 2017 » <a href="/Perft">Perft(15)</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Best-first_search">Best-first search from Wikipedia</a></li>
+<li><a href="/Category:Ian_Carr">Ian Carr</a> &amp; <a href="/Category:Nucleus">Nucleus</a> - Sidewalk, live at the <a href="https://en.wikipedia.org/wiki/BBC">BBC 1980</a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p>feat.: <a href="/Category:Allan_Holdsworth">Allan Holdsworth</a>, <a href="https://en.wikipedia.org/wiki/Brian_Smith_(musician)">Brian Smith</a>, <a href="https://de.wikipedia.org/wiki/Tim_Whitehead">Tim Whitehead</a>, <a href="https://de.wikipedia.org/wiki/Geoff_Castle">Geoff Castle</a>, <a href="https://en.wikipedia.org/wiki/Chucho_Merch%C3%A1n">Chucho Merchán</a>, <a href="https://de.wikipedia.org/wiki/Nic_France">Nic France</a>, <a href="https://www.allmusic.com/artist/chris-fletcher-mn0000384453/credits">Chris Fletcher</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/Bpb_9UE12Gs" title="YouTube video Bpb_9UE12Gs" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=Bpb_9UE12Gs">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Search">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.boost.org/doc/libs/1_43_0/libs/graph/doc/breadth_first_search.html">Boost Graph Library: Breadth-First Search</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Richard_Korf">Richard Korf Video</a> at <a href="/Judea_Pearl">Judea Pearl Symposium</a>, 2010<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Nucleus">Nucleus</a> · <a href="/Category:Ian_Carr">Ian Carr</a> · <a href="/Category:Allan_Holdsworth">Allan Holdsworth</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Best-First">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, Smatovic.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CPW-Engine movegen(0x88) - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">CPW-Engine movegen(0x88)</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Engines">Engines</a> * <a href="/CPW-Engine">CPW-Engine</a> * movegen(0x88)</strong></p>
+<p>This page holds the movegenerator of the engine CPW. For function definitions see <a href="/CPW-Engine_movegen_h">CPW-Engine_movegen_h</a>.</p>
+<p>Current version contains just one move generator with some conditional statements deciding whether we generate a full set of moves, or captures only. This is of course suboptimal, but the speed loss is really small. For that reason we postpone writing a separate capture generator until we are 100% sure about the exact shape of te smove struct, board representation etc.</p>
+<pre><code>#include &quot;stdafx.h&quot;
+#include &quot;0x88_math.h&quot;
+#include &quot;movegen.h&quot;
+
+U8 movecount;
+
+smove * m;
+
+bool slide[5] = { 0, 1, 1, 1, 0 };
+char vectors[5] = { 8, 8, 4, 4, 8 };
+char vector[5][8] = {
+  { SW, SOUTH, SE, WEST, EAST, NW, NORTH, NE },
+  { SW, SOUTH, SE, WEST, EAST, NW, NORTH, NE },
+  { SOUTH, WEST, EAST, NORTH },
+  { SW, SE, NW, NE },
+  { -33, -31, -18, -14, 14, 18, 31, 33 }
+};
+
+//returns movecount
+U8 movegen(smove * moves, U8 tt_move, bool captures) {
+
+  m = moves;
+
+  movecount = 0;
+
+  if (!captures) {
+    //Castling
+    if (b.stm == WHITE) {
+      if (b.castle &amp; CASTLE_WK) {
+        if ((b.pieces[F1] == PIECE_EMPTY) &amp;&amp;
+          (b.pieces[G1] == PIECE_EMPTY) &amp;&amp;
+          (!isAttacked(!b.stm, E1)) &amp;&amp;
+          (!isAttacked(!b.stm, F1)) &amp;&amp;
+          (!isAttacked(!b.stm, G1)))
+          movegen_push(E1, G1, KING, PIECE_EMPTY, MFLAG_CASTLE);
+      }
+      if (b.castle &amp; CASTLE_WQ) {
+        if ((b.pieces[B1] == PIECE_EMPTY) &amp;&amp;
+          (b.pieces[C1] == PIECE_EMPTY) &amp;&amp;
+          (b.pieces[D1] == PIECE_EMPTY) &amp;&amp;
+          (!isAttacked(!b.stm, E1)) &amp;&amp;
+          (!isAttacked(!b.stm, D1)) &amp;&amp;
+          (!isAttacked(!b.stm, C1)))
+          movegen_push(E1, C1, KING, PIECE_EMPTY, MFLAG_CASTLE);
+      }
+    }
+    else {
+      if (b.castle &amp; CASTLE_BK) {
+        if ((b.pieces[F8] == PIECE_EMPTY) &amp;&amp;
+          (b.pieces[G8] == PIECE_EMPTY) &amp;&amp;
+          (!isAttacked(!b.stm, E8)) &amp;&amp;
+          (!isAttacked(!b.stm, F8)) &amp;&amp;
+          (!isAttacked(!b.stm, G8)))
+          movegen_push(E8, G8, KING, PIECE_EMPTY, MFLAG_CASTLE);
+      }
+      if (b.castle &amp; CASTLE_BQ) {
+        if ((b.pieces[B8] == PIECE_EMPTY) &amp;&amp;
+          (b.pieces[C8] == PIECE_EMPTY) &amp;&amp;
+          (b.pieces[D8] == PIECE_EMPTY) &amp;&amp;
+          (!isAttacked(!b.stm, E8)) &amp;&amp;
+          (!isAttacked(!b.stm, D8)) &amp;&amp;
+          (!isAttacked(!b.stm, C8)))
+          movegen_push(E8, C8, KING, PIECE_EMPTY, MFLAG_CASTLE);
+      }
+    }
+  }
+
+  for (S8 sq = 0; sq&lt;120; sq++) {
+
+    if (b.color[sq] == b.stm) {
+
+      if (b.pieces[sq] == PAWN) {
+        movegen_pawn_move(sq, captures);
+        movegen_pawn_capt(sq);
+      }
+      else {
+
+        for (char dir = 0; dir&lt;vectors[b.pieces[sq]]; dir++) {
+
+          for (char pos = sq;;) {
+
+            pos = pos + vector[b.pieces[sq]][dir];
+
+            if (!IS_SQ(pos)) break;
+
+            if (b.pieces[pos] == PIECE_EMPTY) {
+              if (!captures)
+                movegen_push(sq, pos, b.pieces[sq], PIECE_EMPTY, MFLAG_NORMAL);
+            }
+            else if (b.color[pos] != b.stm) {
+              movegen_push(sq, pos, b.pieces[sq], b.pieces[pos], MFLAG_CAPTURE);
+              break;
+            }
+            else {
+              break;
+            }
+
+            if (!slide[b.pieces[sq]]) break;
+          }
+        }
+      }
+    }
+  }
+
+  /* if we have a best-move fed into movegen(), then increase its score */
+
+  if ((tt_move != -1) &amp;&amp; (tt_move &lt; movecount)) moves[tt_move].score = SORT_HASH;
+
+  return movecount;
+}
+
+U8 movegen_qs(smove * moves) {
+
+  m = moves;
+
+  movecount = 0;
+
+  for (S8 sq = 0; sq&lt;120; sq++) {
+
+    if (b.color[sq] == b.stm) {
+
+      if (b.pieces[sq] == PAWN) {
+        movegen_pawn_move(sq, 1);
+        movegen_pawn_capt(sq);
+      }
+      else {
+
+        for (char dir = 0; dir&lt;vectors[b.pieces[sq]]; dir++) {
+
+          for (char pos = sq;;) {
+
+            pos = pos + vector[b.pieces[sq]][dir];
+
+            if (!IS_SQ(pos)) break;
+
+            if (b.pieces[pos] != PIECE_EMPTY) {
+              if (b.color[pos] != b.stm) {
+                movegen_push(sq, pos, b.pieces[sq], b.pieces[pos], MFLAG_CAPTURE);
+                break;
+              }
+              else break; // hitting own piece
+            }
+
+            if (!slide[b.pieces[sq]]) break;
+          }
+        }
+      }
+    }
+  }
+
+  return movecount;
+}
+
+void movegen_pawn_move(S8 sq, bool promotion_only) {
+
+  if (b.stm == WHITE) {
+    if (promotion_only &amp;&amp; (ROW(sq) &lt; 7)) return;
+
+    if (b.pieces[sq + NORTH] == PIECE_EMPTY) {
+      movegen_push(sq, sq + NORTH, PAWN, PIECE_EMPTY, MFLAG_NORMAL);
+      if ((ROW(sq) == 1) &amp;&amp;
+        (b.pieces[sq + NN] == PIECE_EMPTY)
+        ) {
+        movegen_push(sq, sq + NN, PAWN, PIECE_EMPTY, MFLAG_EP);
+      }
+    }
+  }
+  else {
+    if (promotion_only &amp;&amp; (ROW(sq) &gt; 1)) return;
+
+    if (b.pieces[sq + SOUTH] == PIECE_EMPTY) {
+      movegen_push(sq, sq + SOUTH, PAWN, PIECE_EMPTY, MFLAG_NORMAL);
+      if ((ROW(sq) == 6) &amp;&amp;
+        (b.pieces[sq + SS] == PIECE_EMPTY)
+        ) {
+        movegen_push(sq, sq + SS, PAWN, PIECE_EMPTY, MFLAG_EP);
+      }
+    }
+  }
+}
+
+void movegen_pawn_capt(S8 sq) {
+  if (b.stm == WHITE) {
+    if (IS_SQ(sq + NW) &amp;&amp; ((b.ep == sq + NW) || (b.color[sq + NW] == (b.stm ^ 1)))) {
+      movegen_push(sq, sq + NW, PAWN, b.pieces[sq + NW], MFLAG_CAPTURE);
+    }
+    if (IS_SQ(sq + NE) &amp;&amp; ((b.ep == sq + NE) || (b.color[sq + NE] == (b.stm ^ 1)))) {
+      movegen_push(sq, sq + 17, PAWN, b.pieces[sq + NE], MFLAG_CAPTURE);
+    }
+  }
+  else {
+    if (IS_SQ(sq + SE) &amp;&amp; ((b.ep == sq + SE) || (b.color[sq + SE] == (b.stm ^ 1)))) {
+      movegen_push(sq, sq + SE, PAWN, b.pieces[sq + SE], MFLAG_CAPTURE);
+    }
+    if (IS_SQ(sq + SW) &amp;&amp; ((b.ep == sq + SW) || (b.color[sq + SW] == (b.stm ^ 1)))) {
+      movegen_push(sq, sq + SW, PAWN, b.pieces[sq + SW], MFLAG_CAPTURE);
+    }
+  }
+}
+
+void movegen_push(char from, char to, U8 piece_from, U8 piece_cap, char flags) {
+
+  m[movecount].from = from;
+  m[movecount].to = to;
+  m[movecount].piece_from = piece_from;
+  m[movecount].piece_to = piece_from;
+  m[movecount].piece_cap = piece_cap;
+  m[movecount].flags = flags;
+  m[movecount].ply = b.ply;
+  m[movecount].castle = b.castle;
+  m[movecount].ep = b.ep;
+  m[movecount].id = movecount;
+
+  m[movecount].score = sd.history[from][to];
+
+  /* score for capture:
+  Add the value of the captured piece and the id of the attacking piece.
+  So that if two pieces can attack the same target, the one with the higher id (eg. Pawn=5) gets searched first.
+  */
+  if (piece_cap != PIECE_EMPTY)
+    m[movecount].score = SORT_CAPT + e.SORT_VALUE[piece_cap] + piece_from;
+
+  //score for ep-capture
+  if ((piece_from == PAWN) &amp;&amp; (to == b.ep)) {
+    m[movecount].score = SORT_CAPT + e.SORT_VALUE[PAWN] + 5;
+    m[movecount].flags = MFLAG_EPCAPTURE;
+  }
+
+  if ((piece_from == PAWN) &amp;&amp; ((ROW(to) == 0) || (ROW(to) == 7))) {
+    m[movecount].flags |= MFLAG_PROMOTION;
+
+    for (char prompiece = QUEEN; prompiece &lt;= KNIGHT; prompiece++) {
+      m[movecount + prompiece - 1] = m[movecount];
+      m[movecount + prompiece - 1].piece_to = prompiece;
+      m[movecount + prompiece - 1].score += SORT_PROM + e.SORT_VALUE[prompiece];
+      m[movecount + prompiece - 1].id = movecount + prompiece - 1;
+    }
+    movecount += 3;
+  }
+
+  movecount++;
+
+}
+
+void movegen_sort(U8 movecount, smove * m, U8 current) {
+
+  //find the move with the highest score - hoping for an early cutoff
+
+  int high = current;
+
+  for (int i = current + 1; i&lt;movecount; i++) {
+    if (m[i].score &gt; m[high].score)
+      high = i;
+  }
+
+  smove temp = m[high];
+  m[high] = m[current];
+  m[current] = temp;
+}</code></pre>
+<p><strong><a href="/CPW-Engine">Up one Level</a></strong></p>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/CPW-Engine_movegen(0x88)">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

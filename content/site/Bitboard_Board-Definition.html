@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bitboard Board-Definition - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Bitboard Board-Definition</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * Bitboard Board-Definition</strong></p>
+<p>To represent the board we typically need one bitboard for each <a href="/Pieces">piece-type</a> and <a href="/Color">color</a> - likely encapsulated inside a class or structure, or as an <a href="/Array">array</a> of bitboards as part of a <a href="/Chess_Position">position</a> object. A one-bit inside a bitboard implies the existence of a piece of this piece-type on a certain <a href="/Squares">square</a> - one to one associated by the bit-position <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>:</p>
+<p><span id="CBoardDef"></span></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#classical-board">Classical Board</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#structure">Structure</a></li>
+<li><a href="#array">Array</a></li>
+</ol>
+</details></li>
+<li><a href="#denser-board">Denser Board</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="classical-board">Classical Board</h2>
+<p>Those bitboards may part of a central position object which is <a href="/Incremental_Updates">incrementally updated</a> while <a href="/Make_Move">making</a> or <a href="/Unmake_Move">unmaking</a> <a href="/Moves">moves</a>. <span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><a href="http://www.onjava.com/pub/a/onjava/2005/02/02/bitsets.html?page=2" target="_blank" rel="noopener noreferrer"><img src="/assets/Bitboard.gif" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></a></span></p>
+<h3 id="structure">Structure</h3>
+<p><em>To be aware of their scalar 64-bit origin, we use so far a type defined unsigned integer U64 in our <a href="/C">C</a>/<a href="/Cpp">C++</a> source snippets, the scalar 64-bit long in <a href="/Java">Java</a>. Feel free to define a distinct type or wrap U64 into classes for better abstraction and type-safety during compile time.</em></p>
+<pre><code>class CBoard
+{
+   U64 whitePawns;
+   U64 whiteKnights;
+   U64 whiteBishops;
+   U64 whiteRooks;
+   U64 whiteQueens;
+   U64 whiteKing;
+
+   U64 blackPawns;
+   U64 blackKnights;
+   U64 blackBishops;
+   U64 blackRooks;
+   U64 blackQueens;
+   U64 blackKing;
+   ...
+};</code></pre>
+<h3 id="array">Array</h3>
+<p>For better generalization and to <a href="/Avoiding_Branches">avoid branches</a>, one may encapsulate <a href="/Array">arrays</a> of bitboards. For instance, inside the <a href="/Beowulf">Beowulf</a> sources (sample from moves.c) one finds a lot of branches on <a href="/Side_to_move">side to move</a> to either fetch white or black piece bitboards, as already criticized by <a href="/Vincent_Diepeveen">Vincent Diepeveen</a> in 2001 <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> ...</p>
+<pre><code>  switch (side) {
+   case WHITE: tsq = B-&gt;whiteRooks; break;
+   case BLACK: tsq = B-&gt;blackRooks; break;
+  }</code></pre>
+<p>.. where an indexed access with appropriate defined {0,1} color range for the side to move would avoid those branches, per piece-kind, ...</p>
+<pre><code>  tsq = B-&gt;rooks[side];</code></pre>
+<p>... or over all piece-kinds, ...</p>
+<pre><code>  tsq = B-&gt;pieceBB[nWhiteRook + side];</code></pre>
+<p>... for instance, on <a href="/X86">x86</a> or <a href="/X86-64">x86-64</a>, utilizing its <a href="https://en.wikipedia.org/wiki/X86#Addressing_modes">addressing modes</a> with base- and scalable <a href="https://en.wikipedia.org/wiki/Index_register">index register</a>, plus displacement:</p>
+<pre><code>   ; rsi pointer to structure, rcx side (0 == White, 1 == Black)
+   mov  rax, qword ptr [rsi + rookOffset + 8*rcx] </code></pre>
+<p><span id="Occupancy"></span> Likely one also keeps some often used redundant <a href="/General_Setwise_Operations">union</a> sets like white and black pieces, <a href="/Occupancy">occupancy</a> or their complement, the empty squares.</p>
+<pre><code>class CBoard
+{
+   U64 pieceBB[14];
+   U64 emptyBB;
+   U64 occupiedBB;
+   ...
+public:
+   enum enumPiece
+   {
+      nWhite,     // any white piece
+      nBlack,     // any black piece
+      nWhitePawn, // white Pawn
+      nBlackPawn, // white Pawn
+      ...
+   };
+
+   U64 getPieceSet(PieceType pt) const {return pieceBB[pt];}
+   U64 getWhitePawns() const {return pieceBB[nWhitePawn];}
+   ...
+   U64 getPawns(ColorType ct) const {return pieceBB[nWhitePawn + ct];}
+   ...
+};</code></pre>
+<p>On initialization and update of the bitboards, see <a href="/General_Setwise_Operations">general setwise operations</a>. <span id="SixTwo"></span></p>
+<h2 id="denser-board">Denser Board</h2>
+<p>A common alternative to reduce the size of the board structure is to keep two color bitboards and six color independent piece bitboards, which are the <a href="/General_Setwise_Operations">union</a> of black and white respective pieces, i.e. all queens. This space saving requires a cheap <a href="/General_Setwise_Operations">intersection</a> of a color and a piece bitboard to get the required pieces of that color only.</p>
+<pre><code>class CBoard
+{
+   U64 pieceBB[8];
+public:
+   enum enumPiece
+   {
+      nWhite,     // any white piece
+      nBlack,     // any black piece
+      nPawn,
+      nKnight,
+      nBishop,
+      nRook,
+      nQueen,
+      nKing
+   };
+
+   U64 getPieceSet(PieceType pt) const {return pieceBB[pieceCode(pt)] &amp; pieceBB[colorCode(pt)];}
+   U64 getWhitePawns() const {return pieceBB[nPawn] &amp; pieceBB[nWhite];}
+   ...
+   U64 getPawns(ColorType ct) const {return pieceBB[nPawn] &amp; pieceBB[ct];}
+   ...
+};</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Color_Flipping">Color Flipping</a></li>
+<li><a href="/Quad-Bitboards">Quad-Bitboards</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/834fa3c273fafffe/cab7c12ea99e9a35">Bit Board Bonkers??</a> by Dave, <a href="/Computer_Chess_Forums">rec.games.chess.computer</a>, July 28, 1997</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=405590">Bitboard board representation</a> by <a href="/Eric_Oldre">Eric Oldre</a>, <a href="/CCC">CCC</a>, January 13, 2005</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=17138">BitBoard representations of the board</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, October 14, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47917">Decision concerning board representation</a> by Piotr Lopusiewicz, <a href="/CCC">CCC</a>, May 05, 2013</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76083">Bitboard board representation</a> by Elias Nilsson, <a href="/CCC">CCC</a>, December 17, 2020</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="/Category:Charlie_Mariano">Charlie Mariano</a> - <a href="https://www.discogs.com/de/Charlie-Mariano-Helen-12-Trees/release/2532764">Helen 12 Trees</a>, 1977, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p>lineup: <a href="/Category:Charlie_Mariano">Charlie Mariano</a>, <a href="/Category:Jack_Bruce">Jack Bruce</a>, <a href="/Category:Jan_Hammer">Jan Hammer</a>, <a href="/Category:John_Marshall">John Marshall</a>, <a href="/Category:Nippy_Noya">Nippy Noya</a>, <a href="/Category:Zbigniew_Seifert">Zbigniew Seifert</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/eWFEk4cQ6gE" title="YouTube video eWFEk4cQ6gE" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=eWFEk4cQ6gE">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Bitboards">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://web.archive.org/web/20060316100407/http://www.onjava.com/pub/a/onjava/2005/02/02/bitsets.html?page=2">Bitwise Optimization in Java: Bitfields, Bitboards, and Beyond</a> by <a href="/Glen_Pepicelli">Glen Pepicelli</a>, (<a href="https://en.wikipedia.org/wiki/Wayback_Machine">Wayback Machine</a>, 2005), <a href="https://en.wikipedia.org/wiki/O%27Reilly_Media">O'Reilly's</a> <a href="https://web.archive.org/web/20050203015229/http://onjava.com/">OnJava.com</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://www.stmintz.com/ccc/index.php?id=173418">On Beowulf - long post</a> by <a href="/Vincent_Diepeveen">Vincent Diepeveen</a>, <a href="/CCC">CCC</a>, April 04, 2001<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Charlie_Mariano">Charlie Mariano</a> · <a href="/Category:Jack_Bruce">Jack Bruce</a> · <a href="/Category:John_Marshall">John Marshall</a> · <a href="/Category:Jan_Hammer">Jan Hammer</a> · <a href="/Category:Nippy_Noya">Nippy Noya</a> · <a href="/Category:Zbigniew_Seifert">Zbigniew Seifert</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Bitboard_Board-Definition">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

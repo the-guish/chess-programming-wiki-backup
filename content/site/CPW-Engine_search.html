@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CPW-Engine search - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">CPW-Engine search</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Engines">Engines</a> * <a href="/CPW-Engine">CPW-Engine</a> * Search</strong></p>
+<p>For function definitions, see <a href="/CPW-Engine_search_h">CPW-Engine_search_h</a>. On storing <a href="/Lower_Bound">Lower Bound</a>, <a href="/Upper_Bound">Upper Bound</a> and <a href="/Exact_Score">Exact Score</a> into the <a href="/Transposition_Table">Transposition Table</a> at search_root and Search, see the discussions in <a href="/CCC">CCC</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>. __FORCETOC__</p>
+<h2 id="search"><a href="/Search">Search</a></h2>
+<pre><code>#include &quot;stdafx.h&quot;
+#include &quot;search.h&quot;
+#include &quot;transposition.h&quot;
+
+#define MAX_DEPTH 100
+
+/* symbols used to enhance readability */
+#define DO_NULL    1
+#define NO_NULL    0
+#define IS_PV      1
+#define NO_PV      0
+
+sSearchDriver sd;
+
+int draw_opening = -10; // middlegame draw value
+int draw_endgame = 0;   // endgame draw value
+int ASPIRATION = 50;  // size of the aspiration window ( val-ASPITATION, val+ASPIRATION )
+
+bool time_over = 0;
+
+enum eproto {
+  PROTO_NOTHING,
+  PROTO_XBOARD,
+  PROTO_UCI
+} extern mode;
+
+U8 bestmove;         // move id passed between iterations for sorting purposes
+smove move_to_make;  // move to be returned when search runs out of time
+
+/***************************************************************
+*  search_run() is the interface of all the search functions,  *
+*  the only function called outside search.cpp. It does some   *
+*  preparatory work, and then calls search_iterate();          *
+***************************************************************/
+
+void search_run() {
+
+  if (chronos.flags &amp; (FTIME | FINC | FMOVESTOGO)) {
+    if (getBookMove(BOOK_BROAD)) return;
+  }
+
+  search_clearDriver();
+  time_calc_movetime();
+  ageHistoryTable();
+  if (mode == PROTO_NOTHING) printSearchHeader();
+
+  search_iterate();
+}
+
+void search_clearDriver() {
+  sd.myside = b.stm;         // remember color - needed in contempt()
+  sd.starttime = gettime();
+  sd.movetime = 0;
+  sd.depth = 0;
+
+  // now clear all the statistical data
+  sd.nodes = 0;
+  sd.q_nodes = 0;
+}
+
+/**************************************************************
+*  search_iterate() calls search_root() with increasing depth *
+*  until allocated time is exhausted.                         *
+**************************************************************/
+
+void search_iterate() {
+  int val, temp;
+
+  // check the exact number of legal moves in the current position
+
+  int move_count = move_countLegal();
+
+  // do a full-window 1-ply search to get the first estimate of val 
+
+  sd.depth = 1;
+  val = search_root(sd.depth, -INF, INF);
+
+  // main loop, increasing deph in steps of 1
+
+  for (sd.depth = 2; sd.depth &lt;= MAX_DEPTH; sd.depth++) {
+
+    // breaking conditions - either expired time
+    // or just one legal reply and position searched to depth 4
+
+    if (time_stop_root() || time_over) break;
+    if (move_count == 1 &amp;&amp; sd.depth == 5) break;
+
+    // this function deals with aspiration window
+    val = search_widen(sd.depth, val);
+  }
+
+  // after the loop has finished, send the move to the interface
+  com_sendmove(move_to_make);
+}
+
+int search_widen(int depth, int val) {
+  int temp = val,
+    alpha = val - 50,
+    beta = val + 50;
+
+  temp = search_root(sd.depth, alpha, beta);
+  if (temp &lt;= alpha || temp &gt;= beta)
+    temp = search_root(sd.depth, -INF, INF);
+  return temp;
+}
+
+int search_root(U8 depth, int alpha, int beta) {
+
+  int flagInCheck;
+  smove movelist[256];
+  int val = 0;
+
+  U8 currmove_legal = 0;
+
+  /* Check  extension is done also at  the  root */
+
+  flagInCheck = isAttacked(!b.stm, b.KingLoc[b.stm]);
+  if (flagInCheck) ++depth;
+
+  U8 mcount = movegen(movelist, bestmove);
+
+  for (U8 i = 0; i &lt; mcount; i++) {
+
+    movegen_sort(mcount, movelist, i);
+
+    if (movelist[i].piece_cap == KING) {
+      alpha = INF;
+      bestmove = movelist[i].id;
+    }
+
+    move_make(movelist[i]);
+
+    // filter out illegal moves
+    if (isAttacked(b.stm, b.KingLoc[!b.stm])) {
+      move_unmake(movelist[i]);
+      continue;
+    }
+
+    //  if ( mode == PROTO_UCI ) 
+    //      info_currmove( movelist[i], currmove_legal ); 
+
+    currmove_legal++;
+
+    /* the &quot;if&quot; clause introduces PVS at root */
+
+    if ((i == 0) ||
+      (-Search(depth - 1, 0, -alpha - 1, -alpha, DO_NULL, NO_PV) &gt; alpha))
+      val = -Search(depth - 1, 0, -beta, -alpha, DO_NULL, IS_PV);
+
+    move_unmake(movelist[i]);
+
+    if (time_over) break;
+
+    // see CCC Discussion, Re: Debugging a transposition table by Vivien Clauzon
+
+    if (val &gt; alpha) { 
+
+      bestmove = movelist[i].id;
+      move_to_make = movelist[i];
+
+      if (val &gt; beta) { // should be &gt;=, see post
+        tt_save(depth, beta, TT_BETA, bestmove);
+        info_pv(beta);
+        return beta;
+      }
+
+      alpha = val;
+      tt_save(depth, alpha, TT_ALPHA, bestmove);
+
+      info_pv(val);
+    } // changing node value finished
+  }
+
+  tt_save(depth, alpha, TT_EXACT, bestmove);
+  return alpha;
+}
+
+int Search(U8 depth, U8 ply, int alpha, int beta, int can_null, int is_pv) {
+
+  int  val = -INF;
+  char bestmove;
+  char tt_move = INVALID;
+  char tt_flag = TT_ALPHA;
+  int  flagInCheck;
+  int  legal_move = 0;
+  int  raised_alpha = 0;
+  int  f_prune = 0;
+  int  reduction_depth = 0;
+  int  moves_tried = 0;
+  int  new_depth;
+  int  mate_value = INF - ply; // will be used in mate distance pruning
+  smove move;
+
+  /************************************************************************
+  *  Probably later we will want to probe the transposition table.        *
+  *  Tell the cpu to prepare for that event. This is just a minor         *
+  *  speed optimization and program would run fine without that.          *
+  ************************************************************************/
+
+  _mm_prefetch((char *)&amp;tt[b.hash &amp; tt_size], _MM_HINT_NTA);
+
+  /************************************************************************
+  * Check for timeout. This is quite time-consuming, so we do it only     *
+  * every so often. The side effect is that if we want  to limit search   *
+  * by number of nodes, it will be slightly inexact.                      *
+  ************************************************************************/
+
+  if (!time_over &amp;&amp; !(sd.nodes &amp; 4095))
+    time_over = time_stop();
+  if (time_over) return 0;
+
+  /************************************************************************
+  * MATE DISTANCE PRUNING - a minor improvement that helps to shave off   *
+  * some nodes when the checkmate is near. Basically it prevents looking  *
+  * for checkmates taking longer than one we have already found. No Elo   *
+  * gain expected, but it&#39;s a nice feature. Don&#39;t use it at the root,     *
+  * since  this code  doesn&#39;t return a move, only a value.                *
+  ************************************************************************/
+
+  if (alpha &lt; -mate_value) alpha = -mate_value;
+  if (beta &gt; mate_value - 1) beta = mate_value - 1;
+  if (alpha &gt;= beta) return alpha;
+
+  /************************************************************************
+  *  Are we in check? If so, extend. It also means that program will      *
+  *  never enter quiescence search while in check.                        *
+  ************************************************************************/
+
+  flagInCheck = (isAttacked(!b.stm, b.KingLoc[b.stm]));
+  if (flagInCheck) ++depth;
+
+  /************************************************************************
+  *  At leaf nodes we do quiescence search (captures only) to make sure   *
+  *  that only relatively quiet positions with no hanging pieces will be  *
+  *  evaluated.                                                           *
+  ************************************************************************/
+
+  if (depth == 0) return Quiesce(alpha, beta);
+
+  sd.nodes++;
+
+  if (isRepetition()) return contempt();
+
+  /************************************************************************
+  *  Read the transposition table. We may have already searched current   *
+  *  position. If depth was sufficient, then we might use the score       *
+  *  of that search. If not, hash move still is expected to be good       *
+  *  and should be sorted first.                                          *
+  *                                                                       *
+  *  NOTE: current implementation is sub-standard, since tt_move is just  *
+  *  an index showing move&#39;s location on a move list. We should be able   *
+  *  to retrieve move without generating full move list instead.          *
+  ************************************************************************/
+
+  if ((val = tt_probe(depth, alpha, beta, &amp;tt_move)) != INVALID) {
+    // in pv nodes we return only in case of an exact hash hit
+    if (!is_pv || (val &gt; alpha &amp;&amp; val &lt; beta))
+      return val;
+  }
+
+  /************************************************************************
+  * EVAL PRUNING / STATIC NULL MOVE                                       *
+  ************************************************************************/
+
+  if (depth &lt; 3
+    &amp;&amp; (!is_pv)
+    &amp;&amp; (!flagInCheck)
+    &amp;&amp; (abs(beta - 1) &gt; -INF + 100))
+  {
+    int static_eval = eval(alpha, beta, 1);
+
+    int eval_margin = 120 * depth;
+    if (static_eval - eval_margin &gt;= beta)
+      return static_eval - eval_margin;
+  }
+
+  /************************************************************************
+  *  Here  we introduce  NULL MOVE PRUNING. It  means  allowing opponent  *
+  *  to execute two moves in a row, i.e. capturing something and escaping *
+  *  a recapture. If this cannot  wreck our position, then it is so good  *
+  *  that there&#39;s  no  point in searching further. The flag &quot;can_null&quot;    *
+  *  ensures we don&#39;t do  two null moves in a row. Null move is not used  *
+  *  in  the endgame because of the risk of zugzwang.                     *
+  ************************************************************************/
+
+  if ((depth &gt; 2)
+    &amp;&amp; (can_null)
+    &amp;&amp; (!is_pv)
+    &amp;&amp; (eval(alpha, beta, 1) &gt; beta) //should be &gt;=, see post
+    &amp;&amp; (b.PieceMaterial[b.stm] &gt; e.ENDGAME_MAT)
+    &amp;&amp; (!flagInCheck))
+  {
+    char ep_old = b.ep;
+    move_makeNull();
+
+    /********************************************************************
+    *  We use so-called adaptative null move pruning. Size of reduction *
+    *  depends on remaining  depth.                                     *
+    ********************************************************************/
+
+    char R = 2;
+    if (depth &gt; 6) R = 3;
+
+    val = -Search(depth - R - 1, ply, -beta, -beta + 1, NO_NULL, NO_PV);
+
+    move_unmakeNull(ep_old);
+
+    if (time_over) return 0;
+    if (val &gt;= beta) return beta;
+  }
+
+  /************************************************************************
+  *  Decide  if FUTILITY PRUNING  is  applicable. If we are not in check, *
+  *  not searching for a checkmate and eval is below  (alpha - margin),   *
+  *  it  might  mean that searching non-tactical moves at  low depths     *
+  *  is futile, so we set a flag allowing this pruning.                   *
+  ************************************************************************/
+
+  int fmargin[4] = { 0, 200, 300, 500 };
+
+  if (depth &lt;= 3
+    &amp;&amp; !is_pv
+    &amp;&amp; !flagInCheck
+    &amp;&amp;   abs(alpha) &lt; 9000
+    &amp;&amp; eval(alpha, beta, 1) + fmargin[depth] &lt;= alpha)
+    f_prune = 1;
+
+  /* generate moves */
+
+  smove movelist[256];
+  U8 mcount = movegen(movelist, tt_move);
+
+  ReorderMoves(movelist, mcount, ply);
+
+  bestmove = movelist[0].id;
+
+  /************************************************************************
+  *  Now it&#39;s time to loop through the move list.                         *
+  ************************************************************************/
+
+  for (int i = 0; i &lt; mcount; i++) {
+
+    movegen_sort(mcount, movelist, i); // pick the best of untried moves
+    move = movelist[i];
+    move_make(move);
+
+    // filter out illegal moves
+    if (isAttacked(b.stm, b.KingLoc[!b.stm])) {
+      move_unmake(move);
+      continue;
+    }
+    moves_tried++;
+
+    /********************************************************************
+    *  When the futility pruning flag is set, prune moves which do not  *
+    *  give  check and do not change material balance.  Some  programs  *
+    *  prune insufficient captures as well, but that seems too risky.   *
+    ********************************************************************/
+
+    if (f_prune
+      &amp;&amp;     legal_move
+      &amp;&amp; !move_iscapt(move)
+      &amp;&amp; !move_isprom(move)
+      &amp;&amp; !isAttacked(!b.stm, b.KingLoc[b.stm])) {
+      move_unmake(move);
+      continue;
+    }
+
+    reduction_depth = 0;   // this move has not been reduced yet
+    new_depth = depth - 1; // decrease depth by one ply
+
+    /********************************************************************
+    *  Late move reduction. Typically a cutoff occurs on trying one of  *
+    *  the first moves. If it doesn&#39;t, we are probably in an all-node,  *
+    *  which means that all moves will fail low. So we might as well    *
+    *  spare some effort, searching to reduced depth. Of course this is *
+    *  not a foolproof method, but it works more often than not. Still, *
+    *  we  need to exclude certain moves from reduction, in  order  to  *
+    *  filter out tactical moves that may cause a late cutoff.          *
+    ********************************************************************/
+
+    if (!is_pv
+      &amp;&amp; new_depth &gt; 3
+      &amp;&amp; legal_move
+      &amp;&amp; moves_tried &gt; 3
+      &amp;&amp; !isAttacked(!b.stm, b.KingLoc[b.stm])
+      &amp;&amp; !flagInCheck
+      &amp;&amp; (move.from != sd.killers[0][ply].from || move.to != sd.killers[0][ply].to)
+      &amp;&amp; (move.from != sd.killers[1][ply].from || move.to != sd.killers[1][ply].to)
+      &amp;&amp; !move_iscapt(move)
+      &amp;&amp; !move_isprom(move)) {
+
+      /****************************************************************
+      * Real programs tend use more advanced formulas to calculate    *
+      * reduction depth. Typically they calculate it from both        *
+      * remaining depth and move count. Formula used here is very     *
+      * basic and gives only a minimal improvement over uniform       *
+      * one ply reduction, and is included for the sake of complete-  *
+      * ness only.                                                    *
+      ****************************************************************/
+
+      reduction_depth = 1;
+      if (moves_tried &gt; 8) reduction_depth += 1;
+
+      new_depth -= reduction_depth;
+    }
+
+  re_search:
+
+    /********************************************************************
+    *  The code below introduces principal variation search. It  means  *
+    *  that once we are in a PV-node (indicated by IS_PV flag) and  we  *
+    *  have  found a move that raises alpha, we assume that  the  rest  *
+    *  of moves ought to be refuted. This is done  relatively  cheaply  *
+    *  by using  a null-window search centered around alpha.  Only  if  *
+    *  this search fails high, we are forced repeat it with full window.*
+    *                                                                   *
+    *  Understanding the shorthand in the first two lines is a bit      *
+    *  tricky. If alpha has not been raised, we might be either in      *
+    *  a  zero window (scout) node or in an open window (pv)  node,     *
+    *  entered after a scout search failed high. In both cases, we      *
+    *  need to search with the same alpha, the same beta AND the same   *
+    *  node type.                                                       *
+    ********************************************************************/
+
+    if (!raised_alpha)
+      val = -Search(new_depth, ply + 1, -beta, -alpha, DO_NULL, is_pv);
+    else {
+      // first try to refute a move - if this fails, do a real search
+      if (-Search(new_depth, ply + 1, -alpha - 1, -alpha, DO_NULL, NO_PV) &gt; alpha)
+        val = -Search(new_depth, ply + 1, -beta, -alpha, DO_NULL, IS_PV);
+    }
+
+    /********************************************************************
+    *  Sometimes reduced search brings us above alpha. This is unusual, *
+    *  since we expected reduced move to be bad in first place. It is   *
+    *  not certain now, so let&#39;s search to the full, unreduced depth.   *
+    ********************************************************************/
+
+    if (reduction_depth &amp;&amp; val &gt; alpha) {
+      new_depth += reduction_depth;
+      reduction_depth = 0;
+      goto re_search;
+    }
+
+    move_unmake(move);
+
+    /********************************************************************
+    *  If  the  move doesn&#39;t return -INF, it means that  the  King      *
+    *  couldn&#39;t be captured immediately. So the move was legal. In this *
+    *  case we increase the legal_move counter, to look afterwards,     *
+    *  whether there were any legal moves on the board at all.          *
+    ********************************************************************/
+
+    legal_move += (val != -INF);
+
+    if (time_over) return 0;
+
+    /********************************************************************
+    *  We can improve over alpha, so we change the node value together  *
+    *  with  the expected move. Also the raised_alpha flag, needed  to  *
+    *  control PVS, is set. In case of a beta cuoff, when our position  *
+    *  is  so good that the score will not be accepted one ply before,  *
+    *  we return it immediately.                                        *
+    ********************************************************************/
+
+    if (val &gt; alpha) {
+
+      bestmove = movelist[i].id;
+
+      if (val &gt;= beta) {
+
+        /*************************************************************
+        *  On a quiet move update killer moves and history table     *
+        *  in order to enhance move ordering.                        *
+        *************************************************************/
+
+        if (!move_iscapt(move)
+          &amp;&amp; !move_isprom(move)) {
+          setKillers(movelist[i], ply);
+          sd.history[move.from][move.to] += depth*depth;
+
+          /*********************************************************
+          *  With super deep search history table would overflow   *
+          *  - let&#39;s prevent it.                                   *
+          *********************************************************/
+
+          if (sd.history[move.from][move.to] &gt; SORT_KILL) {
+            for (int a = 0; a &lt; 128; a++)
+              for (int b = 0; b &lt; 128; b++) {
+                sd.history[a][b] = sd.history[a][b] / 2;
+              }
+          }
+        }
+        tt_flag = TT_BETA;
+        alpha = beta;
+        break; // no need to search any further
+      }
+
+      raised_alpha = 1;
+      tt_flag = TT_EXACT;
+      alpha = val;
+
+    } // changing the node value is finished
+
+  }   // end of looping through the moves
+
+      /************************************************************************
+      *  Checkmate and stalemate detection: if we can&#39;t find a legal move     *
+      *  in the current position, we test if we are in check. If so, mate     *
+      *  score relative to search depth is returned. If not, we use  draw     *
+      *  evaluation provided by contempt() function.                          *
+      ************************************************************************/
+
+  if (!legal_move) {
+    bestmove = -1;
+
+    if (flagInCheck) alpha = -INF + ply;
+    else               alpha = contempt();
+  }
+
+  /* tt_save() does not save anything when the search is timed out */
+  tt_save(depth, alpha, tt_flag, bestmove);
+
+  return alpha;
+}
+
+void setKillers(smove m, U8 ply) {
+
+  /* if a move isn&#39;t a capture, save it as a killer move */
+  if (m.piece_cap == PIECE_EMPTY) {
+
+    /* make sure killer moves will be different
+    before saving secondary killer move */
+    if (m.from != sd.killers[ply][0].from ||
+      m.to != sd.killers[ply][0].to
+      )
+      sd.killers[ply][1] = sd.killers[ply][0];
+
+    /* save primary killer move */
+    sd.killers[ply][0] = m;
+  }
+}
+
+void ReorderMoves(smove * m, U8 mcount, U8 ply) {
+
+  for (int j = 0; j&lt;mcount; j++) {
+    if ((m[j].from == sd.killers[ply][1].from)
+      &amp;&amp; (m[j].to == sd.killers[ply][1].to)
+      &amp;&amp; (m[j].score &lt; SORT_KILL - 1)) {
+      m[j].score = SORT_KILL - 1;
+    }
+
+    if ((m[j].from == sd.killers[ply][0].from)
+      &amp;&amp; (m[j].to == sd.killers[ply][0].to)
+      &amp;&amp; (m[j].score &lt; SORT_KILL)) {
+      m[j].score = SORT_KILL;
+    }
+  }
+}
+
+int info_currmove(smove m, int nr) {
+
+  switch (mode) {
+  case PROTO_UCI:
+
+    char buffer[64];
+    char move[6];
+
+    algebraic_writemove(m, move);
+    sprintf(buffer, &quot;info depth %d currmove %s currmovenumber %d&quot;, sd.depth, move, nr + 1);
+
+    com_send(buffer);
+  }
+  return 0;
+}
+
+int info_pv(int val) {
+  char buffer[2048];
+  char score[10];
+  char pv[2048];
+
+  if (abs(val) &lt; INF - 2000) {
+    sprintf(score, &quot;cp %d&quot;, val);
+  }
+  else {
+    //the mating value is returned in moves not plies ( thats why /2+1)
+    if (val &gt; 0)
+      sprintf(score, &quot;mate %d&quot;, (INF - val) / 2 + 1);
+    else
+      sprintf(score, &quot;mate %d&quot;, -(INF + val) / 2 - 1);
+  }
+
+  U32 nodes = (U32)sd.nodes;
+  U32 time = gettime() - sd.starttime;
+
+  util_pv(pv);
+
+  if (mode == PROTO_NOTHING)
+    sprintf(buffer, &quot; %2d. %9d  %5d %5d %s&quot;, sd.depth, nodes, time / 10, val, pv);
+  else
+    sprintf(buffer, &quot;info depth %d score %s time %u nodes %u nps %u pv %s&quot;, sd.depth, score, time, nodes, countNps(nodes, time), pv);
+
+  com_send(buffer);
+
+  return 0;
+}
+
+/***********************************************************
+*  countNps() guards against overflow and thus cares  for  *
+*  displaying  correct  nps during longer searches.  Node  *
+*  count is converted from U64 to unsigned int because of  *
+*  some problems with output.                              *
+***********************************************************/
+
+unsigned int countNps(unsigned int nodes, unsigned int time) {
+  if (time == 0) return 0;
+
+  if (time &gt; 20000)
+    return nodes / (time / 1000);
+  else
+    return (nodes * 1000) / time;
+}
+
+/***********************************************************
+*  Checking if the current position has been already       *
+*  encountered on the current search path. Function        *
+*  does NOT check the actual number of repetitions.        *
+***********************************************************/
+
+int isRepetition() {
+
+  for (int i = 0; i &lt; b.rep_index; i++) {
+    if (b.rep_stack[i] == b.hash)
+      return 1;
+  }
+
+  return 0;
+}
+
+/************************************************************
+*  Clearing the history table is needed at the beginning    *
+*  of a search starting from a new position, like at the    *
+*  beginning of a new game.                                 *
+************************************************************/
+
+void clearHistoryTable() {
+  for (int i = 0; i &lt; 128; i++)
+    for (int j = 0; j &lt; 128; j++) {
+      sd.history[i][j] = 0;
+    }
+}
+
+/************************************************************
+* ageHistoryTable() is run between searches  to  decrease   *
+* the  history values used for move sorting. This  causes   *
+* obsolete information to disappear gradually. Clearing     *
+* the table was worse for the move ordering.                *
+************************************************************/
+
+void ageHistoryTable() {
+  for (int i = 0; i &lt; 128; i++)
+    for (int j = 0; j &lt; 128; j++) {
+      sd.history[i][j] = sd.history[i][j] / 8;
+    }
+}
+
+/************************************************************
+*  contempt() returns a draw value (which may be non-zero)  *
+*  relative  to  the side to move and to the  game  stage.  *
+*  This  way  we may make our program play for a  draw  or  *
+*  strive to avoid it.                                      *
+************************************************************/
+
+int contempt() {
+  int value = draw_opening;
+
+  if (b.PieceMaterial[sd.myside] &lt; e.ENDGAME_MAT)
+    value = draw_endgame;
+
+  if (b.stm == sd.myside) return value;
+  else                      return -value;
+}</code></pre>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56647">value &gt; beta</a> by <a href="/Robert_Pope">Robert Pope</a>, <a href="/CCC">CCC</a>, June 10, 2015</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=3056">Static NULL Move</a> by thevinenator, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, December 26, 2016 » <a href="/Reverse_Futility_Pruning">Reverse Futility Pruning</a></li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=3074">NULL Move code question</a> by thevinenator, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, January 27, 2017 » <a href="/Null_Move_Pruning">Null Move Pruning</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=67599&amp;start=2">Re: Debugging a transposition table</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, May 30, 2018</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76574&amp;start=5">Re: Plea for a computerchess beginners forum or FAQ</a> by <a href="/Marcel_Vanthoor">Marcel Vanthoor</a>, <a href="/CCC">CCC</a>, March 09, 2021</li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/CPW-Engine">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=67599&amp;start=2">Re: Debugging a transposition table</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, May 30, 2018<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76574&amp;start=5">Re: Plea for a computerchess beginners forum or FAQ</a> by <a href="/Marcel_Vanthoor">Marcel Vanthoor</a>, <a href="/CCC">CCC</a>, March 09, 2021<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/CPW-Engine_search">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

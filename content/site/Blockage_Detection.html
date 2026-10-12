@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blockage Detection - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Blockage Detection</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Knowledge">Knowledge</a> * <a href="/Pattern_Recognition">Pattern Recognition</a> * Blockage Detection</strong></p>
+<table>
+<tbody>
+<tr>
+<td><p><strong>Blockage Detection</strong>,<br />
+a pattern recognition technique to statically discover <a href="/Pawn_Rams_%28Bitboards%29">rammed positions</a> in <a href="/Pawn_Endgame">pawn endgames</a>, and permanently prevented kings from penetrating into opponent's camp. In those positions material advantage is not sufficient to win such games, otherwise only recognizably by a very deep <a href="/Search">search</a>, when a <a href="/Draw">draw</a> by <a href="/Fifty-move_Rule">fifty-move rule</a> rises the horizon. Best not only applied in <a href="/Leaf_Node">leaf node</a> <a href="/Evaluation">evaluation</a>, but as <a href="/Interior_Node_Recognizer">interior node recognizer</a> within the <a href="/Search">search</a>, a detected blockade either <a href="/Pruning">prunes</a> forward or narrows the <a href="/Window">search window</a>.</p></td>
+<td><p><div class="chess-fen" data-fen="4k3/8/3pPp2/1p1P1P1p/1P5P/5P2/3K4/8"><code>4k3/8/3pPp2/1p1P1P1p/1P5P/5P2/3K4/8</code></div> |- 4k3/8/3pPp2/1p1P1P1p/1P5P/5P2/3K4/8 w - -</p></td>
+</tr>
+</tbody>
+</table>
+
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#search-application">Search Application</a></li>
+<li><a href="#ram-fence">Ram Fence</a></li>
+<li><a href="#blockage-with-dynamic-pawns">Blockage with Dynamic Pawns</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="search-application">Search Application</h2>
+<p>Blockage detection is only applied for the side with advantage, proving its <a href="/Upper_Bound">upper bound</a> is a <a href="/Score">draw score</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>:</p>
+<pre><code>int search(int alpha, int beta, ...) {
+  ...
+  /* blockade detection */
+  if ( beta &gt; DRAW_SCORE ) {
+    if ( blockage() ) {
+      if ( alpha &gt;= DRAW_SCORE )
+        return DRAW_SCORE;
+      beta = DRAW_SCORE; 
+    }    
+  }
+  /* continue regular search */
+}</code></pre>
+<h2 id="ram-fence">Ram Fence</h2>
+<p><em>Following sample assumes White the "winning" side to move</em></p>
+<p>The blockage requires a fence consisting of own fixed pawns and opponent <a href="/Pawn_Attacks_%28Bitboards%29">pawn attacks</a>, to divide the board into two disconnected regions. There are various algorithms to deal with fence detection, and fixed and dynamic pawns, following <a href="/Fill_Algorithms">fill based</a> proposal deals with <a href="/Bitboards">bitboards</a> and should only take none <a href="/Pawn_Levers_%28Bitboards%29">lever pawns</a> into account to prove the fence is impenetrable. First cheap condition is the presence of at least three <a href="/Pawn_Rams_%28Bitboards%29">rams</a>. Further own pawns blocked by own rams are included successively into the fence set, and finally opponent pawn attacks. The precondition, the defending king has at least one vacant square to avoid <a href="/Zugzwang">zugzwang</a> issues, is omitted.</p>
+<p>A <a href="/King_Pattern">king flood</a> starts at its base rank (1st rank for White) over the board (ignoring black passers on the 2rd rank), or all bits below the fence' <a href="/General_Setwise_Operations">least significant one bit</a>, the potential fence as flood stopping obstruction. If, after a few cycles, the flood reaches the above area, the fence is penetrable, and the blockage test failed. Each time, the king flood drowns (undefended) opponent pawns, the ram-fence is re-calculated with the drown pawns "captured". If the flood does not grow anymore, the fence is detected.</p>
+<p><em>see <a href="/General_Setwise_Operations">One Step</a>, <a href="/Population_Count">Population Count</a> and <a href="/BitScan">BitScan</a></em></p>
+<pre><code>bool forms_fence4white(U64 wPawns, U64 bPawns, U64 &amp;fence, U64 &amp;flood) {
+  fence = wPawns &amp; soutOne( bPawns ); 
+  if (popCount( fence ) &lt; 3)
+    return false;
+  fence |= wPawns &amp; soutOne( fence );
+  fence |= wPawns &amp; soutOne( fence );
+  fence |= wPawns &amp; soutOne( fence );
+  fence |= wPawns &amp; soutOne( fence );
+  fence |= bPawnAttacks( bPawns );
+  flood = RANK1BB | allBitsBelow[BitScanForward( fence )];
+  U64 above = allBitsAbove[BitScanReverse( fence )];
+  while ( true ) {
+    U64 temp = flood;
+    flood |= eastOne( flood ) | westOne( flood ); /* Set all 8 neighbors */
+    flood |= soutOne( flood ) | nortOne( flood );
+    flood &amp;= ~fence;
+    if (flood == temp) 
+      break; /* Fill has stopped, blockage? */
+    if (flood &amp; above) /* break through? */
+      return false; /* yes, no blockage */
+    if (flood &amp; bPawns) {
+      bPawns &amp;= ~flood;  /* &quot;capture&quot; undefended black pawns */
+      fence = wPawns &amp; soutOne( bPawns ); 
+      if (popCount( fence ) &lt; 3)
+        return false;
+      fence |= wPawns &amp; soutOne( fence );
+      fence |= wPawns &amp; soutOne( fence );
+      fence |= wPawns &amp; soutOne( fence );
+      fence |= wPawns &amp; soutOne( fence );
+      fence |= bPawnAttacks( bPawns );
+    }
+  } 
+  return true;
+}</code></pre>
+<p>In order to ensure that White cannot penetrate the fence, the white kings must reside in the below flood set, and the defending, black king outside the below set. If all pawns of the "winning" side are rammed without any <a href="/Pawn_Levers_%28Bitboards%29">lever</a>, the most obvious case of a blockage is recognized.</p>
+<pre><code>. . . k . . . .         a a a a a a a a
+. . . . . . . .  above  a a a a a a a a
+. . . . . . . .         a a a a a a a a
+. b . . b . . b         a a a a a a a a
+. w . . w . . w  fence  F_F_F_F_F_F_F_F
+. w . . . . . .         b f b b b b b b
+. . . K . . . .  below  b b b b b b b b
+. . . . . . . .  flood  b b b b b b b b</code></pre>
+<h2 id="blockage-with-dynamic-pawns">Blockage with Dynamic Pawns</h2>
+<p>Otherwise, one has to consider dynamic pawns of the "winning" side, able to <a href="/Pawn_Push">push forward</a> or to <a href="/Captures">capture</a>, in particular above the fence, as member of the fence (levers) and below the fence (from White's point of view). For instance, one (<a href="/Protected_Passed_Pawn">protected</a>) <a href="/Passed_Pawn">passed pawn</a>, with the defending king on its <a href="/Pawn_Spans">front span</a>, is not sufficient to break the blockage. Similar holds for pawns below the fence not able to lever, and becoming rammed if moving forward, or with some care, most <a href="/Backward_Pawn">backward pawns</a>.</p>
+<pre><code>. . . . k . . .         a a a a a a a a
+. . . . . . . .  above  a a a a a a a a
+. . . b w b . .         a a a a a a a a
+. b . w . w . b         a a F_F_F_F_F a
+. w . . . . . w  fence  F_F_F b b b F_F
+. . . . . w . .         b b b b b b b b
+. . . K . . . .  below  b b b b b b b b
+. . . . . . . .  flood  b b b b b b b b</code></pre>
+<p>More complicated cases for a successful blockage detection also with levers involved are elaborated in <a href="/Eli_David">Omid David's</a> et al. 2004 <a href="/ICGA_Journal">ICGA Journal</a> paper <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>, also published as code of <a href="/Chiron">Chiron</a> by <a href="/Ubaldo_Andrea_Farina">Ubaldo Andrea Farina</a> in <a href="/CCC">CCC</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Arthur">Computer Judgment</a></li>
+<li><a href="/Corresponding_Squares">Corresponding Squares</a></li>
+<li><a href="/Draw_Evaluation">Draw Evaluation</a></li>
+<li><a href="/King_Pattern">Flood Fill Algorithm</a></li>
+<li><a href="/Fortress">Fortress</a></li>
+<li><a href="/Interior_Node_Recognizer">Interior Node Recognizer</a></li>
+<li><a href="/Pattern_Recognition">Pattern Recognition</a></li>
+<li><a href="/Chunking">Chunking</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Peter_W._Frey">Peter W. Frey</a>, <a href="/Larry_Atkin">Larry Atkin</a> (<strong>1979</strong>). <em><a href="https://archive.org/stream/byte-magazine-1979-01/1979_01_BYTE_04-01_Life_Algorithms#page/n127/mode/2up">Creating a Chess-Player, Part 4: Thoughts on Strategy</a></em>. In <a href="http://cs.millersville.edu/~liffick/">Blaise W. Liffick</a> (ed.), <a href="https://books.google.com/books/about/The_BYTE_book_of_Pascal.html?id=ofpfQgAACAAJ">The Byte Book of Pascal</a>, pp. 143-155. Byte Publications, also <a href="/Byte_Magazine">BYTE, Vol. 4, No. 1</a></li>
+<li><a href="/Walter_Ravenek">Walter Ravenek</a> (<strong>1995</strong>). <em>Computer Judgment</em>. <a href="/Computer_Chess_Reports">Computer Chess Reports</a>, Vol. 5, Nos. 3+4, pp. 124 » <a href="/Arthur">Computer Judgment</a></li>
+<li><a href="/Eli_David">Omid David</a>, <a href="/Ariel_Felner">Ariel Felner</a>, <a href="/Nathan_S._Netanyahu">Nathan S. Netanyahu</a> (<strong>2004</strong>). <em><a href="http://link.springer.com/chapter/10.1007/11674399_13">Blockage Detection in Pawn Endings</a></em>. <a href="/CG_2004">CG 2004</a>, <a href="http://www.ise.bgu.ac.il/faculty/felner/newsite/publications/blockage.pdf">pdf</a></li>
+<li><a href="/Eli_David">Omid David</a>, <a href="/Ariel_Felner">Ariel Felner</a>, <a href="/Nathan_S._Netanyahu">Nathan S. Netanyahu</a> (<strong>2004</strong>). <em>Blockage Detection in Pawn Endgames</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 27, No. 3</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/DIrf0yWFh-c/hwz26K3gqHAJ">Re: Computer Judgment</a> by <a href="/Walter_Ravenek">Walter Ravenek</a>, <a href="/Computer_Chess_Forums">rgcc</a>, October 25, 1995 » <a href="/Arthur">Computer Judgment</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=269253">Endgame Blockage Positions</a> by <a href="/Eli_David">Omid David</a>, <a href="/CCC">CCC</a>, December 06, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=423308">Jeremiah's Wall Detection</a> by <a href="/Jan_Renze_Steenhuisen">Renze Steenhuisen</a>, <a href="/CCC">CCC</a>, April 28, 2005</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40748">Code of Chiron for Detection of Pawn Blockages</a> by <a href="/Ubaldo_Andrea_Farina">Ubaldo Andrea Farina</a>, <a href="/CCC">CCC</a>, October 13, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41740">To users of Chiron</a> by <a href="/Richard_Vida">Richard Vida</a>, <a href="/CCC">CCC</a>, January 02, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=42385&amp;start=16">Details about Critter 1.4a.</a> by Jesús Muñoz, <a href="/CCC">CCC</a>, February 10, 2012 » <a href="/Critter">Critter</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77768">Fortress detection?</a> by <a href="/Martin_Fierz">Martin Fierz</a>, <a href="/CCC">CCC</a>, July 21, 2021 » <a href="/Checkers">Checkers</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Pattern_Recognition">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Code snippet from <a href="/Eli_David">Omid David</a>, <a href="/Ariel_Felner">Ariel Felner</a>, <a href="/Nathan_S._Netanyahu">Nathan S. Netanyahu</a> (<strong>2004</strong>). <em><a href="http://link.springer.com/chapter/10.1007/11674399_13">Blockage Detection in Pawn Endings</a></em>. <a href="/CG_2004">CG 2004</a>, <a href="http://www.ise.bgu.ac.il/faculty/felner/newsite/publications/blockage.pdf">pdf</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Eli_David">Omid David</a>, <a href="/Ariel_Felner">Ariel Felner</a>, <a href="/Nathan_S._Netanyahu">Nathan S. Netanyahu</a> (<strong>2004</strong>). <em>Blockage Detection in Pawn Endgames</em>. <a href="/ICGA_Journal">ICGA Journal</a>, Vol. 27, No. 3<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=40748">Code of Chiron for Detection of Pawn Blockages</a> by <a href="/Ubaldo_Andrea_Farina">Ubaldo Andrea Farina</a>, <a href="/CCC">CCC</a>, October 13, 2011<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Blockage_Detection">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
