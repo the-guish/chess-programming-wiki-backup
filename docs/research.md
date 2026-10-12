@@ -44,3 +44,20 @@ From a sample of 20 random pages and 12 of their images:
 
 Every file is far below GitHub's 100 MB per-file limit, and the total is well within its recommended repository size (under 1 GB). That is why images are kept in this dedicated repository: it keeps the weight out of unrelated projects.
 The sample was small and leaned towards pages starting with digits, A or C, so treat these numbers as a rough range.
+
+## Result (first full mirror, 11–12 October 2026)
+
+| | Files |
+|---|---|
+| Article pages | 4,252 |
+| `Category:` pages | 774 |
+| `File:` pages (image descriptions and credits) | 2,969 |
+| Images (`/assets/`) | 2,968 |
+| `Special:WhatLinksHere/…` backlink lists | 8,100 |
+| Other (CSS, JS, fonts, search index, `Template:`, `User:`, `Talk:`, …) | 128 |
+| **Total** | **19,191** |
+
+- `content/site/` is 312 MB on disk, and git stores it in about 140 MB.
+- Only one URL failed: `/cdn-cgi/l/email-protection`, a Cloudflare email-obfuscation link that returns 404 and is not wiki content.
+- The crawl ran in 500-request batches over about 9 hours of crawl time. It rode out a roughly 6-minute origin outage (Cloudflare 525/521) without losing anything.
+- Backlink lists were fetched last, because they can be rebuilt from the pages. That makes them the first thing to skip if the archive ever needs slimming down.
