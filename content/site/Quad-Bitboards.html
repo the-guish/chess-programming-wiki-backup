@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quad-Bitboards - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Quad-Bitboards</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * Quad-Bitboards</strong></p>
+<p><strong>Quad-Bitboards</strong> are simply a <a href="/Array">vector</a> of four bitboards for various purposes. Those vectors are suited for <a href="/SIMD_and_SWAR_Techniques">SIMD-instruction sets</a> like <a href="/SSE2">SSE2</a> and may kept for instance in two 128-bit XMM-registers, or <a href="/AVX2">AVX2</a> with one 256-bit YMM-register. <span id="getPiece"></span></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#as-board-definition">As Board-Definition</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#sse2-conversions">SSE2 Conversions</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#to-hex-bitboards">To Hex Bitboards</a></li>
+<li><a href="#to-mailbox">To Mailbox</a></li>
+</ol>
+</details></li>
+<li><a href="#as-sliding-piece-generators">As Sliding Piece Generators</a></li>
+<li><a href="#quotes">Quotes</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="as-board-definition">As Board-Definition</h2>
+<p>One application is to keep one quad-bitboard as compact <a href="/Bitboard_Board-Definition">board-definition</a> with vertical <a href="/Nibble">nibbles</a> as <a href="/Pieces">piece or empty square codes</a>:</p>
+<table>
+<thead>
+<tr>
+<th>idx 10</th>
+<th>6</th>
+<th>6</th>
+<th>6</th>
+<th>6</th>
+<th>5</th>
+<th>5</th>
+<th>5</th>
+<th>5</th>
+<th>5</th>
+<th>~</th>
+<th>0</th>
+<th>...</th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th>0</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>idx 1</td>
+<td>3</td>
+<td>2</td>
+<td>1</td>
+<td>0</td>
+<td>9</td>
+<td>8</td>
+<td>7</td>
+<td>6</td>
+<td>5</td>
+<td>~</td>
+<td>8</td>
+<td>7</td>
+<td>6</td>
+<td>5</td>
+<td>4</td>
+<td>3</td>
+<td>2</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>bb0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>~</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>bb1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>~</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>bb2</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>~</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>bb3</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>~</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr>
+<td></td>
+<td>r</td>
+<td>n</td>
+<td>b</td>
+<td>k</td>
+<td>q</td>
+<td>b</td>
+<td>n</td>
+<td>r</td>
+<td>p</td>
+<td>~</td>
+<td>P</td>
+<td>R</td>
+<td>N</td>
+<td>B</td>
+<td>K</td>
+<td>Q</td>
+<td>B</td>
+<td>N</td>
+<td>R</td>
+</tr>
+</tbody>
+</table>
+<pre><code>bb3    RQK        bb2   NB  K       bb1  P B Q         bb0   black
+1 . . 1 1 . . 1   . 1 1 . 1 1 1 .   . . 1 1 . 1 . .    1 1 1 1 1 1 1 1
+. . . . . . . .   . . . . . . . .   1 1 1 1 1 1 1 1    1 1 1 1 1 1 1 1
+. . . . . . . .   . . . . . . . .   . . . . . . . .    . . . . . . . .
+. . . . . . . .   . . . . . . . .   . . . . . . . .    . . . . . . . .
+. . . . . . . .   . . . . . . . .   . . . . . . . .    . . . . . . . .
+. . . . . . . .   . . . . . . . .   . . . . . . . .    . . . . . . . .
+. . . . . . . .   . . . . . . . .   1 1 1 1 1 1 1 1    . . . . . . . .
+1 . . 1 1 . . 1   . 1 1 . 1 1 1 .   . . 1 1 . 1 . .    . . . . . . . .</code></pre>
+<p>with following arbitrary square codes:</p>
+<table>
+<tbody>
+<tr>
+<td>empty</td>
+<td>square</td>
+<td>0000B</td>
+</tr>
+<tr>
+<td>white</td>
+<td>pawn</td>
+<td>0010B</td>
+</tr>
+<tr>
+<td>white</td>
+<td>knight</td>
+<td>0100B</td>
+</tr>
+<tr>
+<td>white</td>
+<td>bishop</td>
+<td>0110B</td>
+</tr>
+<tr>
+<td>white</td>
+<td>rook</td>
+<td>1000B</td>
+</tr>
+<tr>
+<td>white</td>
+<td>queen</td>
+<td>1010B</td>
+</tr>
+<tr>
+<td>white</td>
+<td>king</td>
+<td>1100B</td>
+</tr>
+<tr>
+<td>black</td>
+<td>pawn</td>
+<td>0011B</td>
+</tr>
+<tr>
+<td>black</td>
+<td>knight</td>
+<td>0101B</td>
+</tr>
+<tr>
+<td>black</td>
+<td>bishop</td>
+<td>0111B</td>
+</tr>
+<tr>
+<td>black</td>
+<td>rook</td>
+<td>1001B</td>
+</tr>
+<tr>
+<td>black</td>
+<td>queen</td>
+<td>1011B</td>
+</tr>
+<tr>
+<td>black</td>
+<td>king</td>
+<td>1101B</td>
+</tr>
+</tbody>
+</table>
+<p>This routine might be used rarely to get a square-centric piece, see also the <a href="/AVX2">AVX2 version</a>:</p>
+<pre><code>int getPiece (const QBB &amp; qbb, enumSquare sq) {
+   return ((qbb.bb[0] &gt;&gt; sq) &amp; 1)
+      + 2*((qbb.bb[1] &gt;&gt; sq) &amp; 1)
+      + 4*((qbb.bb[2] &gt;&gt; sq) &amp; 1)
+      + 8*((qbb.bb[3] &gt;&gt; sq) &amp; 1);
+}</code></pre>
+<p>To get the disjoint bitboards similar to the <a href="/Bitboard_Board-Definition">bitboard board-definition</a> is about some bitwise operations:</p>
+<pre><code>black    = bb0
+occupied =       bb1 | bb2 | bb3
+odd      =       bb1 ^ bb2 ^ bb3  // pawn or knight or rook
+white    = bb0 ^ occupied
+
+bishops  =       bb1 &amp; bb2
+queens   =       bb1       &amp; bb3
+kings    =             bb2 &amp; bb3
+
+pawns    = odd &amp; bb1
+knight   = odd       &amp; bb2
+rooks    = odd             &amp; bb3</code></pre>
+<p>The idea is during <a href="/Make_Move">make</a>/<a href="/Unmake_Move">unmake move</a> to xor the quad-bitboard by from- and to-aspects similar to the <a href="/Zobrist_Hashing">hashkey</a>. This implies the information of the moving and possibly captured piece is coded inside the move structure, as well as special moves like double push (triggering ep), <a href="/Castling">castling</a>, <a href="/En_passant">en passant</a> and <a href="/Promotions">promotions</a>.</p>
+<pre><code>qbb ^= fromTable[move.fromAspects()] ^ toTable[move.toAspects()];</code></pre>
+<p><span id="SSE2Conversions"></span></p>
+<h2 id="sse2-conversions">SSE2 Conversions</h2>
+<h3 id="to-hex-bitboards">To Hex Bitboards</h3>
+<p>A conversion of a quad-bitboard to 16 disjoint bitboards can be done quite efficiently with <a href="/SSE2">SSE2</a> instructions:</p>
+<pre><code>void quad2hexBB(U64 h[], const QBB &amp;s) {
+   __m128i a,b,c,d,e,f, m1;
+   __m128i* p = (__m128i*) &amp;s;
+   a = b = d = p[0];    c = p[1];
+   p     = (__m128i*) h;
+   m1    = _mm_cmpeq_epi8(a, a);        // -1
+   a     = _mm_or_si128  (a, c);
+   d     = _mm_and_si128 (d, c);        // q3 &amp;  q1    :    q2 &amp;  q0
+   e = a = _mm_xor_si128 (a, m1);       //~q3 &amp; ~q1    :   ~q2 &amp; ~q0
+   b     = _mm_xor_si128 (b, d);        //~q3 &amp;  q1    :   ~q2 &amp;  q0
+   f = c = _mm_xor_si128 (c, d);        // q3 &amp; ~q1    :    q2 &amp; ~q0
+   a     = _mm_unpackhi_epi64 (a, a);   //~q3 &amp; ~q1    :~q3 &amp; ~q1
+   e     = _mm_unpacklo_epi64 (e, b);   //   ~q2 &amp;  q0 :   ~q2 &amp; ~q0
+   f     = _mm_unpacklo_epi64 (f, d);   //    q2 &amp;  q0 :    q2 &amp; ~q0
+   b     = _mm_unpackhi_epi64 (b, b);   //~q3 &amp;  q1    :~q3 &amp;  q1
+   c     = _mm_unpackhi_epi64 (c, c);   // q3 &amp; ~q1    : q3 &amp; ~q1
+   d     = _mm_unpackhi_epi64 (d, d);   // q3 &amp;  q1    : q3 &amp;  q1
+   p[0]  = _mm_and_si128 (a, e);        //~q3~q2~q1 q0 :~q3~q2~q1~q0
+   p[1]  = _mm_and_si128 (b, e);        //~q3~q2 q1 q0 :~q3~q2 q1~q0
+   p[2]  = _mm_and_si128 (a, f);        //~q3 q2~q1 q0 :~q3 q2~q1~q0
+   p[3]  = _mm_and_si128 (b, f);        //~q3 q2 q1 q0 :~q3 q2 q1~q0
+   p[4]  = _mm_and_si128 (c, e);        // q3~q2~q1 q0 : q3~q2~q1~q0
+   p[5]  = _mm_and_si128 (d, e);        // q3~q2 q1 q0 : q3~q2 q1~q0
+   p[6]  = _mm_and_si128 (c, f);        // q3 q2~q1 q0 : q3 q2~q1~q0
+   p[7]  = _mm_and_si128 (d, f);        // q3 q2 q1 q0 : q3 q2 q1~q0
+}</code></pre>
+<h3 id="to-mailbox">To Mailbox</h3>
+<p>Converting the 64 vertical <a href="/Nibble">nibbles</a> to a <a href="/8x8_Board">8x8 board</a> is more expensive and should be avoided on the fly, let say once per node.</p>
+<pre><code>void quadBB2Board(char board[], const QBB &amp;quad) {
+   static u64 XMM_ALIGN sq2bb_masks[8] = {
+      0x0101010101010101, 0x0202020202020202,
+      0x0404040404040404, 0x0808080808080808,
+      0x1010101010101010, 0x2020202020202020,
+      0x4040404040404040, 0x8080808080808080,
+   };
+   __m128i t0, t1, t2, t3, b0, b1, b2, b3;
+   __m128i* pm = (__m128i*) sq2bb_masks;
+   __m128i* pq = (__m128i*) &amp;quad;
+   __m128i* pb = (__m128i*) board;
+   // 1. bitboard 0x02:0x01
+   t0    = pq[0];
+   t1    = _mm_unpacklo_epi64(t0, t0);
+   b0    = _mm_and_si128 (t1, pm[0]);
+   b1    = _mm_srli_epi64 ( _mm_and_si128(t1, pm[1]), 2);
+   b2    = _mm_srli_epi64 ( _mm_and_si128(t1, pm[2]), 4);
+   b3    = _mm_srli_epi64 ( _mm_and_si128(t1, pm[3]), 6);
+   // 2. bitboard 0x04:0x02
+   t2    = _mm_unpackhi_epi64(t0, t0);
+   b0    = _mm_or_si128 ( b0, _mm_slli_epi64( _mm_and_si128 (t2, pm[0]), 1));
+   b1    = _mm_or_si128 ( b1, _mm_srli_epi64( _mm_and_si128 (t2, pm[1]), 1));
+   b2    = _mm_or_si128 ( b2, _mm_srli_epi64( _mm_and_si128 (t2, pm[2]), 3));
+   b3    = _mm_or_si128 ( b3, _mm_srli_epi64( _mm_and_si128 (t2, pm[3]), 5));
+   // 3. bitboard 0x08:0x04
+   t0    = pq[1];
+   t1    = _mm_unpacklo_epi64(t0, t0);
+   b0    = _mm_or_si128 ( b0, _mm_slli_epi64( _mm_and_si128 (t1, pm[0]), 2));
+   b1    = _mm_or_si128 ( b1,                 _mm_and_si128 (t1, pm[1])    );
+   b2    = _mm_or_si128 ( b2, _mm_srli_epi64( _mm_and_si128 (t1, pm[2]), 2));
+   b3    = _mm_or_si128 ( b3, _mm_srli_epi64( _mm_and_si128 (t1, pm[3]), 4));
+   // 4. bitboard 0x10:0x08
+   t2    = _mm_unpackhi_epi64(t0, t0);
+   b0    = _mm_or_si128 ( b0, _mm_slli_epi64( _mm_and_si128 (t2, pm[0]), 3));
+   b1    = _mm_or_si128 ( b1, _mm_slli_epi64( _mm_and_si128 (t2, pm[1]), 1));
+   b2    = _mm_or_si128 ( b2, _mm_srli_epi64( _mm_and_si128 (t2, pm[2]), 1));
+   b3    = _mm_or_si128 ( b3, _mm_srli_epi64( _mm_and_si128 (t2, pm[3]), 3));
+   // rotate 8*8 bytes (512 bit) in b0,b1,b2,b3
+   t0    = _mm_srli_epi64 ( _mm_unpackhi_epi64(b0,b0), 1);
+   t1    = _mm_srli_epi64 ( _mm_unpackhi_epi64(b1,b1), 1);
+   t2    = _mm_srli_epi64 ( _mm_unpackhi_epi64(b2,b2), 1);
+   t3    = _mm_srli_epi64 ( _mm_unpackhi_epi64(b3,b3), 1);
+   b0    = _mm_unpacklo_epi8 (b0, t0);
+   b1    = _mm_unpacklo_epi8 (b1, t1);
+   b2    = _mm_unpacklo_epi8 (b2, t2);
+   b3    = _mm_unpacklo_epi8 (b3, t3);
+   t0    = _mm_unpacklo_epi16(b0, b1);
+   t1    = _mm_unpackhi_epi16(b0, b1);
+   t2    = _mm_unpacklo_epi16(b2, b3);
+   t3    = _mm_unpackhi_epi16(b2, b3);
+   pb[0] = _mm_unpacklo_epi32(t0, t2);
+   pb[1] = _mm_unpackhi_epi32(t0, t2);
+   pb[2] = _mm_unpacklo_epi32(t1, t3);
+   pb[3] = _mm_unpackhi_epi32(t1, t3);
+}</code></pre>
+<h2 id="as-sliding-piece-generators">As Sliding Piece Generators</h2>
+<p>Another application is to perform <a href="/Parallel_Prefix_Algorithms">parallel prefix</a> <a href="/Kogge-Stone_Algorithm">Kogge-Stone</a> algorithms with quad-bitboards. That allows to propagate four or up to 15 bitboards with one direction fill.</p>
+<pre><code>qbb.bb[0] = white rooks or queens
+qbb.bb[1] = black rooks or queens
+qbb.bb[2] = black king
+qbb.bb[3] = white king</code></pre>
+<p>Using an appropriate <a href="/Cpp">C++</a> QBB-class with overloaded operators using <a href="/SSE2">SSE2</a>-intrinsics, allows to write it in usual syntax...</p>
+<pre><code>void nortOccl(QBB &amp;gen /* in, out */, U64 pro64) {
+   QBB pro(pro64);
+   gen |= pro &amp; (gen &lt;&lt;  8);
+   pro  = pro &amp; (pro &lt;&lt;  8);
+   gen |= pro &amp; (gen &lt;&lt; 16);
+   pro  = pro &amp; (pro &lt;&lt; 16);
+   gen |= pro &amp; (gen &lt;&lt; 32);
+}</code></pre>
+<h2 id="quotes">Quotes</h2>
+<p>Quote by <a href="/Gerd_Isenberg">Gerd Isenberg</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
+<p><code>A quad-bitboard is simply a dense board-structure, where arbitrary piece-code-nibbles reside vertically in four bitboards. Together with hashkeys (normal and pawnhash), ep and castle states, movecount, reversable movecount, and some more the whole board structure takes 64-bytes - and make/unmake is almost one simdwise "xor/add/and" instruction with delta[moveNr] on that board-structure.</code><br />
+<code>Quad-bitboards with up to 15 arbitrary codes may be used in fill-algorithms, to generate the multiplexed quad-bitboard in one run with one common empty square propagator. But multiplexing and demultiplexing makes it rather hard to use efficiently.</code><br />
+<code>One simpler coding scheme, where each bitboard is a disjoint set, is following:</code></p>
+<p><code>bb0: white rooks or queens</code><br />
+<code>bb1: white king</code><br />
+<code>bb2: black king</code><br />
+<code>bb3: black rooks or queens</code></p>
+<p><code>Now we can fill this quad-bitboard left and right wise (and for the other directions as well). We can aggregate the real sliding attacks for the taboo sets of the opponent king. We can do simdwise leftFill(bb1:bb0) &amp; rightFill(bb3:bb2) and rightFill(bb1:bb0) &amp; leftFill(bb3:bb2) to get inbetween sets of sliders with opponent king. In case of a sliding check (no piece inbetween) we can use this set as possible target set of check-breaking moves. Otherwise we can intersect it with own pieces to get pinned pieces (in total and by direction) or with opposite pieces to get discovered checkers... </code></p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/AVX2">AVX2 Bitboard Permutation</a></li>
+<li><a href="/AVX2">AVX2 Dumb7Fill</a></li>
+<li><a href="/AVX2">AVX2 Knight Attacks</a></li>
+<li><a href="/AVX2">AVX2 Vertical Nibble</a></li>
+<li><a href="/Color_Flipping">Color Flipping</a></li>
+<li><a href="/QBBEngine">QBBEngine</a></li>
+<li><a href="/SSE2">SSE2 Popcnt</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=5859">Quad-bitboards</a> by <a href="/Pradu_Kannan">Pradu</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, November 12, 2006</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62239">Hashing a quadboard from scratch</a> by <a href="/Edoardo_Manino">Edoardo Manino</a>, <a href="/CCC">CCC</a>, November 23, 2016 » <a href="/Hash_Table">Hash Table</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=67328">Quad-bard vs bitboard : is it faster ?</a> by <a href="/Jean-Francois_Romang">Jean-Francois Romang</a>, <a href="/CCC">CCC</a>, May 04, 2018</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://sites.google.com/site/pedonechess/a-didactic-engine">QBBEngine- a didactic engine</a> by <a href="/Fabio_Gobbato">Fabio Gobbato</a> » <a href="/QBBEngine">QBBEngine</a></li>
+<li><a href="/Category:Wes_Montgomery">Wes Montgomery</a> - <a href="https://en.wikipedia.org/wiki/The_Incredible_Jazz_Guitar_of_Wes_Montgomery">Four on Six</a>, <a href="https://en.wikipedia.org/wiki/BBC_Two">BBC Two</a>, <a href="https://en.wikipedia.org/wiki/London">London</a>, May 7, 1965, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p>feat. <a href="https://en.wikipedia.org/wiki/Stan_Tracey">Stan Tracey</a>, <a href="https://en.wikipedia.org/wiki/Jackie_Dougan">Jackie Dougan</a>, <a href="/Category:Rick_Laird">Rick Laird</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/zxTD1XQTcyk" title="YouTube video zxTD1XQTcyk" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=zxTD1XQTcyk">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references/>
+
+<p><strong><a href="/Bitboards">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=5859#p28389">Re: Quad-bitboards</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, November 12, 2006<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Quotes">Quotes</a> · <a href="/Category:Wes_Montgomery">Wes Montgomery</a> · <a href="/Category:Rick_Laird">Rick Laird</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Quad-Bitboards">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

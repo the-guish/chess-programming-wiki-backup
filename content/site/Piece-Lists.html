@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Piece-Lists - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Piece-Lists</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * Piece-Lists</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:300px"><img src="https://upload.wikimedia.org/wikipedia/commons/7/7f/Birds_Swooping_Down_and_Arrows_MET_DT7784.jpg" alt="Paul Klee - Birds Swooping Down and Arrows 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Paul_Klee">Paul Klee</a> - Birds Swooping Down and Arrows <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="/Category:Paul_Klee">Paul Klee</a> - Birds Swooping Down and Arrows, 1919, <a href="https://commons.wikimedia.org/wiki/File:Birds_Swooping_Down_and_Arrows_MET_DT7784.jpg">1</a> <a href="https://en.wikipedia.org/wiki/Wikimedia_Commons">Wikimedia Commons</a>, <a href="https://en.wikipedia.org/wiki/Metropolitan_Museum_of_Art">Metropolitan Museum of Art</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Piece-Lists</strong>,<br />
+<a href="/Linked_List">lists</a> or <a href="/Array">arrays</a> of all up to 32 <a href="/Pieces">pieces</a> (including pawns and king) on the <a href="/Chessboard">board</a>. Likely, <a href="/Pieces">type</a> and <a href="/Color">color</a> of pieces are associated by a certain index range or disjoint lists or arrays. Each element of the list or array for each particular piece associates the <a href="/Squares">square</a> occupied by this piece.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#microchess">MicroChess</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#new-architecture">New Architecture</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#declaration">Declaration</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#piece-list-traversal">Piece List Traversal</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#forward">Forward</a></li>
+<li><a href="#backward">Backward</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#incremental-update">Incremental Update</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#make-moves">Make Moves</a></li>
+<li><a href="#unmake-moves">Unmake Moves</a></li>
+</ol>
+</details></li>
+</ol>
+</details></li>
+<li><a href="#linked-lists">Linked Lists</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1994-">1994 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+<li><a href="#what-links-here">What links here?</a></li>
+</ol>
+</details><h2 id="microchess"><span id="MicroChess"></span>MicroChess</h2>
+<p><a href="/Peter_Jennings">Peter Jennings'</a> board representation in <a href="/MicroChess">MicroChess</a> completely relies on an array of 32 <a href="/Byte">Bytes</a> for each possible piece. Content of the following addresses were either square coordinates in the 0..63 range, or, to indicate a piece was captured and no longer on the board, appropriate values outside that range. After <a href="/Make_Move">make</a>-<a href="/Unmake_Move">unmake</a>, Jennings reversed the board by subtracting coordinates from 63 (octal 077), to keep all nodes searched the same <a href="/Color">color</a>. To alter some bytes inside those addresses with a Monitor program was also the way to enter positions in the first <a href="/6502">6502</a>-based <a href="/MicroChess">MicroChess</a> on a <a href="/KIM-1">KIM-1</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>.</p>
+<table>
+<tbody>
+<tr>
+<td colspan="6"><p>MEMORY LOCATIONS FOR THE PIECES</p></td>
+</tr>
+<tr>
+<td><p>COMPUTER<br />
+PIECES</p></td>
+<td></td>
+<td><p>YOUR<br />
+PIECES</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><p>0050</p></td>
+<td><p>King</p></td>
+<td><p>0060</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><p>0051</p></td>
+<td><p>Queen</p></td>
+<td><p>0061</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><p>0052</p></td>
+<td><p>King Rook</p></td>
+<td><p>0062</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><p>0053</p></td>
+<td><p>Queen Rook</p></td>
+<td><p>0063</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><p>0054</p></td>
+<td><p>King Bishop</p></td>
+<td><p>0064</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><p>0055</p></td>
+<td><p>Queen Bishop</p></td>
+<td><p>0065</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><p>0056</p></td>
+<td><p>King Knight</p></td>
+<td><p>0066</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><p>0057</p></td>
+<td><p>Queen Knight</p></td>
+<td><p>0067</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><p>0058</p></td>
+<td><p>K R Pawn</p></td>
+<td><p>0068</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><p>0059</p></td>
+<td><p>Q R Pawn</p></td>
+<td><p>0069</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><p>005A</p></td>
+<td><p>K N Pawn</p></td>
+<td><p>006A</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><p>005B</p></td>
+<td><p>Q N Pawn</p></td>
+<td><p>006B</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><p>005C</p></td>
+<td><p>K B Pawn</p></td>
+<td><p>006C</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><p>005D</p></td>
+<td><p>Q B Pawn</p></td>
+<td><p>006D</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><p>005E</p></td>
+<td><p>K Pawn</p></td>
+<td><p>006E</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><p>005F</p></td>
+<td><p>Q Pawn</p></td>
+<td><p>006F</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="new-architecture"><span id="NewArchitecture"></span>New Architecture</h2>
+<p>As elaborated in his thesis <em>New Architectures in Computer Chess, Chapter 2 Non-Bitboard Architectures</em> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>, <a href="/Fritz_Reul">Fritz Reul</a> keeps disjoint piece lists in his 32-bit program <a href="/Loop_%28Program%29">Loop Leiden</a>, even disjoint lists for bishops with different <a href="/Color_of_a_Square">square color</a>, for multiple loops per <a href="/Pieces">piece-type</a> and <a href="/Direction">ray-directions</a> for <a href="/Sliding_Pieces">sliding pieces</a> with compact loop bodies with piece specific code, for instance the <a href="/Vector_Attacks">blocker loops</a> in <a href="/Captures">capture</a> <a href="/Move_Generation">generation</a>. For an efficient <a href="/Incremental_Updates">incremental update</a> in <a href="/Make_Move">making</a> and <a href="/Unmake_Move">unmaking moves</a> with <a href="/Origin_Square">from-</a> and <a href="/Target_Square">to-coordinates</a>, an <strong>index board</strong> - like the common piece board, indexed by those square coordinates - keeps piece-type relative indíces to the appropriate piece lists. The following sample demonstrates how rooks are traversed and how the data structure concerning a single move list of white rooks is updated after making and then unmaking two consecutive moves.</p>
+<h3 id="declaration">Declaration</h3>
+<pre><code>int nWhiteRooks; /* counter white rooks */
+int white_rook_list[MAX_ROOKS] ;  /* MAX_ROOKS = 10 */
+...
+int white_index_board[64]; /* or 15x12 board array */</code></pre>
+<h3 id="piece-list-traversal">Piece List Traversal</h3>
+<p>The piece list traversal for instance in <a href="/Move_Generation">move generation</a> is straight forward or backward.</p>
+<h4 id="forward">Forward</h4>
+<pre><code>for (int p = 0; p &lt; nWhiteRooks; ) {
+   fromsquare = white_rook_list[p++];
+   ...
+}</code></pre>
+<h4 id="backward">Backward</h4>
+<pre><code>for (int p = nWhiteRooks; p &gt; 0; ) {
+   fromsquare = white_rook_list[--p];
+   ...
+}</code></pre>
+<h3 id="incremental-update"><span id="IncrementalUpdate"></span>Incremental Update</h3>
+<p><a href="/Incremental_Updates">Incremental update</a> is demonstrated by making Rb5-b8, Ra8xb8 concerning the white rook list and index board, ignoring the black lists and piece array. Since removing a captured piece is done by copying the last piece of the list to fill the gap of the removed piece, but inserting in unmake is done by appending at the end of the list, the piece list of one piece-type may be shuffled in "random" order, yielding in changed <a href="/Move_Ordering">move ordering</a> and <a href="/Static_Exchange_Evaluation">SEE</a> rarely producing different results, since pieces like rook and knight may traversed in different order.</p>
+<h4 id="make-moves"><span id="Make"></span>Make Moves</h4>
+<pre><code>  Initial                             make(Rb5-b8)                        make (xb8)
+                                                                          nWhiteRooks--;
+                                      index = white_index_board[b5];      index  = white_index_board[b8];
+                                      white_index_board[b8] = index;      square = white_rook_list[nWhiteRooks];
+                                      white_rook_list[index] = b8;        white_rook_list[index] = square;
+                                                                          white_index_board[square] = index
+  white_rook_list
+  nWhiteRooks = 2                     nWhiteRooks = 2                     nWhiteRooks = 1                        
+     0    1  ...                         0    1  ...                         0    1  ...                       
+  ┌────┬────┬─~──┐                    ┌────┬────┬─~──┐                    ┌────┬────┬─~──┐                     
+  │ b5 │ h1 │... │                    │ b8 │ h1 │... │                    │ h1 │ h1*│... │                     
+  └────┴────┴─~──┘                    └────┴────┴─~──┘                    └────┴────┴─~──┘                     
+  white_index_board
+  ┌───┬───┬───┬───┬───┬───┬───┬───┐   ┌───┬───┬───┬───┬───┬───┬───┬───┐   ┌───┬───┬───┬───┬───┬───┬───┬───┐    
+8 │   │   │   │   │   │   │   │   | 8 │   │ 0 │   │   │   │   │   │   | 8 │   │ 0*│   │   │   │   │   │   |    
+  ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤    
+7 │   │   │   │   │   │   │   │   | 7 │   │   │   │   │   │   │   │   | 7 │   │   │   │   │   │   │   │   |    
+  ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤    
+6 │   │   │   │   │   │   │   │   | 6 │   │   │   │   │   │   │   │   | 6 │   │   │   │   │   │   │   │   |    
+  ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤    
+5 │   │ 0 │   │   │   │   │   │   | 5 │   │ 0*│   │   │   │   │   │   | 5 │   │ 0*│   │   │   │   │   │   |    
+  ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤    
+4 │   │   │   │   │   │   │   │   | 4 │   │   │   │   │   │   │   │   | 4 │   │   │   │   │   │   │   │   |    
+  ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤    
+3 │   │   │   │   │   │   │   │   | 3 │   │   │   │   │   │   │   │   | 3 │   │   │   │   │   │   │   │   |    
+  ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤    
+2 │   │   │   │   │   │   │   │   | 2 │   │   │   │   │   │   │   │   | 2 │   │   │   │   │   │   │   │   |    
+  ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤    
+1 │   │   │   │   │   │   │   │ 1 | 1 │   │   │   │   │   │   │   │ 1 | 1 │   │   │   │   │   │   │   │ 0 |    
+  └───┴───┴───┴───┴───┴───┴───┴───┘   └───┴───┴───┴───┴───┴───┴───┴───┘   └───┴───┴───┴───┴───┴───┴───┴───┘    
+    a   b   c   d   e   f   g   h       a   b   c   d   e   f   g   h       a   b   c   d   e   f   g   h      
+
+* no longer valid indices     </code></pre>
+<h4 id="unmake-moves"><span id="Unmake"></span>Unmake Moves</h4>
+<pre><code>                                      unmake(xb8)                         unmake(Rb5-b8)
+
+                                      white_rook_list[nWhiteRooks] = b8;  index = white_index_board[b8];
+                                      white_index_board[b8]=nWhiteRooks;  white_index[b5] = index;
+                                      nWhiteRooks++;                      white_rook_list[index] = b5;
+
+  nWhiteRooks = 1                     nWhiteRooks = 2                     nWhiteRooks = 2                        
+     0    1  ...                         0    1  ...                         0    1  ...                       
+  ┌────┬────┬─~──┐                    ┌────┬────┬─~──┐                    ┌────┬────┬─~──┐                     
+  │ h1 │ ...│... │                    │ h1 │ b8 │... │                    │ h1 │ b5 │... │                     
+  └────┴────┴─~──┘                    └────┴────┴─~──┘                    └────┴────┴─~──┘                     
+  white_index_board
+  ┌───┬───┬───┬───┬───┬───┬───┬───┐   ┌───┬───┬───┬───┬───┬───┬───┬───┐   ┌───┬───┬───┬───┬───┬───┬───┬───┐    
+8 │   │ 0*│   │   │   │   │   │   | 8 │   │ 1 │   │   │   │   │   │   | 8 │   │ 1*│   │   │   │   │   │   |    
+  ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤    
+7 │   │   │   │   │   │   │   │   | 7 │   │   │   │   │   │   │   │   | 7 │   │   │   │   │   │   │   │   |    
+  ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤    
+6 │   │   │   │   │   │   │   │   | 6 │   │   │   │   │   │   │   │   | 6 │   │   │   │   │   │   │   │   |    
+  ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤    
+5 │   │ 0*│   │   │   │   │   │   | 5 │   │ 0*│   │   │   │   │   │   | 5 │   │ 1 │   │   │   │   │   │   |    
+  ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤    
+4 │   │   │   │   │   │   │   │   | 4 │   │   │   │   │   │   │   │   | 4 │   │   │   │   │   │   │   │   |    
+  ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤    
+3 │   │   │   │   │   │   │   │   | 3 │   │   │   │   │   │   │   │   | 3 │   │   │   │   │   │   │   │   |    
+  ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤    
+2 │   │   │   │   │   │   │   │   | 2 │   │   │   │   │   │   │   │   | 2 │   │   │   │   │   │   │   │   |    
+  ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤   ├───┼───┼───┼───┼───┼───┼───┼───┤    
+1 │   │   │   │   │   │   │   │ 0 | 1 │   │   │   │   │   │   │   │ 0 | 1 │   │   │   │   │   │   │   │ 0 |    
+  └───┴───┴───┴───┴───┴───┴───┴───┘   └───┴───┴───┴───┴───┴───┴───┴───┘   └───┴───┴───┴───┴───┴───┴───┴───┘    
+    a   b   c   d   e   f   g   h       a   b   c   d   e   f   g   h       a   b   c   d   e   f   g   h 
+
+* no longer valid indices</code></pre>
+<h2 id="linked-lists">Linked Lists</h2>
+<p>Some programs apply <a href="/Linked_List">linked lists</a> instead of arrays for an efficient removal and insertion of pieces while making or unmaking captures. Sample declaration and code was proposed by <a href="/Daniel_Shawul">Daniel Shawul</a> in <a href="/CCC">CCC</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/0x88">0x88</a></li>
+<li><a href="/Bitboards">Bitboards</a></li>
+<li><a href="/Piece-Sets">Piece-Sets</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Dietrich_Prinz">Dietrich Prinz</a> (<strong>1952</strong>). <em>Robot Chess</em>. Research, Vol. 6, reprinted 1988 in <a href="/Computer_Chess_Compendium">Computer Chess Compendium</a></li>
+<li><a href="/Alex_Bell">Alex Bell</a> (<strong>1972</strong>). <em><a href="http://www.chilton-computing.org.uk/acl/literature/books/gamesplaying/overview.htm">Games Playing with Computers</a></em>. <a href="https://en.wikipedia.org/wiki/Allen_%26_Unwin">Allen &amp; Unwin</a>, ISBN-13: 978-0080212227</li>
+<li><a href="/Peter_Jennings">Peter Jennings</a> (<strong>1976</strong>). <em><a href="http://www.computerhistory.org/chess/full_record.php?iid=doc-431614f6d8478">MicroChess, a Chess playing program for the 6502 Microcomputer</a></em>. <a href="http://archive.computerhistory.org/projects/chess/related_materials/text/4-1.MicroChess_%20Manual_for_6502.Micro-Ware/MicroChessManual.PETER_JENNINGS.062303071.sm.pdf">pdf</a>, Courtesy of <a href="/Peter_Jennings">Peter Jennings</a>, <a href="/The_Computer_History_Museum">The Computer History Museum</a></li>
+<li><a href="/Fritz_Reul">Fritz Reul</a> (<strong>2009</strong>). <em>New Architectures in Computer Chess</em>. Ph.D. Thesis, <a href="https://pure.uvt.nl/ws/files/1098572/Proefschrift_Fritz_Reul_170609.pdf">pdf</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1994-">1994 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/group/gnu.chess/browse_frm/thread/a6b1257a1c386acf">Speed up UpdatePieceList</a> by <a href="/Vincent_Diepeveen">Vincent Diepeveen</a>, <a href="/GNU_Chess">gnu.chess</a>, April 18, 1994</li>
+<li><a href="http://www.stmintz.com/ccc/index.php?id=21856">piece list possibilities</a> by <a href="/Tom_Kerrigan">Tom Kerrigan</a>, <a href="/CCC">CCC</a>, July 07, 1998</li>
+<li><a href="http://www.stmintz.com/ccc/index.php?id=22472">is the "dead bit" a good idea?</a> by <a href="/Tom_Kerrigan">Tom Kerrigan</a>, <a href="/CCC">CCC</a>, July 20, 1998</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="http://www.stmintz.com/ccc/index.php?id=125774">Re: C or C++ for Chess Programming?</a> by <a href="/Dan_Newman">Dan Newman</a>, <a href="/CCC">CCC</a>, August 23, 2000</li>
+<li><a href="http://www.stmintz.com/ccc/index.php?id=287682">"Piece List" - Administration?</a> by Axel Grüttner, <a href="/CCC">CCC</a>, March 03, 2003</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=516">Two questions for bitboard experts</a> by <a href="/Tord_Romstad">Tord Romstad</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, November 06, 2004 » <a href="/Bitboards">Bitboards</a>, <a href="/Square_Attacked_By">In Between</a></li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=3110">Piece-list representation</a> by <a href="/Alessandro_Scotti">Alessandro Scotti</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, July 17, 2005</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=23498">Piece List questions</a> by Andrew Short, <a href="/CCC">CCC</a>, September 04, 2008</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=31776">GetSmallestAttacker() in 16x12 board representation</a> by metax, <a href="/CCC">CCC</a>, January 17, 2010 » <a href="/Static_Exchange_Evaluation">Static Exchange Evaluation</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=468678&amp;t=43971">Re: Is there such a thing as branchless move generation?</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, June 10, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57588">Fast lookup of pieces for move generation without bitboards</a> by <a href="/Shawn_Chidester">Shawn Chidester</a>, <a href="/CCC">CCC</a>, September 10, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63126">PieceLists ?</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, February 10, 2017</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69364">piece lists advantage with bit-boards?</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, December 24, 2018</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69364&amp;start=12">Re: piece lists advantage with bit-boards?</a> by <a href="/Ronald_de_Man">Ronald de Man</a>, <a href="/CCC">CCC</a>, December 26, 2018 » <a href="/Stockfish">Stockfish</a>, <a href="/AsmFish">asmFish</a></p>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=77511">PieceList in older versions of Glaurung Chess Engine</a> by shahil4242, <a href="/CCC">CCC</a>, June 19, 2021 » <a href="/Glaurung">Glaurung</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=77511&amp;start=2">Re: PieceList in older versions of Glaurung Chess Engine</a> by <a href="/Tord_Romstad">Tord Romstad</a>, <a href="/CCC">CCC</a>, June 19, 2021</p>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="http://www.chilton-computing.org.uk/acl/literature/books/gamesplaying/p003.htm">Chapter 3: Board Games - 3.1 CHESS</a> from <a href="/Alex_Bell">Alex Bell</a> (<strong>1972</strong>). <em><a href="http://www.chilton-computing.org.uk/acl/literature/books/gamesplaying/overview.htm">Games Playing with Computers</a></em>. <a href="https://en.wikipedia.org/wiki/Allen_%26_Unwin">Allen &amp; Unwin</a>, ISBN-13: 978-0080212227</li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<h2 id="what-links-here">What links here?</h2>
+<p><strong><a href="/Board_Representation">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Peter_Jennings">Peter Jennings</a> (<strong>1976</strong>). <em><a href="http://www.computerhistory.org/chess/full_record.php?iid=doc-431614f6d8478">MicroChess, a Chess playing program for the 6502 Microcomputer</a></em>. <a href="http://archive.computerhistory.org/projects/chess/related_materials/text/4-1.MicroChess_%20Manual_for_6502.Micro-Ware/MicroChessManual.PETER_JENNINGS.062303071.sm.pdf">pdf</a>, Courtesy of <a href="/Peter_Jennings">Peter Jennings</a>, <a href="/The_Computer_History_Museum">The Computer History Museum</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Fritz_Reul">Fritz Reul</a> (<strong>2009</strong>). <em>New Architectures in Computer Chess</em>. Ph.D. Thesis, <em>Chapter 2 Non-Bitboard Architectures</em><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=468678&amp;t=43971">Re: Is there such a thing as branchless move generation?</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, June 10, 2012<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Paul_Klee">Paul Klee</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Piece-Lists">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

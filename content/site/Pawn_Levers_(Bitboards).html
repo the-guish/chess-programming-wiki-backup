@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pawn Levers (Bitboards) - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Pawn Levers (Bitboards)</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * <a href="/Pawn_Pattern_and_Properties">Pawn Pattern and Properties</a> * Pawn Levers</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:200px"><a href="http://chgs.elevator.umn.edu/asset/viewAsset/57f3b6787d58ae5f74bf8ba9#57f3b6d77d58ae5574bf8bbf" target="_blank" rel="noopener noreferrer"><img src="/assets/TotheRight.jpg" alt="Samuel Bak - To The Right 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Samuel_Bak">Samuel Bak</a> - To The Right <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://chgs.elevator.umn.edu/asset/viewAsset/57f3b6787d58ae5f74bf8ba9#57f3b6d77d58ae5574bf8bbf">Chess in the Art of Samuel Bak</a>, , <a href="http://chgs.elevator.umn.edu/">Center for Holocaust &amp; Genocide Studies</a>, <a href="/University_of_Minnesota">University of Minnesota</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Pawn Lever</strong>,<br />
+opposing <a href="/Pawn">pawns</a> in contact that can <a href="/Captures">capture</a> each other. In chess the term lever is also used as <strong>option</strong> to attack an opposing pawn by a <a href="/Pawn_Push">push</a> or <a href="/Pawn_Push">double push</a>. In <em>Pawn Power in Chess</em> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>, <a href="/Hans_Kmoch">Hans Kmoch</a> classified levers in the following way <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>:</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#lever-classification">Lever Classification</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#east-and-west-levers">East and West Levers</a></li>
+<li><a href="#inner-outer-and-center-levers">Inner, Outer and Center Levers</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="lever-classification">Lever Classification</h2>
+<ul>
+<li><strong>Center lever</strong> - A lever wholly within the two center files.</li>
+<li><strong>Chain lever</strong> - Adjacent levers in a diagonal formation, where the respective headpawns attack the base of the opposing chain, e.g., f5, g4 vs. g6, h5. Produces passed pawns.</li>
+<li><strong>Fork lever</strong> - A lever attacking two units at once (can include a piece).</li>
+<li><strong>Inner Lever</strong> - A lever where the capture would move toward the center.</li>
+<li><strong>Loose lever</strong> - A lever where each side has the option of capturing or bypassing.</li>
+<li><strong>Mute chain lever</strong> - A chain lever in which the bases of the opposing pawn chains are not attacked, e.g., a5, b4, c3 vs. a7, b6, c5. Doesn't produce passers.</li>
+<li><strong>Outer lever</strong> - A lever where the capture would move away from the center.</li>
+<li><strong>Tight lever</strong> - A lever including a ram, that offers only one side the option of both capture and bypass, e.g., c4, d4 vs. d5, e6.</li>
+</ul>
+<p><em>Working in the bitboard centric world to determine pawn related pattern set-wise</em>.</p>
+<h3 id="east-and-west-levers">East and West Levers</h3>
+<p>We define lever direction by the two horizontal <a href="/Pawn_Attacks_%28Bitboards%29">attack</a> directions of the pawn, not where it comes from if capturing. Whites east lever implies blacks west lever and vice versa:</p>
+<pre><code>whites east lever   whites west lever
+is blacks west      is blacks east
+. . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .
+. . . b . . . .     . . . b . . . .
+. . w . . . . .     . . . . w . . .
+. . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .</code></pre>
+<p>Keeping disjoint west- or east levers...</p>
+<p><em>Code is based on <a href="/Pawn_Attacks_%28Bitboards%29">Pawn Attacks (Bitboards)</a> and <a href="/Pawn_Pushes_%28Bitboards%29">Pawn Pushes (Bitboards)</a>.</em></p>
+<pre><code>U64 wEastLever(U64 wpawns, U64 bpawns) {
+   return wpawns &amp; bPawnWestAttacks(bpawns);
+}
+
+U64 wWestLever(U64 wpawns, U64 bpawns) {
+   return wpawns &amp; bPawnEastAttacks(bpawns);
+}
+
+U64 wAnyLever(U64 wpawns, U64 bpawns) {
+   return wEastLever(wpawns, bpawns)
+ wWestLever(wpawns, bpawns);
+}</code></pre>
+<p>... makes it easier to decide about inner or outer levers.</p>
+<p>If it is about black levers, we can calculate them accordantly. On the other hand, if we already calculated white levers, we may simply shift them back since wraps are already considered:</p>
+<pre><code>bEastLever = wWestLever &lt;&lt; 7;
+bWestLever = wEastLever &lt;&lt; 9</code></pre>
+<h3 id="inner-outer-and-center-levers">Inner, Outer and Center Levers</h3>
+<p>Whites inner levers imply black outer levers and vice versa. Inner levers are usually more advantageous than outer levers.</p>
+<pre><code>whites inner lever  whites outer lever
+is blacks outer     is blacks inner
+. . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .
+. . b . . . b .     . b . . . . . b
+. w . . . . . w     . . w . . . w .
+. . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .
+
+U64 wInnerLever(U64 wpawns, U64 bpawns) {
+   const U64 abcFiles = C64(0x0707070707070707);
+   const U64 fghFiles = C64(0xE0E0E0E0E0E0E0E0);
+   return ( wEastLever(wpawns, bpawns) &amp; abcFiles )
+ ( wWestLever(wpawns, bpawns) &amp; fghFiles );
+}
+
+U64 wOuterLever(U64 wpawns, U64 bpawns) {
+   const U64 bcdFiles = C64(0x0E0E0E0E0E0E0E0E);
+   const U64 efgFiles = C64(0x7070707070707070);
+   return ( wEastLever(wpawns, bpawns) &amp; efgFiles )
+ ( wWestLever(wpawns, bpawns) &amp; bcdFiles );
+}
+
+U64 wCenterLever(U64 wpawns, U64 bpawns) {
+   const U64 dFile = C64(0x0808080808080808);
+   const U64 eFile = C64(0x1010101010101010);
+   return ( wEastLever(wpawns, bpawns) &amp; dFile )
+ ( wWestLever(wpawns, bpawns) &amp; eFile );
+}</code></pre>
+<p>with similar code for black levers.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Defended_Pawns_%28Bitboards%29">Defended Pawns (Bitboards)</a></li>
+<li><a href="/Pawn_Attacks_%28Bitboards%29">Pawn Attacks (Bitboards)</a></li>
+<li><a href="/Pawn_Rams_%28Bitboards%29">Pawn Rams (Bitboards)</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Lever">Lever from Wikipedia</a></li>
+<li><a href="https://www.chess.com/forum/view/chess-equipment/pawn-power-in-chess-by-hans-kmoch-glossary-of-terms">Pawn Power in Chess by Hans Kmoch - Glossary of Terms - Chess Forums</a> - Chess.com</li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Pawn_Pattern_and_Properties">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Hans_Kmoch">Hans Kmoch</a> (<strong>1959, 1990</strong>). <em>Pawn Power in Chess</em>. New York: Dover, 1990. Previous ed.: New York: McKay, 1959. ISBN 0-486-26486-6<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://www.chess.com/forum/view/chess-equipment/pawn-power-in-chess-by-hans-kmoch-glossary-of-terms">Pawn Power in Chess by Hans Kmoch - Glossary of Terms - Chess Forums</a> - Chess.com<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Samuel_Bak">Samuel Bak</a> · <a href="/Category:Hans_Kmoch">Hans Kmoch</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Pawn_Levers_(Bitboards)">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

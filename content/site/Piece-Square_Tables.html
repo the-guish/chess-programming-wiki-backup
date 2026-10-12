@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Piece-Square Tables - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Piece-Square Tables</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Evaluation">Evaluation</a> * Piece-Square Tables</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="http://www.artnet.com/magazineus/reviews/davis/davis11-1-05_detail.asp?picnum=2" target="_blank" rel="noopener noreferrer"><img src="/assets/CageChessPieces.jpg" alt="John Cage, Chess Pieces, ca. 1944 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:John_Cage">John Cage</a>, Chess Pieces, ca. 1944 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://www.artnet.com/magazineus/reviews/davis/davis11-1-05_detail.asp?picnum=2">John Cage - Chess Pieces, Ca. 1944</a>, Courtesy <a href="https://johncagetrust.blogspot.com/">The John Cage Trust</a> from <a href="http://www.artnet.com/magazineus/reviews/davis/davis11-1-05.asp">artnet Magazine - We Are Duchampians</a> by Ben Davis<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Piece-Square Tables</strong>,<br />
+a simple way to assign values to specific <a href="/Pieces">pieces</a> on specific <a href="/Squares">squares</a>. A table is created for each piece of each <a href="/Color">color</a>, and values assigned to each square. This scheme is fast, since the evaluation term from the piece square tables can be <a href="/Incremental_Updates">incrementally updated</a> as <a href="/Moves">moves</a> are <a href="/Make_Move">made</a> and <a href="/Unmake_Move">unmade</a> in the <a href="/Search_Tree">search tree</a>. Because of that speed, piece-square tables are of great help when conducting <a href="/Lazy_Evaluation">lazy evaluation</a>.</p>
+<p>The same technique can be used for a more subtle evaluation terms, instead of one fixed value for, say, an <a href="/Isolated_Pawn">isolated pawn</a>. It is also possible to use piece-square tables for <a href="/Move_Ordering">move ordering</a>, though <a href="/History_Heuristic">history heuristic</a> tends to perform better. Some programs, like <a href="/Rebel">Rebel</a>, use the combination of the two <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>.</p>
+<p><span id="MultipleTables"></span></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#multiple-tables">Multiple Tables</a></li>
+<li><a href="#pre-processing">Pre-processing</a></li>
+<li><a href="#examples">Examples</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1996-">1996 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="multiple-tables">Multiple Tables</h2>
+<p>Most modern programs, influenced by <a href="/Fruit">Fruit</a>, use two sets of tables. One for the <a href="/Opening">opening</a> of the game and another for the <a href="/Endgame">endgame</a>. The final evaluation is then <a href="/Tapered_Eval">interpolated</a> between these two based on <a href="/Game_Phases">game stage</a> (often <a href="/Material">material</a> on the board). This allows for changes in material as well, since the material part of the evaluation can also be stored in these tables. Using two tables also lets pieces change in evaluation as the game proceeds. For example, <a href="/Pawn">pawns</a> can gain in value in the endgame using this method. <span id="Preprocessing"></span></p>
+<h2 id="pre-processing">Pre-processing</h2>
+<p>Older programs, running on slow hardware and reaching low depths, used an <a href="/Oracle">oracle approach</a> to speed up their evaluation by initializing the piece-square tables at the <a href="/Root">beginning of each search</a>, taking into account complex characteristics of position, influence of <a href="/Pawn_Structure">pawn structure</a>, distance to the enemy king etc <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>. Pre-processing, also dubbed <strong>Pre Scan Heuristics</strong> as applied in <a href="/David_Kittinger">Kittinger</a> programs <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>, most notably the <a href="/Super_Constellation">Super Constellation</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>, were used by <a href="/Kaare_Danielsen">Kaare Danielsen</a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>, <a href="/Richard_Lang">Richard Lang</a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>, <a href="/Don_Dailey">Don Dailey</a>, who even developed a little language so that <a href="/Larry_Kaufman">Larry Kaufman</a> could express evaluation concepts in a more natural way <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>, <a href="/Chrilly_Donninger">Chrilly Donninger</a> with <a href="/Nimzo">Nimzo 3</a>, and <a href="/Frans_Morsch">Frans Morsch</a> and <a href="/Mathias_Feist">Mathias Feist</a> with <a href="/Fritz">Fritz 3</a>, to name a few, the latter even with user modifiable rules or tables. However, the idea already originated from the program <a href="/Tech">Tech</a> by <a href="/James_Gillogly">James Gillogly</a> in the late 1960's <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a>.</p>
+<p>With today's search depth this approach seems to be impractical, since the difference between the root and leaf position may be very big. There also might be a problem with re-using hash scores from the previous entries. About the only recent chess program that sticks with pre-processing for good or bad is <a href="/RomiChess">RomiChess</a> <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a> <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a>.</p>
+<h2 id="examples">Examples</h2>
+<p>Material and piece-square tables alone are enough for a program to play a semi-decent game of chess. Indeed, <a href="/Tomasz_Michniewski">Tomasz Michniewski</a> advocated a method of testing requiring all the tested programs to have identical, simplistic evaluation function, so that only search and efficiency issues would influence the result. One such tournament has been carried out in Poland. <a href="/Ronald_Friederich">Ronald Friederich</a> improved this approach using a <a href="/Tapered_Eval">Tapered Eval</a> and Texel's tuning method as applied in <a href="/RofChade">RofChade</a> and <a href="/PeSTO">PeSTO</a>.</p>
+<ul>
+<li><a href="/Simplified_Evaluation_Function">Simplified Evaluation Function</a></li>
+<li>PeSTO's Evaluation Function</li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Center_Distance">Center Distance</a></li>
+<li><a href="/Center_Manhattan-Distance">Center Manhattan-Distance</a></li>
+<li><a href="/Rookie">Evaluation in Rookie 2.0</a></li>
+<li><a href="/Evaluation_of_Pieces">Evaluation of Pieces</a></li>
+<li><a href="/Game_Phases">Game Phases</a></li>
+<li><a href="/Material">Material</a></li>
+<li><a href="/Mop-up_Evaluation">Mop-up Evaluation</a></li>
+<li><a href="/Oracle">Oracle</a></li>
+<li><a href="/Space">Space</a></li>
+<li><a href="/Tapered_Eval">Tapered Eval</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Jack_Good">Jack Good</a> (<strong>1968</strong>). <em>A Five-Year Plan for Automatic Chess - Appendix F. The Value of the Pieces and Squares</em>. <a href="http://www.doc.ic.ac.uk/~shm/MI/mi2.html">Machine Intelligence Vol. 2</a></li>
+<li><a href="/Don_Beal">Don Beal</a>, <a href="/Martin_C._Smith">Martin C. Smith</a> (<strong>1999</strong>). <em>Learning Piece-Square Values using Temporal Differences.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 22, No. 4</a></li>
+<li><a href="/Jun_Nagashima">Jun Nagashima</a>, <a href="/Masahumi_Taketoshi">Masahumi Taketoshi</a>, <a href="/Yoichiro_Kajihara">Yoichiro Kajihara</a>, <a href="/Tsuyoshi_Hashimoto">Tsuyoshi Hashimoto</a>, <a href="/Hiroyuki_Iida">Hiroyuki Iida</a> (<strong>2002</strong>). <em><a href="http://ci.nii.ac.jp/naid/110006381103">An Efficient Use of Piece-Square Tables in Computer Shogi</a></em>.</li>
+<li><a href="/Sacha_Droste">Sacha Droste</a>, <a href="/Johannes_Fürnkranz">Johannes Fürnkranz</a> (<strong>2008</strong>). <em>Learning of Piece Values for Chess Variants.</em> Technical Report TUD–KE–2008-07, Knowledge Engineering Group, <a href="/Darmstadt_University_of_Technology">TU Darmstadt</a>, <a href="http://www.ke.tu-darmstadt.de/publications/reports/tud-ke-2008-07.pdf">pdf</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1996-">1996 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/4e27d53cd9b6cc5e">Re:Rebel Transposition Table discussion</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Computer_Chess_Forums">rgcc</a>, April 18, 1996, <em>about clearing <a href="/Transposition_Table">TT</a> if using a preprocessor</em>.</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/d962cff95d967c3">The Diep Home page (more correction needed)</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/Computer_Chess_Forums">rgcc</a>, January 21, 1997</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/d67609b6c2e3063d">Question about prescan and evaluating in Crafty</a> by Willem Broekema, <a href="/Computer_Chess_Forums">rgcc</a>, January 07, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=18179">What is "pre-processing"</a> by Howard Exner, <a href="/CCC">CCC</a>, May 07, 1998</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/ce25565232355c61">Preprocessing vs leaf evaluating - any preprocessors left?</a> by <a href="/Tom_King">Tom King</a>, <a href="/Computer_Chess_Forums">rgcc</a>, July 05, 1998</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=95525">Preprocessor blues?</a> by Ernst Walet, <a href="/CCC">CCC</a>, February 07, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=132894">Re: What is Prescan Heuristics ??</a> by <a href="/Vincent_Diepeveen">Vincent Diepeveen</a>, <a href="/CCC">CCC</a>, October 13, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=304684">Program settings (Re: Programmers Should Take A Cue From Chessmaster)</a> by <a href="/Albert_Bertilsson">Albert Bertilsson</a>, <a href="/CCC">CCC</a>, July 04, 2003 » <a href="/Sharper">Sharper</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=21281">Pieze/square tables</a> by <a href="/Fermin_Serrano">Fermin Serrano</a>, <a href="/CCC">CCC</a>, May 21, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=29825">Determining values for piece-square tables.</a> by <a href="/Mike_Leany">Mike Leany</a>, <a href="/CCC">CCC</a>, September 21, 2009</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=37191">dynamically modified evaluation function</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, December 20, 2010</li>
+</ul>
+<p><strong>2011</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38766">Move ordering by PST</a> by <a href="/Onno_Garms">Onno Garms</a>, <a href="/CCC">CCC</a>, April 16, 2011 » <a href="/History_Heuristic">History Heuristic</a>, <a href="/Move_Ordering">Move Ordering</a>, <a href="/Onno">Onno</a></li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=1535">Questions for BB about Rybka PST = Fruit PST</a> by <a href="/Ed_Schroder">Rebel</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, August 4, 2011 » <a href="/Rybka_Controversy">Rybka Controversy</a></li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=22572">PST Calculation</a> by <a href="/Miguel_A._Ballicora">michiguel</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, August 5, 2011</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=22635">Fruit and Crafty Bishop PSTs</a> by <a href="/Miguel_A._Ballicora">michiguel</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, August 12, 2011 <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a> <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a></li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=22642">A small detail about additive constants to PSTs</a> by <a href="/Chris_Whittington">Trotsky</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, August 13, 2011</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=1552">Fruit 1.0 PST</a> by BB+ (<a href="/Mark_Watkins">Mark Watkins</a>), <a href="/Computer_Chess_Forums">OpenChess Forum</a>, August 13, 2011</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=22662">About PSQ tables</a> by <a href="/Richard_Vida">Richard Vida</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, August 15, 2011</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=22669">Take the Fruit Bishop tables...</a> by <a href="/Miguel_A._Ballicora">michiguel</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, August 16, 2011</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=1570">PST of Fruit 2.1 and Rybka 1.0 Beta</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, August 22, 2011</li>
+</ul>
+<p><strong>2012</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=42167">Incremental or non-incremental PST evaluation calcs</a> by Mark Pearce, <a href="/CCC">CCC</a>, January 26, 2012 » <a href="/Incremental_Updates">Incremental Updates</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=475603&amp;t=44507">Re: Some thoughts on QS</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, July 25, 2012 » <a href="/Quiescence_Search">Quiescence Search</a></li>
+</ul>
+<p><strong>2013</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48102">On history and piece square tables</a> by <a href="/Evert_Glebbeek">Evert Glebbeek</a>, <a href="/CCC">CCC</a>, May 24, 2013 » <a href="/History_Heuristic">History Heuristic</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50294">PSQ tables depending on king sides, pawn patterns etc.</a> by <a href="/Sergei_Markoff">Sergei S. Markoff</a>, <a href="/CCC">CCC</a>, December 01, 2013</li>
+</ul>
+<p><strong>2014</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50840">Piece/square table challenge</a> by <a href="/Pawel_Koziol">Pawel Koziol</a>, <a href="/CCC">CCC</a>, January 09, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51518">SEE logic</a> by <a href="/Youri_Matiounine">Youri Matiounine</a>, <a href="/CCC">CCC</a>, March 08, 2014 » <a href="/Static_Exchange_Evaluation">Static Exchange Evaluation</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52861">multi-dimensional piece/square tables</a> by <a href="/Pawel_Koziol">Pawel Koziol</a>, <a href="/CCC">CCC</a>, July 04, 2014</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=52861&amp;start=7">Re: multi-dimensional piece/square tables</a> by Tony P., <a href="/CCC">CCC</a>, January 28, 2020 » <a href="/Automated_Tuning">Automated Tuning</a></p>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57384">about pst</a> by <a href="/Daniel_Anulliero">Daniel Anulliero</a>, <a href="/CCC">CCC</a>, August 26, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57575">high values of pst</a> by <a href="/Daniel_Anulliero">Daniel Anulliero</a>, <a href="/CCC">CCC</a>, September 09, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58231">pieces psqt</a> by <a href="/Alexandru_Mosoi">Alexandru Mosoi</a>, <a href="/CCC">CCC</a>, November 11, 2015</li>
+</ul>
+<p><strong>2016</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61631">Sanity check on piece-value tables</a> by <a href="/Stuart_Riffle">Stuart Riffle</a>, <a href="/CCC">CCC</a>, October 06, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62257">Simple method for simple mates for programs without TBs</a> by J. Wesley Cleveland, <a href="/CCC">CCC</a>, November 25, 2016 » <a href="/KBNK_Endgame">KBNK Endgame</a>, <a href="/Mop-up_Evaluation">Mop-up Evaluation</a></li>
+</ul>
+<p><strong>2017</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64972">Approximating Stockfish's Evaluation by PSQTs</a> by <a href="/Thomas_Dybdahl_Ahle">Thomas Dybdahl Ahle</a>, <a href="/CCC">CCC</a>, August 23, 2017 » <a href="/Automated_Tuning">Regression</a>, <a href="/Stockfish">Stockfish</a></li>
+</ul>
+<p><strong>2018</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66588">Learning piece-square table</a> by <a href="/Mathieu_Pagé">Mathieu Pagé</a>, <a href="/CCC">CCC</a>, February 13, 2018 » <a href="/Automated_Tuning">Automated Tuning</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66966">'ab-initio' piece values</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, March 30, 2018 » <a href="/Point_Value">Point Value</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=68311&amp;start=19">Re: New uci engine: Rofchade</a> by <a href="/Ronald_Friederich">Ronald Friederich</a>, <a href="/CCC">CCC</a>, August 28, 2018 » <a href="/RofChade">RofChade</a>, <a href="/Tapered_Eval">Tapered Eval</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73865">PST for FRC</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, May 07, 2020 » <a href="/Chess960">Chess960</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74752">Using piece-square table score for move ordering</a> by <a href="/Maksim_Korzh">Maksim Korzh</a>, <a href="/CCC">CCC</a>, August 11, 2020 » <a href="/Move_Ordering">Move Ordering</a></li>
+<li><a href="https://prodeo.actieforum.com/t120-engine-choosing-between-sets-of-piece-square-tables">Engine choosing between sets of piece/square tables</a> by <a href="/Pawel_Koziol">nescitus</a>, <a href="/Computer_Chess_Forums">ProDeo Forum</a>, December 05, 2020</li>
+</ul>
+<p><strong>2021</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76256">Piece square tables</a> by Elias Nilsson, <a href="/CCC">CCC</a>, January 08, 2021</li>
+<li><a href="https://prodeo.actieforum.com/t252-little-fun-with-tscp">little fun with TSCP</a> by <a href="/Pawel_Koziol">nescitus</a>, <a href="/Computer_Chess_Forums">ProDeo Forum</a>, February 12, 2021 » <a href="/TSCP">TSCP</a>, PeSTO's Evaluation Function</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76831">The PSTs of Carnivor</a> by <a href="/Michael_Sherwin">Mike Sherwin</a>, <a href="/CCC">CCC</a>, March 10, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77089">PST-only Evaluation for MinimalChess 0.4</a> by <a href="/Thomas_Jahn">Thomas Jahn</a>, <a href="/CCC">CCC</a>, April 15, 2021 » <a href="/MinimalChess">MinimalChess</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77379">Evaluating piece value</a> by Jon Lawrance, <a href="/CCC">CCC</a>, May 25, 2021 » <a href="/Point_Value">Point Value</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77546">Game Phase and tapered PSQT evaluation</a> by Jon12345, <a href="/CCC">CCC</a>, June 23, 2021 » PeSTO's Evaluation Function</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77667">multi-PST for middle-game depend from kings positions</a> by Eugene Kotlov, <a href="/CCC">CCC</a>, July 08, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77715">Just an untested idea</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, July 12, 2021 » <a href="/Automated_Tuning">Automated Tuning</a></li>
+</ul>
+<p><strong>2022</strong></p>
+<ul>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79401">Stuck trying to come up with my own PST values</a> by Kurt Peters, <a href="/CCC">CCC</a>, February 22, 2022</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79049&amp;start=127">Re: Devlog of Leorik - A.k.a. how to tune high-quality PSTs from scratch (material values) in 20 seconds</a> by <a href="/Thomas_Jahn">Thomas Jahn</a>, <a href="/CCC">CCC</a>, March 28, 2022 » <a href="/Automated_Tuning">Automated Tuning</a>, <a href="/Leorik">Leorik</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="http://home.hccnet.nl/h.g.muller/pcsqr.html">Evaluation: Piece-Square Tables</a> from <a href="/Micro-Max">Micro-Max</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a></li>
+<li>Cage. Music, art, chess - Film by Brian Brandt with <a href="https://en.wikipedia.org/wiki/Margaret_Leng_Tan">Margaret Leng Tan</a> and <a href="https://www.linkedin.com/in/larry-list-937b888">Larry List</a>, <a href="https://en.wikipedia.org/wiki/Noguchi_Museum">Noguchi Museum</a> <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a> <a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a> <a href="#fn15" class="footnote-ref" id="fnref15" role="doc-noteref"><sup>15</sup></a>, 2006, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/Hva8WMcRyOE" title="YouTube video Hva8WMcRyOE" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=Hva8WMcRyOE">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Evaluation">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Ed_Schroder">Ed Schröder</a> <em>How REBEL Plays Chess</em> as <a href="http://members.home.nl/matador/Inside%20Rebel.pdf">pdf</a>, see page 1,2 <a href="/Move_Ordering">Move Ordering</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://www.stmintz.com/ccc/index.php?id=18181">Re: What is "pre-processing"</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, May 07, 1998<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://www.schach-computer.info/wiki/index.php/PSH">PSH</a> from <a href="http://www.schach-computer.info/wiki/index.php/Hauptseite_En">Schachcomputer.info Wiki</a> (German)<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.schach-computer.info/wiki/index.php/Novag_Super_Constellation">Novag Super Constellation</a> from <a href="http://www.schach-computer.info/wiki/index.php/Hauptseite_En">Schachcomputer.info - Wiki</a> (German)<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p>"<a href="/Oracle">This approach</a> seems to have been invented by <a href="/Kaare_Danielsen">Kaare Danielsen</a> for his program <a href="/CXG_Star_Chess">CXG Advanced Star Chess</a>" from <a href="/Chrilly_Donninger">Chrilly Donninger</a> (<strong>1996</strong>). <em>CHE: A Graphical Language for Expressing Chess Knowledge</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 19, No. 4</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=475574&amp;t=44507">Re: Some thoughts on QS</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, July 25, 2012<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=475603&amp;t=44507">Re: Some thoughts on QS</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, July 25, 2012<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="/David_Kittinger">David Kittinger</a> and <a href="/Scott_McDonald">Scott McDonald</a> (<strong>1984</strong>). <em>Report from the U.S. Open</em>. <a href="/Computer_Chess_Reports">Computer Chess Digest Annual 1984</a> pp. 15-33<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="https://www.stmintz.com/ccc/index.php?id=18203">Re: What is "pre-processing"</a> by <a href="/Ulrich_Türke">Ulrich Türke</a>, <a href="/CCC">CCC</a>, May 08, 1998<a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="https://www.stmintz.com/ccc/index.php?id=18213">Re: What is "pre-processing"</a> by <a href="/Amir_Ban">Amir Ban</a>, <a href="/CCC">CCC</a>, May 08, 1998<a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=40047">Crafty accused of copying Fruit PST</a> by William O, <a href="/CCC">CCC</a>, August 13, 2011<a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=40085">Crafty *NOT* accused of copying Fruit PST</a> by <a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a>, <a href="/CCC">CCC</a>, August 17, 2011<a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="https://shop.noguchi.org/imofchre.html">The Imagery of Chess Revisited</a><a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p><a href="https://www.youtube.com/watch?v=vegmCb9j4kE">Discovering The Imagery of Chess featuring Larry List</a>, 2017, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video<a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn15"><p><a href="http://www.edochess.ca/batgirl/Imagery_of_Chess3.html">The Imagery of Chess -Surrealism and Chess</a><a href="#fnref15" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:John_Cage">John Cage</a> · <a href="/Category:Videos">Videos</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Piece-Square_Tables">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

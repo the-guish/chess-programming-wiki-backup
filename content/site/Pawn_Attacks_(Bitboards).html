@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pawn Attacks (Bitboards) - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Pawn Attacks (Bitboards)</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * <a href="/Pawn_Pattern_and_Properties">Pawn Pattern and Properties</a> * Pawn Attacks</strong></p>
+<p>A pawn captures diagonally forward, and controls or <a href="/Attacks">attacks</a> one (rook pawn) or two squares one step ahead in diagonal <a href="/Direction">direction(s)</a>. For white versus black pawns forward and backward are considered relative from either whites or blacks point of view.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#single-pawn">Single Pawn</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#attacks">Attacks</a></li>
+<li><a href="#captures">Captures</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#pawns-set-wise">Pawns set-wise</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#attacks-1">Attacks</a></li>
+<li><a href="#attack-maps">Attack Maps</a></li>
+<li><a href="#captures-1">Captures</a></li>
+</ol>
+</details></li>
+</ol>
+</details><h2 id="single-pawn">Single Pawn</h2>
+<p><span id="AttacksOfaSinglePawn"></span></p>
+<h3 id="attacks">Attacks</h3>
+<p>To get attacks, we use a lookup of pre-calculated pawn-attacks, similar to knight- and king-attacks, except the need to consider color of the pawn.</p>
+<pre><code>whitePawnAttacks = arrPawnAttacks[white][sqOfWhitePawn];
+if ( whitePawnAttacks &amp; pieceBB[black] ) -&gt; pseudo legal captures possible
+
+arrPawnAttacks[white][d4]
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . 1 . 1 . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .</code></pre>
+<h3 id="captures">Captures</h3>
+<p>Only intersection with the opponent pieces is required. We may include a possible <a href="/En_passant">en passant</a> target square.</p>
+<h2 id="pawns-set-wise">Pawns set-wise</h2>
+<p>Working in the <strong>bitboard centric</strong> world to determine attacks and properties set-wise. <span id="PawnAttacks"></span></p>
+<h3 id="attacks-1">Attacks</h3>
+<p>Generate all squares that are attacked by pawns of a color. It makes sense to keep disjoint sets for both attacking directions. For <a href="/Move_Generation">move geneneration</a> purpose, disjoint east-west attacks has the advantage of unique source-target relation ship (+-7,9). After obtaining the direction-wise target-set a reverse shift is sufficient to get the source-set without further intersections and wrap issues.</p>
+<p><em>The code snippets rely on <a href="/General_Setwise_Operations">shifting bitboards</a>, specially by <a href="/General_Setwise_Operations">one step only</a>.</em></p>
+<pre><code>U64 wPawnEastAttacks(U64 wpawns) {return noEaOne(wpawns);}
+U64 wPawnWestAttacks(U64 wpawns) {return noWeOne(wpawns);}
+
+U64 bPawnEastAttacks(U64 bpawns) {return soEaOne(bpawns);}
+U64 bPawnWestAttacks(U64 bpawns) {return soWeOne(bpawns);}</code></pre>
+<p>A bit-wise boolean instruction to combine those disjoint sets:</p>
+<pre><code>U64 wPawnAnyAttacks(U64 wpawns) {
+   return wPawnEastAttacks(wpawns) | wPawnWestAttacks(wpawns);
+}
+
+U64 wPawnDblAttacks(U64 wpawns) {
+   return wPawnEastAttacks(wpawns) &amp; wPawnWestAttacks(wpawns);
+}
+
+U64 wPawnSingleAttacks(U64 wpawns) {
+   return wPawnEastAttacks(wpawns) ^ wPawnWestAttacks(wpawns);
+}</code></pre>
+<p>and similar for black.</p>
+<pre><code> white pawns       white pawns &lt;&lt; 9  &amp;       notAFile     ==   wPawnEastAttacks
+. . . . . . . .     . . . . . . . .      . 1 1 1 1 1 1 1      . . . . . . . . 
+. . . . . . . .     . . . . . . . .      . 1 1 1 1 1 1 1      . . . . . . . . 
+. . . . . . . .     . . . . . . . .      . 1 1 1 1 1 1 1      . . . . . . . . 
+. . . . . . . .     . . . . . . . .      . 1 1 1 1 1 1 1      . . . . . . . . 
+. . . . . . . .     h . . c . . . .      . 1 1 1 1 1 1 1      . . . c . . . . 
+. . c . . . . .     . a b . d . f g      . 1 1 1 1 1 1 1      . a b . d . f g 
+a b . d . f g h     . . . . . . . .      . 1 1 1 1 1 1 1      . . . . . . . . 
+. . . . . . . .     / . . . . . . .      . 1 1 1 1 1 1 1      / . . . . . . . 
+
+ white pawns       white pawns &lt;&lt; 7  &amp;       notHFile     ==  wPawnWestAttacks
+. . . . . . . .     . . . . . . . .      1 1 1 1 1 1 1 .      . . . . . . . . 
+. . . . . . . .     . . . . . . . .      1 1 1 1 1 1 1 .      . . . . . . . . 
+. . . . . . . .     . . . . . . . .      1 1 1 1 1 1 1 .      . . . . . . . . 
+. . . . . . . .     . . . . . . . .      1 1 1 1 1 1 1 .      . . . . . . . . 
+. . . . . . . .     . c . . . . . .      1 1 1 1 1 1 1 .      . c . . . . . . 
+. . c . . . . .     b . d . f g h .      1 1 1 1 1 1 1 .      b . d . f g h . 
+a b . d . f g h     . . . . . . . a      1 1 1 1 1 1 1 .      . . . . . . . . 
+. . . . . . . .     . . . . . . . \      1 1 1 1 1 1 1 .      . . . . . . . \ 
+
+ white pawns                                                  wPawnAnyAttacks
+. . . . . . . .                                               . . . . . . . .  
+. . . . . . . .                                               . . . . . . . .  
+. . . . . . . .                                               . . . . . . . .  
+. . . . . . . .                                               . . . . . . . .  
+. . . . . . . .                                               . c . c . . . .  
+. . c . . . . .                                               b a 1 . 1 g 1 g  
+a b . d . f g h                                               . . . . . . . .  
+. . . . . . . .                                               . . . . . . . . </code></pre>
+<p><span id="PawnAttackMaps"></span></p>
+<h3 id="attack-maps">Attack Maps</h3>
+<p>One idea to combine pawn-attacks is about safe squares or push-targets for white respectively black pawns. A kind if of set-wise static exchange evaluation - only considering pawn-attacks from both sides. A square is assumed safe, if the number of own pawn defends if greater or equal than opponent pawn attacks. That is true if the own side defends a square twice, or the opposite side has no attacks at all, or own side attacks once and opponent not twice.</p>
+<pre><code>U64 wSafePawnSquares(U64 wpawns, U64 bpawns) {
+   U64 wPawnEastAttacks =  wPawnEastAttacks (wpawns);
+   U64 wPawnWestAttacks =  wPawnWestAttacks (wpawns);
+   U64 bPawnEastAttacks =  bPawnEastAttacks (bpawns);
+   U64 bPawnWestAttacks =  bPawnWestAttacks (bpawns);
+   U64 wPawnDblAttacks  =  wPawnEastAttacks &amp;  wPawnWestAttacks;
+   U64 wPawnOddAttacks  =  wPawnEastAttacks ^  wPawnWestAttacks;
+   U64 bPawnDblAttacks  =  bPawnEastAttacks &amp;  bPawnWestAttacks;
+   U64 bPawnAnyAttacks  =  bPawnEastAttacks |  bPawnWestAttacks;
+   return wPawnDblAttacks |~bPawnAnyAttacks | (wPawnOddAttacks &amp;~bPawnDblAttacks);
+}</code></pre>
+<p>Those attack maps are among other things useful to decide about <a href="/Candidates_%28Bitboards%29">candidates</a> and <a href="/Backward_Pawns_%28Bitboards%29">backward pawns</a> . <span id="PawnCaptures"></span></p>
+<h3 id="captures-1">Captures</h3>
+<p>As usual, capture targets are the intersection of attack-sets with opponent pieces. Except <a href="/En_passant">en passant</a> captures of course. A reverse shift of disjoint direction-wise sets obtains the pawns which may capture.</p>
+<p>To find the pawn set, which can actually capture, on the fly, we can start with the target squares as well:</p>
+<pre><code>U64 wPawnsAble2CaptureEast(U64 wpawns, U64 bpieces) {
+   return wpawns &amp; bPawnWestAttacks(bpieces);
+}
+
+U64 wPawnsAble2CaptureWest(U64 wpawns, U64 bpieces) {
+   return wpawns &amp; bPawnEastAttacks(bpieces);
+}
+
+U64 wPawnsAble2CaptureAny(U64 wpawns, U64 bpieces) {
+   return wpawns &amp; bPawnAnyAttacks(bpieces);
+}</code></pre>
+<p><strong><a href="/Pawn_Pattern_and_Properties">Up one Level</a></strong></p>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Pawn_Attacks_(Bitboards)">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

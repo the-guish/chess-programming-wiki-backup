@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Persistent Hash Table - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Persistent Hash Table</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Learning">Learning</a> * Persistent Hash Table</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="https://en.wikipedia.org/wiki/The_Disintegration_of_the_Persistence_of_Memory" target="_blank" rel="noopener noreferrer"><img src="/assets/DisintegrationofPersistence.jpg" alt="The Disintegration of the Persistence of Memory 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="https://en.wikipedia.org/wiki/The_Disintegration_of_the_Persistence_of_Memory">The Disintegration of the Persistence of Memory</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="/Category:Salvador_Dalí">Salvador Dalí</a>, <a href="https://en.wikipedia.org/wiki/The_Disintegration_of_the_Persistence_of_Memory">The Disintegration of the Persistence of Memory from Wikipedia</a>, 1952-1954<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Persistent Hash Table</strong>, (<a href="https://en.wikipedia.org/wiki/Persistence_%28computer_science%29">persistent</a> <a href="/Transposition_Table">transposition table</a>)<br />
+a form of long-term <a href="/Memory">memory</a>, to remember "important" nodes from earlier analyzed <a href="/Chess_Position">positions</a> or played <a href="/Chess_Game">games</a> with its <a href="/Exact_Score">exact score</a> and <a href="/Depth">depth</a>, in order to avoid repeating unsuccessful book lines. So called <a href="https://en.wikipedia.org/wiki/Persistence_%28computer_science%29#Orthogonal_or_transparent_persistence">orthogonal or transparent</a> persistent hash tables preserve their contents with focus on <a href="/Node_Types">PV-nodes</a> between moves while playing a game, between games, and even during interactive analysis while playing variations forward and backward <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. <strong>Non-orthogonal</strong> persistence, primary topic of this page, requires data to be written or read to or from storage devices using specific instructions in a program and have to provide mappings from or to the native data structures to or from the storage device data structures.</p>
+<p>Inspired by the <a href="https://en.wikipedia.org/wiki/Rote_learning">rote learning</a> as used in <a href="/Arthur_Samuel">Arthur Samuel's</a> <a href="/Checkers">Checkers</a> program from 1959 <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>, <a href="/David_Slate">David Slate</a> first described a persistent transposition table in computer chess for accumulating selected information from many games and then utilizing it subsequently via the transposition table <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>. In his article, Slate mentions personal communication with <a href="/Tony_Scherzer">Tony Scherzer</a> and <a href="/Tony_Warnock">Tony Warnock</a> regarding learning in <a href="/Bebe">Bebe</a> and <a href="/Lachex">Lachex</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#learning-in-mouse">Learning in Mouse</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#transposition-table">Transposition Table</a></li>
+<li><a href="#algorithm">Algorithm</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#learning-in-bebe">Learning in Bebe</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#short-term-memory">Short Term Memory</a></li>
+<li><a href="#long-term-memory">Long Term Memory</a></li>
+<li><a href="#algorithm-1">Algorithm</a></li>
+</ol>
+</details></li>
+<li><a href="#position-learning-in-crafty">Position Learning in Crafty</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#selected-publications">Selected Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1990-">1990 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="learning-in-mouse">Learning in Mouse</h2>
+<p>Slate's simple <a href="/Brute-Force">brute-force</a> program <em>Mouse</em>, a <a href="/Depth-First">depth-first</a>, full-width <a href="/Iterative_Deepening">iterated</a> <a href="/Alpha-Beta">alpha-beta</a> searcher with an <a href="/Evaluation">evaluation</a> purely based on <a href="/Material">material</a> was used as a learning <a href="https://en.wikipedia.org/wiki/Testbed">testbed</a>, only remembering positions where a significant <a href="/Score">score</a> drop occurred at the root.</p>
+<h3 id="transposition-table">Transposition Table</h3>
+<p>A relative small <a href="/Transposition_Table">transposition table</a> of 4096 buckets (8192 entries) was used for the examples in his paper:</p>
+<pre><code> 6   bytes Hash code
+ 2x2 bytes Score window
+ 2   bytes Best Move, if any
+ 10  bits  Game ply
+ 6   bits  Ply from root node
+ 1   byte  Search height
+ 1   byte  Origin indication</code></pre>
+<p><em>Score window</em> holds the current <a href="/Lower_Bound">lower</a> and <a href="/Upper_Bound">upper bounds</a>. Although some programs use only a single value and a flag for <em>good, lower or upper bound</em>, there are occasions and algorithms <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> that fix the score between unequal bounds neither of which is infinite.</p>
+<p><em>Origin indication</em> holds the explanation of the origin for the entry. There are values for <em>current search, human advice, learned in previous session,</em> etc.</p>
+<h3 id="algorithm">Algorithm</h3>
+<p>The basic learning <a href="/Algorithms">algorithm</a> stores root entries to disk, if the final score of the chosen move is significantly worse than the best score in any of the previous iterations. Between searches during the playing session, relevant portions of the retained entries were loaded into their slots in the TT-table, adjusting bounds by a fuzz term, and to flag their origin to secure them from being indiscriminately overwritten. <span id="LearninginBebe"></span></p>
+<h2 id="learning-in-bebe">Learning in Bebe</h2>
+<p><a href="/Tony_Scherzer">Tony</a> and <a href="/Linda_Scherzer">Linda Scherzer</a>, and Dean Tjaden further elaborate on the persistent hash table in their <a href="/Bebe">award winning paper</a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> concerning <a href="/Learning">Learning</a> in <a href="/Bebe">Bebe</a>:</p>
+<h3 id="short-term-memory">Short Term Memory</h3>
+<p>The short term memory (STM) or <a href="/Transposition_Table">transposition table</a> slot consists of 16 bytes, of which 12 are stored, and 4 bytes are implicit as a memory address. <a href="/Upper_Bound">Upper</a> and <a href="/Lower_Bound">lower limit</a> of the score are needed for the easiest implementation of the learning algorithm:</p>
+<pre><code> 4 bytes Hash code used as STM memory address
+ 4 bytes Hash code used for match verification
+ 2 bytes Search height
+ 2 bytes Position-score lower limit
+ 2 bytes Position-score upper limit
+ 2 bytes The move</code></pre>
+<h3 id="long-term-memory">Long Term Memory</h3>
+<p>The long term memory (LTM) entries are stored on disk and therefor retained between games. The structure is similar, however all 16 bytes were stored:</p>
+<pre><code> 4 bytes Hash code used as STM memory address
+ 4 bytes Hash code used for match verification
+ 2 bytes Depth of search
+ 2 bytes Move number
+ 2 bytes Position-score
+ 2 bytes The move</code></pre>
+<p>One LTM entry is created for each root node during the game.</p>
+<h3 id="algorithm-1">Algorithm</h3>
+<p>The algorithm consists of two phases. One creates (or overwrites) the LTM entries at the end of each search considering a <a href="/Contempt_Factor">contempt factor</a>, while the second transforms and copies LTM entries to STM at the start of each search:</p>
+<pre><code> Position-score lower limit = Position-score - fuzzy tolerance (up to 0.2 pawn units for none draw or mate scores)
+ Position-score upper limit = Position-score + fuzzy tolerance</code></pre>
+<h2 id="position-learning-in-crafty">Position Learning in Crafty</h2>
+<p>Quote from <em><a href="/Crafty">Crafty</a> Command Documentation</em> (version 18) by <a href="/Robert_Hyatt">Robert Hyatt</a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>:</p>
+<p><strong>What is this new Position Learning I've heard about?</strong></p>
+<p>Crafty now has a "permanent" hash table that is kept from game to game. A position gets into this "hash file" when Crafty executes a search and the search value is significantly lower than the last search value.</p>
+<p>When this happens, Crafty stores the current information for this position in the permanent hash file, which can hold up to 65536 positions. Once it fills up, the positions are replaced on a FIFO basis, always keeping the most recent 64K entries.</p>
+<p>Each time Crafty starts a search, the positions/scores from this file are stuffed into the normal transposition table, and used during the search just like any other table entry...</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Book_Learning">Book Learning</a></li>
+<li><a href="/Hash_Table">Hash Table</a></li>
+<li><a href="/Memory">Memory</a></li>
+<li><a href="/Transposition_Table">Transposition Table</a></li>
+</ul>
+<h2 id="selected-publications">Selected Publications</h2>
+<ul>
+<li><a href="/Arthur_Samuel">Arthur Samuel</a> (<strong>1959</strong>). <em><a href="http://domino.watson.ibm.com/tchjr/journalindex.nsf/600cc5649e2871db852568150060213c/39a870213169f45685256bfa00683d74!OpenDocument">Some Studies in Machine Learning Using the Game of Checkers</a></em>. IBM Journal July 1959</li>
+<li><a href="/Arthur_Samuel">Arthur Samuel</a> (<strong>1967</strong>). <em>Some Studies in Machine Learning. Using the Game of Checkers. II-Recent Progress</em>. <a href="http://pages.cs.wisc.edu/~dyer/cs540/handouts/samuel-checkers.pdf">pdf</a></li>
+<li><a href="/David_Slate">David Slate</a> (<strong>1987</strong>). <em>A Chess Program that uses its Transposition Table to Learn from Experience.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 10, No. 2</a></li>
+<li><a href="/Tony_Scherzer">Tony Scherzer</a>, <a href="/Linda_Scherzer">Linda Scherzer</a>, Dean Tjaden (<strong>1990</strong>). <em>Learning in Bebe.</em> <a href="/Computers,_Chess,_and_Cognition">Computers, Chess, and Cognition</a> » <a href="/Bebe">Mephisto Best-Publication Award</a></li>
+<li><a href="/Tony_Scherzer">Tony Scherzer</a>, <a href="/Linda_Scherzer">Linda Scherzer</a>, Dean Tjaden (<strong>1991</strong>). <em>Learning in Bebe.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 14, No. 4</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1990-">1990 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess/wkTUUFfEvIE/RyFnJTjyQq4J">Machine Learning Experience</a> by <a href="/Michael_Valvo">Mike Valvo</a>, <a href="/Computer_Chess_Forums">rgc</a>, January 22, 1990 » <a href="/Persistent_Hash_Table">Learning in Bebe</a></li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=150687">Simple Learning Technique and Random Play</a> by <a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a>, <a href="/CCC">CCC</a>, January 18, 2001 » <a href="/Search_with_Random_Leaf_Values">Search with Random Leaf Values</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=484765">Re: Rybka 1.01 Beta14 - persistent hash table</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/CCC">CCC</a>, February 06, 2006</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=5293&amp;p=26451#p26434">Re: Idea for opening book</a> by <a href="/Mark_Lefler">Mark Lefler</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, August 02, 2006</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=128388&amp;t=14831">Re: Ed Does it Again! (and a question for Ed)</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/CCC">CCC</a>, July 03, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=21754">A simple book learning method</a> by <a href="/Alvaro_Cardoso">Alvaro Cardoso</a>, <a href="/CCC">CCC</a>, June 12, 2008 » <a href="/Book_Learning">Book Learning</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=22546">Persistent Hash</a> by <a href="/Ted_Summers">Ted Summers</a>, <a href="/CCC">CCC</a>, July 24, 2008</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62639">Cumulative building of a shared search tree</a> by <a href="/Bojun_Guo">Bojun Guo</a>, <a href="/CCC">CCC</a>, December 28, 2016 » <a href="/Chinese_Chess">Chinese Chess</a>, <a href="/Opening_Book">Opening Book</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64517">My "official" request to top engine programmers</a> by Rodolfo Leoni, <a href="/CCC">CCC</a>, July 04, 2017</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=64517&amp;start=2">Re: My "official" request to top engine programmers</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, July 05, 2017</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64522">Improving hash replacing schema for analysis mode</a> by <a href="/Daniel_José_Queraltó">Daniel José Queraltó</a>, <a href="/CCC">CCC</a>, July 05, 2017 » <a href="/Transposition_Table">Replacement Strategy</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64557">Andscacs new PH feature: first impressions</a> by Rodolfo Leoni, <a href="/CCC">CCC</a>, July 08, 2017 » <a href="/Andscacs">Andscacs</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64720">Stockfish version with hash saving capability</a> by <a href="/Daniel_José_Queraltó">Daniel José Queraltó</a>, <a href="/CCC">CCC</a>, July 25, 2017 » <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64759">Will you use hash saving?</a> by <a href="/Daniel_José_Queraltó">Daniel José Queraltó</a>, <a href="/CCC">CCC</a>, July 30, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65914">Persistent hashes - performance</a> by Rodolfo Leoni, <a href="/CCC">CCC</a>, December 06, 2017</li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=79567">Most recent implementation of Persistent Hash Table</a> by Giovanni Lavorgna, <a href="/CCC">CCC</a>, March 22, 2022</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="http://www.cis.uab.edu/hyatt/craftydoc.html">Crafty Command Documentation (version 18)</a> - What is this new Position Learning I've heard about?</li>
+<li><a href="http://www.rybkachess.com/index.php?auswahl=Persistent+hash">Rybka 3 Persistent Hash</a> from <a href="http://www.rybkachess.com/index.php">Rybka - for the serious chess player</a></li>
+<li><a href="http://www.developer.com/java/ent/article.php/600531/The-Persistent-Hashtable-A-Quick-and-Dirty-Database.htm">The Persistent Hashtable: A Quick-and-Dirty Database</a> by <a href="http://www.developer.com/author.php/5023/Greg-Travis.htm">Greg Travis</a>, <a href="http://www.developer.com/">Developer.com</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Persistence_%28computer_science%29">Persistence (computer science) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Rote_learning">Rote learning from Wikipedia</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Learning">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=64517&amp;start=2">Re: My "official" request to top engine programmers</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, July 05, 2017<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Arthur_Samuel">Arthur Samuel</a> (<strong>1959</strong>). <em><a href="http://domino.watson.ibm.com/tchjr/journalindex.nsf/600cc5649e2871db852568150060213c/39a870213169f45685256bfa00683d74%21OpenDocument">Some Studies in Machine Learning Using the Game of Checkers</a></em>. IBM Journal July 1959<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="/Arthur_Samuel">Arthur Samuel</a> (<strong>1967</strong>). <em>Some Studies in Machine Learning. Using the Game of Checkers. II-Recent Progress</em>. <a href="http://pages.cs.wisc.edu/%7Edyer/cs540/handouts/samuel-checkers.pdf">pdf</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="/David_Slate">David Slate</a> (<strong>1987</strong>). <em>A Chess Program that uses its Transposition Table to Learn from Experience.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 10, No. 2</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="/David_Slate">David Slate</a> (<strong>1984</strong>). <em>Interior-node Score Bounds in a Brute-force Chess Program.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 7, No. 4</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="/Tony_Scherzer">Tony Scherzer</a>, <a href="/Linda_Scherzer">Linda Scherzer</a>, Dean Tjaden (<strong>1990</strong>). <em>Learning in Bebe.</em> <a href="/Computers,_Chess,_and_Cognition">Computers, Chess, and Cognition</a> » <a href="/Bebe">Mephisto Best-Publication Award</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="http://www.cis.uab.edu/hyatt/craftydoc.html">Crafty Command Documentation (version 18)</a> - What is this new Position Learning I've heard about?<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Salvador_Dalí">Salvador Dalí</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Persistent_Hash_Table">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

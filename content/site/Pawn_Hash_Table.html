@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pawn Hash Table - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Pawn Hash Table</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Evaluation">Evaluation</a> * <a href="/Pawn_Structure">Pawn Structure</a> * Pawn Hash Table</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="http://www.elke-rehder.de/Chess_Woodcuts.htm" target="_blank" rel="noopener noreferrer"><img src="/assets/Elke_Rehder_Chess_Schach_Woodcut_Pawns_King_Bauer_Koenig.jpg" alt="Pawns threaten the King 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Pawns threaten the King <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://www.elke-rehder.de/Chess_Woodcuts.htm">Chess Woodcuts Graphic Arts Woodcut Art</a> by <a href="/Arts">Elke Rehder</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p>A <strong>Pawn Hash Table</strong> is often used inside a chess programs to <a href="https://en.wikipedia.org/wiki/Cache">cache</a> purely <a href="/Pawn">pawn</a> related <a href="/Pawn_Pattern_and_Properties">pattern</a> and <a href="/Pawn_Structure">evaluation</a> stuff. Compared to the <a href="/Transposition_Table">main transposition table</a>, since the <a href="/Pawn_Structure">pawn structure</a> inside the <a href="/Search">search</a> changes rarely or transpose, the number of cached entries required might be quite low (a few K) to get a sufficient hit rate above 95% or even 99% for most positions, specially if the pawn structure is settled or relatively fixed after the <a href="/Opening">opening</a>. On the other hand, most programmers store not only pure aggregated pawn evaluation scores, but other computation expensive pawn structure stuff which is used in second pass <a href="/Evaluation">evaluation</a> considering <a href="/Pieces">pieces</a> and <a href="/King">king</a>. Terms for various <a href="/Game_Phases">game phases</a> and king origins for all possible wings/center per side are often calculated <a href="https://en.wikipedia.org/wiki/Speculative_execution">speculatively</a>, i.e. pawn shield or pawn storm stuff later used by <a href="/King_Safety">king safety</a>.</p>
+<p>While the content of the pawn hash table entry varies a lot between different chess programs and their implementation, it is not uncommon that one entry exceeds 1/2 K-Byte. Some programs store sets or <a href="/Bitboards">bitboards</a> of strong pawns (<a href="/Passed_Pawn">passers</a>, <a href="/Candidate_Passed_Pawn">candidates</a>), square of most advanced passer, different kind of <a href="/Weak_Pawns">weak pawn sets</a> and whatever else. Despite, some programs cache pawn-king stuff separately which requires king squares included inside the index calculation as well table entry for verifications.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#pawn-hash-index">Pawn Hash Index</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1999">1999</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="pawn-hash-index">Pawn Hash Index</h2>
+<p>Most simple, common and recommend is to keep an <a href="/Incremental_Updates">incremental updated</a>, dedicated <a href="/Zobrist_Hashing">Zobrist</a>- or <a href="/BCH_Hashing">BCH-keys</a> similar to the <a href="/Transposition_Table">main transposition table</a>, initialized from all squares occupied by pawns only, <a href="/Side_to_move">side to move</a> does not matter. The update of that key is therefor only necessary for the relative rare pawn moves or captures with pawns as aggressor or victim. The hash table index is computed by key modulo number of entries, which might be a cheap and-instruction from the key for power of two sized tables.</p>
+<p>Alternatively, considering hits from the <a href="/Transposition_Table">transposition table</a>, or a dedicated <a href="/Evaluation_Hash_Table">evaluation hash table</a>, one may use a fast <a href="/Hash_Table">hash function</a> to compute an index from the white and black pawn bitboards on the fly, i.e. either a modulo or a multiplication and shift à la <a href="/Magic_Bitboards">magic bitboards</a> by the difference of the disjoint pawn sets <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> . To verify correct entries while probing, one needs either to store (a part) of the dedicated Zobrist/BCH key, or for 100% correctness 2*48 bits from the pawn occupancy bitboards. This value could be further compressed with the expense of more calculation overhead by means of n-like men: <span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="/assets/PawnHashFormla.jpg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span> This can be further reduced by mirroring the board, considering symmetric positions or detecting illegal positions.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Evaluation_Hash_Table">Evaluation Hash Table</a></li>
+<li><a href="/Hash_Table">Hash Table</a></li>
+<li><a href="/Material_Hash_Table">Material Hash Table</a></li>
+<li><a href="/Material_Tables">Material Tables</a></li>
+<li><a href="/Transposition_Table">Transposition Table</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1999">1999</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=61063">Q: pawn hash?</a> by <a href="/Scott_Gasch">Scott Gasch</a>, <a href="/CCC">CCC</a>, July 20, 1999</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=68872">regular hash key &amp; pawn hash key together - good idea?</a> by <a href="/Tom_Kerrigan">Tom Kerrigan</a>, <a href="/CCC">CCC</a>, September 16, 1999</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=129406">A question about pawn hash tables</a> by <a href="/Andreas_Herrmann">Andreas Herrmann</a>, <a href="/CCC">CCC</a>, September 13, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=200037">A few hashing questions</a> by <a href="/Severi_Salminen">Severi Salminen</a>, <a href="/CCC">CCC</a>, December 02, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=200496">Pawn Hash Collisions in Crafty</a> by <a href="/David_Rasmussen">David Rasmussen</a>, <a href="/CCC">CCC</a>, December 05, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=200800">Crafty's 32-bit pawn hash collision figures?</a> by <a href="/Severi_Salminen">Severi Salminen</a>, <a href="/CCC">CCC</a>, December 06, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=237159">Pawn hash table: need some helps?</a> by <a href="/Pham_Hong_Nguyen">Pham Hong Nguyen</a>, <a href="/CCC">CCC</a>, June 23, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=266544">Ultra small pawn hash efficiency</a> by <a href="/Vladimir_Medvedev">Vladimir Medvedev</a>, <a href="/CCC">CCC</a>, November 21, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=288402">programmers: pawn hash tables</a> by Joel, <a href="/CCC">CCC</a>, March 08, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=309379">pawn hash tables</a> by Joshua Lee, <a href="/CCC">CCC</a>, August 01, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=314386">The key of pawn hash tables is based on what exactly?</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, September 06, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=315478">Pawn hashing without Zobrist keys</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/CCC">CCC</a>, September 12, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=354696">Pawn Hash Question</a> by <a href="/Dan_Honeycutt">Dan Honeycutt</a>, <a href="/CCC">CCC</a>, March 15, 2004</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/cfe3b4da78ee890b/928457251da6ff40">Which pawn positions go into a pawn hash table?</a> by pd42, <a href="/Computer_Chess_Forums">rgcc</a>, May 26, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=373656">pawn hash</a> by <a href="/Tor_Lattimore">Tor Lattimore</a>, <a href="/CCC">CCC</a>, July 03, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=389201">Initialization of pawn hash table</a> by <a href="/Zach_Wegner">Zach Wegner</a>, <a href="/CCC">CCC</a>, September 26, 2004</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=13673">About pawn hash tables</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, May 10, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=15540">An interesting bug in Hamsters</a> by <a href="/Alessandro_Scotti">Alessandro Scotti</a>, <a href="/CCC">CCC</a>, August 02, 2007 » <a href="/Hamsters">Hamsters</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=32509">Pawn Hash</a> by <a href="/Philippe_Gailhac">Philippe Gailhac</a>, <a href="/CCC">CCC</a>, February 10, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=33334">Pawn Hash</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, March 18, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40470">Possible pawn hash speed optimization?</a> by <a href="/John_Merlino">John Merlino</a>, <a href="/CCC">CCC</a>, September 19, 2011</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=44369">Is there a reasonable number of pawn hash entries?</a> by <a href="/Fermin_Serrano">Fermin Serrano</a>, <a href="/CCC">CCC</a>, July 10, 2012</li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59126">pawn hash and ep</a> by J. Wesley Cleveland, <a href="/CCC">CCC</a>, February 01, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59154">Buckets for pawn hash?</a> by J. Wesley Cleveland, <a href="/CCC">CCC</a>, February 04, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59319">pawn hash and eval tuning</a> by J. Wesley Cleveland, <a href="/CCC">CCC</a>, February 21, 2016 » <a href="/Automated_Tuning">Automated Tuning</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59566">hash eval, hash pawn or twice ?</a> by <a href="/Daniel_Anulliero">Daniel Anulliero</a>, March 19, 2016 » <a href="/Evaluation_Hash_Table">Evaluation Hash Table</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61621">Pawn hash</a> by <a href="/Karlo_Balla">Karlo Balla</a>, <a href="/CCC">CCC</a>, October 06, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62160&amp;start=10">pawn hash</a> by <a href="/Volker_Annuss">Volker Annuss</a>, <a href="/CCC">CCC</a>, November 18, 2016</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=71190">A pre-calculated pawn hash table ?</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, July 05, 2019</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72195">Pawn hash table, a little disappointment</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, October 28, 2019</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Transposition_table#Related_techniques">Transposition table - Related techniques, from Wikipedia</a></li>
+<li><a href="http://www.cse.buffalo.edu/~regan/chess/computer/anomalies/DF10anomalies.htm">Chess Engine Anomalies, evidently caused by hash-table collisions and effects of multithreading</a> by <a href="/Kenneth_W._Regan">Kenneth W. Regan</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Pawn_Structure">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://www.stmintz.com/ccc/index.php?id=315478">Pawn hashing without Zobrist keys</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/CCC">CCC</a>, September 12, 2003<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Elke_Rehder">Elke Rehder</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Pawn_Hash_Table">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

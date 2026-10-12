@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retrograde Analysis - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Retrograde Analysis</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Knowledge">Knowledge</a> * Retrograde Analysis</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="http://www.flickr.com/photos/smurpiknik/5149247538/in/photostream" target="_blank" rel="noopener noreferrer"><img src="/assets/RetrogradeAnalysissmurpiknik.jpg" alt="Retrograde analysis 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Retrograde analysis <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://www.flickr.com/photos/smurpiknik/5149247538/in/photostream">Ретроградный анализ. / Retrograde analysis</a>, <a href="http://www.flickr.com/photos/smurpiknik/with/5149247538/#photo_5149247538">Flickr: Fotostream by Segaboy</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Retrograde Analysis</strong>,<br />
+a method in <a href="https://en.wikipedia.org/wiki/Game_theory">game theory</a> to solve <a href="/Chess_Position">game positions</a> for <a href="https://en.wikipedia.org/wiki/Best_response">optimal play</a> by <a href="https://en.wikipedia.org/wiki/Backward_induction">backward induction</a> from known outcomes. A sub-genre of solving certain <a href="https://en.wikipedia.org/wiki/Chess_problem">chess problems</a> uses retrograde analysis to determine which <a href="/Moves">moves</a> were played to reach a position, and for the <a href="https://en.wikipedia.org/wiki/Proof_game">proof game</a> whether a position is legal in the sense that it could be reached by a series of <a href="/Legal_Move">legal moves</a> from the <a href="/Initial_Position">initial position</a>. <span id="History"></span></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#history">History</a></li>
+<li><a href="#algorithm">Algorithm</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#selected-publications">Selected Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1910-">1910 ...</a></li>
+<li><a href="#1920-">1920 ...</a></li>
+<li><a href="#1940-">1940 ...</a></li>
+<li><a href="#1960-">1960 ...</a></li>
+<li><a href="#1970-">1970 ...</a></li>
+<li><a href="#1980-">1980 ...</a></li>
+<li><a href="#1990-">1990 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000--1">2000 ...</a></li>
+<li><a href="#2005--1">2005 ...</a></li>
+<li><a href="#2010--1">2010 ...</a></li>
+<li><a href="#2015--1">2015 ...</a></li>
+<li><a href="#2020--1">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#retrograde-analysis">Retrograde Analysis</a></li>
+<li><a href="#github">GitHub</a></li>
+<li><a href="#programs">Programs</a></li>
+<li><a href="#induction">Induction</a></li>
+<li><a href="#retrograde">Retrograde</a></li>
+<li><a href="#analysis">Analysis</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="history">History</h2>
+<p>History based on <a href="/Lewis_Stiller">Lewis Stiller</a>, <em>Multilinear Algebra and Chess Endgames</em> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
+<p><code>The mathematical justification for the retrograde analysis algorithm was already implicit in the 1912 paper of </code><a href="/Ernst_Zermelo"><code>Ernst Zermelo</code></a><code> </code><a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a><code>. Additional theoretical work was done by </code><a href="/John_von_Neumann"><code>John von Neumann</code></a><code> and </code><a href="https://en.wikipedia.org/wiki/Oskar_Morgenstern"><code>Oskar Morgenstern</code></a><code> </code><a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a><code>. </code></p>
+<p><code>The contemporary </code><a href="/Dynamic_Programming"><code>dynamic programming</code></a><code> methodology, which defines the field of retrograde endgame analysis, was discovered by </code><a href="/Richard_E._Bellman"><code>Richard E. Bellman</code></a><code> in 1965 </code><a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a><code>. Bellman had considered game theory from a classical perspective as well </code><a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a><code> </code><a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a><code>, but his work came to fruition in his 1965 paper, where he observed that the entire </code><a href="https://en.wikipedia.org/wiki/State_space_%28dynamical_system%29"><code>state-space</code></a><code> could be stored and that dynamic programming techniques could then be used to compute whether either side could win any position. </code></p>
+<p><code>Bellman also sketched how a combination of </code><a href="/Search"><code>forward search</code></a><code>, dynamic programming, and </code><a href="/Evaluation"><code>heuristic evaluation</code></a><code> could be used to solve much larger state spaces than could be tackled by either technique alone. He predicted that </code><a href="/Checkers"><code>Checkers</code></a><code> could be solved by his techniques, and the utility of his algorithms for solving very large state spaces has been validated by </code><a href="/Jonathan_Schaeffer"><code>Jonathan Schaeffer</code></a><code> et al. in the domain of Checkers </code><a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a><code>, </code><a href="/Ralph_Gasser"><code>Ralph Gasser</code></a><code> in the domain of </code><a href="/Nine_Men’s_Morris"><code>Nine Men’s Morris</code></a><code> </code><a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a><code>, and </code><a href="/John_Romein"><code>John Romein</code></a><code> with </code><a href="/Henri_Bal"><code>Henri Bal</code></a><code> in the domain of </code><a href="/Awari"><code>Awari</code></a><code> </code><a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a><code>. The first retrograde analysis implementation was due to </code><a href="/Thomas_Ströhlein"><code>Thomas Ströhlein</code></a><code>, whose important 1970 dissertation described the solution of several pawnless 4-piece endgames </code><a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a><code>.</code></p>
+<p><span id="Algorithm"></span></p>
+<h2 id="algorithm">Algorithm</h2>
+<p>Retrograde analysis is the basic <a href="/Algorithms">algorithm</a> to construct <a href="/Endgame_Tablebases">Endgame Tablebases</a>. A <a href="https://en.wikipedia.org/wiki/Bijection">bijective function</a> is used to map <a href="/Chess_Position">chess positions</a> to <a href="https://en.wikipedia.org/wiki/G%C3%B6del_numbering">Gödel numbers</a> which index a database of bitmaps during construction and retrieval, in its simplest form based on a multi-dimensional <a href="/Array">array</a> index. Following description is based on <a href="/Ken_Thompson">Ken Thompson's</a> paper <em>Retrograde Analysis of Certain Endgames</em> with <a href="/Endgame_Tablebases">depth to mate (DTM)</a> metric <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a>, and assumes White the winning side. Files of sets of chess positions, where a one-bit is associated with the Gödel number of a position, are successively manipulated during the <a href="/Iteration">iterative</a> generation process:</p>
+<ul>
+<li>B<span style="vertical-align: sub;font-size: 80%;">i</span> set of the latest newly found Black-to-move and lose in i moves positions</li>
+<li>W<span style="vertical-align: sub;font-size: 80%;">i</span> set of the latest newly found White-to-move and win in i moves positions</li>
+<li>B set of all currently known Black-to-move and lose positions, union of all B<span style="vertical-align: sub;font-size: 80%;">i</span> so far</li>
+<li>W set of all currently known White-to-move and win positions, union of all W<span style="vertical-align: sub;font-size: 80%;">i</span> so far</li>
+<li>J<span style="vertical-align: sub;font-size: 80%;">i</span> is temporary superset of B<span style="vertical-align: sub;font-size: 80%;">i</span> not necessarily lose positions</li>
+</ul>
+<p>The algorithm starts in enumerating all Black-to-move <a href="/Checkmate">checkmate</a> positions B<span style="vertical-align: sub;font-size: 80%;">0</span> with the material configuration under consideration, an <a href="/Move_Generation">un-move generator</a> is used to to build predecessor or parent positions. The un-move generation is similar to <a href="/Move_Generation">move generation</a>, with the difference that it is illegal to start in <a href="/Check">check</a>, but legal to un-move into check, and illegal to capture, but legal to un-capture by leaving an opponent piece behind.</p>
+<p><strong>for</strong> (i=0; B<span style="vertical-align: sub; font-size: 80%;">i</span>; i++)</p>
+<ol type="1">
+<li>Every parent of a B<span style="vertical-align: sub; font-size: 80%;">i</span> position is a White-to-move won position - newly-won positions W<span style="vertical-align: sub; font-size: 80%;">i+1</span> are parents of a B<span style="vertical-align: sub; font-size: 80%;">i</span> not (yet) in W</li>
+<li>W<span style="vertical-align: sub;font-size: 80%;">i+1</span> becomes subset of W</li>
+<li>Every parent of a W<span style="vertical-align: sub;font-size: 80%;">i+1</span> position is a Black-to-move and lose position if Black wanted to mate himself, stored in J<span style="vertical-align: sub;font-size: 80%;">i+1</span></li>
+<li>Only if all successors (by generating and making legal moves <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a>) of a J<span style="vertical-align: sub; font-size: 80%;">i+1</span> position are member of W, the J<span style="vertical-align: sub; font-size: 80%;">i+1</span> position becomes member of B<span style="vertical-align: sub;font-size: 80%;">i+1</span> and B</li>
+</ol>
+<p>The algorithm terminates, if no more newly predecessor positions were found, that is either W<span style="vertical-align: sub;font-size: 80%;">i+1</span> or B<span style="vertical-align: sub;font-size: 80%;">i+1</span> stay empty. Each one-bit in W or B correspondents to a White-to-move and won or Black-to-move and lose position. Remaining zero bits indicate either a <a href="/Draw">draw</a>, White-to-move and lose, Black-to-move and won, or illegal positions.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Chess_Position">Chess Position</a></li>
+<li><a href="/Chess_Problems,_Compositions_and_Studies">Chess Problems, Compositions and Studies</a></li>
+<li><a href="/Category:Problem">Chess Problem Solving Engines</a></li>
+<li><a href="/Corresponding_Squares">Corresponding Squares</a></li>
+<li><a href="/Dynamic_Programming">Dynamic Programming</a></li>
+<li><a href="/Endgame_Bitbases">Endgame Bitbases</a></li>
+<li><a href="/Endgame_Tablebases">Endgame Tablebases</a></li>
+<li><a href="/Oracle">Oracle</a></li>
+<li><a href="/Transposition">Transposition | Retrograde Analysis</a></li>
+</ul>
+<h2 id="selected-publications">Selected Publications</h2>
+<h3 id="1910-">1910 ...</h3>
+<ul>
+<li><a href="/Ernst_Zermelo">Ernst Zermelo</a> (<strong>1913</strong>). <em>Über eine Anwendung der Mengenlehre auf die Theorie des Schachspiels</em> Proc. Fifth Congress Mathematicians, (Cambridge 1912), Cambridge Univ. Press 1913, 501–504. Translation: <em>On an Application of Set Theory to the Theory of the Game of Chess</em>.</li>
+</ul>
+<h3 id="1920-">1920 ...</h3>
+<ul>
+<li><a href="/Mathematician">Dénes Kőnig</a> (<strong>1927</strong>). <em><a href="http://acta.fyx.hu/acta/showCustomerArticle.action?id=5131&amp;dataObjectType=article&amp;returnAction=showCustomerVolume&amp;sessionDataSetId=2b29ea26fa2c9ba">Über eine Schlussweise aus dem Endlichen ins Unendliche</a></em>. <a href="http://acta.fyx.hu/acta/home.action?noDataSet=true">Acta Scientiarum Mathematicarum</a> (<a href="https://en.wikipedia.org/wiki/University_of_Szeged">University of Szeged</a>)</li>
+</ul>
+<h3 id="1940-">1940 ...</h3>
+<ul>
+<li><a href="/John_von_Neumann">John von Neumann</a>, <a href="https://en.wikipedia.org/wiki/Oskar_Morgenstern">Oskar Morgenstern</a> (<strong>1944</strong>). <em>Theory of Games and Economic Behavior</em>. Princeton University Press, Princeton, NJ</li>
+</ul>
+<h3 id="1960-">1960 ...</h3>
+<ul>
+<li><a href="/Richard_E._Bellman">Richard E. Bellman</a> (<strong>1965</strong>). <em><a href="http://www.rand.org/pubs/papers/P3013/">On the Application of Dynamic Programming to the Determination of Optimal Play in Chess and Checkers</a>.</em> <a href="https://en.wikipedia.org/wiki/Proceedings_of_the_National_Academy_of_Sciences_of_the_United_States_of_America">PNAS</a></li>
+<li>Vladimir E. Alekseev (<strong>1969</strong>). <em><a href="http://oai.dtic.mil/oai/oai?verb=getRecord&amp;metadataPrefix=html&amp;identifier=AD0689470">Compilation of Chess Problems on a Computer</a></em>. Technical translation FSTC-HT-23-124-69, US Army, NTIS AD 689470 (<a href="http://www.worldcat.org/title/problemy-kibernetiki/oclc/1762911">Problemy Kibernetiki</a>, 19, 1967)</li>
+</ul>
+<h3 id="1970-">1970 ...</h3>
+<ul>
+<li><a href="/Thomas_Ströhlein">Thomas Ströhlein</a> (<strong>1970</strong>). <em>Untersuchungen über kombinatorische Spiele.</em> Ph.D. Thesis, <a href="/Technical_University_of_Munich">Technical University of Munich</a> (German)</li>
+<li><a href="/Edward_Komissarchik">Edward Komissarchik</a>, <a href="/Aaron_L._Futer">Aaron L. Futer</a> (<strong>1974</strong>). <em>Ob Analize Ferzevogo Endshpilya pri Pomoshchi EVM.</em> (Analysis of a queen endgame using an IBM computer) Problemy Kybernetiki, Vol. 29, pp. 211-220. English translation by <a href="/Christian_Posthoff">Christian Posthoff</a>, revised in <a href="/ICGA_Journal">ICCA Journal, Vol. 9, No. 4</a> (<strong>1986</strong>)</li>
+<li><a href="http://www.mathnet.ru/php/person.phtml?option_lang=eng&amp;personid=55935">A. G. Alexandrov</a>, <a href="http://www.mathnet.ru/php/person.phtml?option_lang=eng&amp;personid=96113">A. M. Baraev</a>, <a href="http://www.mathnet.ru/php/person.phtml?option_lang=eng&amp;personid=96114">Ya. Yu. Gol'fand</a>, <a href="/Edward_Komissarchik">Edward Komissarchik</a>, <a href="/Aaron_L._Futer">Aaron L. Futer</a> (<strong>1977</strong>). <em><a href="http://www.mathnet.ru/php/archive.phtml?wshow=paper&amp;jrnid=at&amp;paperid=7425&amp;option_lang=eng">Computer analysis of rook end game</a></em>. <a href="https://en.wikipedia.org/wiki/Automation_and_Remote_Control">Avtomatika i Telemekhanika</a>, No. 8, 113–117</li>
+<li><a href="/Thomas_Ströhlein">Thomas Ströhlein</a>, <a href="/Ludwig_Zagler">Ludwig Zagler</a> (<strong>1977</strong>). <em><a href="http://www.sciencedirect.com/science/article/pii/0012365X77900334">Analyzing games by Boolean matrix iteration</a></em>. <a href="https://en.wikipedia.org/wiki/Discrete_Mathematics_%28journal%29">Discrete Mathematics</a>, Vol. 19, No. 2</li>
+<li><a href="/Thomas_Ströhlein">Thomas Ströhlein</a>, <a href="/Ludwig_Zagler">Ludwig Zagler</a> (<strong>1978</strong>). <em>Ergebnisse einer vollstandigen Analyse von Schachendspielen: König und Turm gegen König, König und Turm gegen König und Läufer.</em> Report, Institut für Informatik, <a href="/Technical_University_of_Munich">Technical University of Munich</a> (German)</li>
+<li><a href="/Aaron_L._Futer">Aaron L. Futer</a> (<strong>1978</strong>). <em><a href="https://zbmath.org/?q=an:03637634">Programming endgames with few pieces</a></em>. <a href="https://en.wikipedia.org/wiki/Doklady_Physics">Soviet Physics. Doklady</a>, No. 23</li>
+<li><a href="/Vladimir_Arlazarov">Vladimir Arlazarov</a>, <a href="/Aaron_L._Futer">Aaron L. Futer</a> (<strong>1979</strong>). <em>Computer Analysis of a Rook End-Game</em>. <a href="http://www.doc.ic.ac.uk/~shm/MI/mi9.html">Machine Intelligence 9</a> (eds. <a href="/Jean_Hayes_Michie">Jean Hayes Michie</a>, <a href="/Donald_Michie">Donald Michie</a> and L.I. Mikulich), pp. 361-371. Ellis Horwood, Chichester. Reprinted in <a href="/Computer_Chess_Compendium">Computer Chess Compendium</a></li>
+<li><a href="/Raymond_Smullyan">Raymond Smullyan</a> (<strong>1979</strong>). <em><a href="https://www.amazon.com/Chess-Mysteries-Sherlock-Holmes/dp/0394737571">The Chess Mysteries of Sherlock Holmes</a></em>. <a href="https://en.wikipedia.org/wiki/Alfred_A._Knopf">Alfred A. Knopf</a>, New York <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a></li>
+</ul>
+<h3 id="1980-">1980 ...</h3>
+<ul>
+<li><a href="/Raymond_Smullyan">Raymond Smullyan</a> (<strong>1981</strong>). <em><a href="http://www.chesslund.com/detail.asp?id=2206&amp;n=Smullyan-The-Chess-Mysteries-of-the-Arabian-Knights">The Chess Mysteries of the Arabian Knights</a></em>. <a href="https://en.wikipedia.org/wiki/Alfred_A._Knopf">Alfred A. Knopf</a>, New York <a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a></li>
+<li><a href="/Max_Bramer">Max Bramer</a>, <a href="http://www.informatik.uni-trier.de/~ley/pers/hy/a/Alden:B=_E=_P=.html">B. E. P. Alden</a> (<strong>1982</strong>). <em>A Program for Solving Retrograde Analysis Chess Problems.</em> <a href="/Advances_in_Computer_Chess_3">Advances in Computer Chess 3</a> <a href="#fn15" class="footnote-ref" id="fnref15" role="doc-noteref"><sup>15</sup></a></li>
+<li><a href="/Ken_Thompson">Ken Thompson</a> (<strong>1986</strong>). <em>Retrograde Analysis of Certain Endgames</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 9, No. 3</a>, <a href="http://pdos.csail.mit.edu/~rsc/thompson86endgame.pdf">pdf</a></li>
+<li><a href="/Edward_Komissarchik">Edward Komissarchik</a>, <a href="/Aaron_L._Futer">Aaron L. Futer</a> (<strong>1986</strong>). <em>Computer Analysis of a Queen Endgame</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 9, No. 4</a></li>
+<li><a href="/Lewis_Stiller">Lewis Stiller</a> (<strong>1988</strong>). <em>Massively Parallel Retrograde Endgame Analysis</em>. BUCS Tech. Report #88-014, Boston University, Computer Science Department.</li>
+<li><a href="http://www.informatik.uni-trier.de/~ley/pers/hy/a/Alden:B=_E=_P=.html">B. E. P. Alden</a>, <a href="/Max_Bramer">Max Bramer</a> (<strong>1988</strong>). <em>An Expert System for Solving Retrograde-Analysis Chess Problems.</em> <a href="http://www.interaction-design.org/references/periodicals/international_journal_of_man-machine_studies_volume_29.html">International Journal of Man-Machine Studies, Vol. 29, No. 2</a></li>
+<li><a href="/Michael_Schlosser">Michael Schlosser</a> (<strong>1988</strong>). <em>Computers and Chess-Problem Composition.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 11, No. 4</a></li>
+<li><a href="/David_Forthoffer">David Forthoffer</a>, <a href="/Lars_Rasmussen">Lars Rasmussen</a>, <a href="/Sito_Dekker">Sito Dekker</a> (<strong>1989</strong>). <em>A Correction to some KRKB-Database Results</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 12, No. 1</a></li>
+<li><a href="/Ingo_Althöfer">Ingo Althöfer</a> (<strong>1989</strong>). <em>Retrograde Analysis and two Computerizable Definitions of the Quality of Chess Games.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 12, No. 2</a></li>
+</ul>
+<h3 id="1990-">1990 ...</h3>
+<ul>
+<li><a href="/László_Lindner">László Lindner</a>, <a href="/Michael_Schlosser">Michael Schlosser</a> (<strong>1991</strong>). <em>New Ideas in Problem Solving and Composing Programs</em>. <a href="/Advances_in_Computer_Chess_6">Advances in Computer Chess 6</a></li>
+<li><a href="/Michael_Schlosser">Michael Schlosser</a> (<strong>1991</strong>). <em>Can a Computer Compose Chess Problems?</em> <a href="/Advances_in_Computer_Chess_6">Advances in Computer Chess 6</a></li>
+<li><a href="/Lewis_Stiller">Lewis Stiller</a> (<strong>1991</strong>). <em>Some Results from a Massively Parallel Retrograde Analysis.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 14, No. 3</a></li>
+<li><a href="/Ralph_Gasser">Ralph Gasser</a> (<strong>1991</strong>). <em>Applying Retrograde Analysis to Nine Men’s Morris.</em> <a href="/2nd_Computer_Olympiad">Heuristic Programming in AI 2</a></li>
+<li>Robert Lake, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, <a href="/Paul_Lu">Paul Lu</a> (<strong>1993</strong>). <em>Solving Large Retrograde Analysis Problems Using a Network of Workstations</em>. Technical Report, TR93-13, <a href="ftp://ftp.cs.ualberta.ca/pub/TechReports/1993/TR93-13/">ps</a></li>
+<li>Robert Lake, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, <a href="/Paul_Lu">Paul Lu</a> (<strong>1994</strong>). <em>Solving Large Retrograde Analysis Problems Using a Network of Workstations</em>. <a href="/Advances_in_Computer_Chess_7">Advances in Computer Chess 7</a></li>
+<li><a href="/Henri_Bal">Henri Bal</a>, <a href="/Victor_Allis">Victor Allis</a> (<strong>1995</strong>). <em>Parallel Retrograde Analysis on a Distributed System</em>. Supercomputing ’95, San Diego, CA.</li>
+<li><a href="/Lewis_Stiller">Lewis Stiller</a> (<strong>1996</strong>). <em>Multilinear Algebra and Chess Endgames</em>. <a href="http://library.msri.org/books/Book29/index.html">Games of No Chance</a> edited by <a href="/Richard_J._Nowakowski">Richard J. Nowakowski</a>, <a href="http://www.msri.org/publications/books/Book29/files/stiller.pdf">pdf</a></li>
+<li>Dietmar Lippold (<strong>1996</strong>). <em>Legality of Positions of Simple Chess Endgames</em>. <a href="http://digilander.libero.it/gargamellachess/papers/legality%20of%20positions.zip">zipped pdf</a> <a href="#fn16" class="footnote-ref" id="fnref16" role="doc-noteref"><sup>16</sup></a></li>
+<li>Dietmar Lippold (<strong>1997</strong>). <em>The Legitimacy of Positions in Endgame Databases</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 20, No. 1</a></li>
+<li><a href="/Hiroyuki_Iida">Hiroyuki Iida</a>, <a href="/Jin_Yoshimura">Jin Yoshimura</a>, Kazuro Morita, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a> (<strong>1998</strong>). <em><a href="http://www.springerlink.com/content/pg7at646416va0re/">Retrograde Analysis of the KGK Endgame in Shogi: Its Implications for Ancient Heian Shogi</a></em>. <a href="/CG_1998">CG 1998</a></li>
+<li><a href="/Christoph_Wirth">Christoph Wirth</a>, <a href="/Jürg_Nievergelt">Jürg Nievergelt</a> (<strong>1999</strong>). <em>Exhaustive and Heuristic Retrograde Analysis of the KPPKP Endgame.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 22, No. 2</a></li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li>Roel van der Goot (<strong>2000</strong>). <em><a href="http://link.springer.com/chapter/10.1007/3-540-45579-5_6">Awari Retrograde Analysis</a></em>. <a href="/CG_2000">CG 2000</a></li>
+<li><a href="/Haw-ren_Fang">Haw-ren Fang</a>, <a href="/Tsan-sheng_Hsu">Tsan-sheng Hsu</a>, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a> (<strong>2000</strong>). <em><a href="http://link.springer.com/chapter/10.1007/3-540-45579-5_7">Construction of Chinese Chess Endgame Databases by Retrograde Analysis</a></em>. <a href="/CG_2000">CG 2000</a></li>
+<li><a href="/Bruno_Bouzy">Bruno Bouzy</a> (<strong>2001</strong>). <em>Go Patterns Generated by Retrograde Analysis</em>. <a href="/6th_Computer_Olympiad">6th Computer Olympiad Workshop</a>, <a href="http://www.mi.parisdescartes.fr/~bouzy/publications/RAGO.pdf">pdf</a></li>
+<li><a href="/Lewis_Stiller">Lewis Stiller</a> (<strong>2001</strong>). <em>Retrograde Analysis: Software Architecture</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 24, No. 2</a></li>
+<li><a href="/Ren_Wu">Ren Wu</a>, <a href="/Don_Beal">Don Beal</a> (<strong>2001</strong>). <em><a href="http://ilk.uvt.nl/icga/journal/contents/content24-3.htm#FAST">Fast, Memory-efficient Retrograde Algorithms</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 24, No. 3</a> <a href="#fn17" class="footnote-ref" id="fnref17" role="doc-noteref"><sup>17</sup></a> <a href="#fn18" class="footnote-ref" id="fnref18" role="doc-noteref"><sup>18</sup></a></li>
+<li><a href="/Ren_Wu">Ren Wu</a>, <a href="/Don_Beal">Don Beal</a> (<strong>2001</strong>). <em>Parallel Retrograde Analysis on Different Architectures</em>. IEEE 10th Conference in High Performance Distributed Computing pp. 356-362, August 2001</li>
+<li><a href="/Haw-ren_Fang">Haw-ren Fang</a>, <a href="/Tsan-sheng_Hsu">Tsan-sheng Hsu</a>, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a> (<strong>2001</strong>). <em>Construction of Chinese Chess Endgame Databases by Retrograde Analysis</em>. Lecture Notes in Computer Science 2063: <a href="/CG_2000">CG 2000</a></li>
+<li><a href="/Ren_Wu">Ren Wu</a>, <a href="/Don_Beal">Don Beal</a> (<strong>2002</strong>). <em>A memory efficient retrograde algorithm and its application to solve Chinese Chess endgames.</em> <a href="http://library.msri.org/books/Book42/">More Games of No Chance</a> edited by <a href="/Richard_J._Nowakowski">Richard J. Nowakowski</a></li>
+<li><a href="/Thomas_Lincke">Thomas Lincke</a> (<strong>2002</strong>). <em>Exploring the Computational Limits of Large Exhaustive Search Problems</em>. Ph.D thesis, <a href="/ETH_Zurich">ETH Zurich</a>, <a href="http://e-collection.library.ethz.ch/eserv/eth:25905/eth-25905-02.pdf">pdf</a></li>
+<li><a href="/John_Romein">John Romein</a>, <a href="/Henri_Bal">Henri Bal</a> (<strong>2003</strong>). <em>Solving the Game of Awari using Parallel Retrograde Analysis</em>. IEEE Computer, Vol. 36, No. 10, pp. 26–33</li>
+<li>Ping-hsun Wu, Ping-Yi Liu, <a href="/Tsan-sheng_Hsu">Tsan-sheng Hsu</a> (<strong>2004</strong>). <em><a href="http://link.springer.com/chapter/10.1007/11674399_10">An External-Memory Retrograde Analysis Algorithm</a></em>. <a href="/CG_2004">CG 2004</a></li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="/Jesper_Torp_Kristensen">Jesper Torp Kristensen</a> (<strong>2005</strong>). <em><a href="https://issuu.com/jespertk/docs/master_thesis">Generation and compression of endgame tables in chess with fast random access using OBDDs</a></em>. Master thesis, supervisor <a href="/Mathematician">Peter Bro Miltersen</a>, <a href="https://en.wikipedia.org/wiki/Aarhus_University">Aarhus University</a></li>
+<li><a href="/James_Glenn">James Glenn</a>, <a href="/Haw-ren_Fang">Haw-ren Fang</a>, <a href="/Clyde_Kruskal">Clyde Kruskal</a> (<strong>2006</strong>). <em><a href="https://link.springer.com/chapter/10.1007/978-3-540-75538-8_13">A Retrograde Approximation Algorithm for One-Player Can’t Stop</a></em>. <a href="/CG_2006">CG 2006</a></li>
+<li><a href="/James_Glenn">James Glenn</a>, <a href="/Haw-ren_Fang">Haw-ren Fang</a>, <a href="/Clyde_Kruskal">Clyde Kruskal</a> (<strong>2007</strong>). <em>A Retrograde Approximation Algorithm for Two-Player Can't Stop</em>. <a href="/CGW_2007">CGW 2007</a>, <a href="http://www.cs.loyola.edu/~jglenn/Papers/cantstop2.pdf">pdf</a></li>
+<li><a href="/Haw-ren_Fang">Haw-ren Fang</a>, <a href="/James_Glenn">James Glenn</a>, <a href="/Clyde_Kruskal">Clyde Kruskal</a> (<strong>2008</strong>). <em>Retrograde approximation algorithms for Jeopardy stochastic games</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 31, No. 2</a></li>
+<li><a href="/James_Glenn">James Glenn</a>, <a href="/Haw-ren_Fang">Haw-ren Fang</a>, <a href="/Clyde_Kruskal">Clyde Kruskal</a> (<strong>2008</strong>). <em><a href="https://link.springer.com/chapter/10.1007/978-3-540-87608-3_23">A Retrograde Approximation Algorithm for Multi-player Can’t Stop</a></em>. <a href="/CG_2008">CG 2008</a></li>
+<li><a href="/Noam_Elkies">Noam D. Elkies</a>, <a href="/Mathematician">Richard P. Stanley</a> (<strong>2008</strong>). <em>Chess and Mathematics</em>. excerpt, 6 Retrograde Analysis, <a href="http://www-math.mit.edu/%7Erstan/chess/spg.pdf">pdf</a></li>
+<li>Marko Maliković (<strong>2008</strong>). <em>Developing Heuristics for Solving Retrograde Chess Problems</em>. <a href="http://seminar.foi.hr/">Seminar on Formal Methods and Applications</a>, <a href="https://en.wikipedia.org/wiki/Vara%C5%BEdin">Varaždin</a>, <a href="https://en.wikipedia.org/wiki/Croatia">Croatia</a></li>
+<li><a href="/Dan_Heisman">Dan Heisman</a> (<strong>2009</strong>). <em>Steinitz, Zermelo, and Elkies</em>. <a href="http://www.chesscafe.com/text/skittles358.pdf">pdf</a> from <a href="https://en.wikipedia.org/wiki/ChessCafe.com">ChessCafe.com</a>, on <a href="https://en.wikipedia.org/wiki/Wilhelm_Steinitz">Wilhelm Steinitz</a>, <a href="/Ernst_Zermelo">Ernst Zermelo</a> and <a href="/Noam_Elkies">Noam Elkies</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="/Victor_Zakharov">Victor Zakharov</a>, <a href="/Vladimir_Makhnychev">Vladimir Makhnychev</a> (<strong>2010</strong>). <em>A Retroanalysis Algorithm for Supercomputer Systems on the Example of Playing Chess</em>. Software Systems and Tools, Vol. 11 (Russian)</li>
+<li>Ping-hsun Wu, Ping-yi Liu, <a href="/Tsan-sheng_Hsu">Tsan-sheng Hsu</a> (<strong>2010</strong>). <em>An External-memory Retrograde Analysis Algorithm</em>. slides as <a href="http://www.iis.sinica.edu.tw/~tshsu/tcg2010/slides/slide12.pdf">pdf</a></li>
+<li><a href="/Paolo_Ciancarini">Paolo Ciancarini</a>, Gian Piero Favini (<strong>2010</strong>). <em>Retrograde analysis of Kriegspiel endgames</em>. IEEE Conf. on Computational Intelligence and Games, Copenhagen.</li>
+<li>Marko Maliković, Mirko Čubrilo (<strong>2010</strong>). <em><a href="http://bib.irb.hr/prikazi-rad?&amp;rad=445958">What Were the Last Moves?</a></em> International Review on Computers and Software</li>
+<li>Marko Maliković, Mirko Čubrilo (<strong>2010</strong>). <em>Solving Shortest Proof Games by Generating Trajectories using Coq Proof Management System</em>. Proceedings of 21st Central European Conference on Information and Intelligent Systems, <a href="https://en.wikipedia.org/wiki/Vara%C5%BEdin">Varaždin</a>, <a href="https://en.wikipedia.org/wiki/Croatia">Croatia</a> <a href="#fn19" class="footnote-ref" id="fnref19" role="doc-noteref"><sup>19</sup></a></li>
+<li>Marko Maliković (<strong>2011</strong>). <em>Automated Reasoning about Retrograde Chess Problems using Coq</em>. <a href="http://argo.matf.bg.ac.rs/events/2011/fatpa2011/fatpa2011.html">Fourth Workshop on Formal and Automated Theorem Proving and Applications</a>, <a href="https://en.wikipedia.org/wiki/Belgrade">Belgrade</a>, <a href="https://en.wikipedia.org/wiki/Serbia">Serbia</a>, <a href="http://argo.matf.bg.ac.rs/events/2011/fatpa2011/slides/MarkoMalikovic.pdf">slides as pdf</a></li>
+<li><a href="/Jan_van_Rijn">Jan van Rijn</a>, Jonathan K. Vis (<strong>2013</strong>). <em>Complexity and Retrograde Analysis of the Game Dou Shou Qi</em>. <a href="http://bnaic2013.tudelft.nl/">BNAIC 2013</a> <a href="#fn20" class="footnote-ref" id="fnref20" role="doc-noteref"><sup>20</sup></a></li>
+<li><a href="/Jan_van_Rijn">Jan van Rijn</a>, Jonathan K. Vis (<strong>2014</strong>). <em>Endgame Analysis of Dou Shou Qi</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 37, No. 2</a>, <a href="http://www.liacs.nl/~jvrijn/pdf/pub/icga2014a.pdf">pdf</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li>Michael Hartisch (<strong>2015</strong>). <em>Impact of Rounding during Retrograde Analysis for a Game with Chance Nodes: Karl’s Race as a Test Case</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 38, No. 2</a> » <a href="/Games">Games</a>, <a href="/EinStein_würfelt_nicht!">EinStein würfelt nicht!</a> <a href="#fn21" class="footnote-ref" id="fnref21" role="doc-noteref"><sup>21</sup></a></li>
+<li>Michael Hartisch, <a href="/Ingo_Althöfer">Ingo Althöfer</a> (<strong>2015</strong>). <em>Optimal Robot Play in Certain Chess Endgame Situations</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 38, No. 3</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="/Guy_Haworth">Guy Haworth</a> (<strong>2020</strong>). <em>CEN: Thomas Ströhlein’s Endgame Tables, a 50th Anniversary</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 42, Nos. 2-3</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/b42e13fffe70a74e">retrograde analysis</a> by Stefan Schroedl, <a href="/Computer_Chess_Forums">rgcc</a>, August 15, 1995</li>
+</ul>
+<h3 id="2000--1">2000 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/c2509d7520be9ba7">reverse engineering</a> by NoKetch, <a href="/Computer_Chess_Forums">rgcc</a>, June 16, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=162252">EGTB: Better algorithm</a> by <a href="/Urban_Koistinen">Urban Koistinen</a>, <a href="/CCC">CCC</a>, April 07, 2001 <a href="#fn22" class="footnote-ref" id="fnref22" role="doc-noteref"><sup>22</sup></a></li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/msg/392bcd5797808c0e">Re: How endgame tablebases work</a> by <a href="/Bruce_Moreland">Bruce Moreland</a>, <a href="/Computer_Chess_Forums">rgcc</a>, July 19, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=200335">Generating egtbs ICGAJ</a> by <a href="/Tony_van_Roon-Werten">Tony Werten</a>, <a href="/CCC">CCC</a>, December 04, 2001 <a href="#fn23" class="footnote-ref" id="fnref23" role="doc-noteref"><sup>23</sup></a> <a href="#fn24" class="footnote-ref" id="fnref24" role="doc-noteref"><sup>24</sup></a></li>
+</ul>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=200376">Wu/Beal predates Koistinen</a> by <a href="/Guy_Haworth">Guy Haworth</a>, <a href="/CCC">CCC</a>, December 04, 2001</p>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.abstract/browse_frm/thread/48cca090ce094620">Question about retrograde analysis algorithm for endgame databases</a> by mathpolymath, <a href="/Computer_Chess_Forums">rec.games.abstract</a>, April 24, 2002 <a href="#fn25" class="footnote-ref" id="fnref25" role="doc-noteref"><sup>25</sup></a></li>
+</ul>
+<h3 id="2005--1">2005 ...</h3>
+<ul>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=6302&amp;p=29956">Wu / Beal retrograde analisys algorithm</a> by <a href="/Alvaro_Cardoso">Alvaro Jose Povoa Cardoso</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, March 10, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=23214">Could this program be written?</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, August 24, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=24713">Retrograde analysis</a> by Geolm, <a href="/CCC">CCC</a>, November 04, 2008</li>
+</ul>
+<h3 id="2010--1">2010 ...</h3>
+<ul>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=779">Retrograde tablebase methods</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, November 26, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54796">Reverse move generation</a> by Kostas Oreopoulos, <a href="/CCC">CCC</a>, December 30, 2014 » <a href="/Move_Generation">Un-Move Generation</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=54796&amp;start=6">Re: Reverse move generation</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, December 30, 2014</p>
+<h3 id="2015--1">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63515">Position Legally Reachable?</a> by <a href="/Mark_Lefler">Mark Lefler</a>, <a href="/CCC">CCC</a>, March 21, 2017</li>
+</ul>
+<h3 id="2020--1">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73332">Retrograde analysis - TBs move sequences to checkmate</a> by Hedinn Steingrimsson, <a href="/CCC">CCC</a>, March 12, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77685">On the number of chess positions</a> by <a href="/John_Tromp">John Tromp</a>, <a href="/CCC">CCC</a>, July 09, 2021</li>
+</ul>
+<p><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77685&amp;start=34">Re: On the number of chess positions</a> by <a href="/John_Tromp">John Tromp</a>, <a href="/CCC">CCC</a>, April 02, 2022</p>
+<p><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77685&amp;start=42">Re: On the number of chess positions</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, April 03, 2022 » <a href="/Chess_Position">Chess Position</a></p>
+<ul>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=78913">Fast reverse move generation</a> by koedem, <a href="/CCC">CCC</a>, December 18, 2021 » <a href="/Move_Generation">Un-Move Generation</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<h3 id="retrograde-analysis">Retrograde Analysis</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Retrograde_analysis">Retrograde analysis from Wikipedia</a></li>
+<li><a href="https://home.hccnet.nl/h.g.muller/EGT7/retro.html">Leapfrog: Retrograde Analysis</a> from <a href="http://home.hccnet.nl/h.g.muller/EGT7/7-men.html">Leapfrog tablebase generator</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a></li>
+<li><a href="https://www.abc.se/~m10051/eg.txt">Computing endgames with few men</a> by <a href="/Urban_Koistinen">Urban Koistinen</a> <a href="#fn26" class="footnote-ref" id="fnref26" role="doc-noteref"><sup>26</sup></a> <a href="#fn27" class="footnote-ref" id="fnref27" role="doc-noteref"><sup>27</sup></a> <a href="#fn28" class="footnote-ref" id="fnref28" role="doc-noteref"><sup>28</sup></a></li>
+<li><a href="http://www.janko.at/Retros/index.htm">The Retrograde Analysis Corner</a></li>
+<li><a href="http://jewishchesshistory.blogspot.de/2008/01/prime-ministers-and-retrograde-analysis.html">Jewish Chess History: Prime Ministers and Retrograde Analysis</a></li>
+<li><a href="http://joekisenwether.wordpress.com/non-chess-retrograde-analysis/">Non-Chess Retrograde Analysis</a> « <a href="http://joekisenwether.wordpress.com/">Joe Kisenwether's Blog</a></li>
+<li><a href="https://levelup.gitconnected.com/build-your-own-chess-endgame-monster-a3fb23bb3ec1">Build Your Own Chess Endgame Monster - Level Up Coding</a> by <a href="/Don_Cross">Don Cross</a>, February 17, 2020</li>
+</ul>
+<h3 id="github">GitHub</h3>
+<ul>
+<li><a href="https://github.com/tromp/ChessPositionRanking">GitHub - tromp/ChessPositionRanking: Software suite for ranking chess positions and accurately estimating the number of legal chess positions</a> by <a href="/John_Tromp">John Tromp</a></li>
+</ul>
+<h3 id="programs">Programs</h3>
+<ul>
+<li><a href="http://lestourtereaux.free.fr/euclide/">Euclide 1.11 - Home</a> by Étienne Dupuis » Euclide</li>
+<li><a href="https://www.freezerchess.com/">Freezerchess.com - Endgame Analysis beyond Databases</a> by <a href="/Eiko_Bleicher">Eiko Bleicher</a> » <a href="/Freezer">Freezer</a></li>
+<li><a href="http://natch.free.fr/Natch.html">Natch - Checking proof games</a> by Pascal Wassong » Natch</li>
+<li><a href="http://xenon.stanford.edu/~hwatheod/Retractor/">Retractor</a> a program for Retrograde Analysis chess problems by Chad Whipkey and Theodore Hwa » Retractor</li>
+</ul>
+<h3 id="induction">Induction</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Inductive_reasoning">Inductive reasoning from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Backward_induction">Backward induction from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Backward_chaining">Backward chaining from Wikipedia</a></li>
+</ul>
+<h3 id="retrograde">Retrograde</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Retrograde">Retrograde (disambiguation) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Retrograde_motion">Retrograde motion from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/Apparent_retrograde_motion">Apparent retrograde motion from Wikipedia</a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Retrograde_%28music%29">Retrograde (music) from Wikipedia</a></li>
+<li><a href="https://www.allaboutjazz.com/musicians/darryl-reeves">Darryl Reeves</a> - The Mercury Sessions - Retrograde, July 22, 2011 - Churchill Grounds - <a href="https://en.wikipedia.org/wiki/Atlanta">Atlanta, GA</a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p>Darryl Reeves, Kenny Banks, Joel Powell, Kenton "Boom" Bostick</p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/6cRHUd5iCtM" title="YouTube video 6cRHUd5iCtM" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=6cRHUd5iCtM">Watch on YouTube</a></p>
+<h3 id="analysis">Analysis</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Analysis">Analysis from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Analysis_%28disambiguation%29">Analysis (disambiguation) from Wikipedia</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Knowledge">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Lewis_Stiller">Lewis Stiller</a> (<strong>1996</strong>). <em>Multilinear Algebra and Chess Endgames</em>. <a href="http://library.msri.org/books/Book29/index.html">Games of No Chance</a> edited by <a href="/Richard_J._Nowakowski">Richard J. Nowakowski</a>, <a href="http://www.msri.org/publications/books/Book29/files/stiller.pdf">pdf</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Ernst_Zermelo"><code>Ernst Zermelo</code></a><code> (</code><strong><code>1913</code></strong><code>). </code><em><code>Über eine Anwendung der Mengenlehre auf die Theorie des Schachspiels</code></em><code>Proc. Fifth Congress Mathematicians, (Cambridge 1912), Cambridge Univ. Press 1913, 501–504. Translation:</code><em><code>On an Application of Set Theory to the Theory of the Game of Chess</code></em><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="/John_von_Neumann"><code>John von Neumann</code></a><code>and</code><a href="https://en.wikipedia.org/wiki/Oskar_Morgenstern"><code>Oskar Morgenstern</code></a><code> (</code><strong><code>1944</code></strong><code>). </code><em><code>Theory of Games and Economic Behavior</code></em><code>. Princeton University Press, Princeton, NJ</code><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="/Richard_E._Bellman"><code>Richard E. Bellman</code></a><code> (</code><strong><code>1965</code></strong><code>). </code><em><a href="http://www.rand.org/pubs/papers/P3013/"><code>On the Application of Dynamic Programming to the Determination of Optimal Play in Chess and Checkers</code></a><code>.</code></em><code> </code><a href="https://en.wikipedia.org/wiki/Proceedings_of_the_National_Academy_of_Sciences_of_the_United_States_of_America"><code>PNAS</code></a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="/Richard_E._Bellman"><code>Richard E. Bellman</code></a><code> (</code><strong><code>1954</code></strong><code>). </code><em><code>On a new Iterative Algorithm for Finding the Solutions of Games and Linear Programming Problems</code></em><code>. Technical Report P-473, </code><a href="https://en.wikipedia.org/wiki/RAND_Corporation"><code>RAND Corporation</code></a><code>, </code><a href="https://en.wikipedia.org/wiki/Santa_Monica,_California"><code>Santa Monica, CA</code></a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="/Richard_E._Bellman"><code>Richard E. Bellman</code></a><code> (</code><strong><code>1957</code></strong><code>). </code><em><code>The Theory of Games</code></em><code>. Technical Report P-1062, </code><a href="https://en.wikipedia.org/wiki/RAND_Corporation"><code>RAND Corporation</code></a><code>, </code><a href="https://en.wikipedia.org/wiki/Santa_Monica,_California"><code>Santa Monica, CA</code></a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><code>Robert Lake</code><code>, </code><a href="/Jonathan_Schaeffer"><code>Jonathan Schaeffer</code></a><code>, </code><a href="/Paul_Lu"><code>Paul Lu</code></a><code> (</code><strong><code>1994</code></strong><code>). </code><em><code>Solving Large Retrograde Analysis Problems Using a Network of Workstations</code></em><code>. </code><a href="/Advances_in_Computer_Chess_7"><code>Advances in Computer Chess 7</code></a><a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="/Ralph_Gasser"><code>Ralph Gasser</code></a><code> (</code><strong><code>1991</code></strong><code>). </code><em><code>Applying Retrograde Analysis to Nine Men’s Morris.</code></em><code> </code><a href="/2nd_Computer_Olympiad"><code>Heuristic Programming in AI 2</code></a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="/John_Romein"><code>John Romein</code></a><code>, </code><a href="/Henri_Bal"><code>Henri Bal</code></a><code> (</code><strong><code>2003</code></strong><code>). </code><em><code>Solving the Game of Awari using Parallel Retrograde Analysis</code></em><code>. IEEE Computer, Vol. 36, No. 10</code><a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="/Thomas_Ströhlein"><code>Thomas Ströhlein</code></a><code> (</code><strong><code>1970</code></strong><code>). </code><em><code>Untersuchungen über kombinatorische Spiele.</code></em><code>Ph.D. Thesis,</code><a href="/Technical_University_of_Munich"><code>Technical University of Munich</code></a><code> (German)</code><a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="/Ken_Thompson">Ken Thompson</a> (<strong>1986</strong>). <em>Retrograde Analysis of Certain Endgames</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 9, No. 3</a><a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p>dubbed "grandfather" method, <a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=779">Retrograde tablebase methods</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, November 26, 2010<a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="https://groups.google.com/d/msg/rec.games.chess.computer/MyFmpXxqccg/Z6WgNuoF-hcJ">Smullyan Problem in Sherlock Holmes book</a> by Christopher Heckman, <a href="/Computer_Chess_Forums">rgcc</a>, January 18, 2013<a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p><a href="https://de.wikipedia.org/wiki/Schachkomposition#Retrospektive_.28Retroanalyse.29">Retrospektive (Retroanalyse)</a> from German Wikipedia, <a href="/Mathematician">Raymond Smullyan</a>, <a href="https://en.wikipedia.org/wiki/The_Guardian">Manchester Guardian</a>, 1957<a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn15"><p><a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>1981</strong>). <em>Progress in Computer Chess.</em> <a href="http://www.aisb.org.uk/aisbq/qarchive.shtml">AISB Quarterly</a>, reprinted in <a href="/ICGA_Journal">ICCA Newsletter, Vol. 4. No. 3</a>, <a href="http://arno.uvt.nl/show.cgi?fid=106747">pdf</a><a href="#fnref15" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn16"><p>referred in <a href="/Jesper_Torp_Kristensen">Jesper Torp Kristensen</a> (<strong>2005</strong>). <em><a href="https://issuu.com/jespertk/docs/master_thesis">Generation and compression of endgame tables in chess with fast random access using OBDDs</a></em>. Master thesis, supervisor <a href="/Mathematician">Peter Bro Miltersen</a>, <a href="https://en.wikipedia.org/wiki/Aarhus_University">Aarhus University</a><a href="#fnref16" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn17"><p><a href="https://www.stmintz.com/ccc/index.php?id=200335">Generating egtbs ICGAJ</a> by <a href="/Tony_van_Roon-Werten">Tony Werten</a>, <a href="/CCC">CCC</a>, December 04, 2001, with reference to <a href="http://www.abc.se/~m10051/eg.txt">Computing endgames with few men</a> by <a href="/Urban_Koistinen">Urban Koistinen</a><a href="#fnref17" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn18"><p><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=6302&amp;p=29956">Wu / Beal retrograde analisys algorithm</a> by <a href="/Alvaro_Cardoso">Alvaro Jose Povoa Cardoso</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, March 10, 2007<a href="#fnref18" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn19"><p><a href="https://en.wikipedia.org/wiki/Coq">Coq from Wikipedia</a><a href="#fnref19" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn20"><p><a href="https://en.wikipedia.org/wiki/Jungle_%28board_game%29">Jungle (board game) from Wikipedia</a><a href="#fnref20" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn21"><p><a href="http://www.althofer.de/karls-race.html">Karl's Race</a> A Game on Karl Scherer's Alternating Tiling by <a href="/Ingo_Althöfer">Ingo Althöfer</a>, 2006<a href="#fnref21" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn22"><p><a href="http://www.abc.se/~m10051/eg.txt">Computing endgames with few men</a> by <a href="/Urban_Koistinen">Urban Koistinen</a><a href="#fnref22" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn23"><p><a href="/Ren_Wu">Ren Wu</a>, <a href="/Don_Beal">Don Beal</a> (<strong>2001</strong>). <em>Fast, Memory-efficient Retrograde Algorithms</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 24, No. 3</a><a href="#fnref23" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn24"><p><a href="http://www.abc.se/~m10051/eg.txt">Computing endgames with few men</a> by <a href="/Urban_Koistinen">Urban Koistinen</a><a href="#fnref24" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn25"><p><a href="/Ren_Wu">Ren Wu</a>, <a href="/Don_Beal">Don Beal</a> (<strong>2001</strong>). <em>Fast, Memory-efficient Retrograde Algorithms</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 24, No. 3</a><a href="#fnref25" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn26"><p><a href="https://www.stmintz.com/ccc/index.php?id=162252">EGTB: Better algorithm</a> by <a href="/Urban_Koistinen">Urban Koistinen</a>, <a href="/CCC">CCC</a>, April 07, 2001<a href="#fnref26" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn27"><p><a href="https://www.stmintz.com/ccc/index.php?id=200335">Generating egtbs ICGAJ</a> by <a href="/Tony_van_Roon-Werten">Tony Werten</a>, <a href="/CCC">CCC</a>, December 04, 2001<a href="#fnref27" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn28"><p><a href="/Ren_Wu">Ren Wu</a>, <a href="/Don_Beal">Don Beal</a> (<strong>2001</strong>). <em>Fast, Memory-efficient Retrograde Algorithms</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 24, No. 3</a><a href="#fnref28" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Music">Music</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Retrograde_Analysis">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

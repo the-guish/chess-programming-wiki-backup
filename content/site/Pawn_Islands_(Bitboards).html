@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pawn Islands (Bitboards) - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Pawn Islands (Bitboards)</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * <a href="/Pawn_Pattern_and_Properties">Pawn Pattern and Properties</a> * Pawn Islands</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="http://chgs.elevator.umn.edu/asset/viewAsset/57f3b6787d58ae5f74bf8ba9#57f3b6d77d58ae5574bf8bbd" target="_blank" rel="noopener noreferrer"><img src="/assets/Drowned.jpg" alt="Samuel Bak - Drowned 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Samuel_Bak">Samuel Bak</a> - Drowned <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://chgs.elevator.umn.edu/asset/viewAsset/57f3b6787d58ae5f74bf8ba9#57f3b6d77d58ae5574bf8bbd">Chess in the Art of Samuel Bak</a>, <a href="http://www.chgs.umn.edu/">Center for Holocaust &amp; Genocide Studies</a>, <a href="/University_of_Minnesota">University of Minnesota</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Pawn Islands</strong> of either side are groups of pawns (at least one), separated by files without own pawns. Those files are therefore either <a href="/Pawns_and_Files_%28Bitboards%29">halfopen</a> or <a href="/Pawns_and_Files_%28Bitboards%29">open</a>. All other things being equal, the side with fewer pawn islands has an advantage, because the individual pawns are easier to defend against enemy attacks. Each island has a west- or east border file. Rook-files may be the most outer borders.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#sample-filesets">Sample Filesets</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#island-borders">Island Borders</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#east">East</a></li>
+<li><a href="#west">West</a></li>
+</ol>
+</details></li>
+<li><a href="#number-of-islands">Number of Islands</a></li>
+<li><a href="#isolated-files">Isolated Files</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="sample-filesets">Sample Filesets</h2>
+<p>Black has three islands here, white two:</p>
+<pre><code> . . . . . . . .
+ b . . . . . . b
+ . b . b b . b .
+ . . . . . . . .
+ . . . . . . . .
+ . w . . . w . .
+ w . w . . . w w
+ . . . . . . . .</code></pre>
+<p>Those are the black and white <a href="/Pawns_and_Files_%28Bitboards%29">filesets</a>, one byte each.</p>
+<pre><code> b b . b b . b b
+
+ w w w . . w w w</code></pre>
+<h2 id="island-borders">Island Borders</h2>
+<p>Based on <a href="/Pawns_and_Files_%28Bitboards%29">filesets</a>, we can simply determine the west- or east border-files of each island. By shifting left or right one, xor with the original fileset to get all the 0-1 or 1-0 transitions - to finally intersect it with the original fileset to restrict the transitions inside this set of occupied files. The result are the files with <a href="/Isolated_Pawns_%28Bitboards%29">half-isolanis</a>.</p>
+<p>Since <a href="/General_Setwise_Operations">conjunction</a> is distributive over <a href="/General_Setwise_Operations">xor</a>, one may alternately swap both operands. In fact it is the <a href="/General_Setwise_Operations">relative complement</a> of the shifted files in files and takes three operations each.</p>
+<h3 id="east">East</h3>
+<pre><code> b b . b b . b b
+ . b . . b . . b
+
+ w w w . . w w w
+ . . w . . . . w
+
+BYTE islandsEastFiles(BYTE f) {return f &amp; (f ^ (f &gt;&gt; 1));}
+BYTE islandsEastFiles(BYTE f) {return f ^ (f &amp; (f &gt;&gt; 1));}
+BYTE islandsEastFiles(BYTE f) {return f &amp;     ~(f &gt;&gt; 1) ;}
+
+1 . . . 1 1 . .  files
+. . . 1 1 . . .  files &gt;&gt; 1 (board left or west)
+1 . . 1 . 1 . .  xor       -&gt; all the west 0-1 or 1-0 file-transitions
+1 . . . . 1 . .  and files -&gt; east files of each island</code></pre>
+<h3 id="west">West</h3>
+<pre><code> b b . b b . b b
+ b . . b . . b .
+
+ w w w . . w w w
+ w . . . . w . .
+
+BYTE islandsWestFiles(BYTE f) {return f &amp; (f ^ (f &lt;&lt; 1));} // ... (f+f)
+BYTE islandsWestFiles(BYTE f) {return f ^ (f &amp; (f &lt;&lt; 1));}
+BYTE islandsWestFiles(BYTE f) {return f &amp;     ~(f &lt;&lt; 1) ;}
+
+1 . . . 1 1 . .  files
+. 1 . . . 1 1 .  files &lt;&lt; 1  (board right or east)
+1 1 . . 1 . 1 .  xor       -&gt; all the east 0-1 or 1-0 file-transitions
+1 . . . 1 . . .  and files -&gt; west files of each island</code></pre>
+<h2 id="number-of-islands">Number of Islands</h2>
+<p>Since each island has exactly one west- and one east border-file, the <a href="/Population_Count">population count</a> of either border-set might be used to determine the numbers of islands, see <a href="/Dispersion_and_Distortion">dispersion</a>. Of course all byte-wise calculations may be implemented by small, preinitialized lookup tables, indexed by fileset (0..255), containing the number of islands, bitboards of isolated files and whatever else. The maximum number of islands is four.</p>
+<h2 id="isolated-files">Isolated Files</h2>
+<p>The intersection of east- and west border-files are already files with <a href="/Isolated_Pawns_%28Bitboards%29">isolated pawns</a>.</p>
+<pre><code>1 . . . . 1 . .  east files of each island
+1 . . . 1 . . .  west files of each island
+1 . . . . . . .  and -&gt; isolated files
+. . . . 1 1 . .  xor -&gt; resets isolated files</code></pre>
+<p>To isolate wider (2..8) islands is not that hard either.</p>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Glossary_of_chess#P">Glossary of chess from Wikipedia - P</a></li>
+<li><a href="/Category:Steps_Ahead">Steps Ahead</a> - <a href="https://en.wikipedia.org/wiki/Steps_Ahead_(album)">Islands</a>, 1983, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p>lineup:. <a href="/Category:Mike_Mainieri">Mike Mainieri</a>, <a href="/Category:Michael_Brecker">Michael Brecker</a>, <a href="https://en.wikipedia.org/wiki/Eddie_G%C3%B3mez">Eddie Gómez</a>, <a href="/Category:Peter_Erskine">Peter Erskine</a>, <a href="https://en.wikipedia.org/wiki/Eliane_Elias">Elaine Elias</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/ixOvuqRX9nE" title="YouTube video ixOvuqRX9nE" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=ixOvuqRX9nE">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Pawn_Pattern_and_Properties">Up one Level</a></strong></p>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Samuel_Bak">Samuel Bak</a> · <a href="/Category:Steps_Ahead">Steps Ahead</a> · <a href="/Category:Mike_Mainieri">Mike Mainieri</a> · <a href="/Category:Michael_Brecker">Michael Brecker</a> · <a href="/Category:Peter_Erskine">Peter Erskine</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Pawn_Islands_(Bitboards)">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

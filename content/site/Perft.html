@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Perft - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Perft</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Move_Generation">Move Generation</a> * Perft</strong></p>
+<p><strong>Perft</strong>, (<strong>perf</strong>ormance <strong>t</strong>est, move path enumeration)<br />
+a <a href="/Debugging">debugging</a> function to walk the move generation tree of strictly <a href="/Legal_Move">legal moves</a> to count all the <a href="/Leaf_Node">leaf nodes</a> of a certain <a href="/Depth">depth</a>, which can be compared to <a href="/Perft_Results">predetermined values</a> and used to isolate <a href="/Engine_Testing">bugs</a>. In perft, nodes are only counted at the end after the last <a href="/Make_Move">makemove</a>. Thus, "higher" <a href="/Terminal_Node">terminal nodes</a> (e.g. mate or stalemate) are not counted, instead the number of move paths of a certain depth is counted. Perft ignores draws by <a href="/Repetitions">repetition</a>, by the <a href="/Fifty-move_Rule">fifty-move rule</a> and by <a href="/Material">insufficient material</a>. By recording the amount of time taken for each iteration, it's possible to compare the performance of different move generators or the same generator on different machines, though this must be done with caution since there are variations to perft.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#perft-function">Perft function</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#speed-up">Speed up</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#bulk-counting">Bulk-counting</a></li>
+<li><a href="#pseudo-legal-moves">Pseudo Legal Moves</a></li>
+<li><a href="#hashing">Hashing</a></li>
+</ol>
+</details></li>
+<li><a href="#divide">Divide</a></li>
+<li><a href="#purposes">Purposes</a></li>
+<li><a href="#known-issues">Known issues</a></li>
+<li><a href="#history">History</a></li>
+<li><a href="#quotes">Quotes</a></li>
+<li><a href="#results">Results</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#perft-in-other-games">Perft in other Games</a></li>
+<li><a href="#implementations">Implementations</a></li>
+<li><a href="#video-tutorial">Video Tutorial</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="perft-function">Perft function</h2>
+<p>A simple perft function in <a href="/C">C</a> looks as the following:</p>
+<pre><code>typedef unsigned long long u64;
+
+u64 Perft(int depth)
+{
+  MOVE move_list[256];
+  int n_moves, i;
+  u64 nodes = 0;
+
+  if (depth == 0) 
+    return 1ULL;
+
+  n_moves = GenerateLegalMoves(move_list);
+  for (i = 0; i &lt; n_moves; i++) {
+    MakeMove(move_list[i]);
+    nodes += Perft(depth - 1);
+    UndoMove(move_list[i]);
+  }
+  return nodes;
+}</code></pre>
+<h2 id="speed-up">Speed up</h2>
+<h3 id="bulk-counting"><span id="Bulk"></span>Bulk-counting</h3>
+<p>Assuming the above code used a legal move generator. The algorithm is simple and short, but it makes moves for every node, even if they are the leaves (ends of branches). It could improve speed significantly: instead of counting nodes at "depth 0", legal move generators can take advantage of the fact that the number of moves generated at "depth 1" represents the accurate Perft value for that branch. Therefore, they can skip the last <a href="/Make_Move">makemove</a>/<a href="/Unmake_Move">undomove</a>, which gives much faster results and is a better indicator of the raw move generator speed (versus move generator + make/unmake). However, this can cause some confusion when comparing Perft values and may make the task of collecting some extra information, such as the number of captures and checks, almost impossible.</p>
+<pre><code>u64 Perft(int depth /* assuming &gt;= 1 */)
+{
+  MOVE move_list[256];
+  int n_moves, i;
+  u64 nodes = 0;
+
+  n_moves = GenerateLegalMoves(move_list);
+
+  if (depth == 1) 
+    return (u64) n_moves;
+
+  for (i = 0; i &lt; n_moves; i++) {
+    MakeMove(move_list[i]);
+    nodes += Perft(depth - 1);
+    UndoMove(move_list[i]);
+  }
+  return nodes;
+}</code></pre>
+<h3 id="pseudo-legal-moves">Pseudo Legal Moves</h3>
+<p>To generate legal moves, some programs have to make moves first, call a function to check if the position in-check and then undo those moves. That makes the above Perft function make and undo moves twice for all moves. The code below can avoid that problem and run much faster:</p>
+<pre><code>u64 Perft(int depth)
+{
+  MOVE move_list[256];
+  int n_moves, i;
+  u64 nodes = 0;
+
+  if (depth == 0) 
+    return 1ULL;
+
+  n_moves = GenerateMoves(move_list);
+  for (i = 0; i &lt; n_moves; i++) {
+    MakeMove(move_list[i]);
+    if (!IsIncheck())
+      nodes += Perft(depth - 1);
+    UndoMove(move_list[i]);
+  }
+  return nodes;
+}</code></pre>
+<h3 id="hashing">Hashing</h3>
+<p>Perft can receive another speed boost by <a href="/Hash_Table">hashing</a> node counts, with a small chance for inaccurate results. Sometimes this is used as a sanity check to make sure the hash table and keys are working correctly. Hashing may speed up from 1.5 to 4 times<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>.</p>
+<h2 id="divide">Divide</h2>
+<p>The Divide command is often implemented as a variation of Perft, listing all moves and for each move, the Perft of the decremented depth. However, some programs already give "divided" output for Perft. Below is the output of <a href="/Stockfish">Stockfish</a> when computing perft 5 for the start position:</p>
+<pre><code>go perft 5
+a2a3: 181046
+b2b3: 215255
+c2c3: 222861
+d2d3: 328511
+e2e3: 402988
+f2f3: 178889
+g2g3: 217210
+h2h3: 181044
+a2a4: 217832
+b2b4: 216145
+c2c4: 240082
+d2d4: 361790
+e2e4: 405385
+f2f4: 198473
+g2g4: 214048
+h2h4: 218829
+b1a3: 198572
+b1c3: 234656
+g1f3: 233491
+g1h3: 198502
+
+Nodes searched: 4865609</code></pre>
+<h2 id="purposes">Purposes</h2>
+<p>Perft is mostly for debugging purposes. It works mainly with functions: move generators, make move, and unmake move. They are all very basic and vital for chess engines. By comparing Perft results, developers can determine if those functions are working correctly or not. If they are incorrect, they can narrow down the search quickly by comparing branches. Then, they can call Perft for the wrong branches with lower depth and repeat the process until they find direct positions that yield the wrong result.</p>
+<p>Other purposes:</p>
+<ul>
+<li>give a glance at how good/bad their generators/make/unmake functions are, compared with the speed of other engines</li>
+<li>calculate branch factors</li>
+<li>a factor to estimate the complexity of chess variants, by comparing branch factors or Perft results at a given depth for their starting positions</li>
+</ul>
+<h2 id="known-issues">Known issues</h2>
+<p>Perft algorithm considers only legal moves but ignores some <a href="/Draw">draw rules</a>. Before reaching the limit depth, it expands a position if it has some legal moves and stops if it does not. That means Perft stops at being mated and <a href="/Stalemate">draw-by-stalemate</a> positions. However, since the algorithm doesn’t mention, Perft doesn’t stop at other draw positions, including 1) <a href="/Fifty-move_Rule">fifty-move</a> 2) <a href="/Repetitions">repetitions</a>, and 3) <a href="/Material">insufficient material</a>. Consequently, the Perft search trees are not the Chess <a href="/Search_Tree">search trees</a> even though they are quite close. The reason is from the historical when some early chess programs used Perft in that way, and then many others adopted it. The Perft's original form has been widely accepted because of its simple, fast and well-served debugging purposes.</p>
+<h2 id="history">History</h2>
+<p>Supposably, perft was first implemented within the Cobol program RSCE-1 by <a href="/Rolf_C._Smith">R.C. Smith</a>, submitted to the <a href="https://en.wikipedia.org/wiki/United_States_Chess_Federation">USCF</a> for evaluation, and subject of an <a href="/Timeline">1978</a> <a href="/Computerworld">Computerworld</a> article <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> . RSCE-1's purpose was not to play chess games, but to position analysis, to find forced <a href="/Checkmate">mates</a>, and to perform a moving path enumeration of up to three <a href="/Ply">plies</a>, with the <a href="/Perft_Results">perft(3) result</a> of 8,902 from the <a href="/Initial_Position">initial position</a> already mentioned <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>. <a href="/Ken_Thompson">Ken Thompson</a> may have calculated perft(3) and perft(4) earlier than this date with <a href="/Belle">Belle</a>. <a href="/Steven_Edwards">Steven Edwards</a> suggested the move path enumeration in 1995 as implemented in <a href="/Spector">Spector</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> and has since been actively involved in Perft computations, while the term "Perft" was likely coined by a <a href="/Crafty">Crafty</a> command, despite its initial implementation was not conformed to the above definition <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>.</p>
+<p>In <strong>December 2003</strong>, <a href="/Albert_Bertilsson">Albert Bertilsson</a> started a distributed project <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> to calculate perft(11) of the <a href="/Initial_Position">initial position</a>, taking over a week to calculate <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> . Exact Perft numbers have been computed and verified up to a depth of 13 by Edwards and are now available in the <a href="https://en.wikipedia.org/wiki/On-Line_Encyclopedia_of_Integer_Sequences">On-Line Encyclopedia of Integer Sequences</a> <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a>, and are given under <a href="/Initial_Position_Summary">Initial Position Summary</a>. A so far unverified claim for perft(<strong>14</strong>) of 61,885,021,521,585,529,237 was given by <a href="/Peter_Österlund">Peter Österlund</a> in <strong>April 2013</strong> <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a>, while <a href="/Daniel_Shawul">Daniel Shawul</a> proposed Perft estimation applying <a href="/Monte-Carlo_Tree_Search">Monte carlo methods</a> <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a> <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a>. <span id="15"></span> In <strong>August 2017</strong>, <a href="/Ankan_Banerjee">Ankan Banerjee</a>, who already confirmed Peter Österlund's perft(<strong>14</strong>) in September 2016 <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a>, computed perft(<strong>15</strong>) of 2,015,099,950,053,364,471,960 with his <a href="/GPU">GPU</a> perft program <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a>, running it several days two times with different <a href="/Zobrist_Hashing">zobrist keys</a> on a cluster of <a href="https://en.wikipedia.org/wiki/Nvidia_DGX-1">Nvidia DGX-1</a> server systems <a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a>. His program starts exploring the tree in <a href="/Depth-First">depth first</a> manner on the CPU. When a certain depth is reached a GPU function (kernel) is launched to compute perft of the subtree in <a href="/Best-First">breadth first</a> manner <a href="#fn15" class="footnote-ref" id="fnref15" role="doc-noteref"><sup>15</sup></a>. Ankan Banerjee dedicated his computations in honor to <a href="/Steven_Edwards">Steven Edwards</a> - whose tireless efforts for verifying perft(14) encouraged him to verify perft(14) and take up the challenge to compute perft(15) <a href="#fn16" class="footnote-ref" id="fnref16" role="doc-noteref"><sup>16</sup></a>.</p>
+<h2 id="quotes">Quotes</h2>
+<p>by <a href="/Robert_Hyatt">Robert Hyatt</a> in a forum post, June 12, 2020 <a href="#fn17" class="footnote-ref" id="fnref17" role="doc-noteref"><sup>17</sup></a> :</p>
+<p><code>I believe I was the first to use this. Back in the 80s. We rewrote the move generator in Cray Blitz in assembly language. It was a pain to debug. I decided on the "perft" approach solely to test/debug the move generator. We'd run two versions, one FORTRAN, one assembly, and we tested and debugged until they matched.</code><br />
+<code>I carried this over into Crafty as early versions went through several different approaches on move generation. Starting with the Slate/Atkin approach, then rotated bitboards (which took some time to debug), and the magic. It was really intended solely for that purpose. Then several started to use it as a benchmark for speed. I never followed that path since move generation is a very small part of the overall CPU time burned.</code><br />
+<code>Speed here is not so important. I doubt anyone's move generator takes more than 10% of total search time, which means a 20% improvement in perft numbers is only a 2% overall speed gain. I would not worry about anything but matching the node counts exactly...</code></p>
+<h2 id="results">Results</h2>
+<ul>
+<li><a href="/Perft_Results">Perft Results</a></li>
+<li><a href="/Chess960_Perft_Results">Chess960 Perft Results</a></li>
+<li><a href="/Chinese_Chess_Perft_Results">Chinese Chess Perft Results</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Aart_Bik">Aart Bik</a> (<strong>2012</strong>). <em>Computing Deep Perft and Divide Numbers for Checkers</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 35, No. 4</a> » <a href="/Checkers">Checkers</a></li>
+<li><a href="/Daniel_Shawul">Daniel S. Abdi</a> (<strong>2013</strong>). <em>Monte carlo methods for estimating game tree size</em>. <a href="#fn18" class="footnote-ref" id="fnref18" role="doc-noteref"><sup>18</sup></a> » <a href="/Monte-Carlo_Tree_Search">Monte-Carlo Tree Search</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/M8V1AzkfOok/YV9lcfOlfgIJ">Re: Speed of Move Generator</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/Computer_Chess_Forums">rgcc</a>, August 16, 1995 » <a href="/Spector">Spector</a></li>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/2nqtCdHC-r0/ENqomE2u51kJ">Re: complete opening tree stats</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Computer_Chess_Forums">rgcc</a>, February 05, 1998 » <a href="/Crafty">Crafty</a></li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=107258">Testing speed of "position visiting"</a> by <a href="/Tom_Kerrigan">Tom Kerrigan</a>, <a href="/CCC">CCC</a>, April 23, 2000</li>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/ek5fbFf4ajc/lrPxv2kDHgkJ">Experiments with crafty perft command</a> by Guy Macon, <a href="/Computer_Chess_Forums">rgcc</a>, December 10, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=198498">Who is the champion in calculating perft?</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, November 22, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=234025">Perft 5,6 {Fastest program is List}</a> by <a href="/Dann_Corbit">Dann Corbit</a>, <a href="/CCC">CCC</a>, June 04, 2002 » <a href="/List_%28Program%29">List</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=275133">Perft revisited</a> by Normand M. Blais, <a href="/CCC">CCC</a>, January 05, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=276596">perft question</a> by <a href="/Joel_Veness">Joel Veness</a>, <a href="/CCC">CCC</a>, January 12, 2003</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=18&amp;t=41318">Perft</a> by <a href="/Andreas_Herrmann">Andreas Herrmann</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, February 18, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=326134">Highest perft for initial position?</a> by <a href="/Albert_Bertilsson">Albert Bertilsson</a>, <a href="/CCC">CCC</a>, November 07, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=335026">Distributed perft project</a> by <a href="/Albert_Bertilsson">Albert Bertilsson</a>, <a href="/CCC">CCC</a>, December 09, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=334499">Perft(10) verified</a> by <a href="/Albert_Bertilsson">Albert Bertilsson</a>, <a href="/CCC">CCC</a>, December 09, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=335527">Distributed perft, current standings and trends</a> by <a href="/Albert_Bertilsson">Albert Bertilsson</a>, <a href="/CCC">CCC</a>, December 12, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=336985">Hashing in distributed perft</a> by <a href="/Steffen_A._Jakob">Steffen Jakob</a>, <a href="/CCC">CCC</a>, December 19, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=386249">perft records</a> by <a href="/Peter_Fendrich">Peter Fendrich</a>, <a href="/CCC">CCC</a>, September 06, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=388806">perft results (how accurate is accurate enough ?)</a> by <a href="/Roman_Hartmann">Roman Hartmann</a>, <a href="/CCC">CCC</a>, September 23, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=394229">FRC Perft</a> by Jürgen Suntinger, <a href="/CCC">CCC</a>, November 02, 2004</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=1377">perft question</a> by <a href="/Sven_Schüle">Sven Schüle</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, January 19, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=466491">Perft vs Search Re: Cache size does matter</a> by <a href="/Brian_Richardson">Brian Richardson</a>, <a href="/CCC">CCC</a>, December 03, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=488816">Perft -- Test position and data</a> by <a href="/Charles_Roberson">Charles Roberson</a>, <a href="/CCC">CCC</a>, February 23, 2006</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=20834">A perft faster than qperft?!</a> by <a href="/Allard_Siemelink">Allard Siemelink</a>, <a href="/CCC">CCC</a>, April 24, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=23634">Perft problems...</a> by Chris Tatham, <a href="/CCC">CCC</a>, September 10, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=27334">What is perft(x) exactly meaning?</a> by <a href="/Jouni_Uski">Jouni Uski</a>, <a href="/CCC">CCC</a>, April 06, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=29425">Perft and mate</a> by <a href="/Stefano_Gemma">Stefano Gemma</a>, <a href="/CCC">CCC</a>, August 16, 2009 » <a href="/Freccia">Freccia</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=30754">Perft and insufficient material</a> by <a href="/Sven_Schüle">Sven Schüle</a>, <a href="/CCC">CCC</a>, November 23, 2009</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=34025">Does perft include underpromotion?</a> by <a href="/Rasjid_Chan">Chan Rasjid</a>, <a href="/CCC">CCC</a>, April 27, 2010</li>
+</ul>
+<p><strong>2011</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38235">Perft 12 in progress</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, February 27, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38862">Perft(12) count confirmed</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, April 25, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=39678">Perft(13) betting pool</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, July 10, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40108">Fastest perft</a> by ethan ara, <a href="/CCC">CCC</a>, August 19, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41373">Perft(3) from 1978, with a twist!</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, December 08, 2011 <a href="#fn19" class="footnote-ref" id="fnref19" role="doc-noteref"><sup>19</sup></a></li>
+</ul>
+<p><strong>2012</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=42512">estimating the number of possible stalemates in perft(n)</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, February 18, 2012 » <a href="/Stalemate">Stalemate</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=42600">Shatranj perfts</a> by Paul Byrne, <a href="/CCC">CCC</a>, February 24, 2012 » <a href="/Shatranj">Shatranj</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=45099">Perft and en_passant</a> by <a href="/Harald_Lüßen">Harald Lüßen</a>, <a href="/CCC">CCC</a>, September 11, 2012 » <a href="/En_passant">En passant</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46004">about perft, what is the proper way of doing it?</a> by Fred Piche, <a href="/CCC">CCC</a>, November 14, 2012</li>
+</ul>
+<p><strong>2013</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47318">A few positions to test movegen</a> by <a href="/Martin_Sedlak">Martin Sedlak</a>, <a href="/CCC">CCC</a>, February 24, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47335">Perft(14) estimates thread</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, February 26, 2013</li>
+</ul>
+<p><a href="http://talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=513308&amp;t=47335">Re: Perft(14) estimates thread</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, April 02, 2013 » 61,885,021,521,585,529,237</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47740">Perft(15) estimates thread</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, April 10, 2013</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=47740&amp;start=2">MC methods</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, April 11, 2013 » <a href="/Monte-Carlo_Tree_Search">Monte-Carlo Tree Search</a></p>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=47740&amp;topic_view=flat&amp;start=11">Re: MC methods</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, April 13, 2013</p>
+<ul>
+<li><a href="http://www.chessprogramming.net/computerchess/is-perft-speed-important/">Is Perft Speed Important?</a> by <a href="/Steve_Maughan">Steve Maughan</a>, <a href="http://www.chessprogramming.net/">Computer Chess Programming</a>, April 19, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48217">Perft search speed bottleneck</a> by Jim Jarvis, <a href="/CCC">CCC</a>, June 07, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48387">Fast perft on GPU (upto 20 Billion nps w/o hashing)</a> by <a href="/Ankan_Banerjee">Ankan Banerjee</a>, <a href="/CCC">CCC</a>, June 22, 2013 » <a href="/GPU">GPU</a>, <a href="/Kogge-Stone_Algorithm">Kogge-Stone Algorithm</a> <a href="#fn20" class="footnote-ref" id="fnref20" role="doc-noteref"><sup>20</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48423">A perft() benchmark</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, June 26, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48491">gperft</a> by Paul Byrne, <a href="/CCC">CCC</a>, July 01, 2013</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=52965">perft/divide bug in roce38 and Sharper? [SOLVED</a>] by thedrunkard, <a href="/Computer_Chess_Forums">Winboard Forum</a>, October 16, 2013 » <a href="/ROCE">ROCE</a>, <a href="/Sharper">Sharper</a></li>
+</ul>
+<p><strong>2014</strong></p>
+<ul>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2238">Perft and Captures</a> by <a href="/Christian_Daley">CDaley11</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, January 24, 2013 » <a href="/Captures">Captures</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53224">Perft(14) revisited</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, August 08, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53406">Perft(14) Weekly Status Report</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, August 24, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53408">Non recursive perft()</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, August 24, 2014 » <a href="/Iterative_Search">Iterative Search</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53439">OpenCL perft() Technical Issues</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, August 26, 2014 » <a href="/OpenCL">OpenCL</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53743">A method guaranteed to localize the toughest perft() bugs</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, September 18, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54528">FRC / Chess960 Engine with "Divided" Command</a> by <a href="/Steve_Maughan">Steve Maughan</a>, <a href="/CCC">CCC</a>, December 02, 2014 » <a href="/Chess960">Chess960</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54719">Handling integer overflow for certain perft() calculations</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, December 22, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54767">Perft(14) verification</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, December 28, 2014</li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54853">Perft(14) Weekly Status Reports for 2015</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, January 04, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55195">Perft(15)</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, February 09, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55274">Some Chess960/FRC positions to be confirmed</a> by <a href="/Reinhard_Scharnagl">Reinhard Scharnagl</a>, <a href="/CCC">CCC</a>, February 09, 2015 » <a href="/Chess960">Chess960</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55896">An MPI perft program</a> by <a href="/Chao_Ma">Chao Ma</a>, <a href="/CCC">CCC</a>, April 05, 2015 » <a href="/Parallel_Search">Parallel Search</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56523">Deep split perft()</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, May 29, 2015 » <a href="/Thread">Thread</a></li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2855">Please comment on my Perft speeds</a> by ppyvabw, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, July 10, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56998">100 easy perft(7) test positions</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, July 17, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57417">Perft using nullmove</a> by <a href="/Lasse_Hansen">Lasse Hansen</a>, <a href="/CCC">CCC</a>, August 29, 2015</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2913">Perft and hash with legal move generator</a> by Peterpan, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, November 12, 2015 » <a href="/Transposition_Table">Transposition Table</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58406">Auriga - distributed and collaborative Perft</a> by <a href="/Giuseppe_Cannella">Giuseppe Cannella</a>, <a href="/CCC">CCC</a>, November 28, 2015 <a href="#fn21" class="footnote-ref" id="fnref21" role="doc-noteref"><sup>21</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58726">Perft(14) Weekly Status Reports for 2016</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, December 29, 2015</li>
+</ul>
+<p><strong>2016</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59046">Best way to debug perft?</a> by Meni Rosenfeld, <a href="/CCC">CCC</a>, January 25, 2016 » <a href="/Debugging">Debugging</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59567">Perft, leaf nodes?</a> by Luis Babboni, <a href="/CCC">CCC</a>, March 19, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60108">reverse perft</a> by <a href="/Alexandru_Mosoi">Alexandru Mosoi</a>, <a href="/CCC">CCC</a>, May 09, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60445">Perft for Xiangqi &amp; Shogi</a> by <a href="/Patrice_Duhamel">Patrice Duhamel</a>, <a href="/CCC">CCC</a>, June 12, 2016 » <a href="/Chinese_Chess">Xiangqi</a>, <a href="/Shogi">Shogi</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61119">yet another attempt on Perft(14)</a> by <a href="/Ankan_Banerjee">Ankan Banerjee</a>, <a href="/CCC">CCC</a>, August 13, 2016</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=61119&amp;start=30">Re: yet another attempt on Perft(14)</a> by <a href="/Ankan_Banerjee">Ankan Banerjee</a>, <a href="/CCC">CCC</a>, September 09, 2016</p>
+<p><strong>2017 ...</strong></p>
+<ul>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=3063">Perft results?</a> by notachessplayer, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, January 01, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64983">perft(15)</a> by <a href="/Ankan_Banerjee">Ankan Banerjee</a>, <a href="/CCC">CCC</a>, August 25, 2017 » <a href="/Perft">Perft(15)</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=64983&amp;start=4">Re: perft(15)</a> by <a href="/Ankan_Banerjee">Ankan Banerjee</a>, <a href="/CCC">CCC</a>, August 25, 2017</p>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=64983&amp;start=9">Re: Perft(15): comparison of estimates with Ankan's result</a> by <a href="/Ankan_Banerjee">Ankan Banerjee</a>, <a href="/CCC">CCC</a>, August 26, 2017</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70530">No standard specification for Perft</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/CCC">CCC</a>, April 19, 2019</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=71379">You gotta love Perft... just not too much!</a> by <a href="/Martin_Bryant">Martin Bryant</a>, <a href="/CCC">CCC</a>, July 27, 2019</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=71550">Shogi Perft numbers</a> by <a href="/Toni_Helminen">Toni Helminen</a>, <a href="/CCC">CCC</a>, August 14, 2019 » <a href="/Shogi">Shogi</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72669">LastEmperor - Chess960 perft tool</a> by <a href="/Toni_Helminen">JohnWoe</a>, <a href="/CCC">CCC</a>, December 28, 2019 » <a href="/Chess960_Perft_Results">Chess960 Perft Results</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73493">Where to enter/read position into hash table in perft?</a> by <a href="/Marcel_Vanthoor">Marcel Vanthoor</a>, <a href="/CCC">CCC</a>, March 28, 2020 » <a href="/Transposition_Table">Transposition Table</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73558">Count the number of nodes of perft(14) and beyond</a> by <a href="/Marc-Philippe_Huget">Marc-Philippe Huget</a>, <a href="/CCC">CCC</a>, April 04, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73625">magic bitboard perft</a> by <a href="/Richard_Delorme">Richard Delorme</a>, <a href="/CCC">CCC</a>, April 11, 2020 » <a href="/Magic_Bitboards">Magic Bitboards</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73577">Perft speed optimization</a> by <a href="/Marcel_Vanthoor">Marcel Vanthoor</a>, <a href="/CCC">CCC</a>, April 06, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73812">Request for InDoubleCheck PERFTS EPDs</a> by <a href="/Chris_Whittington">Chris Whittington</a>, <a href="/CCC">CCC</a>, May 02, 2020 » <a href="/Double_Check">Double Check</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74153">Perft speed and depth questions</a> by Mark Buisseret, <a href="/CCC">CCC</a>, June 12, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75877">Place to find correct perft result from a fen position</a> by Elias Nilsson, <a href="/CCC">CCC</a>, November 20, 2020 » <a href="/Perft_Results">Perft Results</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76430">Chinese chess Xiangqi perft results</a> by <a href="/Maksim_Korzh">Maksim Korzh</a>, <a href="/CCC">CCC</a>, January 27, 2021 » <a href="/Chinese_Chess_Perft_Results">Chinese Chess Perft Results</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77054">PERFT transposition table funny?!</a> by <a href="/Martin_Bryant">Martin Bryant</a>, <a href="/CCC">CCC</a>, April 10, 2021 » <a href="/Transposition_Table">Transposition Table</a>, <a href="/Memory">Memory</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=77069">Perft 7 -&gt; 1.6 trillion moves</a> by <a href="/Michael_Byrne">MikeB</a>, <a href="/CCC">CCC</a>, April 12, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77350">Being silly with perft and legal move generation</a> by Jakob Progsch, <a href="/CCC">CCC</a>, May 19, 2021 » <a href="/Move_Generation">Legal Move Generation</a>, <a href="/En_passant">En passant</a></li>
+<li><a href="http://talkchess.com/forum3/viewtopic.php?f=7&amp;t=78119">Perft position to debug check-evasions via en passant capture</a> by Roland Tomasi, <a href="/CCC">CCC</a>, September 06, 2021</li>
+<li><a href="http://talkchess.com/forum3/viewtopic.php?f=7&amp;t=78241">Perft test</a> by Pierluigi Meloni, <a href="/CCC">CCC</a>, September 24, 2021</li>
+<li><a href="http://talkchess.com/forum3/viewtopic.php?f=7&amp;t=78230">Gigantua: 1.5 Giganodes per Second per Core move generator</a> by Daniel Infuehr, <a href="/CCC">CCC</a>, September 22, 2021</li>
+<li><a href="http://talkchess.com/forum3/viewtopic.php?f=7&amp;t=78352">Gigantua: 2 Gigamoves per Second per Core move generator - Sourcecode Release</a> by Daniel Infuehr, <a href="/CCC">CCC</a>, October 07, 2021</li>
+<li><a href="http://talkchess.com/forum3/viewtopic.php?f=7&amp;t=80952">My Perft Results</a> by JoAnn Peeler, <a href="/CCC">CCC</a>, November 04, 2022</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=82843">Increase performance of make move, unmake move and move generation functions</a> by Elias Nilsson, <a href="/CCC">CCC</a>, November 09, 2023</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=83043">What is a good perft speed?</a> by Imno Umni, <a href="/CCC">CCC</a>, December 20, 2023</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=83392">Perft(16) estimate after averaging MC samples.</a> by Ajedrecista, <a href="/CCC">CCC</a>, February 26, 2024</li>
+</ul>
+<p><strong>2025...</strong></p>
+<ul>
+<li><a href="https://talkchess.com/viewtopic.php?t=84781">Are the perft results wrong on the CPW?</a> by <a href="/Tim_Jones">Tim Jones</a>, <a href="/CCC">CCC</a>, January 30, 2025</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=84797">The Grand Chess Tree</a> by <a href="/Tim_Jones">Tim Jones</a>, <a href="/CCC">CCC</a>, February 04, 2025</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=84847">Perft and theoretic draws (FIDE)</a> by <a href="/Yves_De_Billoëz">Yves De Billoëz</a>, <a href="/CCC">CCC</a>, February 19, 2025</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=84892">Perft engine - king moves</a> by Thomas Albert, <a href="/CCC">CCC</a>, March 09, 2025</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=85136">Perft stats discrepencies</a> by Ben Vining, <a href="/CCC">CCC</a>, June 01, 2025</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=85453">Writing the fastest move generator. Up to 4BNodes/s</a> by Thomas Albert, <a href="/CCC">CCC</a>, September 14, 2025</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=85560">Why is my move generator so slow ?</a> by Paul Jérôme--Filio, <a href="/CCC">CCC</a>, October 14, 2025</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=85699">Get MoveGen errorfree</a> by Aldo Voogt, <a href="/CCC">CCC</a>, November 23, 2025</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="http://oeis.org/A048987">A048987</a> from <a href="https://en.wikipedia.org/wiki/On-Line_Encyclopedia_of_Integer_Sequences">On-Line Encyclopedia of Integer Sequences</a> (OEIS)</li>
+<li><a href="https://wismuth.com/chess/statistics-games.html">Statistics on chess games</a> by <a href="/Mathematician">François Labelle</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Performance_testing">Performance testing from Wikipedia</a></li>
+<li><a href="https://web.archive.org/web/20061014115710/http://www.albert.nu/programs/dperft/">Distributed Perft Project</a> (<a href="https://en.wikipedia.org/wiki/Wayback_Machine">Wayback Machine</a>)</li>
+<li><a href="https://grandchesstree.com/">The Grand Chess Tree</a> by <a href="/Tim_Jones">Tim Jones</a></li>
+</ul>
+<h3 id="perft-in-other-games">Perft in other Games</h3>
+<ul>
+<li><a href="http://tonyjh.com/chess/technical/">Perft for other forms of Chess</a> by Tony Hecker</li>
+<li><a href="https://checker-board.blogspot.com/2009/02/perft-for-checkers.html">Perft for Checkers</a> by <a href="/Martin_Fierz">Martin Fierz</a></li>
+<li><a href="http://www.aartbik.com/strategy.php">Perft for Checkers and Reversi/Othello</a> by <a href="/Aart_Bik">Aart Bik</a></li>
+</ul>
+<h3 id="implementations">Implementations</h3>
+<ul>
+<li><a href="https://home.hccnet.nl/h.g.muller/dwnldpage.html">µ-Max Dowload Page - qperft</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a> » <a href="/Micro-Max">Micro-Max</a></li>
+<li><a href="https://github.com/ankan-ban/perft_gpu">ankan-ban/perft_gpu · GitHub</a> <a href="#fn22" class="footnote-ref" id="fnref22" role="doc-noteref"><sup>22</sup></a></li>
+<li><a href="http://cinnamonchess.altervista.org/auriga">Auriga</a> by <a href="/Giuseppe_Cannella">Giuseppe Cannella</a> <a href="#fn23" class="footnote-ref" id="fnref23" role="doc-noteref"><sup>23</sup></a></li>
+<li><a href="https://github.com/Mk-Chan/BBPerft">BBPerft: A fast, bitboard based chess perft result generator</a> by <a href="/Manik_Charan">Manik Charan</a> derived from <a href="/WyldChess">WyldChess</a></li>
+<li><a href="http://brausch.org/home/chess/index.html">Chess Engine OliThink - New Move Generator OliPerft (Pre OliThink 5)</a> by <a href="/Oliver_Brausch">Oliver Brausch</a> » <a href="/OliThink">OliThink</a></li>
+<li><a href="http://www.craftychess.com/documentation/craftydoc.html">Crafty Command Documentation</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, see perft <depth> » <a href="/Crafty">Crafty</a></li>
+<li><a href="https://github.com/abulmo/hqperft">hqperft: Chess move generation based on (H)yperbola (Q)uintessence &amp; range attacks</a> by <a href="/Richard_Delorme">Richard Delorme</a> » <a href="/Hyperbola_Quintessence">Hyperbola Quintessence</a></li>
+<li><a href="https://github.com/jniemann66/juddperft">GitHub - jniemann66/juddperft: Chess move generation engine</a> by <a href="/Judd_Niemann">Judd Niemann</a></li>
+<li><a href="http://www.rocechess.ch/perft.html">perft, divide, debugging a move generator</a> from <a href="/ROCE">ROCE</a> by <a href="/Roman_Hartmann">Roman Hartmann</a></li>
+<li><a href="http://marcelk.net/rookie/nostalgia/v3/perft-random.epd">perft-random.epd</a> by <a href="/Marcel_van_Kervinck">Marcel van Kervinck</a> » <a href="/Rookie">Rookie</a></li>
+</ul>
+<h3 id="video-tutorial">Video Tutorial</h3>
+<ul>
+<li>A quick overview of the perft process by <a href="/Jonathan_Warkentin">Jonathan Warkentin</a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Videos</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/A0HJbwRwILk" title="YouTube video A0HJbwRwILk" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=A0HJbwRwILk">Watch on YouTube</a></p>
+<ul>
+<li>An example of debugging a perft error by <a href="/Jonathan_Warkentin">Jonathan Warkentin</a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Videos</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/bAONObdxF54" title="YouTube video bAONObdxF54" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=bAONObdxF54">Watch on YouTube</a></p>
+<ul>
+<li>Improving the perft speed &amp; debugging tips by <a href="/Jonathan_Warkentin">Jonathan Warkentin</a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Videos</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/BIzAfg5sdqg" title="YouTube video BIzAfg5sdqg" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=BIzAfg5sdqg">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Move_Generation">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://talkchess.com/viewtopic.php?p=836489">Re: Where to enter/read position into hash table in perft?</a> by <a href="/Harm_Geert_Muller">HGM's</a>, <a href="/CCC">CCC</a>, March 29, 2020<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://news.google.com/newspapers?nid=849&amp;dat=19780417&amp;id=h8lOAAAAIBAJ&amp;sjid=DEoDAAAAIBAJ&amp;pg=6180,1080528">Written in Cobol - Program Written as Chess Buff's Research Aid</a> by Brad Schultz, <a href="/Computerworld">Computerworld</a>, April 17, 1978, Page 37<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=41373">Perft(3) from 1978, with a twist!</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, December 08, 2011<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://groups.google.com/d/msg/rec.games.chess.computer/M8V1AzkfOok/YV9lcfOlfgIJ">Re: Speed of Move Generator</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/Computer_Chess_Forums">rgcc</a>, August 16, 1995<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="https://groups.google.com/d/msg/rec.games.chess.computer/2nqtCdHC-r0/ENqomE2u51kJ">Re: complete opening tree stats</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Computer_Chess_Forums">rgcc</a>, February 05, 1998<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="https://www.stmintz.com/ccc/index.php?id=335026">Distributed perft project</a> by <a href="/Albert_Bertilsson">Albert Bertilsson</a>, <a href="/CCC">CCC</a>, December 09, 2003<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="https://web.archive.org/web/20061014115710/http://www.albert.nu/programs/dperft/">Distributed Perft Project</a> (<a href="https://en.wikipedia.org/wiki/Wayback_Machine">Wayback Machine</a>)<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="http://oeis.org/A048987">A048987</a> from <a href="https://en.wikipedia.org/wiki/On-Line_Encyclopedia_of_Integer_Sequences">On-Line Encyclopedia of Integer Sequences</a> (OEIS)<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="http://talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=513308&amp;t=47335">Re: Perft(14) estimates thread</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, April 02, 2013<a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=47740&amp;start=2">MC methods</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, April 11, 2013<a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="/Daniel_Shawul">Daniel S. Abdi</a> (<strong>2013</strong>). <em>Monte carlo methods for estimating game tree size</em>. <a href="https://dl.dropboxusercontent.com/u/55295461/perft/perft.pdf">pdf</a><a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=61119&amp;start=30">Re: yet another attempt on Perft(14)</a> by <a href="/Ankan_Banerjee">Ankan Banerjee</a>, <a href="/CCC">CCC</a>, September 09, 2016<a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="https://github.com/ankan-ban/perft_gpu">ankan-ban/perft_gpu · GitHub</a><a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p><a href="https://www.nvidia.com/en-us/data-center/dgx-1/">DGX-1 for AI Research | NVIDIA</a><a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn15"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=64983&amp;start=9">Re: Perft(15): comparison of estimates with Ankan's result</a> by <a href="/Ankan_Banerjee">Ankan Banerjee</a>, <a href="/CCC">CCC</a>, August 26, 2017<a href="#fnref15" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn16"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=64983&amp;start=4">Re: perft(15)</a> by <a href="/Ankan_Banerjee">Ankan Banerjee</a>, <a href="/CCC">CCC</a>, August 25, 2017<a href="#fnref16" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn17"><p><a href="http://talkchess.com/forum3/viewtopic.php?f=7&amp;t=74153">Re: Perft speed and depth questions</a> by Mark Buisseret, <a href="/Computer_Chess_Forums">CCRL Discussion Board</a>, June 12, 2020<a href="#fnref17" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn18"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=47740&amp;topic_view=flat&amp;start=11">Re: MC methods</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, April 13, 2013<a href="#fnref18" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn19"><p><a href="https://news.google.com/newspapers?nid=849&amp;dat=19780417&amp;id=h8lOAAAAIBAJ&amp;sjid=DEoDAAAAIBAJ&amp;pg=6180,1080528">Written in Cobol - Program Written as Chess Buff's Research Aid</a> by Brad Schultz, <a href="/Computerworld">Computerworld</a>, April 17, 1978, Page 37<a href="#fnref19" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn20"><p><a href="https://github.com/ankan-ban/perft_gpu">ankan-ban/perft_gpu · GitHub</a><a href="#fnref20" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn21"><p><a href="http://cinnamonchess.altervista.org/auriga">Auriga</a> by <a href="/Giuseppe_Cannella">Giuseppe Cannella</a><a href="#fnref21" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn22"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=48387">Fast perft on GPU (upto 20 Billion nps w/o hashing)</a> by <a href="/Ankan_Banerjee">Ankan Banerjee</a>, <a href="/CCC">CCC</a>, June 22, 2013<a href="#fnref22" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn23"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=58406">Auriga - distributed and collaborative Perft</a> by <a href="/Giuseppe_Cannella">Giuseppe Cannella</a>, <a href="/CCC">CCC</a>, November 28, 2015<a href="#fnref23" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Videos">Videos</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Perft">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, AartBik, Phhnguyen, Smatovic.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

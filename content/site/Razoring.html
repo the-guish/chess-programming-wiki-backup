@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Razoring - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Razoring</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Search">Search</a> * <a href="/Selectivity">Selectivity</a> * <a href="/Reductions">Reductions</a> * Razoring</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/a/ab/William_of_Ockham_-_Logica_1341.jpg" alt="Occam's razor 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="https://en.wikipedia.org/wiki/Occam%27s_razor">Occam's razor</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://en.wikipedia.org/wiki/William_of_Ockham">William of Ockham</a> – Sketch labeled "frater Occham iste", from a manuscript of Ockham's Summa Logicae, 1341<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p>Unlike <a href="/Alpha-Beta">Alpha-Beta</a>, classical <strong>Razoring</strong> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> <a href="/Pruning">prunes</a> branches forward, if the static evaluation of a move is less than or equal to <a href="/Alpha">Alpha</a>. It assumes that from any given position my opponent will be able to find at least one move that improves his position, the <a href="/Null_Move_Observation">Null Move Observation</a>. There are various implementations of Razoring, somehow diminishing <a href="/Pruning">pruning</a> and <a href="/Reductions">reductions</a> near the <a href="/Horizon_Node">horizon</a>. Razoring either prunes forward based on a reduced search, even the <a href="/Quiescence_Search">quiescence search</a>, or it reduces based on <a href="/Evaluation">evaluation</a> or quiescence search as well.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#pre-frontier-nodes">Pre Frontier Nodes</a></li>
+<li><a href="#deep-razoring">Deep Razoring</a></li>
+<li><a href="#limited-razoring">Limited Razoring</a></li>
+<li><a href="#amir-bans-definition">Amir Ban's Definition</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#implementation">Implementation</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#stockfish">Stockfish</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#historical-implementations">Historical Implementations</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#crafty-1517">Crafty 15.17</a></li>
+<li><a href="#dropping-into-q-search">Dropping into Q-search</a></li>
+<li><a href="#strelka">Strelka</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="pre-frontier-nodes">Pre Frontier Nodes</h2>
+<p>The idea introduced by <a href="/John_Birmingham">John Birmingham</a> and <a href="/Peter_Kent">Peter Kent</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> was applied at so-called <a href="/Pre_Frontier_Node">pre frontier</a> (<span style="background-color: #d6d6d6;">depth = 2</span>) expected <a href="/Node_Types">All-Nodes</a>. Before searching deeper, all <a href="/Move_Generation">moves were generated</a>, <a href="/Make_Move">made</a>, <a href="/Evaluation">evaluated</a>, <a href="/Unmake_Move">unmade</a> and then inserted inside a sorted <a href="/Move_List">move list</a>. While fetching the sorted moves in decreasing order - as long as the evaluation of each move exceeds <a href="/Alpha">alpha</a> - they were tried as usual. Once a move statically does no longer improve <a href="/Alpha">alpha</a>, this and all further moves (sorted below) are pruned without any further investigation.</p>
+<h2 id="deep-razoring">Deep Razoring</h2>
+<p>There is even a more aggressive pruning technique at <span style="background-color: #d6d6d6;">depth = 4</span> nodes, called Deep Razoring. The weaker assumption is my opponent will be able to improve his position with a <em>yourmove-mymove-yourmove</em> sequence. <span id="LimitedRazoring"></span></p>
+<h2 id="limited-razoring">Limited Razoring</h2>
+<p><a href="/Ernst_A._Heinz">Ernst A. Heinz</a> introduced <em>Limited Razoring</em>, pushing the idea of <a href="/Futility_Pruning">futility pruning</a> one step further to pre-pre-frontier nodes (<span style="background-color: #d6d6d6;">depth = 3</span>), he combines it with the depth-reduction mechanism of deep razoring <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> .</p>
+<pre><code>fscore = mat_balance(current) + razor_margin;
+if (!extend
+ &amp;&amp; (depth == PRE_PRE_FRONRIER)
+ &amp;&amp; (fscore &lt;= alpha)
+ &amp;&amp; (opposing_pieces(current) &gt; 3)
+   ) depth = PRE_FRONRIER;</code></pre>
+<h2 id="amir-bans-definition">Amir Ban's Definition</h2>
+<p><a href="/Amir_Ban">Amir Ban</a> in a <a href="/CCC">CCC</a> discussion with <a href="/Robert_Hyatt">Robert Hyatt</a> on Razoring versus <a href="/Pruning">Pruning</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> :</p>
+<p><code>Razoring is supposed to be a sort of forward pruning where rather than skipping an entire subtree, you search it to a reduced depth, typically one less than normal depth. The advantage is that you get most of the saving but with much lower risk than pruning entire subtrees. Razoring is the only forward pruning technique </code><a href="/Junior"><code>Junior</code></a><code> uses, with a depth reduction of one (half-ply). Seems like </code><a href="/Crafty"><code>Crafty</code></a><code> uses the same definition ... </code></p>
+<h2 id="implementation">Implementation</h2>
+<h3 id="stockfish">Stockfish</h3>
+<p>In 2022 razoring was reintroduced to <a href="/Stockfish">Stockfish</a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> by <a href="/Michael_Chaly">Michael Chaly</a>. The implementation features a quadratic depth-dependent margin. Certain precautions were made later on to prevent razoring from interfering with mate finding.</p>
+<pre><code>// Step 7. Razoring (~1 Elo)
+// If eval is really low check with qsearch if it can exceed alpha, if it can&#39;t,
+// return a fail low.
+if (eval &lt; alpha - 512 - 293 * depth * depth)
+{
+    value = qsearch&amp;lt;NonPV&amp;gt;(pos, ss, alpha - 1, alpha);
+    if (value &lt; alpha &amp;&amp; std::abs(value) &lt; VALUE_TB_WIN_IN_MAX_PLY)
+        return value;
+}</code></pre>
+<h2 id="historical-implementations">Historical Implementations</h2>
+<h3 id="crafty-1517">Crafty 15.17</h3>
+<p>This code snippet appears in <a href="/Crafty">Crafty 15.17</a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> (~1998) <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> with <a href="/Extensions">fractional</a> reductions based on <a href="/Evaluation">evaluation</a> at <a href="/Pre_Frontier_Node">pre frontier nodes</a> (<span style="background-color: #d6d6d6;">depth = 2</span>), already controversially discussed between <a href="/Vincent_Diepeveen">Vincent Diepeveen</a> and <a href="/Robert_Hyatt">Robert Hyatt</a> in 2002 <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> :</p>
+<pre><code>/*
+ ----------------------------------------------------------
+
+   now we toss in the &quot;razoring&quot; trick, which simply says |
+   if we are doing fairly badly, we can reduce the depth  |
+   an additional ply, if there was nothing at the current |
+   ply that caused an extension.                          |
+
+ ----------------------------------------------------------
+*/
+      if (depth&lt;3*INCREMENT_PLY &amp;&amp; depth&gt;=2*INCREMENT_PLY &amp;&amp;
+          !tree-&gt;in_check[ply] &amp;&amp; extensions == -60) {
+        register int value=-Evaluate(tree,ply+1,ChangeSide(wtm),
+                                     -(beta+51),-(alpha-51));
+        if (value+50 &lt; alpha) extensions-=60;
+      }</code></pre>
+<h3 id="dropping-into-q-search">Dropping into Q-search</h3>
+<p>A different razoring approach was proposed by <a href="/Robert_Hyatt">Robert Hyatt</a> in <a href="/CCC">CCC</a> <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a> based on an idea by <a href="/Tord_Romstad">Tord Romstad</a> <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a> , and abandoned in Crafty after cluster testing <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a> . Dropping into the <a href="/Quiescence_Search">quiescence search</a> is intended inside a <a href="/Principal_Variation_Search">PVS</a> framework at strong expected <a href="/Node_Types">All-nodes</a> near the tips (pre-pre-frontier nodes or below, <span style="background-color: #d6d6d6;">depth &lt;= 3</span>), that is a <a href="/Null_Window">null window</a> (<span style="background-color: #d6d6d6;">alpha = beta - 1</span>) is passed, and the static <a href="/Evaluation">evaluation</a> is by a margin (~three pawns) below beta (or &lt;= alpha). If under these conditions the quiescence search confirms the fail-low characteristics, its score is trusted and returned.</p>
+<pre><code>/*
+************************************************************
+*                                                          *
+* now we try a quick Razoring test. If we are within 3     *
+* plies of a tip, and the current eval is 3 pawns (or      *
+* more) below beta, then we just drop into a q-search      *
+* to try to get a quick cutoff without searching more in   *
+* a position where we are way down in material.            *
+*                                                          *
+************************************************************
+*/
+if (razoring_allowed &amp;&amp; depth &lt;= razor_depth) {
+   if (alpha == beta - 1) { // null window ?
+      if (Evaluate(tree, ply, wtm, alpha, beta) + razor_margin &lt; beta) { // likely a fail-low node ?
+         value = QuiesceChecks(tree, alpha, beta, wtm, ply);
+         if (value &lt; beta)
+            return value; // fail soft
+      }
+   }
+}</code></pre>
+<h3 id="strelka">Strelka</h3>
+<p>Similar code appears in <a href="/Jury_Osipov">Jury Osipov's</a> <a href="/Category:Open_Source">open source engine</a> <a href="/Strelka">Strelka 2.0</a> <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a> , failing a bit harder. The interesting thing is the missing <span style="background-color: #d6d6d6;">new_value &lt; beta</span> condition in the <span style="background-color: #d6d6d6;">depth = 1</span> case. If the static <a href="/Evaluation">evaluation</a> indicates a <a href="/Node_Types">fail-low node</a>, but q-search <a href="/Fail-High">fails high</a>, the score of the reduced fail-high search is returned, since there was obviously a winning capture raising the score, and one assumes a <a href="/Quiet_Moves">quiet move</a> near the horizon will not do better <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a> .</p>
+<p><em>Strelka.c line 393</em> (slightly modified for clarification) <a href="/User:GerdIsenberg">user:GerdIsenberg</a></p>
+<pre><code>  value = eval + 125;
+  if (value &lt; beta) {
+    if (depth == 1) {
+      new_value = qsearch(...);
+      return max(new_value, value);
+    }
+    value += 175;
+    if (value &lt; beta &amp;&amp; depth &lt;= 3) {
+      new_value = qsearch(...);
+      if (new_value &lt; beta)
+         return max(new_value, value);
+    }
+  }</code></pre>
+<p>In the <a href="/Computer_Chess_Forums">Rybka Forum</a> thread on <a href="/Strelka">Strelka 2.0</a> <a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a> , <a href="/Anthony_Cozzie">Anthony Cozzie</a> states on this feature <a href="#fn15" class="footnote-ref" id="fnref15" role="doc-noteref"><sup>15</sup></a> :</p>
+<p><code>I'm also pretty amazed at how aggressively the search prunes. Not only will Strelka drop straight into the q-search on a depth-3 search, but because it orders all captures first, it will reduce almost all noncapture/check moves.</code></p>
+<h2 id="see-also">See also</h2>
+<p>Classical Razoring is known for being risky. It likely was a progress in <a href="/Claude_Shannon">Shannon</a> <a href="/Type_B_Strategy">Type-B</a> programs and a fixed width. Todays programs more likely rely on:</p>
+<ul>
+<li><a href="/Futility_Pruning">Futility Pruning</a></li>
+<li><a href="/Futility_Pruning">Extended Futility Pruning</a></li>
+<li><a href="/AEL-Pruning">AEL-Pruning</a></li>
+<li><a href="/Null_Move_Pruning">Null Move Pruning</a></li>
+<li>and various <a href="/Reductions">Reductions</a> (and <a href="/Extensions">Extensions</a>) depending on depth left, and probably expected node type.</li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/John_Birmingham">John Birmingham</a>, <a href="/Peter_Kent">Peter Kent</a> (<strong>1977</strong>). <em>Tree-searching and tree-pruning techniques</em>. <a href="/Advances_in_Computer_Chess_1">Advances in Computer Chess 1</a>, reprinted 1988 in <a href="/Computer_Chess_Compendium">Computer Chess Compendium</a></li>
+<li><a href="/Ernst_A._Heinz">Ernst A. Heinz</a> (<strong>1998</strong>). <em><a href="http://people.csail.mit.edu/heinz/dt/node18.html">Extended Futility Pruning</a>.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 21, No. 2</a>, including <a href="http://people.csail.mit.edu/heinz/dt/node28.html">Limited Razoring at Pre-Pre-Frontier Nodes</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=28706">limited razoring question</a> by <a href="/Werner_Inmann">Werner Inmann</a>, <a href="/CCC">CCC</a>, October 03, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=40931">Razoring?</a> by <a href="/Steve_Maughan">Steve Maughan</a>, <a href="/CCC">CCC</a>, January 26, 1999</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=64838">razoring?</a> by <a href="/Scott_Gasch">Scott Gasch</a>, <a href="/CCC">CCC</a>, August 16, 1999</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=246598">razoring in crafty version 16.9, mid 1999</a> by <a href="/Vincent_Diepeveen">Vincent Diepeveen</a>, August 21, 2002</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=24286">Razoring...</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, October 09, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=29777">futility pruning - razoring</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, September 16, 2009 » <a href="/Futility_Pruning">Futility Pruning</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=30802">Futility pruning, Ext futility pruning and Limited Razoring</a> by Jesper Nielsen, <a href="/CCC">CCC</a>, November 26, 2009</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38407">Bad Pruning</a> by <a href="/Onno_Garms">Onno Garms</a>, <a href="/CCC">CCC</a>, March 13, 2011 » <a href="/Onno">Onno</a></li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=3&amp;t=1477&amp;start=20#p13017">Re: Still waiting on Ed</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, July 07, 2011 » on <a href="/Crafty">Crafty</a> 22.1 vs. 23.4. differences</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=43165">futility pruning, razoring question</a> by <a href="/Marco_Belli">Marco Belli</a>, <a href="/CCC">CCC</a>, April 04, 2012 » <a href="/Futility_Pruning">Futility Pruning</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46130">Razoring / Lazy eval question</a> by Jerry Donald, <a href="/CCC">CCC</a>, November 24, 2012 » <a href="/Lazy_Evaluation">Lazy Evaluation</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49863">Null move, razoring and mate threats</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, October 28, 2013 » <a href="/Null_Move_Pruning">Null Move Pruning</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57287">Razoring vs Futility pruning</a> by <a href="/Shawn_Chidester">Shawn Chidester</a>, <a href="/CCC">CCC</a>, August 16, 2015 » <a href="/Futility_Pruning">Futility Pruning</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57843">Verification of pruning techniques</a> by <a href="/Shawn_Chidester">Shawn Chidester</a>, <a href="/CCC">CCC</a>, October 04, 2015 » <a href="/Pruning">Pruning</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72857">Is razoring useless in modern engines ?</a> by Alayan Feh, <a href="/CCC">CCC</a>, January 20, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74425">Questions on Razoring and Code Structure for Pruning</a> by Cheney, <a href="/CCC">CCC</a>, July 09, 2020 » <a href="/Pruning">Pruning</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Razor">Razor from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Razor_Blade">Razor Blade from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Razor_cut">Razor (hair) cut from Wikipedia</a></li>
+<li><a href="http://liswiki.org/wiki/Razoring">Razoring</a> from <a href="http://liswiki.org/wiki/Main_Page">Library and Information Science Wiki</a></li>
+<li><a href="http://www.computermuseum.li/Testpage/UNISYS-History.htm#RemRandShaver">UNISYS-History - A 1955 Remington Rand electric shaver</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Philishave">Philishave from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Occam%27s_razor">Occam's razor from Wikipedia</a></li>
+<li><a href="/Category:Frank_Zappa">Frank Zappa</a> - <a href="http://wiki.killuglyradio.com/wiki/Occam%27s_Razor">Occam's Razor</a> from <a href="https://en.wikipedia.org/wiki/One_Shot_Deal">One Shot Deal</a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p><a href="/Category:Frank_Zappa">Frank Zappa</a>, <a href="https://en.wikipedia.org/wiki/Warren_Cuccurullo">Warren Cuccurullo</a>, <a href="https://wiki.killuglyradio.com/wiki/Denny_Walley">Denny Walley</a>, <a href="https://en.wikipedia.org/wiki/Ike_Willis">Ike Willis</a>, <a href="https://en.wikipedia.org/wiki/Tommy_Mars">Tommy Mars</a>, <a href="https://en.wikipedia.org/wiki/Peter_Wolf_%28producer%29">Peter Wolf</a>, <a href="https://en.wikipedia.org/wiki/Arthur_Barrow">Arthur Barrow</a>, <a href="/Category:Vinnie_Colaiuta">Vinnie Colaiuta</a>, <a href="https://en.wikipedia.org/wiki/Ed_Mann">Ed Mann</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/dp93bcp4HCM" title="YouTube video dp93bcp4HCM" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=dp93bcp4HCM">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Reductions">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/John_Birmingham">John Birmingham</a>, <a href="/Peter_Kent">Peter Kent</a> (<strong>1977</strong>). <em>Tree-searching and tree-pruning techniques</em>. <a href="/Advances_in_Computer_Chess_1">Advances in Computer Chess 1</a>, reprinted 1988 in <a href="/Computer_Chess_Compendium">Computer Chess Compendium</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/John_Birmingham">John Birmingham</a>, <a href="/Peter_Kent">Peter Kent</a> (<strong>1977</strong>). <em>Tree-searching and tree-pruning techniques</em>. <a href="/Advances_in_Computer_Chess_1">Advances in Computer Chess 1</a>, reprinted 1988 in <a href="/Computer_Chess_Compendium">Computer Chess Compendium</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="/Ernst_A._Heinz">Ernst A. Heinz</a> (<strong>1998</strong>). <em><a href="http://people.csail.mit.edu/heinz/dt/node18.html">Extended Futility Pruning</a>.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 21, No. 2</a>, including <a href="http://people.csail.mit.edu/heinz/dt/node28.html">Limited Razoring at Pre-Pre-Frontier Nodes</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://www.stmintz.com/ccc/index.php?id=41065">Re: Razoring?</a> by <a href="/Amir_Ban">Amir Ban</a>, <a href="/CCC">CCC</a>, January 27, 1999<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="https://github.com/official-stockfish/Stockfish/pull/3921">Reintroduce razoring. by Vizvezdenec · Pull Request #3921 · official-stockfish/Stockfish · GitHub</a>, Github, February 4, 2022<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="ftp://ftp.cis.uab.edu/pub/hyatt">Robert Hyatt's FTP Page</a>, &lt;source&gt; <a href="ftp://ftp.cis.uab.edu/pub/hyatt/source/crafty-15.17.zip">crafty-15.17.zip</a>, search.c<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=439367&amp;t=41597">Re: Razoring</a> by <a href="/Sven_Schüle">Sven Schüle</a>, <a href="/CCC">CCC</a>, December 25, 2011<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="https://www.stmintz.com/ccc/index.php?id=246598">razoring in crafty version 16.9, mid 1999</a> by <a href="/Vincent_Diepeveen">Vincent Diepeveen</a>, August 21, 2002<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=24286">Razoring...</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, October 09, 2008<a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=439431&amp;t=41597">Re: Razoring</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, December 26, 2011<a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=291637&amp;t=29777">Re: futility pruning - razoring</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, September 16, 2009<a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="http://www.sdchess.ru/download_engines.htm">Download</a> by <a href="http://www.sdchess.ru/">sdchess.ru</a><a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/8695c3373be2b379#">Razoring</a> by Joe Stella, <a href="/Computer_Chess_Forums">rgcc</a>, August 31, 1995<a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=3006">Strelka 2.0</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, January 11, 2008<a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn15"><p><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=3006;pg=4">Strelka 2.0 pg 4</a> by <a href="/Anthony_Cozzie">Anthony Cozzie</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, January 11, 2008<a href="#fnref15" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Ban_Quotes">Ban Quotes</a> · <a href="/Category:Cozzie_Quotes">Cozzie Quotes</a> · <a href="/Category:Vinnie_Colaiuta">Vinnie Colaiuta</a> · <a href="/Category:Frank_Zappa">Frank Zappa</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Razoring">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, ShawnXu.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quantifying Evaluation Features - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Quantifying Evaluation Features</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Organizations">Organizations</a> * <a href="/ICGA">ICGA</a> * <a href="/ICGA_Investigations">Investigations</a> * Quantifying Evaluation Features</strong></p>
+<p>by <a href="/Mark_Watkins">Mark Watkins</a></p>
+<p><em>The heart of a (any) chess program is its <a href="/Evaluation">evaluation</a> function (EVAL)</em> - <a href="/Ed_Schroder">Ed Schröder</a></p>
+<p>From the standpoint of originality, the principal element of evidence in the <a href="/Rybka_Controversy">Fruit/Rybka controversy</a> seems to be the strong overlap in choice of evaluation features. To be clear, the argument is not that there is a general commonality, but nearly an exact match, both in choice of features and (in the majority of cases) specific conditions in their implementation. Nor is it particularly relevant that one can find everything in Fruit via a patchwork of prior engines - it is the specific Fruit/Rybka realisation of "feature ideas" that is of import.</p>
+<p>So then, a specific proposal is take a number of "control" engines (say 10), and compare the evaluation feature overlap via some mechanism, and then do the same for <a href="/Fruit">Fruit 2.1</a> and various <a href="/Rybka">Rybka</a> versions. Via the control engines, one should be able to get a typical expectation of "overlap", and thus a statistical notion of any Fruit/Rybka overlap could be delineated. The timeline for completing such an analysis (with a proper description of the details) would be a few weeks.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#whether-this-process-is-useful">Whether this process is useful</a></li>
+<li><a href="#choice-of-engines">Choice of engines</a></li>
+<li><a href="#how-to-enumerate-features">How to enumerate features</a></li>
+<li><a href="#how-to-compare-features">How to compare features</a></li>
+<li><a href="#see-also">See also</a></li>
+</ol>
+</details><h2 id="whether-this-process-is-useful">Whether this process is useful</h2>
+<p>Before embarking on such an endeavor it seems wise to discuss its scope and applicability.</p>
+<p>For instance, one argument is that the choice of evaluation features, even when quite specific, is at best no more important than the weighting of such features. Other arguments might involve whether "evaluation features" can really be measured in any quasi-precise sense. I think that <strong>now</strong> is the time to raise/discuss any such issues, prior to any of the gruntwork being done.</p>
+<p>I explain the proposed methodology below, and I hope it sounds sufficiently close to "scientific" that the methodology itself would not <em>ex post facto</em> come under attack.</p>
+<h2 id="choice-of-engines">Choice of engines</h2>
+<p>Clearly Fruit 2.1, Rybka 1.0 Beta (which is essentially the same as Rybka 2.3 in eval), and Rybka 2.3.2a will be included. Other open-source engines that have been mentioned from that era are: <a href="/Pepito">Pepito 1.59</a>, <a href="/Phalanx">Phalanx XXII</a>, <a href="/Faile">Faile 1.4</a>, <a href="/Crafty">Crafty 19.0</a>, RESP 0.19, <a href="/EXchess">EXchess 5.01beta</a>. It might be good to include some examples that post-dated Fruit 2.1.</p>
+<h2 id="how-to-enumerate-features">How to enumerate features</h2>
+<p>The first problem is how to enumerate features. In general, anything that affects the overall evaluation should be included, unless it is so typical that all engines use it, and do so in a similar manner. For instance, all engines have "material" as a feature, but not all have imbalances - and some have a constant <a href="/Bishop_Pair">bishop pair bonus</a> while others don't, with a third group having its value depend on the <a href="/Pawn_Structure">pawn structure</a>, etc. So "<a href="/Material">material</a>" is too broad, but "bishop pair" is probably reasonable. The same considerations can be reiterated for something like <a href="/King_Safety">king safety</a> - almost every engine has it, but the details vary widely, and the question would be whether there should be an enumeration of every single component that goes into it, or whether "king safety" should be one term. Another difficulty could be "similar" features that measure comparable quantities, or do so via alternative methods (e.g. Rook on 7th via a specific bonus, versus in <a href="/Piece-Square_Tables">PST</a>). Hopefully a decent framework for this can be agreed upon, with the end results only changing slightly if the methodology were to be perturbed.</p>
+<h2 id="how-to-compare-features">How to compare features</h2>
+<p>My proposal for comparing features is to fix an engine, enumerate all the features, and then for each of the other engines determine whether a similar feature is used, and if so, how great the overlap is. My idea was to give 1.0 if the feature is shared with the same conditions, and typically 0.5 for having a feature that shares the "same name" (at the abstract level) but with no more shared conditions that could expected from such name-sharing, with adjustments in given cases. For instance, if "doubled pawns" is a feature, there are a number of variations of implementing this. You can count penalise each pawn separately, so that tripled pawns count 1.5x doubled pawns. Or you can count one of the pawns (say the frontmost), so that tripled pawns count the same as doubled pawns. Or you can count the number of pawns on the file, and use an array for the penalty (like Crafty), which allows it to be non-linear. There is also the possibility to penalise doubled pawns more/less when they are on open/closed files, or when they are isolated, or to have a rank/file-based penalty rather than a constant one, etc. The same is true for something like isolated pawns - to have an explicit example, Crafty 19.0 says "now fold in the penalty for isolated pawns, which is non-linear to penalize more isolani more severely.note that the penalty penalizes the side with the most isolated pawns, in an exponential rate", which is quite different than just a constant penalty for each isolated pawn, though the "isolated pawns" label would fit both.</p>
+<p>There is obviously some subjectivity in all this (on whether to give 0.7 versus 0.5 usually), but in general it should be possible to reach a consensus. Since the process is statistical in any event, small errors should not matter much unless there is a cumulative bias.</p>
+<p>Given any two engines X and Y, we would then have an X-&gt;Y overlap and an Y-&gt;X overlap. For instance, these might be 13.5/37 and 7.2/23. These would then be "added" to get 20.7/60, for a final X-Y overlap of 34.5%. Given 10 control engines there would be 45 such overlaps, from which the mean and variance could be computed, and then compared to the Fruit/Rybka(s) overlap. Specific statistics questions, like the nature of distribution and implications therein for the "random chance" of an occurrence of a abnormally large overlap, could also be analyzed.</p>
+<p>Here is the result: <embed src="/assets/EVAL_COMP.pdf" title="EVAL_COMP.pdf" /></p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Evaluation_Overlap">Evaluation Overlap</a></li>
+<li><a href="/Rybka_Controversy">Rybka Controversy</a></li>
+</ul>
+<p><strong><a href="/ICGA_Investigations">Up one level</a></strong></p>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Quantifying_Evaluation_Features">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

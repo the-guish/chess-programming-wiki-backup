@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pin - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Pin</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Chess">Chess</a> * <a href="/Tactics">Tactics</a> * Pin</strong></p>
+<p>A <strong>Pin</strong> is a <a href="/X-ray">X-ray</a> related situation where a <a href="/Sliding_Pieces">sliding piece</a>, a <a href="/Bishop">bishop</a>, a <a href="/Rook">rook</a> or a <a href="/Queen">queen</a> indirectly attacks an opponent <a href="/King">king</a> or piece potentially <a href="/En_prise">en prise</a>, shielded by another directly attacked opponent piece or pawn on the attacking <a href="/Rays">ray</a>. The direct attacked piece or pawn is then called <strong>pinned</strong>, and cannot move out of the line of attack, without leaving the indirectly attacked piece <a href="/En_prise">en prise</a> or illegally its own king in <a href="/Check">check</a>. All pieces except the king may be pinned. One tactic which takes advantage of a pin is called <em>working the pin</em>, where other pieces from the pinning piece's side attack the opposing pinned piece. <span id="AbsolutePin"></span></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#types">Types</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#absolute-pin">Absolute Pin</a></li>
+<li><a href="#partial-pin">Partial Pin</a></li>
+<li><a href="#relative-pin">Relative Pin</a></li>
+<li><a href="#cross-pin">Cross Pin</a></li>
+<li><a href="#situational-pin">Situational Pin</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#considering-pins">Considering Pins</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#move-generation">Move Generation</a></li>
+<li><a href="#evaluation">Evaluation</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+</ol>
+</details><h2 id="types">Types</h2>
+<h3 id="absolute-pin">Absolute Pin</h3>
+<p>The absolute pin is where the piece shielded by the pinned piece is the king. In chess programming, to detect absolute pins is necessary for <a href="/Legal_Move">legal</a> <a href="/Move_Generation">move generation</a> and may be considered in <a href="/Evaluation">evaluation</a>. <span id="PartialPin"></span></p>
+<h3 id="partial-pin">Partial Pin</h3>
+<p>A partial pin refers to (absolute) pins, where the pinned piece or pawn can move along the attacking <a href="/Direction">direction</a>, and may even capture the pinning sliding piece. <span id="RelativePin"></span></p>
+<h3 id="relative-pin">Relative Pin</h3>
+<p>A relative pin is where the piece shielded by the pinned piece is not the king, but either a more valuable than the pinned piece, or conditionally en prise.</p>
+<h3 id="cross-pin">Cross Pin</h3>
+<p>A cross pin describes the rare case, where one piece is pinned in multiple directions simultaneously, most often one partial pin shielding the king and a relative pin shielding the queen. For instance in the otherwise harmless case of a partial pin of a bishop by a bishop, the bishop is also shielding a otherwise hanging queen by a queen, same may apply for rooks instead of bishops. Here the black rook on e4 is cross pinned and black will lose material and likely the game: <div class="chess-fen" data-fen="4k3/1p4pp/2p5/8/q3r2Q/3p3P/1P4PK/4R3"><code>4k3/1p4pp/2p5/8/q3r2Q/3p3P/1P4PK/4R3</code></div> 4k3/1p4pp/2p5/8/q3r2Q/3p3P/1P4PK/4R3 b - -</p>
+<p>Of course with the white king on g1 or h1, things would be different. Such multiple issue tactics seems all the domain of the <a href="/Search">search</a> and is hard to evaluate statically.</p>
+<h3 id="situational-pin">Situational Pin</h3>
+<p>This kind of relative pin is not about shielding own pieces, but important squares, for instance where an opponent rook may have a <a href="/Mate_at_a_Glance">back rank mate</a>. This kind of pins are usually only considered implicit by the search.</p>
+<h2 id="considering-pins">Considering Pins</h2>
+<p>Pinned pieces may be considered inside a chess program's <a href="/Move_Generation">move generation</a> and <a href="/Evaluation">evaluation</a>.</p>
+<h3 id="move-generation">Move Generation</h3>
+<p><a href="/Legal_Move">Legal Move</a> generation requires information about absolute pinned pieces, and their pinning direction to cover partial pins. Even non strictly legal move generation may reduce the number of generated illegal moves if considering absolute and partial pinnes, while ignoring the legality of <a href="/En_passant">En passant</a> captures and <a href="/Castling">castling</a>.</p>
+<h3 id="evaluation">Evaluation</h3>
+<p>Evaluation can take the restricted <a href="/Mobility">mobility</a> of pinned pieces into account, and should consider the <a href="/Distance">distance</a> of the pinned pieces to its shielded king (or queen for relative pins) and whether it is on the own or opponent half of the board during the <a href="/Opening">opening</a> or <a href="/Middlegame">middlegame</a>. Some programs even calculate on <em>working the pin</em>, to look whether pinned pieces may further attacked by other pieces, especially pawns, for instance with <a href="/Bitboards">bitboards</a> whether they <a href="/General_Setwise_Operations">intersect</a> opponent none-guarded pawn <a href="/Attack_Spans">front attack spans</a> and assign appropriate evaluation penalties.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Checks_and_Pinned_Pieces_%28Bitboards%29">Checks and Pinned Pieces (Bitboards)</a></li>
+<li><a href="/En_passant">En passant</a></li>
+<li><a href="/Legal_Move">Legal Move</a></li>
+<li><a href="/Move_Generation">Move Generation</a></li>
+<li><a href="/Skewer">Skewer</a></li>
+<li><a href="/Sliding_Piece_Attacks">Sliding Piece Attacks</a></li>
+<li><a href="/X-ray">X-ray</a></li>
+<li><a href="/X-ray_Attacks_%28Bitboards%29">X-ray Attacks (Bitboards)</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=306311">Question about the KnightCap find_pins function</a> by Matthew White, <a href="/CCC">CCC</a>, July 14, 2003 » <a href="/KnightCap">KnightCap</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=366095">Evaluating Pinned Pieces</a> by <a href="/Tom_Likens">Tom Likens</a>, <a href="/CCC">CCC</a>, May 19, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=385126">SEE and pin detection</a> by <a href="/Dan_Honeycutt">Dan Honeycutt</a>, <a href="/CCC">CCC</a>, August 30, 2004 » <a href="/Static_Exchange_Evaluation">Static Exchange Evaluation</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=390108">Pin aware SEE</a> by <a href="/Dan_Honeycutt">Dan Honeycutt</a>, <a href="/CCC">CCC</a>, October 03, 2004</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=22550">Bitboard of Pinned Pieces</a> by <a href="/Grant_Osborne">Grant Osborne</a>, <a href="/CCC">CCC</a>, July 24, 2008</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=395213">LVA MVV with relative Pin</a> by Clemens Pruell, <a href="/CCC">CCC</a>, February 16, 2011 » <a href="/MVV-LVA">MVV-LVA</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40597">pinned pieces in eval</a> by Pierre Bokma, <a href="/CCC">CCC</a>, October 01, 2011</li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/lIjQUH3dsYg/4VEtHUkrdBsJ">Pinned pieces in king safety</a> by <a href="/Stefan_Geschwentner">Stefan Geschwentner</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, March 28, 2014 » <a href="/King_Safety">King Safety</a>, <a href="/Stockfish">Stockfish</a></li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/S_4E_Xs5HaE/mS3VTnuEFgAJ">pin-aware see</a> by <a href="/Ronald_de_Man">Ronald de Man</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, September 14, 2016 » <a href="/SEE_-_The_Swap_Algorithm">SEE - The Swap Algorithm</a>, <a href="/Stockfish">Stockfish</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Pin_%28chess%29">Pin (chess) from Wikipedia</a></li>
+<li><a href="http://www.top10chess.com/2008/09/tactical-motif-vii-pin.html">Top 10 chess: Tactical Motif VII: The pin</a></li>
+<li><a href="http://www.chesstactics.org/index.php?Type=page&amp;Action=none&amp;From=4,1,1,1">The Pin and the Skewer</a> from <a href="http://www.chesstactics.org/">Ward Farnsworth's Predator at the Chessboard</a></li>
+<li><a href="/Category:The_Searchers">The Searchers</a> - <a href="https://en.wikipedia.org/wiki/Needles_and_Pins_(song)">Needles and Pins</a> (1964), <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/X3aLTl1pa9c" title="YouTube video X3aLTl1pa9c" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=X3aLTl1pa9c">Watch on YouTube</a></p>
+<p><strong><a href="/Tactics">Up one Level</a></strong></p>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:The_Searchers">The Searchers</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Pin">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

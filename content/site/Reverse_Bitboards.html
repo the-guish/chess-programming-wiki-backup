@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reverse Bitboards - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Reverse Bitboards</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * <a href="/Sliding_Piece_Attacks">Sliding Piece Attacks</a> * Reverse Bitboards</strong></p>
+<p>The idea of <strong>Reverse Bitboards</strong> was proposed by <a href="/Ryan_Mack">Ryan Mack</a> in <a href="/Timeline">2000</a> while introducing his <em>Hyperbola Project</em>. It was based on the <a href="/Subtracting_a_Rook_from_a_Blocking_Piece">x XOR (x - 2)</a> <a href="/Bit-Twiddling">bit-twiddling</a> trick to generate attacks in <a href="/On_an_empty_Board">positive</a> <a href="/Rays">ray-directions</a> - and beside the usual <a href="/Occupancy">occupancy</a> bitboard, to maintain a <a href="/Flipping_Mirroring_and_Rotating">reversed or 180 degree rotated</a> occupied bitboard to apply the trick for <a href="/On_an_empty_Board">negative</a> ray-directions as well. It was intended to <a href="/Bitboard_Serialization">traverse</a> reversed sets for move-generation, while re-reversion took place in the scalar, square centric world by <a href="/General_Setwise_Operations">xor</a> 63 after <a href="/BitScan">bitscan</a>. Alternatively, for other purposes a <a href="/MMX">MMX</a>-bitreversal routine was mentioned.</p>
+<p>Ryan made an interesting and thought-provoking contribution. He introduced the predecessor of the <a href="/Subtracting_a_Rook_from_a_Blocking_Piece">o^(o-2r)-trick</a>. With hindsight, the idea of keeping two reversed sets seemed not that successful as the author initially thought. However, <a href="/Hyperbola_Quintessence">Hyperbola Quintessence</a>, where fast vertical byteswap flipping is used on the fly to reverse diagonals and files, is somehow the resurrection of Ryan's ideas, vastly improved by <a href="/Aleks_Peshkov">Aleks Peshkov's</a> <a href="/General_Setwise_Operations">xor</a> wizardry. Aleks' <a href="/SSSE3">SSSE3 approach</a> even relies on keeping reverse occupancies to further use only nine SIMD operations to generate bishop attacks.</p>
+<hr />
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#the-hyperbola-project---new-technologies">The Hyperbola Project - New Technologies</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#bitboard-design-and-sliding-piece-attack-generation">Bitboard Design and Sliding Piece Attack Generation</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#now-how-do-reverse-bitboards-help-generate-sliding-piece-attacks">Now, how do reverse bitboards help generate sliding piece attacks?</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#what-benefit-comes-from-having-a-reversed-bitboard-in-place-of-rotated-bitboards">What benefit comes from having a reversed bitboard in place of rotated bitboards?</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#where-do-the-reverse-bitboards-come-in">Where do the reverse bitboards come in?</a></li>
+<li><a href="#how-can-the-reverse-bitboards-be-converted-back-to-normal">How can the reverse bitboards be converted back to normal?</a></li>
+</ol>
+</details></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#forum-discussions">Forum Discussions</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="the-hyperbola-project---new-technologies">The Hyperbola Project - New Technologies</h2>
+<p><a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> What follows here is merely a glimpse at the new advances in computer chess that the <strong>Hyperbola Project</strong> will include. The revolutionary design will generate enormous speed improvements, optimized specifically for the Pentium III processor's SIMD and <a href="/MMX">MMX</a> enhancements. The downside is that the initial releases of <strong>Hyperbola</strong> will require a P-III system to operate. As the core engine is being written in <a href="/Assembly">assembly</a> code, it is very difficult to optimize for more than one chip at a time.</p>
+<p>The past two years have yielded a serious look at the way computer chess programs operate today. The most significant problem with PC-oriented (non 64-bit) programs is the lack of speed associated with doing 64-bit arithmetic in a 32-bit environment.</p>
+<p>MMX technology introduced some 64-bit operations to the Pentium family of microprocessors, which do increase performance noticeably, but not optimally. When using MMX, many operations still have to be completed in the old 32-bit system, which degrades the performance gain when the data has to be exchanged back and forth between the regular registers and the MMX registers.</p>
+<p>The improvements shown below also address another significant bottleneck in chess programming: memory speeds. Despite the fact that <strong>Hyperbola</strong> is designed for systems with extremely fast memory (RDRAM), memory is still a bottleneck for some calculations, which require a very tight dependency chain. Since a memory read from the fastest (L1) cache has a latency of three clock cycles, the processor remains stalled in a tight dependency chain such as this, where no other calculations can be completed while the processor waits for the memory read to complete.</p>
+<h3 id="bitboard-design-and-sliding-piece-attack-generation">Bitboard Design and Sliding Piece Attack Generation</h3>
+<p>Generating the attacks for <a href="/Sliding_Pieces">sliding pieces</a> proved to be a significant bottleneck in the early trials. For example, before generating legal moves for a position, the program must determine whether the king is in check. To do this, the program has to find the attacks of every type of piece from the king's square and check if an appropriate enemy piece resides there. Since this cannot be done while analyzing other moves, this is a huge slowdown under the current technology, which uses four sets of bitboards (three rotated) and several memory lookups to determine the correct attacks.</p>
+<p><strong>Hyperbola's</strong> design is quite different in this respect from other programs. <strong>Hyperbola</strong> introduces the concept of a reversed bitboard in place of three rotated bitboards, and TOTALLY eliminates the lookup tables in favor of simple calculations, all of which can be done in the 64-bit <a href="/MMX">MMX</a> registers.</p>
+<p>With the research still in progress on this topic, it is not clear as to exactly how much performance can be enhanced by this new technique, but it is clear that performance will be improved very significantly, especially with MMX hardware. Processors that are completely 64-bit, such as the <a href="/Intel">Intel</a> <a href="/Itanium">Itanium</a>, will also be very much helped by this technique.</p>
+<h4 id="now-how-do-reverse-bitboards-help-generate-sliding-piece-attacks">Now, how do reverse bitboards help generate sliding piece attacks?</h4>
+<p>First, let's cover what has to be maintained by the program. There is the normal set of bitboards, all generated in the normal direction. And there is a single <strong>reverse bitboard</strong>, which roughly takes the place of the three rotated bitboards in most programs today. The <strong>reverse bitboard</strong> contains the same information as the forward bitboard which denotes all occupied squares, but it is in reverse, that is, bit x in the forward bitboard corresponds to bit 63-x in the <strong>reverse bitboard</strong>.</p>
+<h3 id="what-benefit-comes-from-having-a-reversed-bitboard-in-place-of-rotated-bitboards">What benefit comes from having a reversed bitboard in place of rotated bitboards?</h3>
+<ul>
+<li><strong>Maintenance</strong></li>
+</ul>
+<p>A single reversed bitboard is easier to maintain than one rotated bitboard, let alone three. This is because a table lookup is required to convert a bit from the forward format to most rotated formats. With the <strong>reverse bitboard</strong>, simply subtract the bit number from 63. Considering that only one of these bitboards has to be maintained instead of three, this issue is important.</p>
+<ul>
+<li><strong>The Calculations</strong></li>
+</ul>
+<p>When taking account of memory latencies, calculating the piece attacks using the forward and <strong>reverse bitboards</strong> can be done significantly faster due to total independence on lookup tables and complex calculations. There are a few slight snags with the diagonal calculations, but they are minor.</p>
+<p>The benefit of having the forward and <strong>reverse bitboards</strong> really shines in light of a very important bit manipulation trick: x XOR (x - 2) contains bits set to one, starting from the second bit, and stopping at the first bit of x that is one, but including it.</p>
+<p>Now, if x is the bitboard of all occupied squares, and it is shifted to the right so that the square for which attacks are being calculated becomes bit zero, then XORing <strong>x with (x - 2)</strong> gives a mask of all squares attacked by the piece on the desired square, once the result is shifted back to the left. It does not include the piece that is making the attack, but it does include the first occupied square. This is exactly the result the lookup tables return!</p>
+<p>The snags come from wraparound - that is, when the mask goes to the end of the file, rank, or diagonal... and keeps going where it shouldn't. This can be easily fixed in rank/file attacks by masking only the rank or file in question, but it is more complicated on diagonals.</p>
+<h4 id="where-do-the-reverse-bitboards-come-in">Where do the reverse bitboards come in?</h4>
+<p>The regular bitboard is fine for calculating any attacks that go in the positive direction from the starting square (by masking the rank, file, or diagonal), but the bit-manipulating trick won't work in the opposite direction. The solution is simple: calculate attacks in the opposite direction using a <strong>reverse bitboard</strong>, so that on that bitboard they extend in the positive direction and can be calculated as above.</p>
+<p>The real problem comes in trying to combine the forward and <strong>reverse bitboards</strong> - there is just no simple way to un-reverse the bitboard. The technique to do the switch is not terribly cumbersome, but it certainly cannot be used in cases where only one set of attacks is being generated... the delay far outweighs the gain.</p>
+<p>However, in <strong>Hyperbola</strong>, this delay can be managed for an overall gain. Though it is unclear whether these types of calculations will even be used in generating legal moves, due to an incremental move generator, the two bitboards can be scanned separately, converting the returns from the bitscans from reverse to forward (by subtracting from 63) instead of converting the entire bitboard.</p>
+<p>A more pertinent issue arises with determining whether the king is in check, which is done before generating any legal moves. Possible ways to go about this include converting the <strong>reverse bitboard</strong>, which is probably not optimal, maintaining <strong>reverse bitboards</strong> for the sliding pieces of both colors, which is possible, and testing the individual squares on the bitboards both in forward and in reverse, which is nearly out of the question. In the newer chip architectures any unpredictable branches severely degrade performance, and the technique to avoid that is also slow because it can only be used on 32-bit registers.</p>
+<p>The most viable option is to maintain four <strong>reverse bitboards</strong>, one for the bishops/queens and rooks/queens of each color. Updating them does not degrade performance because only one of the four must be updated for any move, or none at all, in addition to the regular updates.</p>
+<p>With the extra <strong>reverse bitboards</strong>, it is now very easy to determine if the king is in check without any memory tables. First, calculate the attacks from the king's square for both types of sliding pieces, and simply AND them with the appropriate bitboards of enemy pieces. After that, OR all the results of the comparisons together, and take a single branch.</p>
+<p>A possible shortcut exists here still. If the king is not in check, which is almost always the case, and all of the possible sliding piece lines are closed or empty, which is usually true, then the king cannot be checked by a sliding piece. The merit of this idea is questionable, but a more concrete idea is much more helpful. If the previously used sliding piece attack bitboards are saved and it is determined that none of the squares on those bitboards have changed in the bitboard of occupied pieces, then the bitboards can be used again and the calculations skipped. If this shortcut is used, then it might be more economical to reverse the bitboard(s) after calculating them and ignoring the additional <strong>reverse bitboards</strong>. That depends on the hit rate.</p>
+<h4 id="how-can-the-reverse-bitboards-be-converted-back-to-normal">How can the reverse bitboards be converted back to normal?</h4>
+<p>The fastest way to do this isn't a huge deal, but it cannot be run in parallel with other operations and does degrade performance if it is run too often. Suppose we have the lower 16 bits of a bitboard, x: FEDCBA9876543210.</p>
+<ol type="1">
+<li>Load the constant, k = 5555555555555555h</li>
+<li>x = [(x shl 1) and k] or [(x and k) shr 1] EFCDAB8967452301</li>
+<li>Load the constant, k = 3333333333333333h</li>
+<li>x = [(x shl 2) and k] or [(x and k) shr 2] CDEF89AB45670123</li>
+<li>Load the constant, k = 0F0F0F0F0F0F0F0Fh</li>
+<li>x = [(x shl 4) and k] or [(x and k) shr 4] 89ABCDEF01234567</li>
+<li>Now, due to the availability of a MMX shift instruction that operates on 16-bit words, the bytes can now be switched more easily</li>
+<li>x = (x shlw 8) or (x shrw 8) 0123456789ABCDEF</li>
+<li>And finally, the pshufw on the P-III reorganizes the words in a single instruction</li>
+<li>x = x pshufw 00011011b</li>
+</ol>
+<p>Since all of this arithmetic can be done in the MMX registers, it runs very much in parallel and can complete in a reasonable time frame on the P-III. If this algorithm were to be redesigned for P-II or PMMX architectures (without the pshufw) it would be a little slower since two more steps need to be completed. Trying to do this without 64-bit support would be extremely slow due to the extended-precision operands, despite that most of it could be done in parallel. (This algorithm is also in parallel, so it would probably take over twice as long.)</p>
+<p><em>Copyright © 2000 Ryan Mack</em></p>
+<hr />
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Flipping_Mirroring_and_Rotating">Flipping Mirroring and Rotating</a></li>
+<li><a href="/Hyperbola_Quintessence">Hyperbola Quintessence</a></li>
+<li>Move Generation in Thor's Hammer</li>
+<li><a href="/Praetorian">Praetorian</a></li>
+<li><a href="/Subtracting_a_Rook_from_a_Blocking_Piece">Subtracting a Rook from a Blocking Piece</a></li>
+</ul>
+<h2 id="forum-discussions">Forum Discussions</h2>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=177693">what do think about n xor (n-2) and 'reverse bitboards'?!</a> by Stefan, <a href="/CCC">CCC</a>, July 01, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=210339">Reversed vs. Rotated Bitboards</a> by <a href="/Sune_Fischer">Sune Fischer</a>, <a href="/CCC">CCC</a>, January 28, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=276884">Reverse Bitboards</a> by <a href="/Sander_de_Zoete">Sander de Zoete</a>, <a href="/CCC">CCC</a>, January 13, 2003</li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Sliding_Piece_Attacks">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Copy of the no longer available site: <em>The Hyperbola Project - New Technologies</em>, Copyright © 2000 <a href="/Ryan_Mack">Ryan Mack</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Reverse_Bitboards">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

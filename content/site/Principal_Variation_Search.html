@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Principal Variation Search - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Principal Variation Search</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Search">Search</a> * Principal Variation Search</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="https://en.wikipedia.org/wiki/File:Cage-variations-iii-14-small.jpg" target="_blank" rel="noopener noreferrer"><img src="/assets/Cage-variations-iii-14-small.jpg" alt="John Cage - Variations III, No. 14 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:John_Cage">John Cage</a> - Variations III, No. 14 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://en.wikipedia.org/wiki/File:Cage-variations-iii-14-small.jpg">Variations III, No. 14</a>, a 1992 print by <a href="/Category:John_Cage">John Cage</a> from a series of 57, <a href="https://en.wikipedia.org/wiki/John_Cage">John Cage from Wikipedia</a> <a href="https://en.wikipedia.org/wiki/Fair_use">Fair use</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Principal Variation Search (PVS)</strong>,<br />
+an enhancement to <a href="/Alpha-Beta">Alpha-Beta</a>, based on <a href="/Null_Window">null- or zero window</a> searches of none <a href="/Node_Types">PV-nodes</a>, to prove a move is worse or not than an already safe score from the <a href="/Principal_Variation">principal variation</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#the-idea">The Idea</a></li>
+<li><a href="#history">History</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#pvs-and-negascout">PVS and NegaScout</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#guido-schimmels">Guido Schimmels</a></li>
+<li><a href="#yngvi-björnsson">Yngvi Björnsson</a></li>
+<li><a href="#dennis-breuker">Dennis Breuker</a></li>
+</ol>
+</details></li>
+<li><a href="#pseudo-code">Pseudo Code</a></li>
+<li><a href="#pvs--zws">PVS + ZWS</a></li>
+<li><a href="#pvs-and-aspiration">PVS and Aspiration</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#publications">Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1980-">1980 ...</a></li>
+<li><a href="#1985-">1985 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000--1">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#video-tutorial">Video Tutorial</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="the-idea">The Idea</h2>
+<p>In most of the <a href="/Node">nodes</a> we need just a <a href="/Bound">bound</a>, proving that a move is unacceptable for us or for the opponent, and not the <a href="/Exact_Score">exact score</a>. This is needed only in so-called <a href="/Principal_Variation">principal variation</a> - a sequence of moves acceptable for both players (i.e. not causing a <a href="/Beta-Cutoff">beta-cutoff</a> anywhere in the path) which is expected to propagate down to the <a href="/Root">root</a>. If a lower-depth search has already established such a sequence, finding a series of moves whose value is greater than <a href="/Alpha">alpha</a> but lower than <a href="/Beta">beta</a> throughout the entire branch, the chances are that deviating from it will do us no good. So in a <a href="/Node_Types">PV-node</a> only the first move (the one which is deemed best by the previous iteration of an <a href="/Iterative_Deepening">iterative deepening</a> framework) is searched in the full window in order to establish the expected node value.</p>
+<p>When we already have a <a href="/PV-Move">PV-move</a> (defined as the move that raised alpha in a PV-node) we assume we are going to stick with it. To confirm our belief, a <a href="/Null_Window">null- or zero window</a> search centered around alpha is conducted to test if a new move can be better. If so, with respect to the null window but not with respect to the full window, we have to do a re-search with the full normal window. Since null window searches are cheaper, with a good <a href="/Move_Ordering">move ordering</a> we expect to save about 10% of a search effort.</p>
+<p><a href="/Bruce_Moreland">Bruce Moreland's</a> PVS implementation waits until a move is found that improves alpha, and then searches every move after that with a zero window around alpha <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> . The alpha improvement usually occurs at the first move, and always at the <a href="/Leftmost_Node">leftmost nodes</a> (assuming from left to right traversal) with a most open alpha-beta window of +-oo. In re-searches or with <a href="/Principal_Variation_Search">aspiration-windows</a> the first moves may rarely not improve alpha. As pointed out by <a href="/Edmund_Moshammer">Edmund Moshammer</a>, <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, <a href="/Robert_Hyatt">Robert Hyatt</a> and <a href="/Vincent_Diepeveen">Vincent Diepeveen</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> , it is recommend to only search the first move with an open window, and then every other move after that with a zero window. A further improvement (similar to that known from the <a href="/NegaScout">NegaScout</a> algorithm) is possible. Since there is not much to be gained in the last two plies of the normal search, one might disable PVS there, but programs respond differently to that change.</p>
+<h2 id="history">History</h2>
+<p>PVS was introduced by <a href="/Tony_Marsland">Tony Marsland</a> and <a href="/Murray_Campbell">Murray Campbell</a> in 1982 <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> as nomination of <a href="/Raphael_Finkel">Finkel's</a> and <a href="/John_Philip_Fishburn">Fishburn's</a> routine <strong>Palphabeta</strong> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> , in Fishburn's <a href="/Timeline">1981</a> thesis <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> called <strong>Calphabeta</strong>, which in turn is similar to <a href="/Judea_Pearl">Judea Pearl's</a> <a href="/Scout">Scout</a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> :</p>
+<p><code>An interesting implementation of the alpha-beta algorithm treats the first variation in a special way. The method was originally called </code><strong><code>Palphabeta</code></strong><code> [FISH80] and then renamed </code><strong><code>Calphabeta</code></strong><code> [FISH81], but will be referred to here as principal variation search or PVS for short. </code></p>
+<p>Despite the publications, PVS was already used in 1978, as mentioned by <a href="/Robert_Hyatt">Robert Hyatt</a> <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a> :</p>
+<p><code>I first used PVS in 1978, quite by accident. Murray Campbell and I were discussing this idea at the </code><a href="/ACM_1978"><code>ACM event</code></a><code> in Washington, DC. We were running on a Univac, and I suggested that we dial up my local Vax box and make the changes and see how it works. It looked pretty good, with the only odd thing being fail highs on very minor score changes, which was OK. The next round, our Univac developed a memory problem and I switched back to the vax and had a few exciting moments when we came out with a Nxf7!! sort of output, only to see the score rise by 2 or 3 millipawns. Even in 1978 we just searched the first move with normal alpha/beta and then went into the null-window search, just as the code exactly does in </code><a href="/Crafty"><code>Crafty</code></a><code>... </code></p>
+<p><a href="/John_Philip_Fishburn">John Philip Fishburn</a> in a note, September 2010:</p>
+<p><code>I was thinking about what goes wrong if you start the entire search with a too-narrow window. If the beta value is too low, then one of the children of the </code><a href="/Root"><code>root</code></a><code> might </code><a href="/Fail-High"><code>fail high</code></a><code>, and you wouldn't know the proper windows to give to the subsequent children of the root. Wait a minute... what if there aren't any subsequent children, i.e. what if the child that failed high was the last child of the root? Then you don't care about the subsequent windows, and in fact you've just proved that the last child is the best move. So when you're on the last child of the root, go all the way by bringing beta down to alpha+1. I was trying to get this published starting in Aug. 1979, and it finally appeared as "An optimization of alpha-beta search" in </code><a href="/ACM"><code>SIGART</code></a><code> bulletin Issue 72 (July 1980) </code><a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a><code> . After that came various generalizations where the null window is used generally in the search, also the </code><a href="/Fail-Soft"><code>fail-soft</code></a><code> algorithm. I was somewhat disappointed in the speedup (or lack thereof) that I measured on </code><a href="/Checkers"><code>checkers</code></a><code> lookahead trees. However when I went to work at </code><a href="/Bell_Laboratories"><code>Bell Labs</code></a><code> in 1981, </code><a href="/Ken_Thompson"><code>Ken Thompson</code></a><code> told me that he had read the SIGART paper, and had sped up </code><a href="/Belle"><code>Belle</code></a><code> by 1.5x with </code><a href="/Null_Window"><code>null windows</code></a><code>. </code></p>
+<p>and subsequently some details about <a href="/Belle">Belle's</a> PVS-implementation ...</p>
+<p><code>The PVS algorithm in Belle did not do a second search at the root until a </code><strong><code>second</code></strong><code> fail high occurred. I don’t know whether or not this idea appears in the literature or not. I would hope it does, but I haven’t been following the literature for about 25 years. In other words, Belle is cleverly going for broke: it knows it’s got a high failure, which is the best move so far, but as long as it doesn’t get a second high failure, the first high failure remains the best move, and it can still avoid doing any more full searches. </code></p>
+<h2 id="pvs-and-negascout">PVS and NegaScout</h2>
+<p>Most PVS implementations are similar to <a href="/Alexander_Reinefeld">Reinefeld's</a> <a href="/NegaScout">NegaScout</a> <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a> <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a> , and are used by most todays chess programs. It is based on the accuracy of the <a href="/Move_Ordering">move ordering</a>. Typically, modern chess programs find <a href="/Fail-High">fail-highs</a> on the first move around 90% of the time. This observation can be used to narrow the window on searches of moves after the first, because there is a high probability that they will be lower than the score of the first move.</p>
+<p>Reinefeld's original implementation introduces one additional variable on the <a href="/Stack">stack</a> (only b, since after a = alpha, alpha is not needed any longer), for a slightly simpler control structure than PVS. It has therefor set a new null window at the end of the loop (<span style="background-color: #d6d6d6;">b = a + 1</span>), but has to consider the move count for the re-search condition though. His implementation trusts the null-window score, even if the re-search doesn't confirm the alpha increase, eventually due to <a href="/Search_Instability">search instability</a>. While re-searching, it uses the narrow window of <span style="background-color: #d6d6d6;">{score, beta},</span> while other implementations dealing with search instability, re-search with <span style="background-color: #d6d6d6;">{alpha, beta}</span>. Practically, due to <a href="/Quiescence_Search">Quiescence Search</a>, and <a href="/Fail-Soft">fail-soft</a> implementations of PVS, the two algorithms are essentially equivalent to each other - they expand the same <a href="/Search_Tree">search tree</a> <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a> <a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a> .</p>
+<h3 id="guido-schimmels">Guido Schimmels</h3>
+<p><a href="/Guido_Schimmels">Guido Schimmels</a> in a <a href="/CCC">CCC</a> post on the difference of PVS vs. NegaScout <a href="#fn15" class="footnote-ref" id="fnref15" role="doc-noteref"><sup>15</sup></a> :</p>
+<p><code>The difference is how they handle re-searches: PVS passes alpha/beta while NegaScout passes the value returned by the null window search instead of alpha. But then you can get a fail-low on the research due to search anonomalies. If that happens NegaScout returns the value from the first search. That means you will have a crippled PV. Then there is a refinement Reinefeld suggests which is to ommit the re-search at the last two plies (depth &gt; 1) - but that won't work in a real program because of search extensions. NegaScout is slightly an ivory tower variant of PVS (IMHO). </code></p>
+<p><strong>PVS</strong>:</p>
+<pre><code>value = PVS(-(alpha+1),-alpha)
+if(value &gt; alpha &amp;&amp; value &lt; beta) {
+  value = PVS(-beta,-alpha);
+}</code></pre>
+<p><strong>NegaScout</strong>:</p>
+<pre><code>value = NegaScout(-(alpha+1),-alpha)
+if(value &gt; alpha &amp;&amp; value &lt; beta &amp;&amp; depth &gt; 1) {
+  value2 = NegaScout(-beta,-value)
+  value = max(value,value2);
+}</code></pre>
+<h3 id="yngvi-björnsson">Yngvi Björnsson</h3>
+<p>Quote by <a href="/Yngvi_Björnsson">Yngvi Björnsson</a> from <a href="/CCC">CCC</a>, January 05, 2000 <a href="#fn16" class="footnote-ref" id="fnref16" role="doc-noteref"><sup>16</sup></a> :</p>
+<p><code>Search-wise PVS and Negascout are identical (except the deep-cutoffs on the PV you mention), they are just formulated differently. In Negascout the same routine is used for searching both the PV and the rest of the tree, whereas PVS is typically formulated as two routines: PVS (for searching the PV) and NWS (for the null-window searches). Negascout and PVS were developed about the same time in the early '80 (82-83), but independently. I guess, that's part of the reason we know them by different names. Personally, I've always found the PVS/NWS formulation the most intuative, it's easier to understand what's really going on.</code></p>
+<h3 id="dennis-breuker">Dennis Breuker</h3>
+<p>Quote by <a href="/Dennis_Breuker">Dennis Breuker</a> from <a href="/CCC">CCC</a>, July 28, 2004 <a href="#fn17" class="footnote-ref" id="fnref17" role="doc-noteref"><sup>17</sup></a> :</p>
+<p><code>Q: What's the different between negascout and PVS ? They look like the same algorithm to me.</code></p>
+<p><code>They are identical, see note 15 on page 22 of my thesis </code><a href="#fn18" class="footnote-ref" id="fnref18" role="doc-noteref"><sup>18</sup></a><code> :We note that the version of principal-variation search as mentioned by Marsland (1986) </code><a href="#fn19" class="footnote-ref" id="fnref19" role="doc-noteref"><sup>19</sup></a><code> is identical to the version of negascout as mentioned by Reinefeld (1989) </code><a href="#fn20" class="footnote-ref" id="fnref20" role="doc-noteref"><sup>20</sup></a><code> . We use the 1989 reference instead of 1983 </code><a href="#fn21" class="footnote-ref" id="fnref21" role="doc-noteref"><sup>21</sup></a><code> , which was the first source of this algorithm, since the algorithm described in Reinefeld (1983) contains minor errors.Dennis </code></p>
+<h2 id="pseudo-code">Pseudo Code</h2>
+<p>This demonstrates PVS in a <a href="/Fail-Hard">fail-hard</a> framework, where alpha and beta are hard bounds of the returned score.</p>
+<pre><code>int pvSearch( int alpha, int beta, int depth ) {
+   if( depth == 0 ) return quiesce( alpha, beta );
+   for ( all moves)  {
+      make
+      if ( first move ) {
+         score = -pvSearch(-beta, -alpha, depth - 1);
+      } else {
+         score = -pvSearch(-alpha-1, -alpha, depth - 1);
+         if ( score &gt; alpha &amp;&amp; beta - alpha &gt; 1 )
+         // beta - alpha &gt; 1 prevents redundant re-search of Non-PV nodes.
+         // Note that in rare cases this conditions is true for PV nodes.
+         // Some engines prevent that by setting a boolean PvNode variable
+         // to determine if position is in a PV node. But it&#39;s generally
+         // considered as too rare to cause considereable stength loss.
+            score = -pvSearch(-beta, -alpha, depth - 1); // re-search
+      }
+      unmake
+      if( score &gt;= beta )
+         return beta;   // fail-hard beta-cutoff
+      if( score &gt; alpha ) {
+         alpha = score; // alpha acts like max in MiniMax
+      }
+   }
+   return alpha; // fail-hard
+}</code></pre>
+<p><span id="ZWS"></span></p>
+<h2 id="pvs--zws">PVS + ZWS</h2>
+<p>Often, programmers template PVS to a pure <a href="/Node_Types">PV-node</a> search and a separate <a href="/Scout">scout search</a> with <a href="/Null_Window">null windows</a>.</p>
+<pre><code>enum NodeType {
+    NonPV,
+    PV
+};
+
+template&lt;NodeType nodeType&gt;
+int search( int alpha, int beta, int depth ) {
+   if( depth == 0 ) return quiesce(alpha, beta);
+   constexpr bool PVNode = nodeType != NonPV;
+   int bestValue = -oo;
+   for ( all moves)  {
+      make
+      if ( first move ) {
+         score = -search&lt;nodeType&gt;(-beta, -alpha, depth - 1);
+      } else {
+         score = -search&lt;NonPV&gt;(-alpha - 1, -alpha, depth - 1);
+         if ( score &gt; alpha &amp;&amp; PVNode )
+            score = -search&lt;PV&gt;(-beta, -alpha, depth - 1); // re-search
+      }
+      unmake
+      if( score &gt;= beta )
+         return score;   // fail-soft beta-cutoff
+      if( score &gt; alpha ) {
+         alpha = score; // alpha acts like max in MiniMax
+      }
+   }
+
+   return bestValue;
+}</code></pre>
+<p><span id="PVSandAspiration"></span></p>
+<h2 id="pvs-and-aspiration">PVS and Aspiration</h2>
+<p>When implementing PVS together with the <a href="/Aspiration_Windows">aspiration window</a>, one must be aware that in this case also a normal window search might fail, leaving the program with no move and no PV. (Actually this is the reason why I wrote "When we already have a PV move" and not "searching later moves").</p>
+<ul>
+<li><a href="/PVS_and_Aspiration">PVS and Aspiration</a></li>
+</ul>
+<p>A state of the art <a href="/Fail-Soft">fail-soft</a> PVS implementation, called without aspiration, was posted by <a href="/Vincent_Diepeveen">Vincent Diepeveen</a> inside the mentioned <a href="/CCC">CCC</a> thread <a href="#fn22" class="footnote-ref" id="fnref22" role="doc-noteref"><sup>22</sup></a> :</p>
+<pre><code>Call from root:
+   rootscore = PVS(-infinite, infinite, depthleft);
+
+int PVS(alfa,beta,depthleft) {
+   if( depthleft &lt;= 0 ) return qsearch(alfa, beta);
+
+   // using fail soft with negamax:
+   make first move
+   bestscore = -PVS(-beta, -alfa, depthleft-1);
+   unmake first move
+   if( bestscore &gt; alfa ) {
+      if( bestscore &gt;= beta )
+         return bestscore;
+      alfa = bestscore;
+   }
+
+   for( all remaining moves ) {
+      make move
+      score = -PVS(-alfa-1, -alfa, depthleft-1); // alphaBeta or zwSearch
+      if( score &gt; alfa &amp;&amp; score &lt; beta ) {
+         // research with window [alfa;beta]
+         score = -PVS(-beta, -alfa, depthleft-1);
+         if( score &gt; alfa )
+           alfa = score;
+      }
+      unmake move
+      if( score &gt; bestscore ) {
+         if( score &gt;= beta )
+            return score;
+         bestscore = score;
+      }
+   }
+   return bestscore;
+}</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Alpha-Beta">Alpha-Beta</a></li>
+<li><a href="/CPW-Engine_search">CPW-Engine_search</a></li>
+<li><a href="/Enhanced_Forward_Pruning">Enhanced Forward Pruning</a></li>
+<li><a href="/Iterative_Deepening">Iterative Deepening</a></li>
+<li><a href="/Move_Ordering">Move Ordering</a></li>
+<li><a href="/MTD%28f%29">MTD(f)</a></li>
+<li><a href="/NegaScout">NegaScout</a></li>
+<li><a href="/Null_Window">Null Window</a></li>
+<li><a href="/Principal_Variation">Principal Variation</a></li>
+<li><a href="/PVS_and_Aspiration">PVS and Aspiration</a></li>
+<li><a href="/Scout">Scout</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<h3 id="1980-">1980 ...</h3>
+<ul>
+<li><a href="/Judea_Pearl">Judea Pearl</a> (<strong>1980</strong>). <em>Asymptotic Properties of Minimax Trees and Game-Searching Procedures.</em> <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 14, No. 2</li>
+<li><a href="/Judea_Pearl">Judea Pearl</a> (<strong>1980</strong>). <em>Scout: A Simple Game-Searching Algorithm with Proven Optimal Properties</em>. Proceedings of the First Annual National Conference on Artificial Intelligence. Stanford. <a href="http://ftp.cs.ucla.edu/pub/stat_ser/scout.pdf">pdf</a></li>
+<li><a href="/Raphael_Finkel">Raphael Finkel</a>, <a href="/John_Philip_Fishburn">John Philip Fishburn</a> (<strong>1980</strong>). <em>Parallel Alpha-Beta Search on Arachne.</em> <a href="/IEEE">IEEE</a> International Conference on Parallel Processing</li>
+<li><a href="/John_Philip_Fishburn">John Philip Fishburn</a> (<strong>1980</strong>). <em>An optimization of alpha-beta search</em>. <a href="/ACM">SIGART Bulletin</a>, Issue 72</li>
+<li><a href="/John_Philip_Fishburn">John Philip Fishburn</a> (<strong>1981</strong>). <em>Analysis of Speedup in Distributed Algorithms</em>. Ph.D. Thesis, <a href="https://en.wikipedia.org/wiki/University_of_Wisconsin-Madison">University of Wisconsin-Madison</a>, <a href="http://www.cs.wisc.edu/techreports/1981/TR431.pdf">pdf</a>, <em>Calphabeta</em> at page 167</li>
+<li><a href="/Tony_Marsland">Tony Marsland</a>, <a href="/Murray_Campbell">Murray Campbell</a> (<strong>1982</strong>). <em>Parallel Search of Strongly Ordered Game Trees.</em> <a href="/ACM">ACM Computing Surveys</a>, Vol. 14, No. 4, <a href="http://www.cs.ualberta.ca/%7Etony/OldPapers/strong.pdf">pdf</a></li>
+<li><a href="/Murray_Campbell">Murray Campbell</a>, <a href="/Tony_Marsland">Tony Marsland</a> (<strong>1983</strong>). <em>A Comparison of Minimax Tree Search Algorithms</em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 20, No. 4, pp. 347-367. ISSN 0004-3702.</li>
+<li><a href="/Tony_Marsland">Tony Marsland</a> (<strong>1983</strong>). <em>Relative Efficiency of Alpha-beta Implementations</em>. Procs. 8th Int. Joint Conf. on Art. Intell., pp. 763-766. Kaufman, Los Altos, <a href="http://dli.iiit.ac.in/ijcai/IJCAI-83-VOL-2/PDF/040.pdf">pdf</a></li>
+<li><a href="/Alexander_Reinefeld">Alexander Reinefeld</a> (<strong>1983</strong>). <em>An Improvement to the Scout Tree-Search Algorithm.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 6, No. 4</a>, <a href="http://sc.hlrn.de/reinefeld/bib/83icca.pdf">pdf</a></li>
+</ul>
+<h3 id="1985-">1985 ...</h3>
+<ul>
+<li><a href="/Agata_Muszycka-Jones">Agata Muszycka-Jones</a>, <a href="/Rajjan_Shinghal">Rajjan Shinghal</a> (<strong>1985</strong>). <em>An empirical comparison of pruning strategies in game trees</em>. <a href="/IEEE">IEEE Transactions on Systems, Man, and Cybernetics</a>, Vol. 15, No. 3</li>
+<li><a href="/Tony_Marsland">Tony Marsland</a> (<strong>1986</strong>). <em>A Review of Game-Tree Pruning.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 9, No. 1</a>, <a href="http://www.cs.ualberta.ca/%7Etony/OldPapers/1986review.pdf">pdf</a></li>
+<li><a href="/Alexander_Reinefeld">Alexander Reinefeld</a>, <a href="/Tony_Marsland">Tony Marsland</a> (<strong>1987</strong>). <em>A Quantitative Analysis of Minimal Window Search.</em> <a href="http://www.informatik.uni-trier.de/%7Eley/db/conf/ijcai/ijcai87.html">IJCAI-87</a>, <a href="http://webdocs.cs.ualberta.ca/~tony/OldPapers/ijcai87.pdf">pdf</a></li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="/Mark_Winands">Mark Winands</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Erik_van_der_Werf">Erik van der Werf</a> (<strong>2003</strong>). <em><a href="https://research.tilburguniversity.edu/en/publications/enhanced-forward-pruning">Enhanced forward pruning</a></em>. JCIS 2003</li>
+<li><a href="/Mark_Winands">Mark Winands</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Erik_van_der_Werf">Erik van der Werf</a> (<strong>2005</strong>). <em>Enhanced Forward Pruning</em>. <a href="https://en.wikipedia.org/wiki/Information_Sciences_(journal)">Information Sciences</a>, Vol. 175, No. 4, <a href="http://erikvanderwerf.tengen.nl/pubdown/Enhanced%20forward%20pruning.pdf">pdf preprint</a> (with PVS modifications)</li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/3ffa1d89d13f9e86">Trick Marsland</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Computer_Chess_Forums">rgcc</a>, February 15, 1996</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=20868">Re: Zero-width Window Null Move Search</a> by <a href="/Guido_Schimmels">Guido Schimmels</a>, <a href="/CCC">CCC</a>, June 18, 1998 » <a href="/NegaScout">NegaScout</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=45482">Fail-soft with PVS?</a> by <a href="/Will_Singleton">Will Singleton</a>, <a href="/CCC">CCC</a>, March 09, 1999 » <a href="/Fail-Soft">Fail-Soft</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=54343">Re: negascout vs pvs</a> by <a href="/Dave_Gomboc">Dave Gomboc</a>, <a href="/CCC">CCC</a>, June 04, 1999</li>
+</ul>
+<h3 id="2000--1">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=86122">PVS and NegaScout</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, <a href="/CCC">CCC</a>, January 05, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=102792">A Question on simple Alpha-Beta versus PVS/Negascout</a> by <a href="/Andrei_Fortuna">Andrei Fortuna</a>, <a href="/CCC">CCC</a>, March 21, 2000 » <a href="/Alpha-Beta">Alpha-Beta</a>, <a href="/NegaScout">NegaScout</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=140872">What is Negascout and why is MWS PVS?</a> by <a href="/Severi_Salminen">Severi Salminen</a>, <a href="/CCC">CCC</a>, November 24, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=156886">Please explain the difference between PVS and NegaScout</a> by <a href="/Severi_Salminen">Severi Salminen</a>, <a href="/CCC">CCC</a>, March 02, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=342287">QSearch() as PVS() ?</a> by <a href="/Matthias_Gemuh">Matthias Gemuh</a>, <a href="/CCC">CCC</a>, January 14, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=354012">Fruit - Question for Fabien</a> by <a href="/Dan_Honeycutt">Dan Honeycutt</a>, <a href="/CCC">CCC</a>, March 11, 2004 » <a href="/Fruit">Fruit</a>, <a href="/Node_Types">Node Types</a>, <a href="/Transposition_Table">Transposition Table</a>, <a href="/Principal_Variation">Principal Variation</a></li>
+</ul>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=354016">Re: Fruit - Question for Fabien</a> by <a href="/Fabien_Letouzey">Fabien Letouzey</a>, <a href="/CCC">CCC</a>, March 11, 2004</p>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=373537">Q. Aspiration, PVS, Fail-Soft</a> by <a href="/David_B._Weller">David B. Weller</a>, <a href="/CCC">CCC</a>, July 02, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=379100">negascout and PVS?</a> by <a href="/Peter_Aloysius_Harjanto">Peter Alloysius</a>, <a href="/CCC">CCC</a>, July 26, 2004 » <a href="/NegaScout">NegaScout</a></li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=6558">Slight enhancement to PVS</a> by <a href="/Pradu_Kannan">Pradu Kannan</a>, <a href="/Computer_Chess_Forums">Winboard Programming Forum</a>, June 10, 2007</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=6665">Search questions</a> by <a href="/Sven_Schüle">Sven Schüle</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, July 17, 2007 » <a href="/Fail-Soft">Fail-Soft</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=16724&amp;p=147515">Tuning PVS</a> by <a href="/Aleks_Peshkov">Aleks Peshkov</a>, <a href="/CCC">CCC</a>, September 27, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=24883">when to try zero window search</a>, <a href="/CCC">CCC</a>, November 14, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=26974">PVS</a> by <a href="/Edmund_Moshammer">Edmund Moshammer</a>, <a href="/CCC">CCC</a>, March 12, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=254906&amp;t=26974">Re: PVS</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, March 12, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=255191&amp;t=26974">Re: PVS</a> by <a href="/Vincent_Diepeveen">Vincent Diepeveen</a>, <a href="/CCC">CCC</a>, March 14, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=28266">No PVS at low depths?</a> by <a href="/Mark_Lefler">Mark Lefler</a>, <a href="/CCC">CCC</a>, June 05, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=29681">A way to improve PVS</a> by <a href="/Sergei_Markoff">Sergei S. Markoff</a>, <a href="/CCC">CCC</a>, September 07, 2009</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=356836&amp;t=35022">The strengths and weaknesses of PVS</a> by <a href="/Edmund_Moshammer">Edmund Moshammer</a>, <a href="/CCC">CCC</a>, June 18, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38413">Memory-PV-Search</a> by <a href="/Onno_Garms">Onno Garms</a>, <a href="/CCC">CCC</a>, March 13, 2011 » <a href="/Onno">Onno</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46499">PV Search and Transposition Table</a> by Cheney Nattress, <a href="/CCC">CCC</a>, December 20, 2012</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2208">principle variation search</a> by nak3c, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, January 09, 2013</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2218">Implementing pvs</a> by <a href="/Christian_Daley">CDaley11</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, January 13, 2013</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=48137">Question about PVS and nodes type</a> by <a href="/Patrice_Duhamel">Patrice Duhamel</a>, <a href="/CCC">CCC</a>, May 28, 2013 » <a href="/Node_Types">Node Types</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53626">Improvement from PVS</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, September 09, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53972">Your experience with PVS + Aspiration window</a> by <a href="/Fabio_Gobbato">Fabio Gobbato</a>, <a href="/CCC">CCC</a>, October 07, 2014 » <a href="/Aspiration_Windows">Aspiration Windows</a>, <a href="/PVS_and_Aspiration">PVS and Aspiration</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55709">Question on standard implementation of PVS+NWS</a> by Rob Williamson, <a href="/CCC">CCC</a>, March 19, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60719">PVS/NegaScout: Actual benefits</a> by <a href="/Vincent_Tang">Vincent Tang</a>, <a href="/CCC">CCC</a>, July 06, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62913">bound type in PVS ?</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, January 23, 2017 » <a href="/Bound">Bound</a>, <a href="/Exact_Score">Exact Score</a></li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=3084">LMR and PVS</a> by thevinenator, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, February 10, 2017 » <a href="/Late_Move_Reductions">Late Move Reductions</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65490">PVS &amp; Embla</a> by <a href="/Folkert_van_Heusden">Folkert van Heusden</a>, <a href="/CCC">CCC</a>, October 19, 2017 » <a href="/Embla">Embla</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69252">out of time in PVS</a> by Louis Mackenzie-Smith, <a href="/CCC">CCC</a>, December 13, 2018</li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75549">Principal Variation Search vs. Transposition Table</a> by <a href="/Marcel_Vanthoor">Marcel Vanthoor</a>, <a href="/CCC">CCC</a>, October 26, 2020 » <a href="/Principal_Variation">Principal Variation</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="http://web.archive.org/web/20070809015901/www.seanet.com/~brucemo/topics/pvs.htm">Principal Variation Search</a> from <a href="/Bruce_Moreland">Bruce Moreland's</a> <a href="http://web.archive.org/web/20070811182741/www.seanet.com/%7Ebrucemo/topics/topics.htm">Programming Topics</a></li>
+<li><a href="https://www.ics.uci.edu/~eppstein/180a/990202b.html">Lecture notes for February 2, 1999 Variants of Alpha-Beta Search</a> by <a href="/David_Eppstein">David Eppstein</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Negascout">NegaScout or Principal Variation Search from Wikipedia</a></li>
+</ul>
+<h2 id="video-tutorial">Video Tutorial</h2>
+<ul>
+<li>A summary description of PVS and how it works by <a href="/Jonathan_Warkentin">Jonathan Warkentin</a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/1YdBLgmoV_E" title="YouTube video 1YdBLgmoV_E" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=1YdBLgmoV_E">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Search">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://web.archive.org/web/20040427015506/brucemo.com/compchess/programming/pvs.htm">Principal Variation Search</a> from <a href="/Bruce_Moreland">Bruce Moreland's</a> <a href="http://web.archive.org/web/20040403211728/brucemo.com/compchess/programming/index.htm">Programming Topics</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=26974">PVS</a> by <a href="/Edmund_Moshammer">Edmund Moshammer</a>, <a href="/CCC">CCC</a>, March 12, 2009<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="/Tony_Marsland">Tony Marsland</a>, <a href="/Murray_Campbell">Murray Campbell</a> (<strong>1982</strong>). <em>Parallel Search of Strongly Ordered Game Trees.</em> <a href="/ACM">ACM Computing Surveys</a>, Vol. 14, No. 4, <a href="http://www.cs.ualberta.ca/%7Etony/OldPapers/strong.pdf">pdf reprint</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="/Raphael_Finkel">Raphael Finkel</a>, <a href="/John_Philip_Fishburn">John Philip Fishburn</a> (<strong>1980</strong>). <em>Parallel Alpha-Beta Search on Arachne.</em> <a href="/IEEE">IEEE</a> International Conference on Parallel Processing, pp. 235-243.<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="https://www.stmintz.com/ccc/index.php?id=354016">Re: Fruit - Question for Fabien</a> by <a href="/Fabien_Letouzey">Fabien Letouzey</a>, <a href="/CCC">CCC</a>, March 11, 2004<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="/John_Philip_Fishburn">John Philip Fishburn</a> (<strong>1981</strong>). <em>Analysis of Speedup in Distributed Algorithms</em>. Ph.D. Thesis, <a href="https://en.wikipedia.org/wiki/University_of_Wisconsin-Madison">University of Wisconsin-Madison</a>, <a href="http://www.cs.wisc.edu/techreports/1981/TR431.pdf">pdf</a>, <em>Calphabeta</em> at page 167<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="/Judea_Pearl">Judea Pearl</a> (<strong>1980</strong>). <em>Asymptotic Properties of Minimax Trees and Game-Searching Procedures.</em> <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 14, No. 2<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="/Judea_Pearl">Judea Pearl</a> (<strong>1980</strong>). <em>Scout: A Simple Game-Searching Algorithm with Proven Optimal Properties</em>. Proceedings of the First Annual National Conference on Artificial Intelligence. Stanford. <a href="http://ftp.cs.ucla.edu/pub/stat_ser/scout.pdf">pdf</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=254906&amp;t=26974">Re: PVS</a> by <a href="/Robert_Hyatt">Robert Hyatt</a> from <a href="/CCC">CCC</a>, March 12, 2009<a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="/John_Philip_Fishburn"><code>John Philip Fishburn</code></a><code> (</code><strong><code>1980</code></strong><code>). </code><em><code>An optimization of alpha-beta search</code></em><code>, SIGART Bulletin, Issue 72</code><a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="http://sc.hlrn.de/reinefeld/Research/nsc.html">NegaScout - A Minimax Algorithm faster than AlphaBeta</a><a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="/Alexander_Reinefeld">Alexander Reinefeld</a> (<strong>1983</strong>). <em>An Improvement to the Scout Tree-Search Algorithm.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 6, No. 4</a>, <a href="http://www.top-5000.nl/ps/An%20improvement%20to%20the%20scout%20tree%20search%20algorithm.pdf">pdf</a><a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="/Yngvi_Björnsson">Yngvi Björnsson</a> (<strong>2002</strong>). <em>Selective Depth-First Game-Tree Search.</em> <strong>Ph.D. thesis</strong>, <a href="/University_of_Alberta">University of Alberta</a><a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p><a href="/Mark_Winands">Mark Winands</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Erik_van_der_Werf">Erik van der Werf</a> (<strong>2003</strong>). <em>Enhanced forward pruning.</em> Accepted for publication. <a href="http://www.personeel.unimaas.nl/m-winands/documents/Enhanced%20forward%20pruning.pdf">pdf</a><a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn15"><p><a href="https://www.stmintz.com/ccc/index.php?id=20868">Re: Zero-width Window Null Move Search</a> by <a href="/Guido_Schimmels">Guido Schimmels</a>, <a href="/CCC">CCC</a>, June 18, 1998<a href="#fnref15" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn16"><p><a href="https://www.stmintz.com/ccc/index.php?id=86134">Re: PVS and NegaScout</a> by <a href="/Yngvi_Björnsson">Yngvi Björnsson</a>, <a href="/CCC">CCC</a>, January 05, 2000<a href="#fnref16" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn17"><p><a href="https://www.stmintz.com/ccc/index.php?id=379441">Negascout == PVS (with references)</a> by <a href="/Dennis_Breuker">Dennis Breuker</a>, <a href="/CCC">CCC</a>, July 28, 2004<a href="#fnref17" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn18"><p><a href="/Dennis_Breuker"><code>Dennis M. Breuker</code></a><code> (</code><strong><code>1998</code></strong><code>). </code><em><a href="http://www.dennisbreuker.nl/thesis/index.html"><code>Ph.D. thesis: Memory versus Search in Games</code></a></em><a href="#fnref18" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn19"><p><a href="/Tony_Marsland"><code>Tony Marsland</code></a><code> (</code><strong><code>1986</code></strong><code>). </code><em><code>A Review of Game-Tree Pruning.</code></em><code> </code><a href="/ICGA_Journal"><code>ICCA Journal, Vol. 9, No. 1</code></a><code>, </code><a href="http://www.cs.ualberta.ca/%7Etony/OldPapers/1986review.pdf"><code>pdf</code></a><a href="#fnref19" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn20"><p><a href="http://sc.hlrn.de/reinefeld/Research/nsc.html"><code>NegaScout - A Minimax Algorithm faster than AlphaBeta</code></a><a href="#fnref20" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn21"><p><a href="/Alexander_Reinefeld"><code>Alexander Reinefeld</code></a><code> (</code><strong><code>1983</code></strong><code>). </code><em><code>An Improvement to the Scout Tree-Search Algorithm.</code></em><code> </code><a href="/ICGA_Journal"><code>ICCA Journal, Vol. 6, No. 4</code></a><code>, </code><a href="http://www.top-5000.nl/ps/An%20improvement%20to%20the%20scout%20tree%20search%20algorithm.pdf"><code>pdf</code></a><a href="#fnref21" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn22"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=255191&amp;t=26974">Re: PVS</a> by <a href="/Vincent_Diepeveen">Vincent Diepeveen</a>, <a href="/CCC">CCC</a>, March 14, 2009<a href="#fnref22" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:John_Cage">John Cage</a> · <a href="/Category:Videos">Videos</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Principal_Variation_Search">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, ShawnXu.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Repetitions - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Repetitions</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Search">Search</a> * Repetitions</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="http://www.mcescher.com/Gallery/back-bmp/LW327.jpg" target="_blank" rel="noopener noreferrer"><img src="/assets/EschersReptiles.jpg" alt="M. C. Escher, Reptiles, 1943 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:M._C._Escher">M. C. Escher</a>, Reptiles, 1943 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://www.mcescher.com/Gallery/back-bmp/LW327.jpg">Picture gallery "Back in Holland 1941 - 1954"</a> from <a href="http://www.mcescher.com/">The Official M.C. Escher Website</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Repetitions</strong> of <a href="/Chess_Position">positions</a> may happen during <a href="/Chess_Game">game play</a> and inside the <a href="/Search">search</a> of a chess program due to <a href="/Reversible_Moves">reversible moves</a> played from both sides, which might be nullified in one or multiple further reversible moves. The player to move <strong>may</strong> claim a <a href="/Draw">draw</a> if the same position occurs <strong>three</strong> times, or will occur after an intended move, in any order, with the same player to move.</p>
+<p>Two positions are considered same or equal, if all occupied squares and kind of <a href="/Pieces">pieces</a> (not necessarily the same piece) they occupy are the same, the <a href="/Castling_Rights">castling rights</a> for both sides did not change, and no <a href="/En_passant">en passant capture</a> was possible during the first occurrence, even if obviously not played.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#assigning-draw-score">Assigning Draw Score</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#rules">Rules</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#fide-rule">Fide Rule</a></li>
+<li><a href="#since-july-01-2014">Since July 01, 2014</a></li>
+<li><a href="#former-rule">Former Rule</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#repetition-of-positions">Repetition of Positions</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#transposition-table">Transposition Table</a></li>
+<li><a href="#list-of-keys">List of Keys</a></li>
+<li><a href="#dedicated-hash-table">Dedicated Hash Table</a></li>
+</ol>
+</details></li>
+<li><a href="#repetition-of-moves">Repetition of Moves</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#publications">Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1929">1929</a></li>
+<li><a href="#1980-">1980 ...</a></li>
+<li><a href="#1990-">1990 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1990--1">1990 ...</a></li>
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000--1">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010--1">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="assigning-draw-score">Assigning Draw Score</h2>
+<p>Threefold repetition implies a position occurred thrice, that is repeated twice. When to score the position as a draw, however, is an entirely different matter. Most programs do this on the first repetition, no matter whether the first occurrence of the repeated position appears in the current search space, or not. Other programs consider that fact, they avoid <a href="https://en.wikipedia.org/wiki/Cycle_%28graph_theory%29">cycles</a> inside the current <a href="/Search_Tree">search tree</a> to make it a <a href="https://en.wikipedia.org/wiki/Directed_acyclic_graph">directed acyclic graph</a> (DAG), but allow a one-fold repetition, if the first occurrence appears in the game history before the current <a href="/Root">root</a>. Anyway, to wait for the second repetition one has its pros and cons. The Repetition score is either zero or the <a href="/Contempt_Factor">contempt factor</a>.</p>
+<h2 id="rules">Rules</h2>
+<p>The <a href="/Rules_of_Chess">rules of chess</a> state a <a href="https://en.wikipedia.org/wiki/Threefold_repetition">threefold repetition</a> of a <a href="/Chess_Position">position</a> gives the <a href="/Side_to_move">player to move</a> the option to claim a draw, no matter whether the threefold repetition already occurred yet, or is about to occur after declaring the intended move in conjunction with the draw claim. The latter case is a bit tricky for computers, and is/was likely not strictly implemented in most programs or their <a href="/User_Interface">user interfaces</a>, since a draw message text or box appeared after the repetition occurs but no claim before. Since July 2014 a fivefold repetition is sufficient without any claim <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>.</p>
+<h3 id="fide-rule">Fide Rule</h3>
+<p><a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></p>
+<p><code>9.2 The game is drawn, upon a correct claim by the player having the move, when the same position, for at least the third time (not necessarily by a repetition of moves)</code><br />
+<code> a) is about to appear, if he first writes his move on his </code><a href="/Game_Notation"><code>scoresheet</code></a><code> and declares</code><br />
+<code>    to the arbiter his intention to make this move, or</code><br />
+<code> b) has just appeared, and the player claiming the draw has the move.</code><br />
+<code>Positions as in (a) and (b) are considered the same, if the same player has the move, pieces of the same kind and color occupy the same squares, and the possible moves of all the pieces of both players are the same. Positions are not the same if a pawn that could have been captured en passant can no longer in this manner be captured or if the right to castle has been changed temporarily or permanently. </code></p>
+<h3 id="since-july-01-2014">Since July 01, 2014</h3>
+<p><code>9.6  If one or both of the following occur(s) then the game is drawn: </code><br />
+<code> a) the same position has appeared, as in 9.2b, for at least five consecutive alternate moves by each player.  </code><br />
+<code> b) any consecutive series of 75 moves have been completed by each player without the movement of any pawn </code><br />
+<code>    and without any capture. If the last move resulted in checkmate, that shall take precedence. </code></p>
+<h3 id="former-rule">Former Rule</h3>
+<p>A former (German) rule, was believed to be sufficient to make the game of chess finite <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> :</p>
+<p><code>A chess game ends with a draw if a sequence of moves - with all pieces in exactly the same positions - is played three times successively. </code></p>
+<p>was proved not sufficient by <a href="/Max_Euwe">Max Euwe</a> in 1929 by applying the <a href="/Max_Euwe">Prouhet–Thue–Morse Sequence</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> , i. e. with following move indices <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> :</p>
+<table>
+<thead>
+<tr>
+<th>0</th>
+<th>Nb1-c3</th>
+<th>Nb8-c6</th>
+<th>Nc3-b1</th>
+<th>Nc6-b8</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Ng1-f3</td>
+<td>Ng8-f6</td>
+<td>Nf3-g1</td>
+<td>Nf6-g8</td>
+</tr>
+</tbody>
+</table>
+<p>Euwe's prove was the reason, two other rules in force each of which guarantees chess to be a finite game, <a href="https://en.wikipedia.org/wiki/Threefold_repetition">threefold repetition</a> of positions and the <a href="/Fifty-move_Rule">fifty-move rule</a>. <span id="RepetitionOfPositions"></span></p>
+<h2 id="repetition-of-positions">Repetition of Positions</h2>
+<p>By <a href="/Chess_Position">position</a> we mean the location of all the <a href="/Pieces">pieces</a> on the <a href="/Chessboard">Chessboard</a> as well as <a href="/Castling_Rights">castling rights</a> and <a href="/En_passant">en passant</a> status. Since the rule speaks about the piece position, and not their identity (i.e. artificially constructed repeated position where the rooks of one player changed places still would be a draw), repetition may be detected by using the <a href="/Zobrist_Hashing">Zobrist-</a> or <a href="/BCH_Hashing">BCH signatures</a> of the position.</p>
+<h3 id="transposition-table">Transposition Table</h3>
+<p>One possible implementation was used by <a href="/Ken_Thompson">Ken Thompson</a> in <a href="/Belle">Belle</a>, who told <a href="/Bruce_Moreland">Bruce Moreland</a> that he detected repetitions by using the <a href="/Transposition_Table">transposition hash table</a>, as follows <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> :</p>
+<p><code>The idea is to set an "open" flag in the position's transposition table element when the hash table is probed. This flag stays set until the position is no longer being searched, meaning when the search function returns a value for that position.</code></p>
+<p><code>At any given time, the only nodes that are "open" are nodes that are in the game history, or are in the current line in the tree search, so if the hash table probe encounters an open node, it must be because the current position has occurred somewhere before</code></p>
+<p><code>This has the advantage that it uses data structures that are already present in the typical chess program, but there are a few problems with this idea. The hash table element must be written when a node is entered, so an "always replace" scheme must be used. This isn't a problem for Thompson, since his scheme involves using an "always replace" table, but other implementations might not use this kind of replacement scheme. Another problem is that there can be hash table entry collisions, and they must be dealt with. I am not talking about hash key collisions which occur when two positions map to the same 64-bit key, I'm talking about when two particular positions want to share the same hash table element, which should be pretty common. If two open nodes that want to share the same hash element, it's not immediately obvious what to do, other than not detect repetitions on the second one. Perhaps this problem could be dealt with via a re-hashing scheme, but this seems like an annoying thing to add in order to support functionality that isn't central to what the transposition table should be doing. A final problem is that it is hard to figure out how to adapt this to a </code><a href="/Parallel_Search"><code>multiprocessor search</code></a><code> where there might be several search </code><a href="/Thread"><code>threads</code></a><code> accessing the same hash table. When an open node is encountered, it might not indicate a repetition at all, since it could belong to a line being searched by another processor. This problem sounds complicated to solve. </code></p>
+<p><span id="listofkeys"></span></p>
+<h3 id="list-of-keys">List of Keys</h3>
+<p>Most programs use an <a href="/Array">array</a> or list of Zobrist- or BCH-keys and compare the current signature with keys 4, 6, 8 and so on <a href="/Ply">plies</a> along the actual variation. This is usually quite cheap, since testing often does not require looking through the entire list, since <a href="/Captures">captures</a> and <a href="/Pawn_Push">pawn moves</a>, that reset the <a href="/Halfmove_Clock">halfmove clock</a> for the purpose of enforcing <a href="/Fifty-move_Rule">fifty-move rule</a> are known to make a repetition impossible. Since each thread or process may own its own copy of the game-record, this approach has also some merits in <a href="/Parallel_Search">parallel search</a> implementations.</p>
+<p><a href="/John_Stanback">John Stanback</a> about his implementation in <a href="/Zarkov">Zarkov</a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>:</p>
+<p><code>In Zarkov I simply keep 32 bits of </code><a href="/Zobrist_Hashing"><code>hash</code></a><code> for each move in the </code><a href="/Chess_Game"><code>game history</code></a><code>, whether it has actually occurred on the board or during the current search. I also have a variable that contains the </code><a href="/Ply"><code>ply</code></a><code> at which the last </code><a href="/Irreversible_Moves"><code>irreversible move</code></a><code> occurred.  At each </code><a href="/Node"><code>node</code></a><code> in the search, including </code><a href="/Quiescence_Search"><code>quiescence</code></a><code>, if the current ply is at least 4 plies beyond the last irreversible move I test the current hash value against those for each position in the game history (for the current side to move only) back to the last irreversible move and count the number of matches (repetitions).  </code></p>
+<p><code>If the count is 2, then this is the third repetition and a draw score is returned.  If the count is 1 and the current_ply &gt; root_ply+2 then a draw score is also returned. This avoids problems that can occur if the program thinks that a move at the </code><a href="/Root"><code>root</code></a><code> leads to a draw (due to a single repetition) when the opponent may vary, but it also lets the program treat repeated positions in the search as draws which helps a lot. Since most positions in a search are less than 4 plies beyond the last irreversible move the repetition() function is rarely called and the performance hit for detecting repetitions is negligible. </code></p>
+<p><span id="RepetitionHashTable"></span></p>
+<h3 id="dedicated-hash-table">Dedicated Hash Table</h3>
+<p>Some programs, like <a href="/Gerbil">Gerbil</a> or <a href="/Rookie">Rookie</a> use a separate small <a href="/Hash_Table">hash table</a>, actually an implementation of a <a href="https://en.wikipedia.org/wiki/Bloom_filter">Bloom filter</a> revealed by <a href="/Ronald_de_Man">Ronald de Man</a> as mentioned by <a href="/Marcel_van_Kervinck">Marcel van Kervinck</a> in his thesis <em>The design and implementation of the Rookie 2.0 Chess Playing Program</em> <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a>:</p>
+<p><code>It is tempting to use the transposition table to help detecting repeated positions. However, overloaded transposition tables can lose entries. So we choose something else </code><a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a><a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a><code> : a dedicated, small, repetition hash table. This tables has 2^14 one-byte entries that are initially zero (totaling 16KB). When entering a new position, the low 14 bits of the hash-key are used to index the table and bump up its value by one. The value is restored after unmaking the move. When entering a node and its value is found to be non-zero already, we know there could be a cycle, which we verify by tracing back the actual variation. The repetition table is large enough to sufficiently reduce the number of false hits and this vaporizes the costs of futile back-traces. </code></p>
+<p><span id="RepetitionofMoves"></span></p>
+<h2 id="repetition-of-moves">Repetition of Moves</h2>
+<p>An alternative, pragmatical approach based on repetitions of <a href="/Moves">moves</a> was proposed by <a href="/Vladan_Vučković">Vladan Vučković</a> and <a href="/Đorđe_Vidanović">Đorđe Vidanović</a> in 2004, as implemented in <a href="/Axon">Axon</a> <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a> and discussed in <a href="/CCC">CCC</a> <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a> <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a>.</p>
+<p>The algorithm needs a <a href="/Move_List">move list</a> containing the <a href="/Chess_Game">game record</a> including the variation actually <a href="/Search">searched</a>, 16-bit entries with <a href="/Origin_Square">origin</a> and <a href="/Target_Square">target square</a>, and a flag whether a move is <a href="/Irreversible_Moves">irreversible</a>, as only information required. Starting with the last move made, the list is scanned backwards as long there are <a href="/Reversible_Moves">reversible moves</a>. A local concatenating list of up to 24 entries (one entry for each piece able to make reversible moves) is used to determine cycles per piece, where consecutive moves on their target squares are merged to one "pseudo" move, using the earliest origin and the latest target square. If all distinct white and black moving pieces in the chain list contain equal from- and to coordinates, all cycles of moves are closed and a move repetition is detected. This is how the algorithm as given in the paper in <a href="/8086">8086</a> <a href="/Assembly">assembly</a> looks in pseudo <a href="/Cpp">C++</a>, square coordinates are offset from a 12*12 <a href="/Mailbox">mailbox</a> approach, so that empty entries have no valid square index.</p>
+<pre><code>bool repetition(SMove *pVariant) {
+   SMove chainList[24], m;
+   short c = 0, i;
+
+   for (i=0; i &lt; 24; ++i) {
+      chainList[i].setEmpty();
+   }
+
+l: m = *pVariant--; /* fetch move and decrement move list pointer */
+   if ( m.isReversible() ) { 
+      /* lookup chain list for from-coordinate that match current to coordinate */
+      for (i=0; i &lt; 24; ++i) {
+         if ( m.to == chainList[i].from ) {
+            if ( m.from == chainList[i].to ) {
+              if ( --c == 0 )
+                  return true; /* repetition detected */
+               chainList[i].setEmpty();
+               goto l;
+            } 
+            chainList[i].from = m.from; /* concatenate moves */
+            goto l;
+         }
+      }
+      /* lookup for next empty slot, to add the current move in the chain list */
+      for (i=0; i &lt; 24; ++i) {
+         if ( chainList[i].isEmpty() ) {
+            chainList[i] = m;
+            ++c;
+            goto l;
+         }
+      }
+   }
+   return false;
+}</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Contempt_Factor">Contempt Factor</a></li>
+<li><a href="/Stalemate">Desperado</a></li>
+<li><a href="/Draw">Draw</a></li>
+<li><a href="/Fifty-move_Rule">Fifty-move Rule</a></li>
+<li><a href="/Graph_History_Interaction">Graph History Interaction</a> (GHI)</li>
+<li><a href="/Path-Dependency">Path-Dependency</a></li>
+<li><a href="/Check">Perpetual Check</a></li>
+<li>Pursuit</li>
+<li><a href="/Belzebub">Repetitions in Belzebub</a></li>
+<li><a href="/SCP">Repetitions in SCP</a></li>
+<li><a href="/Transposition">Transposition</a></li>
+<li><a href="/Transposition_Table">Transposition Table</a></li>
+<li><a href="/Vice">Vice Video on Repetition</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<h3 id="1929">1929</h3>
+<ul>
+<li><a href="/Max_Euwe">Max Euwe</a> (<strong>1929</strong>). <em>Mengentheoretische Betrachtungen über das Schachspiel</em>. Proc. Konin. Akad. Wetenschappen (Amsterdam)</li>
+</ul>
+<h3 id="1980-">1980 ...</h3>
+<ul>
+<li><a href="/Murray_Campbell">Murray Campbell</a> (<strong>1985</strong>). <em><a href="http://portal.acm.org/citation.cfm?id=320516">The graph-history interaction: on ignoring position history</a></em>. Computer Science Department, <a href="/Carnegie_Mellon_University">Carnegie Mellon University</a>, Proceedings of the 1985 ACM annual conference, <a href="http://wiki.cs.pdx.edu/wurzburg2009/nfp/campbell-ghi.pdf">pdf</a></li>
+<li><a href="/Harry_Nelson">Harry Nelson</a>, <a href="/Robert_Hyatt">Robert Hyatt</a> (<strong>1988</strong>). <em>The Draw Heuristic of Cray Blitz</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 11, No. 1</a> » <a href="/Cray_Blitz">Cray Blitz</a></li>
+</ul>
+<h3 id="1990-">1990 ...</h3>
+<ul>
+<li><a href="/Dennis_Breuker">Dennis Breuker</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Victor_Allis">Victor Allis</a> (<strong>1999</strong>). <em>A Solution to the GHI Problem for Best-First Search</em>. <a href="/CG_1998">CG 1998</a> » <a href="/Graph_History_Interaction">Graph History Interaction</a>, <a href="/Best-First">Best-First</a></li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="/Thomas_Lincke">Thomas Lincke</a> (<strong>2002</strong>). <em>Exploring the Computational Limits of Large Exhaustive Search Problems</em>. Ph.D thesis, <a href="/ETH_Zurich">ETH Zurich</a>, <a href="http://e-collection.library.ethz.ch/eserv/eth:25905/eth-25905-02.pdf">pdf</a>, <a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a> Chapter 4.3 Cycles</li>
+<li><a href="/Vladan_Vučković">Vladan Vučković</a>, <a href="/Đorđe_Vidanović">Đorđe Vidanović</a> (<strong>2004</strong>). <em>A New Approach to Draw Detection by Move Repetition in Computer Chess Programming.</em> <a href="http://arxiv.org/abs/cs/0406038">CoRR arXiv:cs/0406038</a> <a href="#fn15" class="footnote-ref" id="fnref15" role="doc-noteref"><sup>15</sup></a> <a href="#fn16" class="footnote-ref" id="fnref16" role="doc-noteref"><sup>16</sup></a></li>
+<li><a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Martin_Müller">Martin Müller</a> (<strong>2004</strong>). <em>A General Solution to the Graph History Interaction Problem</em>. <a href="/AAAI">AAAI</a> National Conference, <a href="http://webdocs.cs.ualberta.ca/~mmueller/ps/aaai-ghi.pdf">pdf</a></li>
+<li><a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a> (<strong>2005</strong>). <em>Correct and Efficient Search Algorithms in the Presence of Repetitions</em>. Ph.D. thesis, <a href="/University_of_Alberta">University of Alberta</a>, Received the 2005 <a href="/ChessBase">ChessBase</a> <a href="/ICGA">Best-Publication Award</a>, <a href="http://www.is.titech.ac.jp/%7Ekishi/pdf_file/kishi_phd_thesis.pdf">pdf</a> » <a href="/Proof-Number_Search">Proof-Number Search</a></li>
+<li><a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Martin_Müller">Martin Müller</a> (<strong>2005</strong>). <em>A Solution to the GHI Problem for Depth-First Proof-Number Search</em>. 7th Joint Conference on Information Sciences (JCIS2003), pp. 489 - 492, <a href="http://webdocs.cs.ualberta.ca/~mmueller/ps/kishimoto-mueller-infsci-ghi.pdf">pdf</a> » <a href="/Graph_History_Interaction">Graph History Interaction</a></li>
+<li>Daniel Andersson (<strong>2009</strong>). <em>Perfect-Information Games with Cycles</em>. Ph.D. thesis, <a href="https://en.wikipedia.org/wiki/Aarhus_University">Aarhus University</a>, advisor <a href="/Mathematician">Peter Bro Miltersen</a>, <a href="http://www.cs.au.dk/~koda/thesis.pdf">pdf</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="/Marcel_van_Kervinck">Marcel van Kervinck</a> (<strong>2013</strong>). <em>A fast software-based method for upcoming cycle detection in search trees</em>. <a href="http://marcelk.net/2013-04-06/paper/upcoming-rep-v2.pdf">pdf preview</a> <a href="#fn17" class="footnote-ref" id="fnref17" role="doc-noteref"><sup>17</sup></a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1990--1">1990 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.chess/browse_frm/thread/8cc6428ab611f70e">Repetition detection w/hash tables</a> by <a href="/Bruce_Moreland">Bruce Moreland</a>, <a href="/Computer_Chess_Forums">rec.games.chess</a>, August 14, 1993</li>
+</ul>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/7edf36b54a47267d">Draw by Repetition Code</a> by cmayer, <a href="/Computer_Chess_Forums">rgcc</a>, December 31, 1996</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/6e999936bc7e5200">Repetitions in Crafty</a> by <a href="/Martin_Borriss">Martin Borriss</a>, <a href="/Computer_Chess_Forums">rgcc</a>, January 30, 1997 » <a href="/Crafty">Crafty</a></li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/e3bf1dac24b7b1ce">Perpetual check</a> by <a href="/Ian_Kennedy">Ian Kennedy</a>, <a href="/Computer_Chess_Forums">rgcc</a>, May 19, 1997</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/1d601e208c97c395">Handling of repetition (draw) in transposition table</a> by Bjarke Dahl Ebert, <a href="/Computer_Chess_Forums">rgcc</a>, June 9, 1997</li>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/T9VBgvjL450/u6aUpiL1XzMJ">Detected draw by repetition</a> by <a href="/Tim_Foden">Tim Foden</a>, <a href="/Computer_Chess_Forums">rgcc</a>, October 15, 1997</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/c431ac1739de871b">triple repetition</a> by Daniel Kang, <a href="/Computer_Chess_Forums">rgcc</a>, October 26, 1997</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=22816">draw by repetition and hash tables</a> by <a href="/Werner_Inmann">Werner Inmann</a>, <a href="/CCC">CCC</a>, July 24, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=47663">Draw by 2nd repetition?</a> by <a href="/James_Robertson">James Robertson</a>, <a href="/CCC">CCC</a>, March 31, 1999</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=72221">Problem with draws by rep and hash table</a> by <a href="/James_Robertson">James Robertson</a>, <a href="/CCC">CCC</a>, October 07, 1999</li>
+</ul>
+<h3 id="2000--1">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=99216">Does your program understand castling/en passant rights on 3x repetition</a> by Richard A. Fowell, <a href="/CCC">CCC</a>, February 27, 2000 » <a href="/Castling_Rights">Castling Rights</a>, <a href="/En_passant">En passant</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=119867">Detecting three-fold repetition?</a> by <a href="/Tom_Kerrigan">Tom Kerrigan</a>, <a href="/CCC">CCC</a>, July 17, 2000</li>
+</ul>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=119911">Re: Detecting three-fold repetition?</a> by <a href="/John_Stanback">John Stanback</a>, <a href="/CCC">CCC</a>, July 17, 2000 » <a href="/SCP">SCP Repetition detection</a></p>
+<p><strong>2001</strong></p>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=160274">The Old way to detect 3fold repetition (help needed)</a> by <a href="/Gianluigi_Masciulli">Gianluigi Masciulli</a>, <a href="/CCC">CCC</a>, March 26, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=182927">"Don't trust draw score" &lt;=Is it true?</a> by <a href="/Teerapong_Tovirat">Teerapong Tovirat</a>, <a href="/CCC">CCC</a>, August 08, 2001 » <a href="/Transposition_Table">Transposition Table</a>, <a href="/Path-Dependency">Path-Dependency</a></li>
+</ul>
+<p><strong>2002</strong></p>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=214562">Detecting Draws using a Small Hash Table?</a> by <a href="/Steve_Maughan">Steve Maughan</a>, <a href="/CCC">CCC</a>, February 20, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=216120">3 fold repetiton (Seacher v Postmodernist)</a> by <a href="/Frank_Phillips">Frank Phillips</a>, <a href="/CCC">CCC</a>, March 02, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=233270">A new(?) technique to recognize draws</a> by <a href="/Heiner_Marxen">Heiner Marxen</a>, <a href="/CCC">CCC</a>, June 01, 2002 » <a href="/Check">Perpetual Check</a>, <a href="/Corresponding_Squares">Corresponding Squares</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=239987">Repetitions: is this code correct?</a> by <a href="/Vladimir_Medvedev">Vladimir Medvedev</a>, <a href="/CCC">CCC</a>, July 12, 2002</li>
+</ul>
+<p><strong>2003</strong></p>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=301324">Draw claims</a> by <a href="/Thomas_Mayer">Thomas Mayer</a>, <a href="/CCC">CCC</a>, June 17, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=332089">In computer games 3-fold repetition should be AUTOMATICALLY draw!</a> by <a href="/Jouni_Uski">Jouni Uski</a>, <a href="/CCC">CCC</a>, November 30, 2003</li>
+</ul>
+<p><strong>2004</strong></p>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=345832">perpetual check recognition</a> by <a href="/Andreas_Herrmann">Andreas Herrmann</a>, <a href="/CCC">CCC</a>, January 30, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=379648">A New Approach to Draw Detection by Move Repetition</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, <a href="/CCC">CCC</a>, July 29, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=380201">Draw Detection by Move Repetition Procedure - Comments</a> by <a href="/Đorđe_Vidanović">Đorđe Vidanović</a>, <a href="/CCC">CCC</a>, August 01, 2004</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=18&amp;t=48537">How to handle the first repetition correctly? (long)</a> by <a href="/Sven_Schüle">Sven Schüle</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, August 10, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=398421">Repetition Detection</a> by <a href="/Jan_Renze_Steenhuisen">Renze Steenhuisen</a>, <a href="/CCC">CCC</a>, December 01, 2004</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=858">Perpetual check</a> by <a href="/Alessandro_Scotti">Alessandro Scotti</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, December 03, 2004</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=2093">When to claim repetition and 50 move draws?</a> by Peter Hughes, <a href="/Computer_Chess_Forums">Winboard Forum</a>, March 26, 2005</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=3863">draw by repetition</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, November 21, 2005</li>
+</ul>
+<p><strong>2007</strong></p>
+<ul>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=6238">Handling 3-rep/50-move in hash tables</a> by <a href="/Pradu_Kannan">Pradu Kannan</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, February 19, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=13791">avoidrep-pruning</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/CCC">CCC</a>, May 15, 2007 » <a href="/Pruning">Pruning</a></li>
+</ul>
+<p><strong>2008</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=18854">Problem with Transposition Table and Repitition-Draw</a> by <a href="/Oliver_Brausch">Oliver Brausch</a>, <a href="/CCC">CCC</a>, January 11, 2008 » <a href="/Transposition_Table">Transposition Table</a></li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=6422">Again, rep-draws (and score aging)</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, January 28, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=19257">Repetition detection question</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, January 28, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=19779">Repetition detection structure</a> by <a href="/Mathieu_Pagé">Mathieu Pagé</a>, <a href="/CCC">CCC</a>, February 23, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=21343">Semi-Path Dependent Hashing: a semi-useless idea</a> by <a href="/Zach_Wegner">Zach Wegner</a>, <a href="/CCC">CCC</a>, May 24, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=22968">Repetition Detection</a> by Colin, <a href="/CCC">CCC</a>, August 13, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=23257">When and how to return a draw evaluation?</a> by <a href="/Mathieu_Pagé">Mathieu Pagé</a>, <a href="/CCC">CCC</a>, August 26, 2008 » <a href="/Draw">Draw</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=25075">Are everybody making this bad?</a> by <a href="/Fermin_Serrano">Fermin Serrano</a>, <a href="/CCC">CCC</a>, November 26, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=25705">Draw by repetition when mate is possible</a> by <a href="/Mathieu_Pagé">Mathieu Pagé</a>, <a href="/CCC">CCC</a>, December 30, 2008 » <a href="/Checkmate">Checkmate</a></li>
+</ul>
+<p><strong>2009</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=30925">wrong draw claim or right?</a> by <a href="/Will_Singleton">Will Singleton</a>, <a href="/CCC">CCC</a>, December 03, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=31220">Stupid Extension Problem/Question</a> by <a href="/John_Merlino">John Merlino</a>, <a href="/CCC">CCC</a>, December 23, 2009 » <a href="/Extensions">Extensions</a></li>
+</ul>
+<h3 id="2010--1">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=32597">Repetition Detection Without Hashing</a> by Levi Aho, <a href="/CCC">CCC</a>, February 13, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=35052">nullmove and repetitive draw detection</a> by Edward Yu, <a href="/CCC">CCC</a>, June 20, 2010 » <a href="/Null_Move_Pruning">Null Move Pruning</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=36599">bizarre repetition detection issue</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, November 04, 2010</li>
+</ul>
+<p><strong>2011</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=38608">Repeating moves to add time</a> by <a href="/Fermin_Serrano">Fermin Serrano</a>, <a href="/CCC">CCC</a>, March 31, 2011 » <a href="/Time_Management">Time Management</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40388">Repetitions/50 moves and TT</a> by <a href="/Sergei_Markoff">Sergei Markoff</a>, <a href="/CCC">CCC</a>, September 13, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40931">repetition detection</a> by <a href="/Edmund_Moshammer">Edmund Moshammer</a>, <a href="/CCC">CCC</a>, October 29, 2011</li>
+</ul>
+<p><strong>2012</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41833">Draw by 3-fold repetition?</a> by Andy Duplain, <a href="/CCC">CCC</a>, January 06, 2012</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2093">Aquarium IDEA, repetitions, and minimax over cycles</a> by kevinfat, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, September 17, 2012 » <a href="/Aquarium">Aquarium</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=45774">Why is this game not a draw?</a> by Carlos Pagador, <a href="/CCC">CCC</a>, October 29, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=490672&amp;t=45846">Re: Move Tables - explain as if I'm five</a> by <a href="/Karlo_Balla">Karlo Bala Jr.</a>, <a href="/CCC">CCC</a>, November 05, 2012 » <a href="/Belzebub">Repetitions in Belzebub</a></li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=52677&amp;sid=5875e0b83aa323c58f9e9b3af0718049">FIDE Rules</a> by crystalclear, <a href="/Computer_Chess_Forums">Winboard Forum</a>, December 11, 2012</li>
+</ul>
+<p><strong>2013</strong></p>
+<ul>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=3&amp;t=2209">Half Move Clock Confusion</a> by HumbleProgrammer, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, January 10, 2013 » <a href="/Fifty-move_Rule">Fifty-move Rule</a>, <a href="/Halfmove_Clock">Halfmove Clock</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47637">Repetition check</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, March 29, 2013</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2300">Upcoming repetition detection</a> by <a href="/Marcel_van_Kervinck">Marcel van Kervinck</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, April 06, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48149">Stockfish bug</a> by <a href="/Steven_Atkinson">Steven Atkinson</a>, <a href="/CCC">CCC</a>, May 30, 2013 » <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48696">Repetition check</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, July 20, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48768">UCI protocol issue</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, July 27, 2013 » <a href="/UCI">UCI</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49362">ep and castle rights hashing</a> by Natale Galioto, <a href="/CCC">CCC</a>, September 15, 2013 » <a href="/Castling_Rights">Castling Rights</a>, <a href="/En_passant">En passant</a>, <a href="/Transposition_Table">Transposition Table</a></li>
+</ul>
+<p><strong>2014</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51000">Two fold repetition rule</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, <a href="/CCC">CCC</a>, January 22, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53030">FIDE's new rules for chess</a> by <a href="/Mark_Lefler">Mark Lefler</a>, <a href="/CCC">CCC</a>, July 20, 2014</li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2863">Using TT for detecting repetitions</a> by thevinenator, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, August 18, 2015</li>
+</ul>
+<p><strong>2016</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59322">Simple triple repetition handler</a> by <a href="/Stefano_Gemma">Stefano Gemma</a>, <a href="/CCC">CCC</a>, February 21, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59841">How to test 3rd repetition rule?</a> by Luis Babboni, <a href="/CCC">CCC</a>, April 12, 2016</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=59841&amp;start=14">This should be in the wiki</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, April 13, 2016</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59854">3rd repetition, a case where not cause castle rights... but</a> by Luis Babboni, <a href="/CCC">CCC</a>, April 14, 2016 » <a href="/Castling_Rights">Castling Rights</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60075">Triple Repitition: Is this considered a repitition or not?</a> by Jayakiran Akurathi, <a href="/CCC">CCC</a>, May 07, 2016 » <a href="/En_passant">En passant</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60310">Repetitions in the Search Tree</a> by Jayakiran Akurathi, <a href="/CCC">CCC</a>, May 29, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60906">Syzygy and draw by repetition</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, July 22, 2016 » <a href="/Syzygy_Bases">Syzygy Bases</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61140">perpetual check position</a> by <a href="/Erin_Dame">Erin Dame</a>, <a href="/CCC">CCC</a>, August 16, 2016 » <a href="/Check">Perpetual Check</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61328">Hashed repetition table</a> by J. Wesley Cleveland, <a href="/CCC">CCC</a>, September 04, 2016 » <a href="/Repetitions">Repetition Hash Table</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61384">transposition tables and three-fold repetition</a> by <a href="/Erin_Dame">Erin Dame</a>, <a href="/CCC">CCC</a>, September 10, 2016 » <a href="/Transposition_Table">Transposition Table</a></li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/M2bkzC3MuFQ/N3pHK4DcAgAJ">The new chess rules (5-fold repetition and 75-move draw)</a> by <a href="/Lyudmil_Antonov">Lyudmil Antonov</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, November 29, 2016 » <a href="/Stockfish">Stockfish</a>, <a href="/Fifty-move_Rule">Fifty-move Rule</a></li>
+</ul>
+<p><strong>2017</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62956">Have engines updated for fide 2014 draw rules?</a> by Norm Pollock, <a href="/CCC">CCC</a>, January 28, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63906">Reporting a draw in UCI</a> by Vince Sempronio, <a href="/CCC">CCC</a>, May 05, 2017 » <a href="/Draw">Draw</a>, <a href="/UCI">UCI</a></li>
+</ul>
+<p><strong>2018</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66323">3-fold repetition and cutechess-cli</a> by Lars Mathiesen, <a href="/CCC">CCC</a>, January 14, 2018 » <a href="/En_passant">En passant</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73552">FEN and 3rd repetition rule. No information?</a> by Luis Babboni, <a href="/CCC">CCC</a>, April 03, 2020 » <a href="/Forsyth-Edwards_Notation">FEN</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75573">Make engine stop repeating moves in a clearly won position</a> by <a href="/Marcel_Vanthoor">Marcel Vanthoor</a>, <a href="/CCC">CCC</a>, October 27, 2020</li>
+</ul>
+<p><strong>2021</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77497">Alpha-beta search for drawing endgames</a> by Emanuel Torres, <a href="/CCC">CCC</a>, June 16, 2021 » <a href="/Alpha-Beta">Alpha-Beta</a>, <a href="/Draw_Evaluation">Draw Evaluation</a>, <a href="/Graph_History_Interaction">Graph History Interaction</a></li>
+</ul>
+<p><strong>2022</strong></p>
+<ul>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79286">Draw by repetition</a> by Philippe Chevalier, <a href="/CCC">CCC</a>, February 05, 2022</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=80520">Elegant algorithm for detecting repetitions?</a> by A. Li, <a href="/CCC">CCC</a>, August 19, 2022</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Cycle_%28graph_theory%29#Cycle_detection">Cycle detection (graph theory) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Cycle_detection">Cycle detection from Wikipedia</a></li>
+<li><a href="http://web.archive.org/web/20070710013535/www.brucemo.com/compchess/programming/repetition.htm">Repetition Detection</a> from <a href="/Bruce_Moreland">Bruce Moreland's</a> <a href="http://web.archive.org/web/20070607231311/www.brucemo.com/compchess/programming/index.htm">Programming Topics</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Threefold_repetition">Threefold repetition from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Perpetual_check">Perpetual check from Wikipedia</a></li>
+<li><a href="http://www.fide.com/component/handbook/?id=124&amp;view=article">Fide Handbook - E.I.01A. Laws of Chess</a></li>
+<li><a href="https://rjlipton.wordpress.com/2016/01/21/a-chess-firewall-at-zero/">A Chess Firewall at Zero?</a> by <a href="/Kenneth_W._Regan">Ken Regan</a>, <a href="https://rjlipton.wordpress.com/">Gödel's Lost Letter and P=NP</a>, January 21, 2016</li>
+<li><a href="/Category:Agnes_Obel">Agnes Obel</a> - <a href="http://lyrics.wikia.com/wiki/Agnes_Obel:It%27s_Happening_Again">It's Happening Again</a> (2016), <a href="https://en.wikipedia.org/wiki/BBC_Radio_6_Music">BBC 6 Music Live Room</a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p>featuring <a href="https://www.couchsurfing.com/people/kriskar">Kristina Koropecki</a>, <a href="https://mobile.twitter.com/agnesobel_org/status/637306150413803524">Charlotte Danhier</a>, <a href="https://www.discogs.com/de/artist/1453695-Catherine-De-Biasio">Catherine De Biasio</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/1zED62IYPe4" title="YouTube video 1zED62IYPe4" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=1zED62IYPe4">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Search">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=53030">FIDE's new rules for chess</a> by <a href="/Mark_Lefler">Mark Lefler</a>, <a href="/CCC">CCC</a>, July 20, 2014<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.fide.com/component/handbook/?id=124&amp;view=article">Fide Handbook - E.I.01A. Laws of Chess</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://www.fh-friedberg.de/users/boergens/english/problems/problem059engl.htm">Mathematical Problems - Max Euwe's sequence</a> by <a href="http://www.fh-friedberg.de/users/boergens/main.htm">Manfred Börgens</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="/Max_Euwe">Max Euwe</a> (<strong>1929</strong>). <em>Mengentheoretische Betrachtungen über das Schachspiel</em>, Proc. Konin. Akad. Wetenschappen (Amsterdam)<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://www.fh-friedberg.de/users/boergens/english/problems/problem059englloe.htm">Mathematical Problems - Max Euwe's sequence - Solution</a> by <a href="http://www.fh-friedberg.de/users/boergens/main.htm">Manfred Börgens</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="http://web.archive.org/web/20040427014858/brucemo.com/compchess/programming/repetition.htm">Repetition Detection</a> from <a href="/Bruce_Moreland">Bruce Moreland's</a> <a href="http://web.archive.org/web/20040403211728/brucemo.com/compchess/programming/index.htm">Programming Topics</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/7edf36b54a47267d">Draw by Repetition Code, post 4</a> by <a href="/John_Stanback">John Stanback</a>, <a href="/Computer_Chess_Forums">rgcc</a>, December 31, 1996<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="/Marcel_van_Kervinck">Marcel van Kervinck</a> (<strong>2002</strong>). <em>The design and implementation of the Rookie 2.0 Chess Playing Program</em>. Masters Thesis, <a href="http://alexandria.tue.nl/extra2/afstversl/wsk-i/kervinck2002.pdf">pdf</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><code>Courtesy </code><a href="/Ronald_de_Man"><code>Ronald de Man</code></a><code> for revealing this implementation trick</code><a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/c431ac1739de871b/d8f8d6ee1b252b86"><code>Re: triple repetition</code></a><code>by</code><a href="/Ronald_de_Man"><code>Ronald de Man</code></a><code>, </code><a href="/Computer_Chess_Forums"><code>rgcc</code></a><code>, October 27, 1997</code><a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="/Vladan_Vučković">Vladan Vučković</a>, <a href="/Đorđe_Vidanović">Đorđe Vidanović</a> (<strong>2004</strong>). <em>A New Approach to Draw Detection by Move Repetition in Computer Chess Programming.</em> <a href="http://arxiv.org/abs/cs/0406038">CoRR arXiv:cs/0406038</a><a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="https://www.stmintz.com/ccc/index.php?id=379648">A New Approach to Draw Detection by Move Repetition</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, <a href="/CCC">CCC</a>, July 29, 2004<a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="https://www.stmintz.com/ccc/index.php?id=380201">Draw Detection by Move Repetition Procedure - Comments</a> by <a href="/Đorđe_Vidanović">Đorđe Vidanović</a>, <a href="/CCC">CCC</a>, August 01, 2004<a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2093#p17469">Re: Aquarium IDEA, repetitions, and minimax over cycles</a> by <a href="/Ronald_de_Man">syzygy</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, September 22, 2012<a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn15"><p><a href="https://www.stmintz.com/ccc/index.php?id=379648">A New Approach to Draw Detection by Move Repetition</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, <a href="/CCC">CCC</a>, July 29, 2004<a href="#fnref15" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn16"><p><a href="https://www.stmintz.com/ccc/index.php?id=380201">Draw Detection by Move Repetition Procedure - Comments</a> by <a href="/Đorđe_Vidanović">Đorđe Vidanović</a>, <a href="/CCC">CCC</a>, August 01, 2004<a href="#fnref16" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn17"><p><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2300">Upcoming repetition detection</a> by <a href="/Marcel_van_Kervinck">Marcel van Kervinck</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, April 06, 2013<a href="#fnref17" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:M._C._Escher">M. C. Escher</a> · <a href="/Category:Agnes_Obel">Agnes Obel</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Repetitions">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, Phhnguyen.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pseudorandom Number Generator - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Pseudorandom Number Generator</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Programming">Programming</a> * <a href="/Algorithms">Algorithms</a> * Pseudorandom Number Generator</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/1/16/Pompeii_-_Osteria_della_Via_di_Mercurio_-_Dice_Players.jpg" alt="Dice players 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Dice players <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://commons.wikimedia.org/wiki/File:Pompeii_-_Osteria_della_Via_di_Mercurio_-_Dice_Players.jpg">Dice players</a> - <a href="https://en.wikipedia.org/wiki/Ancient_Rome">Roman</a> <a href="https://en.wikipedia.org/wiki/Fresco">fresco</a> from the <a href="http://www.pompeiiinpictures.com/pompeiiinpictures/r6/6%2010%2001.htm">Osteria della Via di Mercurio</a> (<a href="http://www.pompeiiinpictures.com/pompeiiinpictures/r6/6%2010%2001%20p2.htm">VI 10,1.19, room b</a>) in <a href="https://en.wikipedia.org/wiki/Pompeii">Pompeii</a>, Source: <a href="https://en.wikipedia.org/wiki/Filippo_Coarelli">Filippo Coarelli</a> (ed.) (<strong>2002</strong>). <em><a href="https://www.zvab.com/buch-suchen/titel/pompeji/autor/coarelli/">Pompeji</a></em>. <a href="https://en.wikipedia.org/wiki/Hirmer_Verlag">Hirmer Verlag</a>, <a href="https://en.wikipedia.org/wiki/Munich">Munich</a>, ISBN: 3-7774-9530-1, p. 146, <a href="https://en.wikipedia.org/wiki/Wikimedia_Commons">Wikimedia Commons</a>, <a href="https://en.wikipedia.org/wiki/History_of_randomness">History of randomness from Wikipedia</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Pseudorandom Number Generator</strong> (PRNG),<br />
+an algorithmic <a href="https://en.wikipedia.org/wiki/Gambling">gambling</a> device for generating <a href="https://en.wikipedia.org/wiki/Pseudorandomness">pseudorandom</a> <a href="https://en.wikipedia.org/wiki/Pseudorandom_number_generator">numbers</a>, a <a href="https://en.wikipedia.org/wiki/Deterministic_system">deterministic</a> sequence of numbers which appear to be <a href="https://en.wikipedia.org/wiki/Randomness">random</a> with the property of reproducibility. They are useful in <a href="https://en.wikipedia.org/wiki/Simulation">simulation</a>, <a href="https://en.wikipedia.org/wiki/Sampling">sampling</a>, <a href="https://en.wikipedia.org/wiki/Computer_programming">computer programming</a>, <a href="https://en.wikipedia.org/wiki/Decision-making">decision making</a>, <a href="https://en.wikipedia.org/wiki/Cryptography">cryptography</a>, <a href="https://en.wikipedia.org/wiki/Aesthetics">aesthetics</a> and <a href="https://en.wikipedia.org/wiki/Recreation">recreation</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> - in computer chess, beside randomization of game playing, primarily used to generate keys for <a href="/Zobrist_Hashing">Zobrist hashing</a>.</p>
+<p>Games of chance, such as <a href="/Backgammon">Backgammon</a> and <a href="/EinStein_würfelt_nicht!">EinStein würfelt nicht!</a> require PRNGs for rolling a <a href="https://en.wikipedia.org/wiki/Dice">dice</a>. Chess and game playing programs use PRNGs to randomly choose one of several possible moves of a position from an <a href="/Opening_Book">opening book</a>, or use random fluctuations in <a href="/Learning">learning</a> and <a href="/Automated_Tuning">automated tuning</a> tasks. Game playing programs performing a <a href="/Monte-Carlo_Tree_Search">Monte-Carlo Tree Search</a>, use random playouts in their simulation phase. <a href="/Don_Beal">Don Beal</a> and <a href="/Martin_C._Smith">Martin C. Smith</a> demonstrated that deeper <a href="/Search_with_Random_Leaf_Values">search with random leaf values</a> in chess yields to better play, with some interesting insights in <a href="/Minimax">minimax search</a> and implications for designing and testing <a href="/Evaluation">evaluation</a> terms <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#methods">Methods</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#lcg">LCG</a></li>
+<li><a href="#rkiss">RKISS</a></li>
+<li><a href="#ranrot-b3">RANROT B3</a></li>
+<li><a href="#mt">MT</a></li>
+<li><a href="#chacha">ChaCha</a></li>
+</ol>
+</details></li>
+<li><a href="#applications">Applications</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#selected-publications">Selected Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1950-">1950 ...</a></li>
+<li><a href="#1960-">1960 ...</a></li>
+<li><a href="#1970-">1970 ...</a></li>
+<li><a href="#1980-">1980 ...</a></li>
+<li><a href="#1990-">1990 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1982-">1982 ...</a></li>
+<li><a href="#1990--1">1990 ...</a></li>
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000--1">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010--1">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#randomness">Randomness</a></li>
+<li><a href="#methods-1">Methods</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#language-support">Language Support</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#basic">Basic</a></li>
+<li><a href="#c">C</a></li>
+<li><a href="#c-1">C++</a></li>
+<li><a href="#c-2">C#</a></li>
+<li><a href="#d">D</a></li>
+<li><a href="#fortran">Fortran</a></li>
+<li><a href="#go">Go</a></li>
+<li><a href="#java">Java</a></li>
+<li><a href="#lisp">Lisp</a></li>
+<li><a href="#pascal">Pascal</a></li>
+<li><a href="#python">Python</a></li>
+</ol>
+</details></li>
+<li><a href="#tests">Tests</a></li>
+<li><a href="#misc">Misc</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="methods">Methods</h2>
+<p>PRNGs maintain a state variable, a bitwise superset of the random number, initialized by a <a href="https://en.wikipedia.org/wiki/Random_seed">random seed</a> - a constant for the same sequence each time, i.e. for Zobrist keys, otherwise, something like <a href="https://en.wikipedia.org/wiki/System_time">system time</a> to produce varying pseudo randoms. Each call of the PRNG routine performs certain operations or <a href="/Bit-Twiddling">bit-twiddling</a> on that state, leaving the next pseudo random number. For various applications more or less important features are <a href="https://en.wikipedia.org/wiki/Randomness">randomness</a>, resolution, (<a href="https://en.wikipedia.org/wiki/Equidistributed_sequence">uniform</a>) <a href="https://en.wikipedia.org/wiki/Probability_distribution">distribution</a>, and <a href="https://en.wikipedia.org/wiki/Periodicity">periodicity</a> - topic of various <a href="https://en.wikipedia.org/wiki/Randomness_tests">randomness tests</a> - and further performance, and <a href="https://en.wikipedia.org/wiki/Software_portability">portability</a>.</p>
+<p><a href="/Zobrist_Hashing">Zobrist hashing</a> with about 12*64 keys has less issues with randomness and period, but with distribution, and requires <a href="https://en.wikipedia.org/wiki/Linear_independence">linear independence</a> so that a small subset of all keys doesn't xor to zero. Despite selected hard-coded random constants used at compile time, many programs use an own PRNG based on <a href="https://en.wikipedia.org/wiki/Recurrence_relation">recurrence relation</a> in <a href="https://en.wikipedia.org/wiki/GF%282%29">GF(2)</a> such as <a href="https://en.wikipedia.org/wiki/Mersenne_twister">Mersenne Twister</a> or <a href="https://en.wikipedia.org/wiki/Xorshift">Xorshift</a>.</p>
+<h3 id="lcg">LCG</h3>
+<p>A common method used in many library functions, such as <a href="/C">C</a>/<a href="/Cpp">C++</a> rand() is the <a href="https://en.wikipedia.org/wiki/Linear_congruential_generator">linear congruential generator</a> (LCG) based on multiply, add, <a href="https://en.wikipedia.org/wiki/Modulo_operation">modulo</a> with integers, where some past implementations had serious shortcomings in the randomness, distribution and period of the sequence <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>. Due to such issues in rand() implementations, where lower bits are less random than higher bits, it is recommended not to use <a href="https://en.wikipedia.org/wiki/Modulo_operation">modulo</a> X to reduce the integer range from RAND_MAX to X, but division by (RAND_MAX div X) <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> - or to use C++11's random number generation facilities to replace rand <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>.</p>
+<h3 id="rkiss">RKISS</h3>
+<p><a href="/Stockfish">Stockfish</a> (since 2.0) uses an implementation by Heinz van Saanen based on <a href="/Bob_Jenkins">Bob Jenkins'</a> <a href="/Bob_Jenkins">RKISS</a>, a member of <a href="/Mathematician">George Marsaglia's</a> Xorshift familly.</p>
+<h3 id="ranrot-b3">RANROT B3</h3>
+<p><a href="/Amy">Amy</a> by <a href="/Thorsten_Greiner">Thorsten Greiner</a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> uses an implementation of Agner Fog's RANROT B3 <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>, also recommended by <a href="/Stefan_Meyer-Kahlen">Stefan Meyer-Kahlen</a> as used in <a href="/Shredder">Shredder</a> <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a>.</p>
+<h3 id="mt">MT</h3>
+<p><a href="/Arasan">Arasan</a> 20.x switched to C++11 random number support using <a href="https://en.wikipedia.org/wiki/Mersenne_twister">Mersenne Twister</a> std::mt19937_64 <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a> <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a>.</p>
+<h3 id="chacha">ChaCha</h3>
+<p>The <a href="/Rust">Rust</a> engine <a href="/Asymptote">Asymptote</a> uses the <a href="https://en.wikipedia.org/wiki/Salsa20#ChaCha_variant">ChaCha</a> <a href="https://en.wikipedia.org/wiki/Stream_cipher">stream cipher</a> developed by <a href="/Mathematician">Daniel J. Bernstein</a>, built on a <a href="https://en.wikipedia.org/wiki/Pseudorandom_function_family">pseudorandom function</a> based on <a href="https://en.wikipedia.org/wiki/Salsa20#ChaCha_variant">add-rotate-xor (ARX)</a> operations <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a>.</p>
+<h2 id="applications">Applications</h2>
+<ul>
+<li><a href="/Looking_for_Magics">Looking for Magics</a></li>
+<li><a href="/Genetic_Programming">Genetic Programming</a></li>
+<li><a href="/Monte-Carlo_Tree_Search">Monte-Carlo Tree Search</a></li>
+<li><a href="/Opening_Book">Opening Book</a></li>
+<li><a href="/Search_with_Random_Leaf_Values">Search with Random Leaf Values</a></li>
+<li><a href="/Simulated_Annealing">Simulated Annealing</a></li>
+<li><a href="/SPSA">SPSA</a></li>
+<li><a href="/Zobrist_Hashing">Zobrist Hashing</a></li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/CPW-Engine_book">CPW-Engine_book</a></li>
+<li><a href="/De_Bruijn_Sequence_Generator">De Bruijn Sequence Generator</a></li>
+<li><a href="/Bob_Jenkins">RKISS</a> by <a href="/Bob_Jenkins">Bob Jenkins</a></li>
+<li><a href="/Sequential_Logic">Sequential Logic</a></li>
+<li><a href="/Trial_and_Error">Trial and Error</a></li>
+</ul>
+<h2 id="selected-publications">Selected Publications</h2>
+<h3 id="1950-">1950 ...</h3>
+<ul>
+<li><a href="/Mathematician">Derrick H. Lehmer</a> (<strong>1951</strong>). <em><a href="http://www.ams.org/mathscinet-getitem?mr=0044899">Mathematical methods in large-scale computing units</a></em>. <a href="https://archive.org/details/proceedings_of_a_second_symposium_on_large-scale_">Proceedings of a 2nd Symposium on Large Scale Digital Computing Machinery</a>, 1949, <a href="https://en.wikipedia.org/wiki/Harvard_University_Press">Harvard University Press</a>, pp. 141–146</li>
+<li><a href="https://en.wikipedia.org/wiki/RAND_Corporation">RAND Corporation</a> (<strong>1955</strong>). <em><a href="https://en.wikipedia.org/wiki/A_Million_Random_Digits_with_100,000_Normal_Deviates">A Million Random Digits with 100,000 Normal Deviates</a></em>. <a href="https://www.rand.org/content/dam/rand/pubs/monograph_reports/MR1418/MR1418.deviates.pdf">pdf</a>, <a href="https://www.rand.org/pubs/monograph_reports/MR1418/index2.html">online</a></li>
+</ul>
+<h3 id="1960-">1960 ...</h3>
+<ul>
+<li><a href="/John_von_Neumann">John von Neumann</a> (<strong>1963</strong>). <em>Various techniques used in connection with random digits</em>. von Neumann's Collected Works, Vol. 5, <a href="https://en.wikipedia.org/wiki/Pergamon_Press">Pergamon Press</a>, <a href="https://dornsifecms.usc.edu/assets/sites/520/docs/VonNeumann-ams12p36-38.pdf">pdf</a></li>
+<li><a href="/Mathematician">M. Donald MacLaren</a>, <a href="/Mathematician">George Marsaglia</a> (<strong>1965</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=321257">Uniform Random Number Generators</a></em>. <a href="/ACM">Journal of the ACM</a>, Vol. 12, No. 1</li>
+<li><a href="/Donald_Knuth">Donald Knuth</a> (<strong>1969</strong>). <em><a href="https://en.wikipedia.org/wiki/The_Art_of_Computer_Programming">The Art of Computer Programming (TAOCP)</a> - <a href="https://en.wikipedia.org/wiki/The_Art_of_Computer_Programming#Volumes">Volume 2 - Seminumerical Algorithms</a></em>. Chapter 3 – Random numbers, 1st edition</li>
+</ul>
+<h3 id="1970-">1970 ...</h3>
+<ul>
+<li><a href="/Mathematician">Joachim H. Ahrens</a>, <a href="/Mathematician">Ulrich Dieter</a>, <a href="/Mathematician">Andreas Grube</a> (<strong>1970</strong>). <em><a href="http://link.springer.com/article/10.1007%2FBF02241740?LI=true">Pseudo-random numbers</a></em>. <a href="https://en.wikipedia.org/wiki/Computing_(journal)">Computing</a>, Vol. 6, No. 1</li>
+<li><a href="/Mathematician">George Marsaglia</a> (<strong>1972</strong>). <em>The Structure of Linear Congruential Sequences</em>. in S. K. Zaremba (ed.) <em><a href="http://www.sciencedirect.com/science/book/9780127759500">Applications of Number Theory to Numerical Analysis</a></em>. <a href="https://en.wikipedia.org/wiki/Academic_Press">Academic Press</a></li>
+<li><a href="/Mathematician">Ulrich Dieter</a>, <a href="/Mathematician">Joachim H. Ahrens</a> (<strong>1973</strong>). <em><a href="http://link.springer.com/article/10.1007/BF02252903">A combinatorial method for the generation of normally distributed random numbers</a></em>. <a href="https://en.wikipedia.org/wiki/Computing_(journal)">Computing</a>, Vol. 11, No. 2</li>
+</ul>
+<h3 id="1980-">1980 ...</h3>
+<ul>
+<li><a href="/Mathematician">Scott Kirkpatrick</a>, <a href="http://estoll.ch.marissa.hostorama.ch/">Erich P. Stoll</a> (<strong>1981</strong>). <em><a href="https://www.researchgate.net/publication/200104855_A_Very_Fast_Shift-Register_Sequence_Random_Number_Generator">A Very Fast Shift-Register Sequence Random Number Generator</a></em>. <a href="https://en.wikipedia.org/wiki/Journal_of_Computational_Physics">Journal of Computational Physics</a>, Vol. 40, No. 2</li>
+<li><a href="/Mathematician">George Marsaglia</a> (<strong>1985</strong>). <em>A Current View of Random Number Generators</em>. Proceedings, Computer Science and Statistics: 16th Symposium on the Interface, <a href="https://en.wikipedia.org/wiki/Elsevier">Elsevier</a></li>
+<li><a href="/Mathematician">Pierre L'Ecuyer</a> (<strong>1988</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=62969">Efficient and Portable combined random number generators</a></em>. <a href="/ACM">Communications of the ACM</a>, Vol. 31, No. 6</li>
+</ul>
+<h3 id="1990-">1990 ...</h3>
+<ul>
+<li><a href="/Mathematician">Pierre L'Ecuyer</a> (<strong>1990</strong>). <em><a href="https://scholar.google.com/citations?view_op=view_citation&amp;hl=en&amp;user=gDxovowAAAAJ&amp;cstart=280&amp;sortby=pubdate&amp;citation_for_view=gDxovowAAAAJ:2osOgNQ5qMEC">Random numbers for simulation</a></em>. <a href="/ACM">Communications of the ACM</a>, Vol. 33, No. 10</li>
+<li><a href="/Mathematician">William H. Press</a>, <a href="/Mathematician">Saul A. Teukolsky</a>, <a href="https://de.wikipedia.org/wiki/William_T._Vetterling">William T. Vetterling</a>, <a href="https://en.wikipedia.org/wiki/Brian_P._Flannery">Brian P. Flannery</a> (<strong>1992</strong>). <em><a href="http://www.nrbook.com/a/bookcpdf.php">Numerical Recipes in C: The Art of Scientific Computing, 2nd edition</a></em>. Chapter 7. Random Numbers</li>
+<li>F. Warren Burton, <a href="http://www.cs.ou.edu/~rlpage/">Rex L. Page</a> (<strong>1992</strong>). <em>Distributed Random Number Generation</em>. <a href="https://en.wikipedia.org/wiki/Journal_of_Functional_Programming">Journal of Functional Programming</a>, Vol. 2, No. 2, <a href="http://www.cs.ou.edu/~rlpage/burtonpagerngjfp.pdf">pdf</a></li>
+<li><a href="/Donald_Eastlake">Donald Eastlake</a>, <a href="/Stephen_D._Crocker">Stephen D. Crocker</a>, <a href="https://jis.qyv.name/">Jeffrey I. Schiller</a> (<strong>1994</strong>). <em>Randomness Recommendations for Security</em>. <a href="https://www.ietf.org/rfc/rfc1750.txt">RFC 1750</a></li>
+<li><a href="/Donald_Knuth">Donald Knuth</a> (<strong>1997</strong>). <em><a href="http://www-cs-faculty.stanford.edu/~knuth/taocp.html">The Art of Computer Programming (TAOCP)</a> - <a href="http://www.informit.com/store/art-of-computer-programming-volume-2-seminumerical-9780201896848">Volume 2 - Seminumerical Algorithms</a></em>. <a href="http://www.informit.com/articles/article.aspx?p=2221790">Chapter 3 – Random numbers</a>, 3rd edition</li>
+<li><a href="/Andrew_Shapira">Andrew Shapira</a> (<strong>1997</strong>). <em>Cycle parity random number generators, and a general random number library</em>. Ph.D. thesis, <a href="https://en.wikipedia.org/wiki/Rensselaer_Polytechnic_Institute">Rensselaer Polytechnic Institute</a>, advisor <a href="/Mathematician">Mukkai S. Krishnamoorthy</a>.</li>
+<li><a href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/eindex.html">Makoto Matsumoto</a>, <a href="http://dblp.uni-trier.de/pers/hd/n/Nishimura:Takuji">Takuji Nishimura</a> (<strong>1998</strong>). <em>Mersenne twister: A 623-dimensionally equidistributed uniform pseudo-random number generator</em>. <a href="/ACM">ACM Transactions on Modeling and Computer Simulation</a>, Vol. 8, No. 1, <a href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/ARTICLES/mt.pdf">pdf preprint</a></li>
+<li>Anna Górecka, <a href="/Maciej_Szmit">Maciej Szmit</a> (<strong>1998</strong>). <em><a href="http://maciej.szmit.info/documents/prgr/index.htm">Programowe generatory liczb pseudolosowych. Znacie - to posłuchajcie</a>.</em> Software 11/1998 (Polish)</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="/Mathematician">Karl Entacher</a> (<strong>2000</strong>). <em><a href="http://random.mat.sbg.ac.at/results/karl/server/server.html">A collection of classical pseudorandom number generators with linear structures - advanced version</a></em>.</li>
+<li><a href="http://www.agner.org/">Agner Fog</a> (<strong>2001</strong>). <em>Chaotic Random Number Generators with Random Cycle Lengths</em>. <a href="http://www.agner.org/random/theory/chaosran.pdf">pdf</a></li>
+<li><a href="/Julio_César_Hernández-Castro">Julio César Hernández-Castro</a>, <a href="https://scholar.google.es/citations?user=0q4BhD8AAAAJ&amp;hl=en">Arturo Ribagorda</a>, <a href="https://scholar.google.com/citations?user=BHf4l7wAAAAJ&amp;hl=en">Pedro Isasi</a>, <a href="https://dblp.org/pid/56/6864.html">José M. Sierra</a> (<strong>2001</strong>). <em><a href="https://www.tandfonline.com/doi/abs/10.1080/0161-110191889897">Genetic Algorithms Can be Used to Obtain Good Linear Congruential Generators</a></em>. <a href="https://en.wikipedia.org/wiki/Cryptologia">Cryptologia</a>, Vol. 25, No. 3</li>
+<li><a href="/Mathematician">George Marsaglia</a> (<strong>2002</strong>). <em><a href="http://digitalcommons.wayne.edu/jmasm/vol2/iss1/2/">Random number generators</a></em>. <a href="https://en.wikipedia.org/wiki/Journal_of_Modern_Applied_Statistical_Methods">Journal of Modern Applied Statistical Methods</a>, Vol. 2, No. 2.</li>
+<li><a href="/Mathematician">George Marsaglia</a> (<strong>2003</strong>). <em><a href="https://www.jstatsoft.org/article/view/v008i14">Xorshift RNGs</a></em>. <a href="https://en.wikipedia.org/wiki/Journal_of_Statistical_Software">Journal of Statistical Software</a>, Vol. 8, No. 14</li>
+<li><a href="/Mathematician">Pierre L'Ecuyer</a> (<strong>2004</strong>). <em>Random Number Generation</em>. <a href="http://www.iro.umontreal.ca/~lecuyer/myftp/papers/handstat.pdf">pdf</a></li>
+<li><a href="/Julio_César_Hernández-Castro">Julio César Hernández-Castro</a>, <a href="https://en.wikipedia.org/wiki/Andr%C3%A9_Seznec">André Seznec</a>, <a href="https://scholar.google.com/citations?user=BHf4l7wAAAAJ&amp;hl=en">Pedro Isasi</a> (<strong>2004</strong>). <em>On the design of state-of-the-art pseudorandom number generators by means of genetic programming</em>. <a href="https://dblp.org/db/conf/cec/cec2004.html#HernandezSI04">CEC 2004</a>, <a href="https://core.ac.uk/download/pdf/29399623.pdf">pdf</a></li>
+<li><a href="/Donald_Eastlake">Donald Eastlake</a>, <a href="/Stephen_D._Crocker">Stephen D. Crocker</a>, <a href="https://jis.qyv.name/">Jeffrey I. Schiller</a> (<strong>2005</strong>). <em>Randomness Requirements for Security</em>. <a href="https://tools.ietf.org/html/rfc4086">RFC 4086</a></li>
+<li><a href="/Mathematician">William H. Press</a>, <a href="/Mathematician">Saul A. Teukolsky</a>, <a href="https://de.wikipedia.org/wiki/William_T._Vetterling">William T. Vetterling</a>, <a href="https://en.wikipedia.org/wiki/Brian_P._Flannery">Brian P. Flannery</a> (<strong>2007</strong>). <em><a href="https://en.wikipedia.org/wiki/Numerical_Recipes">Numerical Recipes. The Art of Scientific Computing</a>, 3rd edition</em>. (C++ code)</li>
+<li><a href="/Mathematician">Daniel J. Bernstein</a> (<strong>2007</strong>). <em>The Salsa20 family of stream ciphers</em>. <a href="https://en.wikipedia.org/wiki/University_of_Illinois_at_Chicago">University of Illinois at Chicago</a>, <a href="https://cr.yp.to/snuffle/salsafamily-20071225.pdf">pdf</a> <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a></li>
+<li><a href="/Mathematician">Daniel J. Bernstein</a> (<strong>2008</strong>). <em>ChaCha, a variant of Salsa20</em>. <a href="https://en.wikipedia.org/wiki/University_of_Illinois_at_Chicago">University of Illinois at Chicago</a>, <a href="http://cr.yp.to/chacha/chacha-20080128.pdf">pdf</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="/Maciej_Szmit">Maciej Szmit</a>, <a href="https://dblp.uni-trier.de/pers/hd/s/Szmit:Anna">Anna Szmit</a> (<strong>2011</strong>). <em><a href="https://link.springer.com/chapter/10.1007/978-3-642-21771-5_32">DNS Pseudo-Random Number Generators Weakness</a></em>. <a href="https://dblp.uni-trier.de/db/conf/cn/cn2011.html">CN 2011</a>, <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a></li>
+<li><a href="/Jeff_Rollason">Jeff Rollason</a> (<strong>2015</strong>). <em><a href="http://www.aifactory.co.uk/newsletter/2014_02_completely_random.htm">When Completely Random is Just not Random Enough</a></em>. <a href="/AI_Factory">AI Factory</a>, February 2015</li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1982-">1982 ...</h3>
+<ul>
+<li><a href="http://quux.org:70/Archives/usenet-a-news/NET.chess/82.01.07_duke.1593_net.chess.txt">compact representation of chess positions</a> by <a href="/Tom_Truscott">Tom Truscott</a>, net.chess, January 7, 1982</li>
+</ul>
+<h3 id="1990--1">1990 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess/Qe_5lhAWTsc/79h9BQslCWIJ">Re: Weakest Chess Program needed</a> by Kenneth S A Oksanen, <a href="/Computer_Chess_Forums">rgc</a>, November 12, 1991</li>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess/h9Q2wik_kTg/Jq7rYE0vqtoJ">Hash tables - Clash!!! What happens next?</a> by <a href="/Valavan_Manohararajah">Valavan Manohararajah</a>, <a href="/Computer_Chess_Forums">rgc</a>, March 15, 1994</li>
+</ul>
+<p><a href="https://groups.google.com/d/msg/rec.games.chess/h9Q2wik_kTg/9zrP0flwuzAJ">Re: Hash tables - Clash!!! What happens next?</a> by <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, March 17, 1994</p>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess/xIvJfi92jMc/BQP231Z0V84J">Re: Human VS computer</a> by <a href="/Don_Beal">Don Beal</a>, <a href="/Computer_Chess_Forums">rgc</a>, July 11, 1994</li>
+</ul>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess/NXEDz2iTbRc/k6uH2zBMmxMJ">Primitive Chess Program</a> by David Ewart, <a href="/Computer_Chess_Forums">rgc</a>, June 09, 1995</li>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/AI3xadkLEIk/lqWaLrHtl7AJ">random play</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Computer_Chess_Forums">rgcc</a>, November 25, 1996</li>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/ul-HWewM5FQ/sXcqhGL06UQJ">Randomness in move selection</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Computer_Chess_Forums">rgcc</a>, December 01, 1996</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=28699">Re: Interesting random chess question - What is probability to win?</a> by Jari Huikari, <a href="/CCC">CCC</a>, October 03, 1998 » <a href="/Nero">Nero</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=29571">Random chess statistics, part two</a> by Jari Huikari, <a href="/CCC">CCC</a>, October 14, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=29817">How to create a set of random integers for hashing?</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, October 18, 1998</li>
+<li><a href="https://groups.google.com/d/msg/sci.math.num-analysis/6dlqhMI2Dvs/t5uVomP0VbUJ">Random numbers for C: End, at last?</a> by <a href="/Mathematician">George Marsaglia</a>, <a href="https://groups.google.com/forum/?hl=en#!forum/sci.math.num-analysis">sci.math.num-analysis</a>, January 21, 1999</li>
+</ul>
+<h3 id="2000--1">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=88292">random book moves/ random generator</a> by <a href="/Vincent_Diepeveen">Vincent Diepeveen</a>, <a href="/CCC">CCC</a>, January 13, 2000</li>
+</ul>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=88293">Re: random book moves/ random generator</a> by <a href="/Thorsten_Greiner">Thorsten Greiner</a>, <a href="/CCC">CCC</a>, January 13, 2000</p>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=150687">Simple Learning Technique and Random Play</a> by <a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a>, <a href="/CCC">CCC</a>, January 18, 2001 » <a href="/Persistent_Hash_Table">Persistent Hash Table</a></li>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/WH0DlnlGH7g/Izx2q-xoHTcJ">Why Random Number Needed In HashFunction[piece</a>[position]] by Cheok Yan Cheng, <a href="/Computer_Chess_Forums">rgcc</a>, June 12, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=175314">Random factor in static evaluation!</a> by Tiago Ribeiro, <a href="/CCC">CCC</a>, June 15, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=178041">Simulating the result of a single game by random numbers</a> by Christoph Fieberg, <a href="/CCC">CCC</a>, July 03, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=179091">Simulating the result of a single game by random numbers - Update!</a> by Christoph Fieberg, <a href="/CCC">CCC</a>, July 10, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=178939">Simulating the result of a single game by random numbers - Update!</a> by Christoph Fieberg, <a href="/CCC">CCC</a>, August 02, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=200366">About random numbers and hashing</a> by <a href="/Severi_Salminen">Severi Salminen</a>, <a href="/CCC">CCC</a>, December 04, 2001</li>
+</ul>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=200622">Re: About random numbers and hashing</a> by <a href="/Sven_Reichard">Sven Reichard</a>, <a href="/CCC">CCC</a>, December 05, 2001</p>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=245775">Random keys and hamming distance</a> by <a href="/James_Swafford">James Swafford</a>, <a href="/CCC">CCC</a>, August 16, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=292517">Random play</a> by <a href="/Russell_Reagan">Russell Reagan</a>, <a href="/CCC">CCC</a>, April 08, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=324223">64-Bit random numbers</a> by Martin Schreiber, <a href="/CCC">CCC</a>, October 28, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=378514">A question about random numbers</a> by Antonio Senatore, <a href="/CCC">CCC</a>, July 22, 2004</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=452889">randomness of random number generators? somewhat OT</a> by David Dahlem, <a href="/CCC">CCC</a>, October 01, 2005</li>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/Ab9uA1-8Hlw/UjT_JXTiHuIJ">Random number mobility scores</a> by Guest, <a href="/Computer_Chess_Forums">rgcc</a>, September 20, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=26152">Zobrist key random numbers</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, January 21, 2009</li>
+<li><a href="http://compgroups.net/comp.lang.fortran/64-bit-kiss-rngs/601519">64-bit KISS RNGs</a> by <a href="/Mathematician">George Marsaglia</a>, <a href="http://compgroups.net/comp.lang.fortran/">comp.lang.fortran</a>, February 28, 2009</li>
+</ul>
+<h3 id="2010--1">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=35415">Transposition table random numbers</a> by Justin Madru, <a href="/CCC">CCC</a>, July 13, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=37406">RKISS</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/CCC">CCC</a>, January 01, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38313">RKISS copyright?</a> by Giorgio Medeot, <a href="/CCC">CCC</a>, March 07, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38760">Stockfish random generator (rkiss.h)</a> by <a href="/Martin_Sedlak">Martin Sedlak</a>, <a href="/CCC">CCC</a>, April 15, 2011 » <a href="/Stockfish">Stockfish</a>, <a href="/Bob_Jenkins">Bob Jenkins</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=43910">MT or KISS ?</a> by <a href="/Dan_Honeycutt">Dan Honeycutt</a>, <a href="/CCC">CCC</a>, June 02, 2012 <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49807">rkiss and other dependencies in syzygy</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, October 23, 2013</li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=56225">A simple PRNG using /dev/urandom</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, May 04, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56328">Revised source for the random game generator</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, May 12, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56364">Random playout vs evaluation</a> by <a href="/Robert_Pope">Robert Pope</a>, <a href="/CCC">CCC</a>, May 15, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60582">"random mover" chess programs</a> by <a href="/Norbert_Raimund_Leisner">Norbert Raimund Leisner</a>, <a href="/CCC">CCC</a>, June 24, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61315">Adding a random small number to the evaluation function</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, September 03, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63803">random evaluation perturbation factor</a> by <a href="/Stuart_Cracraft">Stuart Cracraft</a>, <a href="/CCC">CCC</a>, April 24, 2017</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70050">xiphos 64 bit random number</a> by <a href="/Pedro_Castro">Pedro Castro</a>, <a href="/CCC">CCC</a>, February 28, 2019 » <a href="/Xiphos">Xiphos</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74028">Rolling dice</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, May 27, 2020 » <a href="/Chess_Engine_Communication_Protocol">CECP</a>, <a href="/EinStein_würfelt_nicht!">EinStein würfelt nicht!</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Pseudorandom_number_generator">Pseudorandom number generator from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Pseudo-random_number_sampling">Pseudo-random number sampling from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Pseudorandomness">Pseudorandomness from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Statistical_randomness">Statistical randomness from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Pseudo-random_number_sampling">Pseudo-random number sampling from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Random_seed">Random seed from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Cryptographically_secure_pseudorandom_number_generator">Cryptographically secure pseudorandom number generator from Wikipedia</a></li>
+</ul>
+<h3 id="randomness">Randomness</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Randomness">Randomness from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/History_of_randomness">History of randomness from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Random_number_generation">Random number generation from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Hardware_random_number_generator">Hardware random number generator</a></li>
+<li><a href="https://www.random.org/">RANDOM.ORG - True Random Number Service</a></li>
+<li><a href="https://www.random.org/integers/">RANDOM.ORG - Integer Generator</a></li>
+</ul>
+<h3 id="methods-1">Methods</h3>
+<ul>
+<li><a href="http://clomont.com/generating-uniform-random-numbers-on-01/">Generating Uniform Random Numbers on [0,1</a> ] by <a href="http://clomont.com/">Chris Lomont</a>, March 2017</li>
+<li><a href="https://en.wikipedia.org/wiki/Linear_congruential_generator">Linear congruential generator from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/Lehmer_random_number_generator">Lehmer random number generator from Wikipedia</a></p>
+<p><a href="http://www.firstpr.com.au/dsp/rand31/">Park-Miller-Carta Pseudo-Random Number Generators</a></p>
+<p><a href="https://en.wikipedia.org/wiki/RANDU">RANDU from Wikipedia</a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Mersenne_twister">Mersenne Twister from Wikipedia</a></li>
+</ul>
+<p><a href="http://www.math.sci.hiroshima-u.ac.jp/%7Em-mat/MT/emt.html">Mersenne Twister - Home Page</a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Linear-feedback_shift_register">Linear-feedback shift register from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Xorshift">Xorshift from Wikipedia</a></li>
+<li><a href="http://www.burtleburtle.net/bob/rand/smallprng.html">A small noncryptographic pseudorandom number generator</a> by <a href="/Bob_Jenkins">Bob Jenkins</a></li>
+<li><a href="http://www.burtleburtle.net/bob/rand/isaacafa.html">ISAAC, a fast cryptographic random number generator</a> by <a href="/Bob_Jenkins">Bob Jenkins</a></li>
+<li><a href="http://www.agner.org/random/">Pseudo random number generators</a> by <a href="http://www.agner.org/">Agner Fog</a></li>
+<li><a href="http://random.mat.sbg.ac.at/generators/">Random Number Generators - the pLab project</a> by <a href="/Mathematician">Peter Hellekalek</a></li>
+<li><a href="http://www.stat.tugraz.at/stadl/random.html">Random Number Generation</a> by <a href="/Mathematician">Ernst Stadlober</a></li>
+<li><a href="http://www.paulm.org/random.html">Random Number Generators</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Salsa20">Salsa20 from Wikipedia</a></li>
+</ul>
+<h3 id="language-support">Language Support</h3>
+<h4 id="basic"><a href="/Basic">Basic</a></h4>
+<ul>
+<li><a href="https://en.wikibooks.org/wiki/BASIC_Programming/Random_Number_Generation">BASIC Programming/Random Number Generation - Wikibooks</a></li>
+<li>[<a href="https://msdn.microsoft.com/en-us/library/f7s023d2(v=vs.90">https://msdn.microsoft.com/en-us/library/f7s023d2(v=vs.90</a>).aspx Rnd Function (Visual Basic)]</li>
+<li><a href="http://www.atarimagazines.com/compute/issue90/The_Beginners_Page.php">The Beginner's Page: The Random Function</a> » <a href="/Atari_8-bit">Atari 8-bit</a></li>
+<li><a href="https://www.c64-wiki.com/wiki/RND">RND - C64-Wiki</a> » <a href="/Commodore_64">Commodore 64</a></li>
+</ul>
+<h4 id="c"><a href="/C">C</a></h4>
+<ul>
+<li><a href="https://msdn.microsoft.com/en-us/library/398ax69y.aspx">rand - MSDN</a></li>
+<li><a href="http://man7.org/linux/man-pages/man3/rand.3.html">rand(3) - Linux manual page</a></li>
+<li><a href="https://www.gnu.org/software/gsl/manual/html_node/Random-Number-Generation.html">GNU Scientific Library – Reference Manual: Random Number Generation</a></li>
+</ul>
+<h4 id="c-1"><a href="/Cpp">C++</a></h4>
+<ul>
+<li><a href="http://en.cppreference.com/w/cpp/numeric/random/rand">std::rand - cppreference.com</a></li>
+<li><a href="http://www.boost.org/doc/libs/1_64_0/doc/html/boost_random/reference.html">Boost Random - Reference - 1.64.0</a></li>
+<li><a href="http://en.cppreference.com/w/cpp/numeric/random">Pseudo-random number generation - cppreference.com</a></li>
+<li><a href="http://www.cplusplus.com/reference/random/mt19937_64/">mt19937_64 - C++ Reference</a></li>
+<li><a href="https://www.johndcook.com/blog/cpp_TR1_random/">Random number generation using</a> <a href="https://en.wikipedia.org/wiki/C%2B%2B_Technical_Report_1">C++ Technical Report 1</a> by <a href="https://www.johndcook.com/blog/">John D. Cook</a> (2008)</li>
+</ul>
+<h4 id="c-2"><a href="/C_sharp">C#</a></h4>
+<ul>
+<li>[<a href="https://msdn.microsoft.com/en-us/library/system.random(v=vs.110">https://msdn.microsoft.com/en-us/library/system.random(v=vs.110</a>).aspx Random Class (System) - MSDN]</li>
+<li><a href="http://csharpindepth.com/Articles/Chapter12/Random.aspx">C# in Depth: Random numbers</a></li>
+<li><a href="https://www.codeproject.com/Articles/25172/Simple-Random-Number-Generation">Simple Random Number Generation - CodeProject</a> by <a href="https://www.johndcook.com/blog/">John D. Cook</a> (2008 - 2011)</li>
+</ul>
+<h4 id="d"><a href="/D_%28Programming_Language%29">D</a></h4>
+<ul>
+<li><a href="https://dlang.org/library/std/random.html">Module std.random - D Programming Language</a></li>
+<li><a href="https://dlang.org/phobos/std_random.html">std.random - D Programming Language</a></li>
+</ul>
+<h4 id="fortran"><a href="/Fortran">Fortran</a></h4>
+<ul>
+<li><a href="https://gcc.gnu.org/onlinedocs/gfortran/RAND.html">The GNU Fortran Compiler: RAND</a></li>
+<li><a href="https://gcc.gnu.org/onlinedocs/gfortran/RANDOM_005fNUMBER.html">The GNU Fortran Compiler: RANDOM_NUMBER</a></li>
+</ul>
+<h4 id="go"><a href="/Go">Go</a></h4>
+<ul>
+<li><a href="https://golang.org/pkg/math/rand/">rand - The Go Programming Language</a></li>
+<li><a href="https://gobyexample.com/random-numbers">Go by Example: Random Numbers</a></li>
+</ul>
+<h4 id="java"><a href="/Java">Java</a></h4>
+<ul>
+<li><a href="http://docs.oracle.com/javase/8/docs/api/java/util/Random.html">Random (Java Platform SE 8 )</a></li>
+<li><a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ThreadLocalRandom.html">ThreadLocalRandom (Java Platform SE 8 )</a></li>
+</ul>
+<h4 id="lisp">Lisp</h4>
+<ul>
+<li><a href="https://www.cs.cmu.edu/Groups/AI/html/cltl/clm/node133.html">Common Lisp - 12.9. Random Numbers</a></li>
+<li><a href="https://jorgetavares.com/2009/09/02/exploring-pseudo-random-numbers-in-lisp/">Exploring pseudo-random numbers in Lisp</a> – <a href="https://jorgetavares.com/">Jorge Tavares Notes</a></li>
+</ul>
+<h4 id="pascal"><a href="/Pascal">Pascal</a></h4>
+<ul>
+<li><a href="https://www.freepascal.org/docs-html/rtl/system/random.html">Free Pascal - Random</a></li>
+<li><a href="http://wiki.freepascal.org/Generating_Random_Numbers">Generating Random Numbers - Free Pascal wiki</a></li>
+<li><a href="http://wiki.freepascal.org/Delphi_compatible_LCG_Random">Delphi compatible LCG Random - Free Pascal wiki</a></li>
+<li><a href="http://wiki.freepascal.org/Marsaglia%27s_pseudo_random_number_generators">Marsaglia's pseudo random number generators - Free Pascal wiki</a></li>
+</ul>
+<h4 id="python"><a href="/Python">Python</a></h4>
+<ul>
+<li><a href="https://docs.python.org/2/library/random.html">9.6. random — Generate pseudo-random numbers — Python 2.7.13 documentation</a></li>
+<li><a href="https://docs.python.org/3/library/random.html">9.6. random — Generate pseudo-random numbers — Python 3.6.1 documentation</a></li>
+</ul>
+<h3 id="tests">Tests</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Randomness_tests">Randomness tests from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Diehard_tests">Diehard tests from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Spectral_test">Spectral test from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/TestU01">TestU01 from Wikipedia</a></li>
+</ul>
+<h3 id="misc">Misc</h3>
+<ul>
+<li><a href="/Category:Van_der_Graaf_Generator">Van der Graaf Generator</a> - Theme One (1972), <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/WWcJ7WeAK78" title="YouTube video WWcJ7WeAK78" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=WWcJ7WeAK78">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Algorithms">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Donald_Knuth">Donald Knuth</a> (<strong>1997</strong>). <em><a href="http://www-cs-faculty.stanford.edu/~knuth/taocp.html">The Art of Computer Programming (TAOCP)</a> - <a href="http://www.informit.com/store/art-of-computer-programming-volume-2-seminumerical-9780201896848">Volume 2 - Seminumerical Algorithms</a></em>. <a href="http://www.informit.com/articles/article.aspx?p=2221790">Chapter 3 – Random numbers</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Don_Beal">Don Beal</a>, <a href="/Martin_C._Smith">Martin C. Smith</a> (<strong>1994</strong>). <em>Random Evaluations in Chess</em>. <a href="/Advances_in_Computer_Chess_7">Advances in Computer Chess 7</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>"In the past, some implementations of rand() have had serious shortcomings in the randomness, distribution and period of the sequence produced (in one well-known example, the low-order bit simply alternated between 1 and 0 between calls) rand() is not recommended for serious random-number generation needs, like cryptography. It is recommended to use C++11's random number generation facilities to replace rand()." <a href="http://en.cppreference.com/w/cpp/numeric/random/rand">rand - cppreference.com</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://www.stmintz.com/ccc/index.php?id=88293">Re: random book moves/ random generator</a> by <a href="/Thorsten_Greiner">Thorsten Greiner</a>, <a href="/CCC">CCC</a>, January 13, 2000<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://en.cppreference.com/w/cpp/numeric/random">Pseudo-random number generation - cppreference.com</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p>amy-0.8.7.tar.gz /src/random.c<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="http://www.agner.org/">Agner Fog</a> (<strong>2001</strong>). <em>Chaotic Random Number Generators with Random Cycle Lengths</em>. <a href="http://www.agner.org/random/theory/chaosran.pdf">pdf</a><a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="https://www.stmintz.com/ccc/index.php?id=88309">Re: random book moves/ random generator</a> by <a href="/Stefan_Meyer-Kahlen">Stefan Meyer-Kahlen</a>, <a href="/CCC">CCC</a>, January 13, 2000<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="https://github.com/jdart1/arasan-chess/blob/master/src/movegen.h">arasan-chess/movegen.h at master · jdart1/arasan-chess · GitHub</a><a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="http://www.cplusplus.com/reference/random/mt19937_64/">mt19937_64 - C++ Reference</a><a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="https://doc.rust-lang.org/1.0.0/rand/chacha/struct.ChaChaRng.html">rand::chacha::ChaChaRng - Rust</a><a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="https://en.wikipedia.org/wiki/Salsa20">Salsa20 from Wikipedia</a><a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="https://en.wikipedia.org/wiki/Mersenne_twister">Mersenne twister from Wikipedia</a><a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Van_der_Graaf_Generator">Van der Graaf Generator</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Pseudorandom_Number_Generator">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pieces versus Directions - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Pieces versus Directions</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * Pieces versus Directions</strong></p>
+<p>Despite the <a href="/Move_Generation">generation of moves</a> to one <a href="/Target_Square">target square</a> by <a href="/Pieces">pieces</a> from different <a href="/Direction">directions</a> as mentioned <a href="/Square_Attacked_By">Square Attacked By</a>, there are two approaches to <a href="/Move_Generation">generate</a> <a href="/Moves">moves</a> in an <a href="/Origin_Square">origin centric</a> manner to determine a set of distinct target squares. The classical approach, also applied in <a href="/Mailbox">Mailbox</a> <a href="/Array">array</a> representation, is to generate <a href="/Attacks">attacks</a> and moves piece by piece. Alternately there are set-wise approaches, to determine distinct direction attacks for sets of multiple pieces and <a href="/Pawn">pawns</a>. <a href="/Sliding_Pieces">Sliding pieces</a> rely on <a href="/Dumb7Fill">dumb7fill</a>, <a href="/Kogge-Stone_Algorithm">kogge-stone algorithm</a> or <a href="/Fill_by_Subtraction">fill by subtraction</a>. <span id="PieceByPiece"></span></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#piece-by-piece">Piece by Piece</a></li>
+<li><a href="#directions">Directions</a></li>
+<li><a href="#hybrid">Hybrid</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="piece-by-piece">Piece by Piece</h2>
+<p>In general there are lookup techniques to determine attack- or move-target sets for each individual <a href="/Pawn">pawn</a> or <a href="/Pieces">piece</a>, indexed by <a href="/BitScan">bitscanned</a> square and for the sliders by occupancy. Each piece-wise attack covers all their inherited <a href="/Direction">ray- or knight directions</a>. This classical approach traverses all pieces and generates attack sets and move sets by following techniques:</p>
+<ul>
+<li><a href="/Pawn_Push">Pawn Push</a></li>
+<li><a href="/Pawn_Attacks_%28Bitboards%29">Attacks of a Single Pawn</a></li>
+<li><a href="/Knight_Pattern">Knight Attacks by Lookup</a></li>
+<li><a href="/King_Pattern">King Attacks by Lookup</a></li>
+<li><a href="/Sliding_Piece_Attacks">Single Sliding Piece Attacks</a></li>
+</ul>
+<p>As usual, <a href="/Captures">captures</a> are determined by <a href="/General_Setwise_Operations">intersection</a> of attacks with opponent pieces or <a href="/En_passant">en passant</a> target, while all other attacks or push targets of empty squares are <a href="/Quiet_Moves">quiet moves</a>.</p>
+<pre><code>for all pieces {
+  generateMovetargets(piece);
+  for all capture targets
+      generate captures (move or capture list)
+  for all empty square targets
+      generate quite moves (move list)
+}</code></pre>
+<p><span id="DirectionWise"></span></p>
+<h2 id="directions">Directions</h2>
+<p>The <a href="/Direction">direction-wise</a> approach relies on following set-wise techniques to determine move-targets. As usual, <a href="/Captures">captures</a> are determined by <a href="/General_Setwise_Operations">intersection</a> of attacks with opponent pieces or <a href="/En_passant">en passant</a> target, while all other attacks or push targets of empty squares are <a href="/Quiet_Moves">quiet moves</a>.</p>
+<ul>
+<li><a href="/Pawn_Pushes_%28Bitboards%29">Pushes set-wise</a></li>
+<li><a href="/Pawn_Attacks_%28Bitboards%29">Pawn Attacks set-wise</a></li>
+<li><a href="/Knight_Pattern">Multiple Knight Attacks</a></li>
+<li><a href="/King_Pattern">King Attacks by Calculation</a> with <a href="/General_Setwise_Operations">Direction-Steps</a></li>
+<li><a href="/Sliding_Piece_Attacks">Multiple Sliding Pieces</a></li>
+</ul>
+<p>For <a href="/Move_Generation">move generation</a> purpose one may store target-sets of different piece types per direction. Thus, 16 bitboards as a kind of unsorted <a href="/Move_List">move list</a>. Each <a href="/Target_Square">target square</a> in each ray-direction set has an unique one-to-one relation to it's <a href="/Origin_Square">source square</a>.</p>
+<pre><code>for all 16 ray- and knight directions {
+  generateMovetargets(dirtargets[dir], dir);
+}</code></pre>
+<p>Likely this loop is unrolled - at least for the ray-attacks - where pawns, kings, bishops, rooks or queens may involved. See the proposal of <a href="/DirGolem">DirGolem</a> for a branch-less direction-wise generation of <a href="/Legal_Move">legal moves</a>.</p>
+<p>An incremental <a href="https://en.wikipedia.org/wiki/Finite_state_machine">finite state machine</a> - move-getter may scan and reset the target squares per direction. For distant source squares of <a href="/Sliding_Pieces">sliding pieces</a>, one may <a href="/General_Setwise_Operations">intersect</a> the <a href="/On_an_empty_Board">ray-wise masks</a> per direction and <a href="/Target_Square">target-square</a> with the occupancy - to use either <a href="/BitScan">bitscan</a> <a href="/BitScan">reverse</a> or <a href="/BitScan">forward</a> for the <a href="/On_an_empty_Board">positive</a> or <a href="/On_an_empty_Board">negative</a> directions - similar to the <a href="/Classical_Approach">classical approach</a>, except one don't needs the if (blocker) - condition, which is always true. However, one may delay determining the source square and moving piece until <a href="/Make_Move">make move</a> time, and to <a href="/Encoding_Moves">encode moves</a> uniquely with target square (six bits) and direction (4 bits).</p>
+<p>Alternatively, one may process a ray in one run, to bitscan the most farthest <a href="/Target_Square">destination square</a> from one distinct direction, i.e. bitscan reverse of positive ray attacks, and to loop over all intermediate targets by adding offsets until the source square is arrived. The below loop considers that move-target bits may already reset due to staged move generation, i.e. <a href="/Hash_Move">hash move</a> or <a href="/Killer_Move">killer moves</a> may already tried. Therefor the extra condition with <em>testAndResetBit</em> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>.</p>
+<pre><code>while ( northMoveTargets )
+{
+    targetSquare = bitScanReverse( northMoveTargets );
+    sourceSquare = bitScanReverse( rayAttacks[sout][targetSquare] &amp; occupied);
+    storeMoveOrCapture( sourceSquare, targetSquare); 
+    resetBit (northMoveTargets, targetSquare);
+    targetSquare -= 8; 
+    while ( targetSquare &gt; sourceSquare) {
+       if ( testAndResetBit (northMoveTargets, targetSquare) )
+          storeMove( sourceSquare, targetSquare); 
+       targetSquare -= 8; 
+    }
+}</code></pre>
+<h2 id="hybrid">Hybrid</h2>
+<p>One may combine both approaches with usual <a href="/Move_List">move lists</a>. For instance direction-wise attacks for all pawns, piece-wise attacks for none-pawns. The target set-of pawn-captures should be considered early, since this are winning or at least equal captures.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Bitboard_Serialization">Bitboard Serialization</a></li>
+<li><a href="/BitScan">BitScan</a></li>
+<li><a href="/Classical_Approach">Classical Approach</a> of <a href="/Sliding_Piece_Attacks">Sliding Piece Attacks</a></li>
+<li><a href="/DirGolem">DirGolem</a></li>
+<li><a href="/Move_Generation">Move Generation</a></li>
+<li><a href="/Square_Attacked_By">Square Attacked By</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="/Category:Miles_Davis">Miles Davis</a> - <a href="https://en.wikipedia.org/wiki/A_Different_Kind_of_Blue">Call It Anything</a>, <a href="https://en.wikipedia.org/wiki/Isle_of_Wight_Festival_1970">Isle of Wight Festival</a>, August 29, 1970, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p><a href="/Category:Miles_Davis">Miles Davis</a>, <a href="https://en.wikipedia.org/wiki/Gary_Bartz">Gary Bartz</a>, <a href="/Category:Chick_Corea">Chick Corea</a>, <a href="/Category:Keith_Jarrett">Keith Jarrett</a>, <a href="/Category:Dave_Holland">Dave Holland</a>, <a href="/Category:Jack_DeJohnette">Jack DeJohnette</a>, <a href="/Category:Airto_Moreira">Airto Moreira</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></p>
+<p><a href="https://en.wikipedia.org/wiki/Bitches_Brew_Live#Track_listing">Directions</a> (<a href="/Category:Joe_Zawinul">Joe Zawinul</a>) 0:00 (7:30), <a href="https://en.wikipedia.org/wiki/Bitches_Brew">Bitches Brew</a> 7:30 (10:09), <a href="https://en.wikipedia.org/wiki/Live_at_the_Fillmore_East,_March_7,_1970:_It%27s_About_that_Time">It's About That Time</a> 17:39 (6:17),</p>
+<p><a href="https://en.wikipedia.org/wiki/Bitches_Brew#Track_listing">Sanctuary</a> (<a href="/Category:Wayne_Shorter">Wayne Shorter</a>) 23:56 (1:10), <a href="https://en.wikipedia.org/wiki/Bitches_Brew">Spanish Key</a> 25:06 (8:15), <a href="https://en.wikipedia.org/wiki/Bitches_Brew_Live">The Theme</a> 33:21 (2:10)</p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/qyJooHmRcdc" title="YouTube video qyJooHmRcdc" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=qyJooHmRcdc">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Bitboards">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://msdn.microsoft.com/en-us/library/hd0hzyf8%28VS.100%29.aspx">_bittestandreset, _bittestandreset64</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://answers.yahoo.com/question/index?qid=20101214072119AASF0pn">Does anyone know the name of the instrument Airto Moreira uses during the Isle of Wight Festival (1970)?</a> | <a href="https://en.wikipedia.org/wiki/Yahoo!_Answers">Yahoo! Answers</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://en.wikipedia.org/wiki/Cu%C3%ADca">Cuíca from Wikipedia</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Chick_Corea">Chick Corea</a> · <a href="/Category:Miles_Davis">Miles Davis</a> · <a href="/Category:Jack_DeJohnette">Jack DeJohnette</a> · <a href="/Category:Dave_Holland">Dave Holland</a> · <a href="/Category:Keith_Jarrett">Keith Jarrett</a> · <a href="/Category:Airto_Moreira">Airto Moreira</a> · <a href="/Category:Wayne_Shorter">Wayne Shorter</a> · <a href="/Category:Joe_Zawinul">Joe Zawinul</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Pieces_versus_Directions">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

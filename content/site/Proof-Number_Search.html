@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proof-Number Search - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Proof-Number Search</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Search">Search</a> * Proof-Number Search</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/7/72/Tree_Nursery%2C_Paul_Klee%2C_1929%2C_oil_on_incised_gesso_on_canvas_%28detail%29_-_Phillips_Collection_-_DSC04897.JPG" alt="Paul Klee - Tree Nursery 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Paul_Klee">Paul Klee</a> - Tree Nursery <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="/Category:Paul_Klee">Paul Klee</a> - Tree Nursery, <a href="https://en.wikipedia.org/wiki/The_Phillips_Collection">The Phillips Collection</a>, <a href="https://en.wikipedia.org/wiki/Wikimedia_Commons">Wikimedia Commons</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Proof-Number Search</strong>, (Pn-Search, PnS, PNS)<br />
+a <a href="/Best-First">best-first</a> <a href="https://en.wikipedia.org/wiki/And%E2%80%93or_tree">and-or tree</a> search algorithm designed by <a href="/Victor_Allis">Victor Allis</a> for finding the game-theoretical value in game trees <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> . PNS is based on ideas derived from <a href="/Conspiracy_Number_Search">conspiracy number search</a>. While in cn search the purpose is to continue searching until it is unlikely that the <a href="/Minimax">minimax</a> value of the <a href="/Root">root</a> will change, PNS aims at <strong>proving</strong> the true value of the root <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>. In the fall 2012 issue of the <a href="/ICGA_Journal">ICGA Journal</a>, about 20 years after its invention, <a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Mark_Winands">Mark Winands</a>, <a href="/Martin_Müller">Martin Müller</a> and <a href="/Jahn-Takeshi_Saito">Jahn-Takeshi Saito</a> wrote a résumé about PNS and its variants and enhancements, considered a tribute to Victor Allis by editor <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> .</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#algorithm">Algorithm</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#conspiracy-numbers">Conspiracy Numbers</a></li>
+<li><a href="#proof-and-disproof-numbers">Proof and Disproof Numbers</a></li>
+<li><a href="#tree-sample">Tree Sample</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#pseudo-code">Pseudo Code</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#set-numbers">Set Numbers</a></li>
+<li><a href="#select">Select</a></li>
+<li><a href="#expand">Expand</a></li>
+<li><a href="#update-ancestors">Update Ancestors</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#enhancements">Enhancements</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#pn²">Pn²</a></li>
+<li><a href="#depth-first">Depth First</a></li>
+<li><a href="#pds">PDS</a></li>
+<li><a href="#pds-pn">PDS-PN</a></li>
+<li><a href="#parallel-pns">Parallel PNS</a></li>
+</ol>
+</details></li>
+<li><a href="#applications">Applications</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#publications">Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1988-">1988 ...</a></li>
+<li><a href="#1990-">1990 ...</a></li>
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#proof">Proof</a></li>
+<li><a href="#misc">Misc</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="algorithm">Algorithm</h2>
+<h3 id="conspiracy-numbers">Conspiracy Numbers</h3>
+<p>PNS specializes <a href="/Conspiracy_Numbers">conspiracy numbers</a> to <a href="https://en.wikipedia.org/wiki/And%E2%80%93or_tree">and-or tree</a> search with binary outcome, with significant reduced <a href="/Memory">memory</a> requirements compared to CnS <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> . MAX-nodes are represented as OR-nodes, MIN-nodes as AND-nodes. A solved tree with value <em>true</em> is called proved, while a solved tree with value <em>false</em> is called disproved. Evaluation of leaves yields in the values of <em>false</em>, <em>true</em> or <em>unknown</em>, the latter can be expanded to become a <a href="/Frontier_Nodes">frontier node</a>. For backpropagation, after expansion, AND-nodes become <em>false</em> if at least one child is <em>false</em>, else <em>unknown</em> if at least one child is <em>unknown</em>, otherwise <em>true</em>. At OR-nodes, <em>false</em> and <em>true</em> are interchanged analogously.</p>
+<h3 id="proof-and-disproof-numbers">Proof and Disproof Numbers</h3>
+<p>The algorithm requires the whole tree in memory to select the next evaluated but yet unknown node to be expanded using two criteria: the potential range of subtree values and the number of nodes which must conspire to <strong>prove</strong> or <strong>disprove</strong> that range of potential values. These two criteria enable PNS to treat game trees with a non-uniform <a href="/Branching_Factor">branching factor</a> and deep and narrow lines efficiently.</p>
+<p>PNS continuously tries to solve the tree by focusing on the potentially shortest solution, i.e., consisting of the least number of nodes. At each step of the search, a node which is part of the potentially shortest solution available is selected and expanded or developed. After expansion, its conspiracy numbers, the proof- and disproof number, are established anew, to update the proof- and disproof numbers of its ancestors. This process of selection, expansion and ancestor update is repeated until either the tree is solved or has run out of time- or memory resources.</p>
+<h3 id="tree-sample">Tree Sample</h3>
+<p>Following sample, taken from Allis' Ph.D. thesis <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> , illustrates how proof and disproof numbers are assigned and updated to solve the tree.</p>
+<p>All frontier nodes (E, F, I, L, M, N and P) have proof number or conspiracy of 1. A terminal node with value <em>true</em> (node K) has proof number 0, with value <em>false</em> (node O), proof number ∞. Internal AND-nodes (B, D, G, H and J) have proof numbers equal to the sum of the proof numbers of their children, internal OR-nodes (A and C) have proof numbers equal to the minimum of the proof numbers of their children. Disproof numbers behave analogously to proof numbers, interchanging the roles of AND-nodes and OR-nodes, and the cardinalities 0 and ∞. Each pair consisting of a smallest proof set and a smallest disproof set has a non-empty intersection.</p>
+<table>
+<tbody>
+<tr>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="/assets/ProofNTree.jpg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="/assets/DisproofNTree.jpg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+</tr>
+<tr>
+<td><p>And-or tree with proof numbers</p></td>
+<td><p>and disproof numbers</p></td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="pseudo-code">Pseudo Code</h2>
+<p>The PNS C-like pseudo code is based on the code given in <em>Game-Tree Search using Proof Numbers: The First Twenty Years</em> by <a href="/Akihiro_Kishimoto">Kishimoto</a> et al. <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> . The domain dependent procedure evaluate assigns one of the values <em>proven</em>, <em>disproven</em> and <em>unknown</em> to node.value.</p>
+<pre><code>void PNS ( Node root ) {
+  evaluate( root );
+  setProofAndDisproofNumbers( root );
+  Node current = root;
+  while ( root.proof != 0 &amp;&amp; root.disproof != 0 &amp;&amp; resourcesAvailable() ) {
+    Node mostProving = selectMostProvingNode( current );
+    expandNode( mostProving );
+    current = updateAncestors( mostProving, root );
+  }
+}</code></pre>
+<h3 id="set-numbers">Set Numbers</h3>
+<pre><code>void setProofAndDisproofNumbers( Node n ) {
+  if ( n.expanded ) { /* interior node */
+    if ( n.type == AND ) {
+      n.proof = 0;  n.disproof = ∞;
+      for (each child c of n) {
+         n.proof += c.proof;
+         n.disproof = min(n.disproof, c.disproof);
+      }
+    } else { /* OR node */
+      n.proof = ∞;  n.disproof = 0;
+      for (each child c of n) {
+         n.disproof += c.disproof;
+         n.proof = min(n.proof, c.proof);
+      }
+    }
+  } else { /* terminal node or none terminal leaf */
+    switch( n.value ) {
+      case disproven: n.proof = ∞; n.disproof = 0; break;
+      case proven:    n.proof = 0; n.disproof = ∞; break;
+      case unknown:   n.proof = 1; n.disproof = 1; break;
+    }
+  }
+}</code></pre>
+<h3 id="select">Select</h3>
+<pre><code>Node selectMostProvingNode( Node n ) {
+  while ( n.expanded ) {
+    int value = ∞;
+    Node best;
+    if ( n.type == AND ) {
+      for (each child c of n) {
+        if ( value &gt; c.disproof ) {
+           best = c;
+           value = c.disproof;
+        }
+      }
+    } else { /* OR node */
+      for (each child c of n) {
+        if ( value &gt; c.proof ) {
+           best = c;
+           value = c.proof;
+        }
+      }
+    }
+    n = best;
+  }
+  return n;
+}</code></pre>
+<h3 id="expand">Expand</h3>
+<pre><code>void expandNode( Node n ) {
+  generateChildren( n );
+  for (each child c of n) {
+    evaluate( c );
+    setProofAndDisproofNumbers( c );
+    if ( n.type == AND ) {
+      if ( c.disproof == 0 ) break;
+    } else {  /* OR node */
+      if ( c.proof == 0 ) break;
+    }
+  }
+  n.expanded = true;
+}</code></pre>
+<h3 id="update-ancestors">Update Ancestors</h3>
+<pre><code>Node updateAncestors( Node n, Node root ) {
+  while( n != root ) {
+    int oldProof = n.proof;
+    int oldDisproof = n.disproof;
+    setProofAndDisproofNumbers( n );
+    if ( n.proof == oldProof &amp;&amp; n.disproof == oldDisproof )
+      return n;
+    n = n.parent;
+  }
+  setProofAndDisproofNumbers( root );
+  return root;
+}</code></pre>
+<h2 id="enhancements">Enhancements</h2>
+<p>Proof-number search as illustrated above is suited for pure trees, but has issues with games consisting of <a href="https://en.wikipedia.org/wiki/Directed_acyclic_graph">directed acyclic graphs</a> (<a href="/Transposition">transpositions</a>) and even more, <a href="https://en.wikipedia.org/wiki/Directed_graph">directed cyclic graphs</a> (<a href="/Repetitions">repetitions</a>), already addressed by Martin Schijf in 1993 <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> .</p>
+<h3 id="pn²">Pn²</h3>
+<p>The <strong>Pn²</strong> search algorithm safes resources by using a second PNS instead of calling <em>evaluate</em>, which child-nodes can be discarded afterwards <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a> . <span id="DF-PN"></span></p>
+<h3 id="depth-first">Depth First</h3>
+<p><strong>C</strong>* and <strong>PN</strong>*, introduced by Masahiro Seo <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a> and Seo et al <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a> , transforms a best-first PNS into an <a href="/Iterative_Deepening">iterative deepening</a> <a href="/Depth-First">depth-first</a> approach <strong>df-pn</strong>. Moreover, PN* also incorporates ideas from <a href="/Richard_Korf">Korf's</a> <em>Linear-Space Best-First Search</em> (RBFS) <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a>, and is enhanced by methods such as <a href="/Internal_Iterative_Deepening">recursive iterative deepening</a>, dynamic evaluation, efficient <a href="/Move_Ordering">successor ordering</a>, and pruning by dependency relations. <span id="PDS"></span></p>
+<h3 id="pds">PDS</h3>
+<p><a href="/Ayumu_Nagai">Ayumu Nagai</a> proposed a depth-first variation of PNS dubbed <strong>PDS</strong> for Proof-number and Disproof-number Search <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a> .</p>
+<h3 id="pds-pn">PDS-PN</h3>
+<p><strong>PDS-PN</strong> is a two-level search, which performs a depth-first Proof-number and Disproof-number Search (PDS) at the first level, followed by second level best-first PNS <a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a> .</p>
+<h3 id="parallel-pns">Parallel PNS</h3>
+<p><a href="/Parallel_Search">Parallel search</a> implementations of PNS were introduced by <a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a> and <a href="/Yoshiyuki_Kotani">Yoshiyuki Kotani</a> in 1999 <a href="#fn15" class="footnote-ref" id="fnref15" role="doc-noteref"><sup>15</sup></a> , and by <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a> in 2010 <a href="#fn16" class="footnote-ref" id="fnref16" role="doc-noteref"><sup>16</sup></a> .</p>
+<h2 id="applications">Applications</h2>
+<p>In conjunction with <a href="/Retrograde_Analysis">retrograde analysis</a> and <a href="/Alpha-Beta">alpha-beta</a>, PNS approaches were used to solve various games completely or partial, and to support game playing programs in finding game theoretic solutions. As pointed out by <a href="/Akihiro_Kishimoto">Kishimoto</a> et al. <a href="#fn17" class="footnote-ref" id="fnref17" role="doc-noteref"><sup>17</sup></a> , <a href="/Victor_Allis">Victor Allis</a> first used the notion of proof and disproof numbers while analyzing and solving <a href="/Connect_Four">Connect Four</a>, still called <a href="/Conspiracy_Numbers">conspiracy numbers</a> <a href="#fn18" class="footnote-ref" id="fnref18" role="doc-noteref"><sup>18</sup></a> . <a href="/Charles_Elkan">Charles Elkan</a> applied proof numbers to <a href="https://en.wikipedia.org/wiki/Automated_theorem_proving">theorem proving</a> <a href="#fn19" class="footnote-ref" id="fnref19" role="doc-noteref"><sup>19</sup></a> . In <a href="/Go">Go</a>, PNS could be applied in <a href="https://en.wikipedia.org/wiki/Life_and_death">Life and death</a> situations <a href="#fn20" class="footnote-ref" id="fnref20" role="doc-noteref"><sup>20</sup></a> , and PNS played an important role in solving <a href="/Checkers">Checkers</a> by <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a> et al. in 2007 <a href="#fn21" class="footnote-ref" id="fnref21" role="doc-noteref"><sup>21</sup></a> <a href="#fn22" class="footnote-ref" id="fnref22" role="doc-noteref"><sup>22</sup></a> .</p>
+<p>In <a href="/Shogi">Shogi</a> as well in Chess, PNS solves deep <a href="https://en.wikipedia.org/wiki/Tsumeshogi">tsume-shogi</a> or <a href="/Checkmate">mate</a> problems. <a href="/Duck">Prover</a> was a PNS implementation for chess, using chess-specific routines of <a href="/Duck">Duck</a>. Provers only goal was <a href="/Mate_Search">searching for mate</a> <a href="#fn23" class="footnote-ref" id="fnref23" role="doc-noteref"><sup>23</sup></a> . <a href="/Sjeng">Sjeng</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a> uses Proof-number search in it's <a href="https://en.wikipedia.org/wiki/Antichess">suicide and loser's</a> mode <a href="#fn24" class="footnote-ref" id="fnref24" role="doc-noteref"><sup>24</sup></a> .</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Conspiracy_Numbers">Conspiracy Numbers</a></li>
+<li><a href="/Conspiracy_Number_Search">Conspiracy Number Search</a></li>
+<li>Lambda-Search</li>
+<li><a href="/Mate_Search">Mate Search</a></li>
+<li><a href="/Retrograde_Analysis">Retrograde Analysis</a></li>
+<li><a href="/James_R._Slagle">Theorem-Proving</a> by <a href="/James_R._Slagle">James R. Slagle</a></li>
+<li><a href="/Jack_Good">Theorem-Proving from Five-Year Plan</a> by <a href="/Jack_Good">Jack Good</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<h3 id="1988-">1988 ...</h3>
+<ul>
+<li><a href="/Victor_Allis">Victor Allis</a> (<strong>1988</strong>). <em>A Knowledge-Based Approach of Connect Four: The Game is Over, White to Move Wins</em>. M.Sc. thesis, Report No. IR-163, Faculty of Mathematics and Computer Science, <a href="https://en.wikipedia.org/wiki/Vrije_Universiteit">Vrije Universteit, Amsterdam</a></li>
+<li><a href="/Charles_Elkan">Charles Elkan</a> (<strong>1989</strong>). <em>Conspiracy Numbers and Caching for Searching And/Or Trees and Theorem-Proving</em>. <a href="/Conferences">IJCAI 1989</a>, <a href="http://ijcai.org/Past%20Proceedings/IJCAI-89-VOL1/PDF/054.pdf">pdf</a></li>
+</ul>
+<h3 id="1990-">1990 ...</h3>
+<ul>
+<li><a href="/Victor_Allis">Victor Allis</a>, <a href="/Maarten_van_der_Meulen">Maarten van der Meulen</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>1991</strong>). <em>Proof-Number Search.</em> Technical Reports in Computer Science, CS 91-01. Department of Computer Science, <a href="/Maastricht_University">University of Limburg</a>. ISSN 0922-8721.</li>
+<li><a href="/Victor_Allis">Victor Allis</a>, Patrick Schoo (<strong>1992</strong>). <em>Qubic Solved Again</em>. Heuristic Programming in Artificial Intelligence 3: <a href="/3rd_Computer_Olympiad">The Third Computer Olympiad</a></li>
+<li>Martin Schijf (<strong>1993</strong>). <em>Proof-number Search and Transpositions</em>. M.Sc. thesis, <a href="/Leiden_University">Leiden University</a></li>
+<li><a href="/Victor_Allis">Victor Allis</a> (<strong>1994</strong>). <em>Searching for Solutions in Games and Artificial Intelligence</em>. Ph.D. thesis, <a href="/Maastricht_University">University of Limburg</a>, <a href="http://fragrieu.free.fr/SearchingForSolutions.pdf">pdf</a></li>
+<li><a href="/Dennis_Breuker">Dennis Breuker</a>, <a href="/Victor_Allis">Victor Allis</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>1994</strong>). <em>How to Mate: Applying Proof-Number Search</em>. <a href="/Advances_in_Computer_Chess_7">Advances in Computer Chess 7</a>, reprint as <a href="http://www.top-5000.nl/ps/Mate%20in%2038-%20applying%20proof%20number%20search%20to%20chess.pdf">Mate in 38: Applying Proof-Number Search</a> from <a href="/Ed_Schroder">Ed Schroder's</a> <a href="http://www.top-5000.nl/prostuff.htm">Programmer's Stuff site</a></li>
+<li><a href="/Victor_Allis">Victor Allis</a>, <a href="/Maarten_van_der_Meulen">Maarten van der Meulen</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>1994</strong>). <em><a href="http://www.sciencedirect.com/science/article/pii/0004370294900043">Proof-Number Search</a></em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 66, No. 1</li>
+<li>Martin Schijf, <a href="/Victor_Allis">Victor Allis</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a> (<strong>1994</strong>). <em>Proof-Number Search and Transpositions</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 17, No. 2</a></li>
+</ul>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li>Masahiro Seo (<strong>1995</strong>). <em>The C* Algorithm for AND/OR Tree Search and Its Application to a Tsume-Shogi Program</em>. M.Sc. thesis, <a href="https://en.wikipedia.org/wiki/University_of_Tokyo">University of Tokyo</a>, <a href="http://www-imai.is.s.u-tokyo.ac.jp/PAPERS/Seo95.ps">ps</a></li>
+<li><a href="/Dennis_Breuker">Dennis Breuker</a> (<strong>1998</strong>). <em><a href="http://www.dennisbreuker.nl/thesis/index.html">Memory versus Search in Games</a></em>. Ph.D. thesis, <a href="/Maastricht_University">Maastricht University</a>, Chapter 3: The proof-number search algorithm, Chapter 4: The pn2-search algorithm</li>
+<li><a href="/Ayumu_Nagai">Ayumu Nagai</a> (<strong>1998</strong>). <em>A new AND/OR Tree Search Algorithm Using Proof Number and Disproof Number</em>. Complex Games Lab Workshop, Tsukuba</li>
+<li><a href="/Ayumu_Nagai">Ayumu Nagai</a> (<strong>1999</strong>). <em>A New Depth-First-Search Algorithm for AND/OR Trees</em>. M.Sc. thesis, <a href="https://en.wikipedia.org/wiki/University_of_Tokyo">University of Tokyo</a></li>
+<li><a href="/Ayumu_Nagai">Ayumu Nagai</a>, <a href="/Hiroshi_Imai">Hiroshi Imai</a> (<strong>1999</strong>). <em>Proof for the Equivalence Between Some Best-First Algorithms and Depth-First Algorithms for AND/OR Trees</em>. Proceedings of the Korea-Japan Joint Workshop on Algorithms and Computation</li>
+<li><a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Yoshiyuki_Kotani">Yoshiyuki Kotani</a> (<strong>1999</strong>). <em>Parallel AND/OR tree search based on proof and disproof numbers</em>. <a href="/Conferences">5th Game Programming Workshop</a></li>
+<li><a href="/Ayumu_Nagai">Ayumu Nagai</a>, <a href="/Hiroshi_Imai">Hiroshi Imai</a> (<strong>1999</strong>). <em>Application of df-pn+ to Othello endgames</em>. <a href="/Conferences">5th Game Programming Workshop</a> » <a href="/Othello">Othello</a></li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2000</strong>). <em><a href="http://link.springer.com/chapter/10.1007/3-540-45579-5_3">Abstract Proof Search</a></em>. <a href="/CG_2000">CG 2000</a>, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/APS-final.pdf">pdf</a></li>
+<li>Masahiro Seo, <a href="/Hiroyuki_Iida">Hiroyuki Iida</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a> (<strong>2001</strong>). <em>The PN*-Search Algorithm: Applications to Tsume-Shogi.</em> <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 129, Nos. 1-2</li>
+<li><a href="/Makoto_Sakuta">Makoto Sakuta</a>, <a href="/Hiroyuki_Iida">Hiroyuki Iida</a> (<strong>2001</strong>). <em>The Performance of PN*, PDS, and PN Search on 6x6 Othello and Tsume-Shogi</em>. <a href="/Advances_in_Computer_Games_9">Advances in Computer Games 9</a></li>
+<li><a href="/Dennis_Breuker">Dennis Breuker</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2001</strong>). <em>The PN2-Search Algorithm</em>. <a href="/Advances_in_Computer_Games_9">Advances in Computer Games 9</a></li>
+<li><a href="/Mark_Winands">Mark Winands</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a> (<strong>2001</strong>). <em>PN, PN2 and PN* in Lines of Action</em>. <a href="/6th_Computer_Olympiad">6th Computer Olympiad Workshop</a>, <a href="https://dke.maastrichtuniversity.nl/m.winands/documents/PN_PN2_AND_PNstar_%20IN_LOA.pdf">pdf</a> » <a href="/Lines_of_Action">Lines of Action</a></li>
+<li><a href="/Makoto_Sakuta">Makoto Sakuta</a>, <a href="/Hiroyuki_Iida">Hiroyuki Iida</a> (<strong>2001</strong>). <em><a href="http://ilk.uvt.nl/icga/journal/contents/content24-4.htm#AND/OR-TREE">AND/OR-tree Search Algorithms in Shogi Mating Search</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 24, No. 4</a></li>
+<li><a href="/Martin_Müller">Martin Müller</a> (<strong>2001</strong>). <em>Proof-Set Search</em>. Technical Report TR 01-09, <a href="/University_of_Alberta">University of Alberta</a> <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.20.9972">CiteSeerX</a> <a href="#fn25" class="footnote-ref" id="fnref25" role="doc-noteref"><sup>25</sup></a></li>
+<li><a href="/Martin_Müller">Martin Müller</a> (<strong>2002</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-40031-8_7">Proof-Set Search</a></em>. <a href="/CG_2002">CG 2002</a></li>
+<li><a href="/Mark_Winands">Mark Winands</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2002</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-40031-8_5">PDS-PN: A New Proof-Number Search Algorithm: Application to Lines of Action</a></em>. <a href="/CG_2002">CG 2002</a> » <a href="/Lines_of_Action">Lines of Action</a></li>
+<li><a href="/Ayumu_Nagai">Ayumu Nagai</a> (<strong>2002</strong>). <em>Df-pn Algorithm for Searching AND/OR Trees and Its Applications</em>. Ph.D. thesis, <a href="https://en.wikipedia.org/wiki/University_of_Tokyo">University of Tokyo</a></li>
+<li><a href="/Ayumu_Nagai">Ayumu Nagai</a>, <a href="/Hiroshi_Imai">Hiroshi Imai</a> (<strong>2002</strong>). <em><a href="http://ci.nii.ac.jp/naid/110006376599">Proof for the Equivalence Between Some Best-First Algorithms and Depth-First Algorithms for AND/OR Trees</a></em>. <a href="http://ci.nii.ac.jp/vol_issue/nels/AA10826272/ISS0000408668_en.html">IEICE transactions on information and systems</a></li>
+<li><a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Martin_Müller">Martin Müller</a> (<strong>2003</strong>). <em>Df-pn in Go: An Application to the One-Eye Problem</em>. <a href="/Advances_in_Computer_Games_10">Advances in Computer Games 10</a>, <a href="http://www.fun.ac.jp/%7Ekishi/pdf_file/acg_kishimoto_mueller.pdf">pdf</a> » <a href="/Go">Go</a> <a href="#fn26" class="footnote-ref" id="fnref26" role="doc-noteref"><sup>26</sup></a></li>
+<li><a href="/Mark_Winands">Mark Winands</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2004</strong>). <em>An Effective Two-Level Proof-Number Search Algorithm</em>. <a href="http://www.sciencedirect.com/science/journal/03043975">Theoretical Computer Science</a>. Vol. 313, No.3, pp. 511-525. <a href="http://www.personeel.unimaas.nl/m-winands/documents/An%20Effective%20Two-Level%20Proof-Number%20Search%20Algorithm.ps">ps</a></li>
+<li><a href="/Mark_Winands">Mark Winands</a> (<strong>2004</strong>). <em>Informed Search in Complex Games</em>. Ph.D. thesis, <a href="/Maastricht_University">Universiteit Maastricht</a>, Received the 2004 <a href="/ChessBase">ChessBase</a> <a href="/ICGA">Best-Publication Award</a>, <a href="http://www.personeel.unimaas.nl/m-winands/documents/informed_search.pdf">pdf</a>, Chapter 4 - Proof-Number Search Algorithm, Chapter 5 - An Effective Two-Level Proof-Number Search Algorithm</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a> (<strong>2005</strong>). <em>Correct and Efficient Search Algorithms in the Presence of Repetitions</em>. Ph.D. thesis, <a href="/University_of_Alberta">University of Alberta</a>, Received the 2005 <a href="/ChessBase">ChessBase</a> <a href="/ICGA">Best-Publication Award</a>, <a href="http://www.is.titech.ac.jp/%7Ekishi/pdf_file/kishi_phd_thesis.pdf">pdf</a></li>
+<li><a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Martin_Müller">Martin Müller</a> (<strong>2005</strong>). <em>A Solution to the GHI Problem for Depth-First Proof-Number Search</em>. 7th Joint Conference on Information Sciences (JCIS2003), pp. 489 - 492, <a href="http://webdocs.cs.ualberta.ca/~mmueller/ps/kishimoto-mueller-infsci-ghi.pdf">pdf</a> » <a href="/Graph_History_Interaction">Graph History Interaction</a></li>
+<li><a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, <a href="/Yngvi_Björnsson">Yngvi Björnsson</a>, Neil Burch, <a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Martin_Müller">Martin Müller</a>, Rob Lake, <a href="/Paul_Lu">Paul Lu</a>, Steve Sutphen (<strong>2005</strong>). <em>Solving Checkers</em>. <a href="/Conferences">IJCAI 2005</a>, <a href="http://www.ru.is/faculty/yngvi/pdf/SchaefferBBKMLLS05.pdf">pdf</a></li>
+<li><a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jeroen_Donkers">Jeroen Donkers</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, Sander Bakkes, <a href="/Jahn-Takeshi_Saito">Jahn-Takeshi Saito</a> (<strong>2006</strong>). <em>Intelligent Search Techniques Proof-Number Search</em>. MICC/IKAT <a href="/Maastricht_University">Universiteit Maastricht</a></li>
+<li><a href="/Jahn-Takeshi_Saito">Jahn-Takeshi Saito</a>, <a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2006</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-75538-8_5">Monte-Carlo Proof-Number Search for Computer Go</a></em>. <a href="/CG_2006">CG 2006</a></li>
+<li><a href="/Jakub_Pawlewicz">Jakub Pawlewicz</a>, Łukasz Lew (<strong>2006</strong>). <em><a href="http://link.springer.com/chapter/10.1007%2F978-3-540-75538-8_14">Improving Depth-first PN-Search: 1 + ε Trick</a></em>. <a href="/CG_2006">CG 2006</a>, <a href="http://www.mimuw.edu.pl/~pan/papers/lm-pns.pdf">pdf</a></li>
+<li>Kazuki Yoshizoe, <a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Martin_Müller">Martin Müller</a>. (<strong>2007</strong>). <em>Lambda Depth-First Proof-Number Search and Its Application to Go</em>. <a href="/Conferences">IJCAI 2007</a>, <a href="http://www.fun.ac.jp/%7Ekishi/pdf_file/yoshizoe-ijcai07.pdf">pdf</a></li>
+<li>Kazuki Yoshizoe (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_13">A New Proof-Number Calculation Technique for Proof-Number Search</a></em>. <a href="/CG_2008">CG 2008</a></li>
+<li><a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Martin_Müller">Martin Müller</a> (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_14">About the Completeness of Depth-First Proof-Number Search</a></em>. <a href="/CG_2008">CG 2008</a></li>
+<li>Toru Ueda, <a href="/Tsuyoshi_Hashimoto">Tsuyoshi Hashimoto</a>, <a href="/Junichi_Hashimoto">Junichi Hashimoto</a>, <a href="/Hiroyuki_Iida">Hiroyuki Iida</a> (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_15">Weak Proof-Number Search</a></em>. <a href="/CG_2008">CG 2008</a></li>
+<li>Kazuki Yoshizoe (<strong>2009</strong>). <em>AND-OR Tree Search Algorithms for Domains with Uniform Branching Factors</em>. Ph.D. thesis, <a href="https://en.wikipedia.org/wiki/University_of_Tokyo">University of Tokyo</a></li>
+<li><a href="/Jahn-Takeshi_Saito">Jahn-Takeshi Saito</a>, <a href="/Mark_Winands">Mark Winands</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2009</strong>). <em>Randomized Parallel Proof-Number Search</em>. <a href="/Advances_in_Computer_Games_12">Advances in Computer Games 12</a>, <a href="http://wwwis.win.tue.nl/bnaic2009/papers/bnaic2009_paper_23.pdf">pdf</a></li>
+<li>Changming Xu, Zongmin Ma, Junjie Tao, <a href="/Xinhe_Xu">Xinhe Xu</a> (<strong>2009</strong>). <em>Enhancements of Proof Number Search in Connect6</em>. <a href="/IEEE">IEEE</a> Control and Decision Conference</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="/Ping-Hung_Lin">Ping-Hung Lin</a> (<strong>2010</strong>). <em>Relevance-Zone-Oriented Proof Search for Connect6</em>. Ph.D. thesis</li>
+<li><a href="/Mark_Winands">Mark Winands</a>, Maarten Schadd (<strong>2010</strong>). <em><a href="http://link.springer.com/chapter/10.1007%2F978-3-642-17928-0_3">Evaluation-Function Based Proof-Number Search</a></em>. <a href="/CG_2010">CG 2010</a>, <a href="https://dke.maastrichtuniversity.nl/m.winands/documents/CG2010pneval.pdf">pdf</a></li>
+<li><a href="/I-Chen_Wu">I-Chen Wu</a>, <a href="/Hung-Hsuan_Lin">Hung-Hsuan Lin</a>, <a href="/Ping-Hung_Lin">Ping-Hung Lin</a>, <a href="/Der-Johng_Sun">Der-Johng Sun</a>, <a href="/Yi-Chih_Chan">Yi-Chih Chan</a>, Bo-Ting Chen (<strong>2010</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-642-17928-0_2">Job-Level Proof-Number Search for Connect6</a></em>. <a href="/CG_2010">CG 2010</a></li>
+<li><a href="/I-Chen_Wu">I-Chen Wu</a>, <a href="/Ping-Hung_Lin">Ping-Hung Lin</a> (<strong>2010</strong>). <em>Relevance-Zone-Oriented Proof Search for Connect6</em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 2, No. 3 » <a href="/Connect6">Connect6</a></li>
+<li><a href="/Shi-Jim_Yen">Shi-Jim Yen</a>, <a href="/Jung-Kuei_Yang">Jung-Kuei Yang</a> (<strong>2010</strong>). <em><a href="https://www.semanticscholar.org/paper/Searching-for-Stage-Proof-Number-in-Connect6-Yen-Yang/2de70372893e8773b12391f75d2b964ea7fb6df2">Searching for Stage Proof Number in Connect6</a></em>. TAAI 2010</li>
+<li><a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a> (<strong>2010</strong>). <em>Parallel Depth First Proof Number Search</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/aaai/aaai2010.html#Kaneko10">AAAI 2010</a></li>
+<li><a href="/Abdallah_Saffidine">Abdallah Saffidine</a>, Nicolas Jouandeau, <a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2011</strong>). <em>Solving Breakthrough with Race Patterns and Job-Level Proof Number Search</em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a> » <a href="/Breakthrough_%28Game%29">Breakthrough (Game)</a></li>
+<li><a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Mark_Winands">Mark Winands</a>, <a href="/Martin_Müller">Martin Müller</a>, <a href="/Jahn-Takeshi_Saito">Jahn-Takeshi Saito</a> (<strong>2012</strong>). <em>Game-Tree Search using Proof Numbers: The First Twenty Years</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 35, No. 3</a></li>
+<li><a href="/Abdallah_Saffidine">Abdallah Saffidine</a> (<strong>2012</strong>). <em>Minimal Proof Search for Modal Logic K Model Checking</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/journals/corr/corr1207.html#abs-1207-1832">CoRR, July 2012</a> <a href="#fn27" class="footnote-ref" id="fnref27" role="doc-noteref"><sup>27</sup></a></li>
+<li><a href="/Abdallah_Saffidine">Abdallah Saffidine</a>, <a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2012</strong>). <em>Multiple-Outcome Proof Number Search</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/ecai/ecai2012.html#SaffidineC12">ECAI 2012</a></li>
+<li><a href="/Kunihito_Hoki">Kunihito Hoki</a>, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a>, <a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Takeshi_Ito">Takeshi Ito</a> (<strong>2013</strong>). <em>Parallel Dovetailing and its Application to Depth-First Proof-Number Search</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 36, No. 1</a> <a href="#fn28" class="footnote-ref" id="fnref28" role="doc-noteref"><sup>28</sup></a></li>
+<li><a href="/Abdallah_Saffidine">Abdallah Saffidine</a> (<strong>2013</strong>). <em>Solving Games and All That</em>. Ph.D. thesis, 2.4 Proof Number Search</li>
+<li><a href="/I-Chen_Wu">I-Chen Wu</a>, <a href="/Hung-Hsuan_Lin">Hung-Hsuan Lin</a>, <a href="/Der-Johng_Sun">Der-Johng Sun</a>, <a href="/Kuo-Yuan_Kao">Kuo-Yuan Kao</a>, <a href="/Ping-Hung_Lin">Ping-Hung Lin</a>, <a href="/Yi-Chih_Chan">Yi-Chih Chan</a>, Bo-Ting Chen (<strong>2013</strong>). <em>Job-Level Proof Number Search</em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 5, No. 1</li>
+<li><a href="/Jakub_Pawlewicz">Jakub Pawlewicz</a>, <a href="/Ryan_Hayward">Ryan Hayward</a> (<strong>2013</strong>). <em>Scalable Parallel DFPN Search</em>. <a href="/CG_2013">CG 2013</a>, <a href="https://webdocs.cs.ualberta.ca/~hayward/papers/pawlhayw.pdf">pdf</a></li>
+<li><a href="/Mark_Watkins">Mark Watkins</a> (<strong>2014</strong>). <em>Solved Openings in Losing Chess</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 37, No. 2</a> » <a href="/Losing_Chess">Losing Chess</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li>Taichi Ishitobi, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Hiroyuki_Iida">Hiroyuki Iida</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2015</strong>). <em>Reducing the Seesaw Effect with Deep Proof Number Search</em>. <a href="/Advances_in_Computer_Games_14">Advances in Computer Games 14</a></li>
+<li>Jiaxing Song (<strong>2017</strong>). <em>Deep df-pn and its Efficient Implementations</em>. <a href="/Advances_in_Computer_Games_15">Advances in Computer Games 15</a></li>
+<li>Chao Gao, <a href="/Martin_Müller">Martin Müller</a>, <a href="/Ryan_Hayward">Ryan Hayward</a> (<strong>2017</strong>). <em>Focused Depth-first Proof Number Search using Convolutional Neural Networks for the Game of Hex</em>. <a href="/Conferences">IJCAI 2017</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=169978">Re: One mate to solve...(proof number search results)</a> by Angrim, <a href="/CCC">CCC</a>, May 16, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=233322">Re: A new(?) technique to recognize draws</a> by Dan Andersson, <a href="/CCC">CCC</a>, June 01, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=248605">Proof number &amp; conspiracy search</a> by Eli Liang, <a href="/CCC">CCC</a>, August 29, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=343084">Mixing alpha-beta with PN search</a> by <a href="/Tord_Romstad">Tord Romstad</a>, <a href="/CCC">CCC</a>, January 18, 2004 » <a href="/Alpha-Beta">Alpha-Beta</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52936">Upper bound on proof tree size</a> by Forrest Hoch, <a href="/CCC">CCC</a>, July 11, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61774">Proof-number search</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, October 20, 2016 » <a href="/Crazyhouse">Crazyhouse</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Proof-number_search">Proof-number search from Wikipedia</a></li>
+</ul>
+<h3 id="proof">Proof</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Proof">Proof from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Formal_proof">Formal proof from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Mathematical_proof">Mathematical proof from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/List_of_mathematical_proofs">List of mathematical proofs from Wikipedia</a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Automated_theorem_proving">Automated theorem proving from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Combinatorial_proof">Combinatorial proof from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/Bijective_proof">Bijective proof from Wikipedia</a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Mathematical_induction">Mathematical induction from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Proof_by_exhaustion">Proof by exhaustion from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Proof_theory">Proof theory from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Proof_calculus">Proof calculus from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Method_of_analytic_tableaux">Method of analytic tableaux from Wikipedia</a></li>
+</ul>
+<h3 id="misc">Misc</h3>
+<ul>
+<li><a href="/Category:Marcus_Miller">Marcus Miller</a> &amp; <a href="/Category:Herbie_Hancock">Herbie Hancock's</a> <a href="/Category:The_Headhunters">Headhunters'05</a> - <a href="https://en.wikipedia.org/wiki/Thrust_%28album%29">Actual Proof</a>, Live at <a href="http://tokyo-jazz.com/2005/english/index.html">Tokyo Jazz 2005</a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p>feat.: <a href="/Category:Terri_Lyne_Carrington">Terri Lyne Carrington</a>, <a href="/Category:Roy_Hargrove">Roy Hargrove</a>, <a href="http://www.discogs.com/artist/256492-Munyungo-Jackson">Munyungo Jackson</a>, <a href="https://en.wikipedia.org/wiki/Lionel_Loueke">Lionel Loucke</a>, <a href="https://en.wikipedia.org/wiki/%27Wah_Wah%27_Watson">Wah Wah Watson</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/dIWSC2uHXFA" title="YouTube video dIWSC2uHXFA" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=dIWSC2uHXFA">Watch on YouTube</a></p>
+<ul>
+<li><a href="/Category:Herbie_Hancock">Herbie Hancock</a>: <a href="https://en.wikipedia.org/wiki/The_Imagine_Project">The Imagine Project</a> - <a href="https://en.wikipedia.org/wiki/Thrust_%28album%29">Actual Proof</a>, <a href="https://en.wikipedia.org/wiki/Montreux_Jazz_Festival">Montreux Jazz Festival</a>, July 16, 2010, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p>feat.: <a href="/Category:Tal_Wilkenfeld">Tal Wilkenfeld</a>, <a href="/Category:Greg_Phillinganes">Greg Phillinganes</a>, <a href="/Category:Vinnie_Colaiuta">Vinnie Colaiuta</a>, <a href="https://en.wikipedia.org/wiki/Lionel_Loueke">Lionel Loueke</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/teI2VkEeD3w" title="YouTube video teI2VkEeD3w" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=teI2VkEeD3w">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Search">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Victor_Allis">Victor Allis</a> (<strong>1994</strong>). <em>Searching for Solutions in Games and Artificial Intelligence</em>. Ph.D. thesis, <a href="/Maastricht_University">University of Limburg</a>, <a href="http://fragrieu.free.fr/SearchingForSolutions.pdf">pdf</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Victor_Allis">Victor Allis</a>, <a href="/Maarten_van_der_Meulen">Maarten van der Meulen</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>1994</strong>). <em><a href="http://www.sciencedirect.com/science/article/pii/0004370294900043">Proof-Number Search</a></em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 66, No. 1<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Mark_Winands">Mark Winands</a>, <a href="/Martin_Müller">Martin Müller</a>, <a href="/Jahn-Takeshi_Saito">Jahn-Takeshi Saito</a> (<strong>2012</strong>). <em>Game-Tree Search using Proof Numbers: The First Twenty Years</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 35, No. 3</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2012</strong>). <em>All is Proof Numbers</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 35, No. 3</a> (editorial)<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Mark_Winands">Mark Winands</a>, <a href="/Martin_Müller">Martin Müller</a>, <a href="/Jahn-Takeshi_Saito">Jahn-Takeshi Saito</a> (<strong>2012</strong>). <em>Game-Tree Search using Proof Numbers: The First Twenty Years</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 35, No. 3</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="/Victor_Allis">Victor Allis</a> (<strong>1994</strong>). <em>Searching for Solutions in Games and Artificial Intelligence</em>. Ph.D. thesis, <a href="/Maastricht_University">University of Limburg</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Mark_Winands">Mark Winands</a>, <a href="/Martin_Müller">Martin Müller</a>, <a href="/Jahn-Takeshi_Saito">Jahn-Takeshi Saito</a> (<strong>2012</strong>). <em>Game-Tree Search using Proof Numbers: The First Twenty Years</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 35, No. 3</a><a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p>Martin Schijf (<strong>1993</strong>). <em>Proof-number Search and Transpositions</em>. M.Sc. thesis, <a href="/Leiden_University">Leiden University</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="/Dennis_Breuker">Dennis Breuker</a> (<strong>1998</strong>). <em><a href="http://www.dennisbreuker.nl/thesis/index.html">Memory versus Search in Games</a></em>. Ph.D. thesis, <a href="/Maastricht_University">Maastricht University</a>, Chapter 4: The pn2-search algorithm<a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p>Masahiro Seo (<strong>1995</strong>). <em>The C* Algorithm for AND/OR Tree Search and Its Application to a Tsume-Shogi Program</em>. M.Sc. thesis, <a href="https://en.wikipedia.org/wiki/University_of_Tokyo">University of Tokyo</a>, <a href="http://www-imai.is.s.u-tokyo.ac.jp/PAPERS/Seo95.ps">ps</a><a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p>Masahiro Seo, <a href="/Hiroyuki_Iida">Hiroyuki Iida</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a> (<strong>2001</strong>). <em>The PN*-Search Algorithm: Applications to Tsume-Shogi.</em> <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 129, Nos. 1-2<a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="/Richard_Korf">Richard Korf</a> (<strong>1993</strong>). <em>Linear-Space Best-First Search.</em> <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 62, No. 1, <a href="http://www.aaai.org/Papers/AAAI/1992/AAAI92-082.pdf">pdf</a><a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="/Ayumu_Nagai">Ayumu Nagai</a> (<strong>2002</strong>). <em>Df-pn Algorithm for Searching AND/OR Trees and Its Applications</em>. Ph.D. thesis, <a href="https://en.wikipedia.org/wiki/University_of_Tokyo">University of Tokyo</a><a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p><a href="/Mark_Winands">Mark Winands</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2002</strong>). <em>PDS-PN: A new proofnumber search algorithm: Application to Lines of Action</em>. <a href="/CG_2002">CG 2002</a>, <a href="http://www.personeel.unimaas.nl/m-winands/documents/PDSPNCG2002.pdf">pdf</a><a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn15"><p><a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Yoshiyuki_Kotani">Yoshiyuki Kotani</a> (<strong>1999</strong>). <em>Parallel AND/OR tree search based on proof and disproof numbers</em>. <a href="/Conferences">5th Game Programming Workshop</a><a href="#fnref15" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn16"><p><a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a> (<strong>2010</strong>). <em>Parallel Depth First Proof Number Search</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/aaai/aaai2010.html#Kaneko10">AAAI 2010</a><a href="#fnref16" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn17"><p><a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Mark_Winands">Mark Winands</a>, <a href="/Martin_Müller">Martin Müller</a>, <a href="/Jahn-Takeshi_Saito">Jahn-Takeshi Saito</a> (<strong>2012</strong>). <em>Game-Tree Search using Proof Numbers: The First Twenty Years</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 35, No. 3</a><a href="#fnref17" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn18"><p><a href="/Victor_Allis">Victor Allis</a> (<strong>1988</strong>). <em>A Knowledge-Based Approach of Connect Four: The Game is Over, White to Move Wins</em>. M.Sc. thesis, Report No. IR-163, Faculty of Mathematics and Computer Science, <a href="https://en.wikipedia.org/wiki/Vrije_Universiteit">Vrije Universteit, Amsterdam</a><a href="#fnref18" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn19"><p><a href="/Charles_Elkan">Charles Elkan</a> (<strong>1989</strong>). <em>Conspiracy Numbers and Caching for Searching And/Or Trees and Theorem-Proving</em>. <a href="/Conferences">IJCAI 1989</a>, <a href="http://ijcai.org/Past%20Proceedings/IJCAI-89-VOL1/PDF/054.pdf">pdf</a><a href="#fnref19" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn20"><p><a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Martin_Müller">Martin Müller</a> (<strong>2003</strong>). <em>Df-pn in Go: An Application to the One-Eye Problem</em>. <a href="/Advances_in_Computer_Games_10">Advances in Computer Games 10</a>, <a href="http://www.fun.ac.jp/%7Ekishi/pdf_file/acg_kishimoto_mueller.pdf">pdf</a><a href="#fnref20" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn21"><p><a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, Neil Burch, <a href="/Yngvi_Björnsson">Yngvi Björnsson</a>, <a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Martin_Müller">Martin Müller</a>, Rob Lake, <a href="/Paul_Lu">Paul Lu</a>, Steve Sutphen (<strong>2007</strong>). <em><a href="http://www.sciencemag.org/content/317/5844/1518.abstract">Checkers is Solved</a></em>. <a href="https://en.wikipedia.org/wiki/Science_%28journal%29">Science</a>, Vol. 317, no. 5844<a href="#fnref21" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn22"><p><a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, <a href="/Yngvi_Björnsson">Yngvi Björnsson</a>, Neil Burch, <a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Martin_Müller">Martin Müller</a>, Rob Lake, <a href="/Paul_Lu">Paul Lu</a>, Steve Sutphen (<strong>2005</strong>). <em>Solving Checkers</em>. <a href="/Conferences">IJCAI 2005</a><a href="#fnref22" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn23"><p><a href="/Dennis_Breuker">Dennis Breuker</a>, <a href="/Victor_Allis">Victor Allis</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>1994</strong>). <em>How to Mate: Applying Proof-Number Search</em>. <a href="/Advances_in_Computer_Chess_7">Advances in Computer Chess 7</a>, reprint as <a href="http://www.top-5000.nl/ps/Mate%20in%2038-%20applying%20proof%20number%20search%20to%20chess.pdf">Mate in 38: Applying Proof-Number Search</a> from <a href="/Ed_Schroder">Ed Schroder's</a> <a href="http://www.top-5000.nl/prostuff.htm">Programmer's Stuff site</a><a href="#fnref23" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn24"><p><a href="http://sjeng.org/download.html">Sjeng : Download / proof.c</a><a href="#fnref24" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn25"><p><a href="https://www.stmintz.com/ccc/index.php?id=233322">Re: A new(?) technique to recognize draws</a> by Dan Andersson, <a href="/CCC">CCC</a>, June 01, 2002<a href="#fnref25" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn26"><p><a href="http://senseis.xmp.net/?Tsumego">Tsumego at Sensei's Library</a><a href="#fnref26" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn27"><p><a href="https://en.wikipedia.org/wiki/Modal_logic">Modal logic from Wikipedia</a><a href="#fnref27" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn28"><p><a href="https://en.wikipedia.org/wiki/Dovetailing_%28computer_science%29">Dovetailing (computer science) from Wikipedia</a><a href="#fnref28" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Paul_Klee">Paul Klee</a> · <a href="/Category:The_Headhunters">The Headhunters</a> · <a href="/Category:Terri_Lyne_Carrington">Terri Lyne Carrington</a> · <a href="/Category:Herbie_Hancock">Herbie Hancock</a> · <a href="/Category:Roy_Hargrove">Roy Hargrove</a> · <a href="/Category:Marcus_Miller">Marcus Miller</a> · <a href="/Category:Tal_Wilkenfeld">Tal Wilkenfeld</a> · <a href="/Category:Greg_Phillinganes">Greg Phillinganes</a> · <a href="/Category:Vinnie_Colaiuta">Vinnie Colaiuta</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Proof-Number_Search">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
