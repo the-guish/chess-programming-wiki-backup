@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Development - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Development</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Evaluation">Evaluation</a> * <a href="/Game_Phases">Game Phases</a> * <a href="/Opening">Opening</a> * Development</strong></p>
+<p><strong>Development</strong>,<br />
+the aim of the opening phase to move pieces from their initial to more advantageous <a href="/Squares">squares</a> to occupy or <a href="/Center_Control">control the center</a> to gain more <a href="/Space">space</a> and more attack and defense possibilities, or activity, as well in hindering the opponent from doing so. In the first place this applies to the minor <a href="/Pieces">pieces</a>, <a href="/Knight">knights</a> and <a href="/Bishop">bishops</a>, in conjunction with the required pawn moves to open lines aka diagonals to mobilize bishops.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#tempo-balance">Tempo Balance</a></li>
+<li><a href="#eval-considerations">Eval Considerations</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#chess">Chess</a></li>
+<li><a href="#misc">Misc</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="tempo-balance">Tempo Balance</h2>
+<p>Each development of a minor piece, and finally connecting the rooks on the base rank due to <a href="/Castling">castling</a>, is considered a <a href="/Tempo">tempo</a>, but no pawn move. In tempo sensitive, often dynamic and tactical opening lines with early pawn <a href="/Pawn_Levers_%28Bitboards%29">levers</a> and options to open attacking lines, <a href="https://en.wikipedia.org/wiki/Siegbert_Tarrasch">Tarrasch</a> rates three tempi worth about the value of one pawn <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>, which is the motivation of many gambit openings.</p>
+<p>A rule of thumb is not only to avoid premature pawn moves, but also moving the same piece multiple times without a good reason, and to develop most or at best all minor pieces before starting attacks with the queen - since too early queen development without appropriate support makes her vulnerable to opponent piece attacks, often worsening the tempo balance if not worse.</p>
+<h2 id="eval-considerations">Eval Considerations</h2>
+<p>While some programs rely on the <a href="/Opening_Book">opening book</a> and appropriate <a href="/Piece-Square_Tables">piece-square tables</a> as well as <a href="/Mobility">mobility</a> and <a href="/Center_Control">center control</a> terms to encourage piece development, others have explicit terms for this early game phase and consider a tempo balance and extra penalties for knights and bishops on their initial home squares. Quite common is also to punish blocked center pawns on their base rank, and too early development of the queen.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Center_Control">Center Control</a></li>
+<li><a href="/Fianchetto">Fianchetto</a></li>
+<li>Gambit</li>
+<li><a href="/Mobility">Mobility</a></li>
+<li><a href="/Opening_Book">Opening Book</a></li>
+<li><a href="/Piece-Square_Tables">Piece-Square Tables</a></li>
+<li><a href="/Returning_Bishop">Returning Bishop</a></li>
+<li><a href="/Space">Space</a></li>
+<li><a href="/Tempo">Tempo</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48632">2 Dh5?</a> by Henk van den Belt, <a href="/CCC">CCC</a>, July 13, 2013</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<h3 id="chess">Chess</h3>
+<ul>
+<li><a href="https://en.wikibooks.org/wiki/Chess_Strategy/Development">Chess Strategy/Development - Wikibooks</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Glossary_of_chess#Develop">Glossary of chess - Develop - Wikipedia</a></li>
+<li><a href="http://www.mark-weeks.com/aboutcom/aa05g16.htm">Chess Opening Tutorial : Count the Developing Moves</a> from <a href="http://www.mark-weeks.com/aboutcom/index.htm">Chess for All Ages</a> by <a href="https://www.blogger.com/profile/10101044127493771263">Mark Weeds</a></li>
+</ul>
+<h3 id="misc">Misc</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Development">Development from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Software_development">Software development from Wikipedia</a> » <a href="/Software">Software</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Opening">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://en.wikipedia.org/wiki/Siegbert_Tarrasch">Siegbert Tarrasch</a> (<strong>1931</strong>). <a href="https://www.amazon.de/Das-Schachspiel-Originalfassung-Siegbert-Tarrasch/dp/3938484845">Das Schachspiel</a> Die Eröffnung I. Allgemeiner Teil Die Kräfte, Der Raum, Die Zeit, Tempobilanz (German)<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Development">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Draw Evaluation - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Draw Evaluation</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Evaluation">Evaluation</a> * <a href="/Game_Phases">Game Phases</a> * <a href="/Endgame">Endgame</a> * Draw Evaluation</strong></p>
+<p>It is important for the evaluation function to recognize the endgame positions which are likely <a href="/Draw">drawn</a>, even though one side has a nominal advantage. This page is devoted to listing some of them. More of that kind of knowledge can be found in the <a href="/KPK">KPK</a> section. <span id="immediate"></span></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#obvious-draws">Obvious Draws</a></li>
+<li><a href="#simple-heuristics">Simple Heuristics</a></li>
+<li><a href="#complex-heuristics">Complex Heuristics</a></li>
+<li><a href="#one-sided-heuristics">One-sided Heuristics</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="obvious-draws">Obvious Draws</h2>
+<p>According to the rules of a dead position, Article 5.2 b, when there is no possibility of <a href="/Checkmate">checkmate</a> for either side with any series of legal moves, the position is an immediate draw if</p>
+<ul>
+<li>Both Sides have a bare King</li>
+<li>One Side has a King and a Minor Piece against a bare King</li>
+<li>Both Sides have a King and a Bishop, the Bishops being the same Color</li>
+</ul>
+<h2 id="simple-heuristics">Simple Heuristics</h2>
+<p>The bishops of different colors are not counted as an immediate draw, because of the possibility of a helpmate in the corner. Since this is unlikely given even a four ply search, we may introduce another class of drawn positions: those that cannot be claimed, but can be evaluated as draws:</p>
+<ul>
+<li>Two Knights against the bare King <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></li>
+<li>Both Sides have a King and a Minor Piece each</li>
+<li>The Weaker Side has a Minor Piece against two Knights</li>
+<li>Two Bishops draw against a Bishop</li>
+<li>Two Minor Pieces against one draw, except when the Stronger Side has a <a href="/Bishop_Pair">Bishop Pair</a></li>
+</ul>
+<p>Please note that a knight or even two knights against two bishops are not included here, as it is possible to win this ending.</p>
+<p><strong>Implementation note:</strong> When a program uses heuristics of that kind, it is of utmost importance to be consistent. For example, if KBN vs KB is scored as a draw, the same must be done with KBN vs KBP. A possible idea is to divide a score by a large constant, such as 16 or 32, when the side nominally ahead has the wrong piece combination.</p>
+<h2 id="complex-heuristics">Complex Heuristics</h2>
+<ul>
+<li>If the Stronger Side has a Pawn and a Bishop against the Minor Piece, the Position is almost certainly drawn if the Weaker Side's King occupies a Square on the Path of a Pawn that is inaccessible to the enemy Bishop (The degenerate cases like Trapping the Minor Piece are best left for Search).</li>
+<li><a href="/Queen_versus_Pawn">Queen versus Rook Pawn on 7th</a> and <a href="/Queen_versus_Pawn">Queen versus Bishop Pawn on 7th</a></li>
+<li><a href="/Wrong_Color_Bishop_and_Rook_Pawn">Wrong Color Bishop and Rook Pawn</a></li>
+</ul>
+<h2 id="one-sided-heuristics">One-sided Heuristics</h2>
+<p>There are some heuristics that tells us only that one of the players cannot win the endgame</p>
+<ul>
+<li>A single Minor Piece should not win against any number of Pawns (again, there is a special case of a smothered mate in the corner, but it is Search issue, not to be taken into account by the <a href="/Evaluation_Function">evaluation function</a>)</li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Blockage_Detection">Blockage Detection</a></li>
+<li><a href="/Contempt_Factor">Contempt Factor</a></li>
+<li><a href="/Draw">Draw</a></li>
+<li><a href="/Fifty-move_Rule">Fifty-move Rule</a></li>
+<li><a href="/Fortress">Fortress</a></li>
+<li><a href="/Material">Insufficient Material</a></li>
+<li><a href="/Interior_Node_Recognizer">Interior Node Recognizer</a></li>
+<li><a href="/Repetitions">Repetitions</a></li>
+<li><a href="/Stalemate">Stalemate</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=182927">"Don't trust draw score" &lt;=Is it true?</a> by <a href="/Teerapong_Tovirat">Teerapong Tovirat</a>, <a href="/CCC">CCC</a>, August 08, 2001 » <a href="/Repetitions">Repetitions</a>, <a href="/Transposition_Table">Transposition Table</a>, <a href="/Path-Dependency">Path-Dependency</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=193257">Draw recognition by eval problems</a> by <a href="/Rafael_B._Andrist">Rafael B. Andrist</a>, <a href="/CCC">CCC</a>, October 17, 2001 » <a href="/Wrong_Color_Bishop_and_Rook_Pawn">Wrong Color Bishop and Rook Pawn</a></li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=18&amp;t=42991">When can a game be declared as a draw?</a> by <a href="/Josué_Forte">Josué Forte</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, June 15, 2003</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=34673">question on draw evaluation</a> by liuzy, <a href="/CCC">CCC</a>, June 03, 2010</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=34673&amp;start=8">Re: question on draw evaluation</a> by <a href="/Robert_Houdart">Robert Houdart</a>, <a href="/CCC">CCC</a>, June 07, 2010</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50150">handling draw by insufficient material</a> by <a href="/Youri_Matiounine">Youri Matiounine</a>, November 19, 2013 » <a href="/Material">Insufficient Material</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50194">evaluating tablebases draws</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, November 23, 2013 » <a href="/Endgame_Tablebases">Endgame Tablebases</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50223">Discocheck 5.01: Bishop related endgame problems</a> by Mike Scheidl, <a href="/CCC">CCC</a>, November 25, 2013 » <a href="/DiscoCheck">DiscoCheck</a>, <a href="/Color_of_a_Square">Color of a Square</a>, <a href="/Wrong_Color_Bishop_and_Rook_Pawn">Wrong Color Bishop and Rook Pawn</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61250">Stockfish eval output</a> by <a href="/Erin_Dame">Erin Dame</a>, <a href="/CCC">CCC</a>, August 27, 2016 » <a href="/Wrong_Color_Bishop_and_Rook_Pawn">Wrong Color Bishop and Rook Pawn</a>, <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62380">draw endgame scaling</a> by <a href="/Alexandru_Mosoi">Alexandru Mosoi</a>, <a href="/CCC">CCC</a>, December 04, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64115">insufficient mating material</a> by <a href="/Erin_Dame">Erin Dame</a>, <a href="/CCC">CCC</a>, May 29, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66640">Marcel Duchamp endgame "splits" engines / hash phenomenon</a> by <a href="/Kenneth_W._Regan">Kenneth Regan</a>, <a href="/CCC">CCC</a>, February 19, 2018 » <a href="/Chess_Problems,_Compositions_and_Studies">Chess Problems, Compositions and Studies</a>, <a href="/Category:Marcel_Duchamp">Marcel Duchamp</a>, <a href="/Transposition_Table">Transposition Table</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66798">what to do when all depths give the exact same score?</a> by Sander Maassen vd Brink, <a href="/CCC">CCC</a>, March 10, 2018</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70827">KQKP and the like</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, May 25, 2019</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=71707">Why does stockfish randomise draw evaluations?</a> by <a href="/Vincent_Tang">Vincent Tang</a>, <a href="/CCC">CCC</a>, September 01, 2019 » <a href="/Stockfish">Stockfish</a>, <a href="/Score">Draw Score</a>, <a href="/Search_with_Random_Leaf_Values">Search with Random Leaf Values</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73012">Endgame woes</a> by <a href="/Tom_King">Tom King</a>, <a href="/CCC">CCC</a>, February 07, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74203">OliThink 5.4.0 has been published with an big leap in strength for only 3 lines of code</a> by <a href="/Oliver_Brausch">Oliver Brausch</a>, <a href="/CCC">CCC</a>, June 16, 2020 » <a href="/OliThink">OliThink</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77497">Alpha-beta search for drawing endgames</a> by Emanuel Torres, <a href="/CCC">CCC</a>, June 16, 2021 » <a href="/Alpha-Beta">Alpha-Beta</a>, <a href="/Graph_History_Interaction">Graph History Interaction</a>, <a href="/Repetitions">Repetitions</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Endgame">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=18&amp;t=42991">When can a game be declared as a draw?</a> by <a href="/Josué_Forte">Josué Forte</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, June 15, 2003<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Marcel_Duchamp">Marcel Duchamp</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Draw_Evaluation">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

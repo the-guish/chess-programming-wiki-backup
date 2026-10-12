@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Extended Position Description - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Extended Position Description</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Chess">Chess</a> * <a href="/Chess_Position">Position</a> * Extended Position Description</strong></p>
+<p><strong>Extended Position Description</strong> (<strong>EPD</strong>)<br />
+describes a chess position similar to the <a href="/Forsyth-Edwards_Notation">Forsyth-Edwards Notation</a> (FEN). Unlike FEN, <strong>EPD</strong> is designed to be expandable by the addition of new operations. <strong>EPD</strong> was developed by <a href="/John_Stanback">John Stanback</a> and <a href="/Steven_Edwards">Steven Edwards</a>. Its first implementation is in Stanback's chessplaying program <a href="/Zarkov">Zarkov</a>. Steven Edwards specified the <strong>EPD</strong> standard for computer chess applications as part of the <a href="/Portable_Game_Notation">Portable Game Notation</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#epd-syntax">EPD Syntax</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#piece-placement">Piece Placement</a></li>
+<li><a href="#side-to-move">Side to move</a></li>
+<li><a href="#castling-ability">Castling ability</a></li>
+<li><a href="#en-passant-target-square">En passant target square</a></li>
+<li><a href="#operations">Operations</a></li>
+<li><a href="#opcode-mnemonics">Opcode mnemonics</a></li>
+</ol>
+</details></li>
+<li><a href="#examples">Examples</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="epd-syntax">EPD Syntax</h2>
+<p>One EPD string or record consists of one text line of variable length composed of four fields separated by a space character followed by zero or more operations. The four data fields, which describe the position, are common with the <a href="/Forsyth-Edwards_Notation">FEN-Specification</a>, while the <a href="/Halfmove_Clock">halfmove clock</a> and <a href="/Forsyth-Edwards_Notation">full move counter</a>, obligatory in Forsyth-Edwards Notation are replaced by optional <strong>hmvc</strong> and <strong>fmvn</strong> operations, and 0, 1 are their default values <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>.</p>
+<p><em><a href="https://en.wikipedia.org/wiki/Terminal_and_nonterminal_symbols">Terminal and none terminal symbols</a> of a variant of <a href="https://en.wikipedia.org/wiki/Backus%E2%80%93Naur_form">BNF</a> below are embedded in ' ' resp. &lt; &gt;.</em></p>
+<pre><code>&lt;EPD&gt; ::=  &lt;Piece Placement&gt;
+       &#39; &#39; &lt;Side to move&gt;
+       &#39; &#39; &lt;Castling ability&gt;
+       &#39; &#39; &lt;En passant target square&gt;
+      {&#39; &#39; &lt;operation&gt;}</code></pre>
+<p><span id="PiecePlacement"></span></p>
+<h3 id="piece-placement">Piece Placement</h3>
+<p>The Piece Placement is determined rank by rank in <a href="/Big-endian">big-endian</a> order, that is starting at the 8th rank down to the first rank. Each rank is separated by the terminal symbol '/' (slash). One rank, scans piece placement in <a href="/Little-endian">little-endian</a> file-order from the A to H. A decimal digit counts consecutive empty squares, the pieces are identified by a single letter from standard English names for chess pieces as used in the <a href="/Algebraic_Chess_Notation">Algebraic Chess Notation</a>. Uppercase letters are for white pieces, lowercase letters for black pieces.</p>
+<pre><code>&lt;Piece Placement&gt; ::= &lt;rank8&gt;&#39;/&#39;&lt;rank7&gt;&#39;/&#39;&lt;rank6&gt;&#39;/&#39;&lt;rank5&gt;&#39;/&#39;&lt;rank4&gt;&#39;/&#39;&lt;rank3&gt;&#39;/&#39;&lt;rank2&gt;&#39;/&#39;&lt;rank1&gt;
+&lt;ranki&gt;       ::= [&lt;digit17&gt;]&lt;piece&gt; {[&lt;digit17&gt;]&lt;piece&gt;} [&lt;digit17&gt;] | &#39;8&#39;
+&lt;piece&gt;       ::= &lt;white Piece&gt; | &lt;black Piece&gt;
+&lt;digit17&gt;     ::= &#39;1&#39; | &#39;2&#39; | &#39;3&#39; | &#39;4&#39; | &#39;5&#39; | &#39;6&#39; | &#39;7&#39;
+&lt;white Piece&gt; ::= &#39;P&#39; | &#39;N&#39; | &#39;B&#39; | &#39;R&#39; | &#39;Q&#39; | &#39;K&#39;
+&lt;black Piece&gt; ::= &#39;p&#39; | &#39;n&#39; | &#39;b&#39; | &#39;r&#39; | &#39;q&#39; | &#39;k&#39;</code></pre>
+<p><span id="Sidetomove"></span></p>
+<h3 id="side-to-move">Side to move</h3>
+<p>Side to move is one lowercase letter for either White ('w') or Black ('b').</p>
+<pre><code>&lt;Side to move&gt; ::= {&#39;w&#39; | &#39;b&#39;}</code></pre>
+<p><span id="Castling"></span></p>
+<h3 id="castling-ability">Castling ability</h3>
+<p>If neither side can castle, the symbol '-' is used, otherwise each of four individual <a href="/Castling_Rights">castling rights</a> for king and queen castling for both sides are indicated by a sequence of one to four letters.</p>
+<pre><code>&lt;Castling ability&gt; ::= &#39;-&#39; | [&#39;K&#39;] [&#39;Q&#39;] [&#39;k&#39;] [&#39;q&#39;] (1..4)</code></pre>
+<p><span id="Enpassanttargetsquare"></span></p>
+<h3 id="en-passant-target-square">En passant target square</h3>
+<p>The <a href="/En_passant">en passant</a> target square is specified after a double push of a pawn, no matter whether an en passant capture is really possible or not. Other moves than double pawn pushes imply the symbol '-' for this FEN field.</p>
+<pre><code>&lt;En passant target square&gt; ::= &#39;-&#39; | &lt;epsquare&gt;
+&lt;epsquare&gt;   ::= &lt;fileLetter&gt; &lt;eprank&gt;
+&lt;fileLetter&gt; ::= &#39;a&#39; | &#39;b&#39; | &#39;c&#39; | &#39;d&#39; | &#39;e&#39; | &#39;f&#39; | &#39;g&#39; | &#39;h&#39;
+&lt;eprank&gt;     ::= &#39;3&#39; | &#39;6&#39;</code></pre>
+<h3 id="operations">Operations</h3>
+<pre><code>&lt;operation&gt; ::= &lt;opcode&gt; {&#39; &#39;&lt;operand&gt;} &#39;;&#39;
+&lt;opcode&gt;    ::= &lt;letter&gt; {&lt;letter&gt; | &lt;digit&gt; | &#39;_&#39;} (up to 14)
+&lt;operand&gt;   ::= &lt;stringOperand&gt;
+ &lt;sanMove&gt;
+ &lt;unsignedOperand&gt;
+ &lt;integerOperand&gt;
+ &lt;floatOperand&gt;
+
+&lt;stringOperand&gt;  ::= &#39;&quot;&#39; {&lt;char&gt;} &#39;&quot;&#39;
+
+&lt;sanMove&gt;        ::= &lt;PieceCode&gt; [&lt;Disambiguation&gt;] &lt;targetSquare&gt; [&lt;promotion&gt;] [&#39;+&#39;|&#39;#&#39;]
+ &lt;castles&gt;
+&lt;castles&gt;        ::= &#39;O-O&#39; | &#39;O-O-O&#39; (upper case O, not zero)
+&lt;PieceCode&gt;      ::= &#39;&#39; | &#39;N&#39; | &#39;B&#39; | &#39;R&#39; | &#39;Q&#39; | &#39;K&#39;
+&lt;Disambiguation&gt; ::= &lt;fileLetter&gt; | &lt;digit18&gt;
+&lt;targetSquare&gt;   ::= &lt;fileLetter&gt; &lt;digit18&gt;
+&lt;fileLetter&gt; ::= &#39;a&#39; | &#39;b&#39; | &#39;c&#39; | &#39;d&#39; | &#39;e&#39; | &#39;f&#39; | &#39;g&#39; | &#39;h&#39;
+&lt;promotion&gt;      ::=  &#39;=&#39; &lt;PiecePromotion&gt;
+&lt;PiecePromotion&gt; ::= &#39;N&#39; | &#39;B&#39; | &#39;R&#39; | &#39;Q&#39;
+
+&lt;unsignedOperand&gt;::= &lt;digit19&gt; { &lt;digit&gt; } | &#39;0&#39;
+&lt;integerOperand&gt; ::= [&#39;-&#39; | &#39;+&#39;] &lt;unsignedIntegerOperand&gt;
+&lt;floatOperand&gt;   ::= &lt;integerOperand&gt; &#39;.&#39; &lt;digit&gt; {&lt;digit&gt;}
+&lt;digit18&gt; ::= &#39;1&#39; | &#39;2&#39; | &#39;3&#39; | &#39;4&#39; | &#39;5&#39; | &#39;6&#39; | &#39;7&#39; | &#39;8&#39;
+&lt;digit19&gt; ::= &#39;1&#39; | &#39;2&#39; | &#39;3&#39; | &#39;4&#39; | &#39;5&#39; | &#39;6&#39; | &#39;7&#39; | &#39;8&#39; | &#39;9&#39;
+&lt;digit&gt;   ::= &#39;0&#39; | &lt;digit19&gt;</code></pre>
+<p><span id="mnemonics"></span></p>
+<h3 id="opcode-mnemonics">Opcode mnemonics</h3>
+<ul>
+<li><strong>acd</strong> analysis count <a href="/Depth">depth</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></li>
+<li><strong>acn</strong> analysis count <a href="/Node">nodes</a></li>
+<li><strong>acs</strong> analysis count seconds</li>
+<li><strong>am</strong> avoid move(s)</li>
+<li><strong>bm</strong> best move(s)</li>
+<li><strong>c0</strong> comment (primary, also <strong>c1</strong> though <strong>c9</strong>)</li>
+<li><strong>ce</strong> <a href="/Centipawns">centipawn</a> evaluation</li>
+<li><strong>dm</strong> direct mate fullmove count</li>
+<li><strong>draw_accept</strong> accept a draw offer</li>
+<li><strong>draw_claim</strong> claim a draw</li>
+<li><strong>draw_offer</strong> offer a draw</li>
+<li><strong>draw_reject</strong> reject a draw offer</li>
+<li><strong>eco</strong> <a href="/ECO">Encyclopedia of Chess Openings</a> opening code</li>
+<li><strong>fmvn</strong> fullmove number</li>
+<li><strong>hmvc</strong> <a href="/Halfmove_Clock">halfmove clock</a></li>
+<li><strong>id</strong> position identification</li>
+<li><strong>nic</strong> <a href="/NIC-Key">New In Chess</a> opening code</li>
+<li><strong>noop</strong> no operation</li>
+<li><strong>pm</strong> predicted move</li>
+<li><strong>pv</strong> predicted variation</li>
+<li><strong>rc</strong> repetition count</li>
+<li><strong>resign</strong> game resignation</li>
+<li><strong>sm</strong> supplied move</li>
+<li><strong>tcgs</strong> telecommunication game selector</li>
+<li><strong>tcri</strong> telecommunication receiver identification</li>
+<li><strong>tcsi</strong> telecommunication sender identification</li>
+<li><strong>v0</strong> variation name (primary, also <strong>v1</strong> though <strong>v9</strong>)</li>
+</ul>
+<h2 id="examples">Examples</h2>
+<p>The start position:</p>
+<pre><code>rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - hmvc 0; fmvn 1;</code></pre>
+<p>Other EPD strings from some tests:</p>
+<pre><code>r1bqk2r/p1pp1ppp/2p2n2/8/1b2P3/2N5/PPP2PPP/R1BQKB1R w KQkq - bm Bd3; id &quot;Crafty Test Pos.28&quot;; c0 &quot;DB/GK Philadelphia 1996, Game 5, move 7W (Bd3)&quot;;
+8/3r4/pr1Pk1p1/8/7P/6P1/3R3K/5R2 w - - bm Re2+; id &quot;arasan21.16&quot;; c0 &quot;Aldiga (Brainfish 091016)-Knight-king (Komodo 10 64-bit), playchess.com 2016&quot;;
+3r1rk1/1p3pnp/p3pBp1/1qPpP3/1P1P2R1/P2Q3R/6PP/6K1 w - - bm Rxh7;c0 &quot;Mate in 7 moves&quot;;id &quot;BT2630-14&quot;;</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Ferdinand_Mosca">Chess Artist</a> by <a href="/Ferdinand_Mosca">Ferdinand Mosca</a></li>
+<li><a href="/Forsyth-Edwards_Notation">Forsyth-Edwards Notation</a> (FEN)</li>
+<li><a href="/Portable_Game_Notation">Portable Game Notation</a> (PGN)</li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/0-xpXHbfzh4/GoKIkW0SKoUJ">Help on PGN/ EPD-Format and its implementation wanted</a> by <a href="/Rudolf_Posch">Rudolf Posch</a>, <a href="/Computer_Chess_Forums">rgcc</a>, November 05, 1996 » <a href="/Portable_Game_Notation">PGN</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=20631">EPD examples: Bratko-Kopec test suite</a> by <a href="/Steven_Edwards">Steven J. Edwards</a>, <a href="/CCC">CCC</a>, June 15, 1998 » <a href="/Bratko-Kopec_Test">Bratko-Kopec Test</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=137052">EPD format</a> by <a href="/Stefan_Meyer-Kahlen">Stefan Meyer-Kahlen</a>, <a href="/CCC">CCC</a>, November 07, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=155201">Question about EPD</a> by <a href="/Aaron_Tay">Aaron Tay</a>, <a href="/CCC">CCC</a>, February 20, 2001</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=32254">XBoard and epd tournament</a> by <a href="/Vlad_Stamate">Vlad Stamate</a>, <a href="/CCC">CCC</a>, January 31, 2010 » <a href="/Chess_Engine_Communication_Protocol">Chess Engine Communication Protocol</a>, <a href="/Engine_Testing">Engine Testing</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38488">What's wrong with this EPD?</a> by <a href="/Jouni_Uski">Jouni Uski</a>, <a href="/CCC">CCC</a>, March 20, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57108">epd multipv</a> by J. Wesley Cleveland, <a href="/CCC">CCC</a>, July 28, 2015 » <a href="/Principal_Variation">Principal Variation</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59633">Test epd for Linux ?</a> by Jean Arthuin, <a href="/CCC">CCC</a>, March 25, 2016 » <a href="/Linux">Linux</a>, <a href="/Strategic_Test_Suite">STS</a>, <a href="/XBoard">XBoard</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64003">FEN - Flipper for Windows</a> by <a href="/Matthias_Gemuh">Matthias Gemuh</a>, <a href="/CCC">CCC</a>, May 17, 2017 » <a href="/Color_Flipping">Color Flipping</a>, <a href="/Forsyth-Edwards_Notation">FEN</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65881">how to create a labeled epd from pgn?</a> by <a href="/Erin_Dame">Erin Dame</a>, <a href="/CCC">CCC</a>, December 02, 2017 » Texel's Tuning Method, <a href="/Portable_Game_Notation">PGN</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70048">Fun challenge for best cool code</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, February 28, 2019</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70048&amp;start=3">Re: Fun challenge for best cool code</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, February 28, 2019</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=71135">Scid vs. PC - EPD Export feature</a> by <a href="/Steven_Atkinson">Steven Atkinson</a>, <a href="/CCC">CCC</a>, June 29, 2019 » <a href="/Scid_vs._PC">Scid vs. PC</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="http://www.thechessdrum.net/PGN_Reference.txt">Standard: Portable Game Notation Specification and Implementation Guide</a> 16.2: EPD by <a href="/Steven_Edwards">Steven Edwards</a></li>
+<li><a href="http://www.marochess.de/php3/epd2html.html">EPD to HTML/ASCII Diagram Converter</a> by <a href="http://www.marochess.de/biograph.html">Manfred Rosenboom</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a></li>
+<li><a href="http://40h.000webhostapp.com/">40H Chess Tools and Utilities</a> by Norm Pollock » <a href="/Portable_Game_Notation">Portable Game Notation</a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a></li>
+<li><a href="https://github.com/Mk-Chan/Chess-Tools/blob/master/epd2uci.py">Chess-Tools/epd2uci.py at master · Mk-Chan/Chess-Tools · GitHub</a> by <a href="/Manik_Charan">Manik Charan</a> » <a href="/Python">Python</a>, <a href="/Python-chess">python-chess</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Chess_Position">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.thechessdrum.net/PGN_Reference.txt">Standard: Portable Game Notation Specification and Implementation Guide</a> 16.2: EPD by <a href="/Steven_Edwards">Steven Edwards</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70048&amp;start=5">Re: Fun challenge for best cool code</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, February 28, 2019<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://www.stmintz.com/ccc/index.php?id=137052">EPD format</a> by <a href="/Stefan_Meyer-Kahlen">Stefan Meyer-Kahlen</a>, <a href="/CCC">CCC</a>, November 07, 2000<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.rebel.nl/epd2diag.htm">EPD2diag</a> hosted by <a href="/Ed_Schroder">Ed Schröder</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=58581">An important message to users of 40H utility tools</a> by Norm Pollock, <a href="/CCC">CCC</a>, December 13, 2015<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=59376&amp;start=1">Re: 40H chess downloads has moved</a> by Norm Pollock, <a href="/CCC">CCC</a>, March 12, 2016<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=62554">Moved "40H" tools/utilities to a new URL</a> byNorm Pollock, <a href="/CCC">CCC</a>, December 21, 2016<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Extended_Position_Description">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, Phhnguyen.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

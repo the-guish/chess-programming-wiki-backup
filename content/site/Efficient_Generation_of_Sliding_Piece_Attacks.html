@@ -1,0 +1,1037 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Efficient Generation of Sliding Piece Attacks - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Efficient Generation of Sliding Piece Attacks</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Conferences">Conferences</a> * <a href="/Workshop_Chess_and_Mathematics">Workshop Chess and Mathematics</a> * Efficient Generation of Sliding Piece Attacks</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><a href="https://en.wikipedia.org/wiki/Dresden_University_of_Technology" target="_blank" rel="noopener noreferrer"><img src="https://upload.wikimedia.org/wikipedia/commons/f/f9/Logo_TU_Dresden.svg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></a></span></p>
+<p><u>Fakultät Mathematik und Naturwissenschaften Institut für Numerische Mathematik</u></p>
+<!-- -->
+
+<p><strong>Workshop Chess and Mathematics</strong> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
+<p><a href="https://en.wikipedia.org/wiki/Dresden">Dresden</a>, November 21st and 22nd, 2008</p>
+<hr />
+<p><a href="/Gerd_Isenberg">Gerd Isenberg</a>, Hattingen</p>
+<p><span style="font-size: 130%; font-family: Tahoma,Geneva,sans-serif"><strong>Efficient generation of Moves and Controls of Sliding Pieces</strong></span></p>
+<p>Sa., 16:00, TU Dresden, WIL C207<br />
+Attack-Sets as Base for Bitboard Move-generation: Opposed to “None-sliding” pieces, Knight, King and Pawn, whose attacks are determined by its origin square only, sliding piece attacks like Rook-, Bishop- and Queen-attacks are dependend on other pieces as well, which may block the attacking ray in one particular ray-direction. In <a href="/Quiescence_Search">Quiescence Search</a> the performance of generating (winning) capture moves is crucial. Opposed to classical square-centric board-representations, which require loops over squares, bitboards permit more efficient algorithms in generating sliding attacks.</p>
+<hr />
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#bitboard-basics">Bitboard Basics</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#squares-and-bitindex">Squares and Bitindex</a></li>
+<li><a href="#empty-and-universe">Empty and Universe</a></li>
+<li><a href="#bitboard-board-definition">Bitboard Board-Definition</a></li>
+<li><a href="#setwise-operations">Setwise Operations</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#shifts">Shifts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#one-step-only">One Step Only</a></li>
+<li><a href="#pawn-attacks">Pawn Attacks</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#bit-twiddling-relying-on-the-twos-complement">Bit-Twiddling relying on the Two's Complement</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#ls-bit-isolation">LS-Bit-Isolation</a></li>
+<li><a href="#ls-bit-reset">LS-Bit-Reset</a></li>
+</ol>
+</details></li>
+<li><a href="#converting-bitboards-to-lists">Converting Bitboards to Lists</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#bitscan">BitScan</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#de-bruijn-multiplication">De Bruijn Multiplication</a></li>
+<li><a href="#bitscan-by-modulo">Bitscan by Modulo</a></li>
+</ol>
+</details></li>
+<li><a href="#kindergarten-multiplication">Kindergarten Multiplication</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#attack-sets-as-base-for-bitboard-move-generation">Attack-Sets as Base for Bitboard Move-generation</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#sliding-piece-attacks-on-the-otherwise-empty-board">Sliding piece Attacks on the otherwise empty board</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#ray-attacks">Ray Attacks</a></li>
+<li><a href="#line-attacks">Line Attacks</a></li>
+<li><a href="#piece-attacks">Piece attacks</a></li>
+</ol>
+</details></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#sliding-attacks-by-calculation">Sliding Attacks by Calculation</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#subtraction-and-reverse-subtraction-of-rooks-from-blockers">Subtraction and Reverse Subtraction of rooks from blockers</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#flood-fill-techniques-with-multiple-sliders">Flood Fill Techniques with multiple sliders</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#occluded-fill">Occluded Fill</a></li>
+<li><a href="#kogge-stone-parallel-prefix-algorithm">Kogge-Stone Parallel Prefix Algorithm</a></li>
+<li><a href="#ray-wise-attacks-in-one-direction">Ray-wise Attacks in one Direction</a></li>
+</ol>
+</details></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#lookup-techniques">Lookup Techniques</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#rook-attacks-on-the-first-rank---as-a-base-of-occupancy-lookup">Rook Attacks on the first Rank - as a base of occupancy lookup</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#one-byte-only">One Byte Only</a></li>
+<li><a href="#the-outer-squares">The Outer Squares</a></li>
+<li><a href="#other-ranks">Other ranks</a></li>
+</ol>
+</details></li>
+<li><a href="#rotated-bitboards">Rotated Bitboards</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#kindergarten-bitboards">Kindergarten Bitboards</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#ranks-and-diagonals">Ranks and Diagonals</a></li>
+<li><a href="#files">Files</a></li>
+</ol>
+</details></li>
+<li><a href="#congruent-modulo-bitboards">Congruent Modulo Bitboards</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#magic-bitboards">Magic Bitboards</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#how-it-works">How it works</a></li>
+<li><a href="#perfect-hashing">Perfect Hashing</a></li>
+<li><a href="#sample-code">Sample Code</a></li>
+</ol>
+</details></li>
+</ol>
+</details></li>
+<li><a href="#summary">Summary</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="bitboard-basics">Bitboard Basics</h2>
+<p>Bitboards are 64-bit integers and represent a <a href="https://en.wikipedia.org/wiki/Finite_set">finite set</a> of up to 64 elements - all the <a href="/Squares">squares</a> of a <a href="/Chessboard">chessboard</a> with specific boolean properties of those squares. For instance whether squares are empty or occupied, or occupied by a specific kind of piece - or which is the main topic of this talk, whether a square is controlled or attacked (defended) by a specific kind of piece, especially attacked by sliding pieces.</p>
+<h3 id="squares-and-bitindex">Squares and Bitindex</h3>
+<p><em>see main article <a href="/Square_Mapping_Considerations">Square Mapping Considerations</a></em></p>
+<p>There is a <a href="https://en.wikipedia.org/wiki/Bijection">bijective</a> one-to-one correspondence between bits of a bitboard and the squares of a board. There are 64! different mappings, but most commonly bits are enumerated "in order" along ranks or files (orthogonal). Some programs (<a href="/Rotated_Bitboards">Rotated Bitboards</a>) keep redundant mappings and also enumerate consecutive bits along the diagonals or anti-diagonals.</p>
+<p><em>If not stated otherwise, we further rely on Little-Endian Rank-File Mapping.</em> <span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="/assets/BBUniverse.jpg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span> with following relations:</p>
+<pre><code>squareIndex {0..63} = 8*rankIndex + fileIndex;
+rankIndex   {0..7}  = squareIndex div 8; // squareIndex &gt;&gt; 3;
+fileIndex   {0..7}  = squareIndex mod 8; // squareIndex &amp; 7;</code></pre>
+<p>Diagonals may be enumerated in various ways determined by the difference of rankIndex and fileIndex:</p>
+<pre><code>DiagonalIndex {0..15} = (rankIndex - fileIndex) &amp; 15;
+\f  0  1  2  3  4  5  6  7
+r_________________________
+7 | 7  6  5  4  3  2  1  0
+6 | 6  5  4  3  2  1  0 15
+5 | 5  4  3  2  1  0 15 14
+4 | 4  3  2  1  0 15 14 13
+3 | 3  2  1  0 15 14 13 12
+2 | 2  1  0 15 14 13 12 11
+1 | 1  0 15 14 13 12 11 10
+0 | 0 15 14 13 12 11 10  9</code></pre>
+<p>Anti-Diagonals may be enumerated in various ways determined by the sum of rankIndex and fileIndex:</p>
+<pre><code>AntiDiagonalIndex {0..15} = (rankIndex + fileIndex) ^ 7; // xor
+\f  0  1  2  3  4  5  6  7
+r_________________________
+7 | 0 15 14 13 12 11 10  9
+6 | 1  0 15 14 13 12 11 10
+5 | 2  1  0 15 14 13 12 11
+4 | 3  2  1  0 15 14 13 12
+3 | 4  3  2  1  0 15 14 13
+2 | 5  4  3  2  1  0 15 14
+1 | 6  5  4  3  2  1  0 15
+0 | 7  6  5  4  3  2  1  0</code></pre>
+<h3 id="empty-and-universe">Empty and Universe</h3>
+<ul>
+<li>The <a href="https://en.wikipedia.org/wiki/Empty_set">empty set</a> is represented by all bits zero.</li>
+<li>The <a href="https://en.wikipedia.org/wiki/Universal_set">universal set</a> contains all elements by setting all bits to binary one.</li>
+</ul>
+<p>The numerical values and set-wise representations of those sets, and how the appear as a board:</p>
+<pre><code>empty set E = 0      universal set U   = 2^64 - 1 or ~0
+ set-wise   = {}      set-wise         = {a1, b1, c1, d1, ....., e8, f8, g8, h8}
+                      hexadecimal      = 0xffffffffffffffff
+                      unsigned decimal = 18,446,744,073,709,551,615
+. . . . . . . .      1 1 1 1 1 1 1 1
+. . . . . . . .      1 1 1 1 1 1 1 1
+. . . . . . . .      1 1 1 1 1 1 1 1
+. . . . . . . .      1 1 1 1 1 1 1 1
+. . . . . . . .      1 1 1 1 1 1 1 1
+. . . . . . . .      1 1 1 1 1 1 1 1
+. . . . . . . .      1 1 1 1 1 1 1 1
+. . . . . . . .      1 1 1 1 1 1 1 1</code></pre>
+<h3 id="bitboard-board-definition">Bitboard Board-Definition</h3>
+<p><em>see main article <a href="/Bitboard_Board-Definition">Bitboard Board-Definition</a></em></p>
+<p>To represent the board we typically need one bitboard for each <a href="/Pieces">piece-type</a> and <a href="/Color">color</a> - likely encapsulated inside a class or structure, or as an array of bitboards as part of a <a href="/Chess_Position">position</a> object. A one-bit inside a bitboard implies the existence of a piece of this piece-type on a certain <a href="/Squares">square</a> - one to one associated by the bit-position.</p>
+<pre><code>               pieces
+   white                  black            occupied               empty
+. . . . . . . .     1 . 1 1 . 1 1 .     1 . 1 1 . 1 1 .     . 1 . . 1 . . 1
+. . . . . . . .     . . 1 . 1 1 1 1     . . 1 . 1 1 1 1     1 1 . 1 . . . .
+. . . . . . . .     1 . . . . . . .     1 . . . . . . .     . 1 1 1 1 1 1 1
+. . . . . . . .     . 1 . 1 1 . . .     . 1 . 1 1 . . .     1 . 1 . . 1 1 1
+. . . . . . . .     . . . . . . . .     . . . . . . . .     1 1 1 1 1 1 1 1
+. 1 1 . . . . .     . . . . . . . .     . 1 1 . . . . .     1 . . 1 1 1 1 1
+1 1 . 1 . 1 1 1     . . . . . . . .     1 1 . 1 . 1 1 1     . . 1 . 1 . . .
+1 1 1 1 1 . 1 .     . . . . . . . .     1 1 1 1 1 . 1 .     . . . . . 1 . 1</code></pre>
+<div class="chess-fen" data-fen="r1bq1rk1/2p1bppp/p7/1p1np3/8/1BP5/PP1P1PPP/RNBQR1K1"><code>r1bq1rk1/2p1bppp/p7/1p1np3/8/1BP5/PP1P1PPP/RNBQR1K1</code></div>
+
+<!-- -->
+
+<pre><code>               pawns                                  knights
+   white                  black            white                  black
+. . . . . . . .     . . . . . . . .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . 1 . . 1 1 1     . . . . . . . .     . . . . . . . .
+. . . . . . . .     1 . . . . . . .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . 1 . . 1 . . .     . . . . . . . .     . . . 1 . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .     . . . . . . . .
+. . 1 . . . . .     . . . . . . . .     . . . . . . . .     . . . . . . . .
+1 1 . 1 . 1 1 1     . . . . . . . .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .     . 1 . . . . . .     . . . . . . . .
+              bishops                                  rooks
+   white                   black           white                  black
+. . . . . . . .     . . 1 . . . . .     . . . . . . . .     1 . . . . 1 . .
+. . . . . . . .     . . . . 1 . . .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .     . . . . . . . .
+. 1 . . . . . .     . . . . . . . .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .     . . . . . . . .
+. . 1 . . . . .     . . . . . . . .     1 . . . 1 . . .     . . . . . . . .
+               queens                                  kings
+   white                   black           white                  black
+. . . . . . . .     . . . 1 . . . .     . . . . . . . .     . . . . . . 1 .
+. . . . . . . .     . . . . . . . .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .     . . . . . . . .
+. . . 1 . . . .     . . . . . . . .     . . . . . . 1 .     . . . . . . . .</code></pre>
+<h3 id="setwise-operations">Setwise Operations</h3>
+<p><em>see main article <a href="/General_Setwise_Operations">General Setwise Operations</a></em></p>
+<p><a href="https://en.wikipedia.org/wiki/Boolean_algebra">Boolean algebra</a> is an algebraic structure that captures essential properties of both set operations and logic operations. Specifically, it deals with the set operations of <strong>intersection</strong>, <strong>union</strong>, <strong>complement</strong> - and the bitwise boolean operations of <strong>AND, OR, NOT</strong>. Bitwise boolean operations on 64-bit words are in fact 64 parallel operations on each bit.</p>
+<p>Assume we have an attack set of a <a href="/Queen">queen</a>, and like to know whether the queen attacks opponent <a href="/Pieces">pieces</a> it may <a href="/Captures">capture</a>, we need to 'and' the queen-attacks with the set of opponent pieces.</p>
+<pre><code>queen attacks    &amp;  opponent pieces  =  attacked pieces
+. . . . . . . .     1 . . 1 1 . . 1     . . . . . . . .
+. . . 1 . . 1 .     1 . 1 1 1 1 1 .     . . . 1 . . 1 .
+. 1 . 1 . 1 . .     . 1 . . . . . 1     . 1 . . . . . .
+. . 1 1 1 . . .     . . . . . . . .     . . . . . . . .
+1 1 1 * 1 1 1 .  &amp;  . . . * . . 1 .  =  . . . * . . 1 .
+. . 1 1 1 . . .     . . . . . . . .     . . . . . . . .
+. . . 1 . 1 . .     . . . . . . . .     . . . . . . . .
+. . . 1 . . . .     . . . . . . . .     . . . . . . . .</code></pre>
+<h3 id="shifts">Shifts</h3>
+<p>Shift acts like a multiplication (shift left) or division (shift right) by a power of two. With orthogonal square mapping, shift with appropriate ray directions amounts of {1,7,8,9} are used to "move" the pieces one step in that direction, or to generate their square controls set-wise.</p>
+<p>In the 8*8 board centric world with one scalar square-coordinate 0..63, each of the max eight neighboring squares can be determined by adding an offset for each direction. For border squares one has to care about overflows and wraps from a-file to h-file or vice versa. Some conditional code is needed to avoid that. Such code is usually part of move generation for particular pieces.</p>
+<p>The mentioned square mapping implies following eight ray-directions as a compass-rose:</p>
+<pre><code>  northwest    north   northeast
+  noWe         nort         noEa
+          +7    +8    +9
+              \  |  /
+  west    -1 &lt;-  0 -&gt; +1    east
+              /  |  \
+          -9    -8    -7
+  soWe         sout         soEa
+  southwest    south   southeast</code></pre>
+<p>In the set-wise world of bitboards, where a square as member of a set is determined by an appropriate one-bit 2^square, the operation to apply such movements is shifting.</p>
+<p>One has to consider wraps, which requires one further intersection.</p>
+<p><em>To be aware of their scalar 64-bit origin, we use so far a type defined unsigned integer U64 in our <a href="/C">C</a> or <a href="/Cpp">C++</a> source snippets, the scalar 64-bit long in <a href="/Java">Java</a>. Feel free to define a distinct type or wrap U64 into classes for better abstraction and type-safety during compile time. The macro C64 will append a suffix to 64-bit constants as required by some compilers</em>:</p>
+<pre><code>typedef unsigned __int64 U64;    // for the old microsoft compilers
+typedef unsigned long long  U64; // supported by MSC 13.00+ and C99
+#define C64(constantU64) constantU64##ULL</code></pre>
+<h4 id="one-step-only">One Step Only</h4>
+<p>The advantage with bitboards is, that the shift applies to all set bits in parallel, e.g. with all pawns. Vertical shifts by +-8 don't need any under- or overflow conditions since bits simply fall out and disappear.</p>
+<pre><code>U64 soutOne (U64 b) {return  b &gt;&gt; 8;}
+U64 nortOne (U64 b) {return  b &lt;&lt; 8;}</code></pre>
+<p>Wraps from a-file to h-file or vice versa may be considered by only shifting subsets which may not wrap. Thus we can mask off the a- or h-file before or after a +-1,7,9 shift:</p>
+<pre><code>const U64 notAFile = 0xfefefefefefefefe; // ~0x0101010101010101
+const U64 notHFile = 0x7f7f7f7f7f7f7f7f; // ~0x8080808080808080</code></pre>
+<p>Post-shift masks, ...</p>
+<pre><code>U64 eastOne (U64 b) {return (b &lt;&lt; 1) &amp; notAFile;}
+U64 noEaOne (U64 b) {return (b &lt;&lt; 9) &amp; notAFile;}
+U64 soEaOne (U64 b) {return (b &gt;&gt; 7) &amp; notAFile;}
+U64 westOne (U64 b) {return (b &gt;&gt; 1) &amp; notHFile;}
+U64 soWeOne (U64 b) {return (b &gt;&gt; 9) &amp; notHFile;}
+U64 noWeOne (U64 b) {return (b &lt;&lt; 7) &amp; notHFile;}</code></pre>
+<h4 id="pawn-attacks">Pawn Attacks</h4>
+<p><em>see main article <a href="/Pawn_Attacks_%28Bitboards%29">Pawn Attacks (Bitboards)</a></em></p>
+<p>Pawn Attacks set-wise as application of One Step Only.</p>
+<pre><code> white pawns       white pawns &lt;&lt; 9  &amp;       notAFile     ==      noEaOne
+. . . . . . . .     . . . . . . . .      . 1 1 1 1 1 1 1      . . . . . . . .
+. . . . . . . .     . . . . . . . .      . 1 1 1 1 1 1 1      . . . . . . . .
+. . . . . . . .     . . . . . . . .      . 1 1 1 1 1 1 1      . . . . . . . .
+. . . . . . . .     . . . . . . . .      . 1 1 1 1 1 1 1      . . . . . . . .
+. . . . . . . .     h . . c . . . .      . 1 1 1 1 1 1 1      . . . c . . . .
+. . c . . . . .     . a b . d . f g      . 1 1 1 1 1 1 1      . a b . d . f g
+a b . d . f g h     . . . . . . . .      . 1 1 1 1 1 1 1      . . . . . . . .
+. . . . . . . .     / . . . . . . .      . 1 1 1 1 1 1 1      / . . . . . . .
+
+ white pawns       white pawns &lt;&lt; 7  &amp;       notHFile     ==     noWeOne
+. . . . . . . .     . . . . . . . .      1 1 1 1 1 1 1 .      . . . . . . . .
+. . . . . . . .     . . . . . . . .      1 1 1 1 1 1 1 .      . . . . . . . .
+. . . . . . . .     . . . . . . . .      1 1 1 1 1 1 1 .      . . . . . . . .
+. . . . . . . .     . . . . . . . .      1 1 1 1 1 1 1 .      . . . . . . . .
+. . . . . . . .     . c . . . . . .      1 1 1 1 1 1 1 .      . c . . . . . .
+. . c . . . . .     b . d . f g h .      1 1 1 1 1 1 1 .      b . d . f g h .
+a b . d . f g h     . . . . . . . a      1 1 1 1 1 1 1 .      . . . . . . . .
+. . . . . . . .     . . . . . . . \      1 1 1 1 1 1 1 .      . . . . . . . \
+
+ white pawns                                                 Union (1 == double attacks)
+. . . . . . . .                                               . . . . . . . .
+. . . . . . . .                                               . . . . . . . .
+. . . . . . . .                                               . . . . . . . .
+. . . . . . . .                                               . . . . . . . .
+. . . . . . . .                                               . c . c . . . .
+. . c . . . . .                                               b a 1 . 1 g 1 g
+a b . d . f g h                                               . . . . . . . .
+. . . . . . . .                                               . . . . . . . .</code></pre>
+<h3 id="bit-twiddling-relying-on-the-twos-complement">Bit-Twiddling relying on the Two's Complement</h3>
+<h4 id="ls-bit-isolation">LS-Bit-Isolation</h4>
+<p>Intersection with its Two's Complement isolates the least significant one bit:</p>
+<pre><code>With some arbitrary sample set:
+      x          &amp;        -x         =     LS1B_of_x
+. . . . . . . .     1 1 1 1 1 1 1 1     . . . . . . . .
+. . 1 . 1 . . .     1 1 . 1 . 1 1 1     . . . . . . . .
+. 1 . . . 1 . .     1 . 1 1 1 . 1 1     . . . . . . . .
+. . . . . . . .     1 1 1 1 1 1 1 1     . . . . . . . .
+. 1 . . . 1 . .  &amp;  1 . 1 1 1 . 1 1  =  . . . . . . . .
+. . 1 . 1 . . .     . . 1 1 . 1 1 1     . . 1 . . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .</code></pre>
+<h4 id="ls-bit-reset">LS-Bit-Reset</h4>
+<p>Intersection with its Ones' Decrement resets the least significant one bit:</p>
+<pre><code>      x          &amp;      (x-1)        =  x_with_reset_LS1B
+. . . . . . . .     . . . . . . . .     . . . . . . . .
+. . 1 . 1 . . .     . . 1 . 1 . . .     . . 1 . 1 . . .
+. 1 . . . 1 . .     . 1 . . . 1 . .     . 1 . . . 1 . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .
+. 1 . . . 1 . .  &amp;  . 1 . . . 1 . .  =  . 1 . . . 1 . .
+. . 1 . 1 . . .     1 1 . . 1 . . .     . . . . 1 . . .
+. . . . . . . .     1 1 1 1 1 1 1 1     . . . . . . . .
+. . . . . . . .     1 1 1 1 1 1 1 1     . . . . . . . .</code></pre>
+<p>... since two's complement (-x) and ones' decrement (x-1) are complement sets.</p>
+<h3 id="converting-bitboards-to-lists">Converting Bitboards to Lists</h3>
+<p><em>see main article <a href="/Bitboard_Serialization">Bitboard Serialization</a> and <a href="/Traversing_Subsets_of_a_Set">Traversing Subsets of a Set</a></em></p>
+<p>At some point bitboards require serialization - for instance if we need to process move-target sets to generate moves. Thanks to the Two's Complement, isolation and reset is cheap. To determine the bit- or square-index in the 0..63 range is tad more work ...</p>
+<pre><code>while ( x ) {
+   *list++  = log2OfPowerOfTwo (x &amp; -x); // determine bit index, also referred as BitScan
+   x &amp;= x-1; // reset LS1B
+}</code></pre>
+<p>or alternatively</p>
+<pre><code>while ( x ) {
+   *list++  = bitScanForward(x); // determine bit index of least significant one bit
+   x &amp;= x-1; // reset LS1B
+}</code></pre>
+<h3 id="bitscan">BitScan</h3>
+<p><em>see main article <a href="/BitScan">BitScan</a></em></p>
+<p>Despite recent processors have hardware instruction for bitScan, two hashing methods are mentioned to determine the base two logarithm of a single populated Bitboard. One hash-index is based on multiplication and shift, while the second one is determined by modulo. As we will see, both techniques also appear in hashing of multiple bits of a line.</p>
+<h4 id="de-bruijn-multiplication">De Bruijn Multiplication</h4>
+<p>The classical <strong>De Bruijn</strong> bitscan, as described by <a href="/Charles_Leiserson">Leiserson et al.</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>, to determine the <a href="/General_Setwise_Operations">LS1B</a> index by <a href="/Hash_Table">minimal perfect hashing</a>. So called <a href="https://en.wikipedia.org/wiki/De_Bruijn_sequence">De Bruijn sequences</a> were invented by the Dutch mathematician <a href="/Nicolaas_de_Bruijn">Nicolaas de Bruijn</a>. A 64-bit De Bruijn sequence contains 64-overlapping unique 6-bit sequences, thus a ring of 64+5 bits. The five hidden "trailing" zeros are in fact common with the five leading zeros. There are 2^26 = 67108864 odd sequences with 6 leading binary zeros and 2^26 even sequences with 5 leading binary zeros, which may be calculated from the odd ones by shifting left one.</p>
+<p>A multiplication with a power of two value (the isolated <a href="/General_Setwise_Operations">LS1B</a>) acts like a left shift by it's exponent. Thus, if we multiply a 64-bit De Bruijn sequence with the isolated <a href="/General_Setwise_Operations">LS1B</a>, we get a unique six bit sequence in the most significant bits. To obtain the bit-index we need to extract these upper six bits by shifting right the product, to lookup an array.</p>
+<p>See also <a href="/De_Bruijn_Sequence_Generator">generating your "private" De Bruijn Bitscan routine</a>.</p>
+<pre><code>const int index64[64] = {
+   63,  0, 58,  1, 59, 47, 53,  2,
+   60, 39, 48, 27, 54, 33, 42,  3,
+   61, 51, 37, 40, 49, 18, 28, 20,
+   55, 30, 34, 11, 43, 14, 22,  4,
+   62, 57, 46, 52, 38, 26, 32, 41,
+   50, 36, 17, 19, 29, 10, 13, 21,
+   56, 45, 25, 31, 35, 16,  9, 12,
+   44, 24, 15,  8, 23,  7,  6,  5
+};
+
+/**
+* bitScanForward
+* @author Charles E. Leiserson
+*         Harald Prokop
+*         Keith H. Randall
+* &quot;Using de Bruijn Sequences to Index a 1 in a Computer Word&quot;
+* @param bb bitboard to scan
+* @precondition bb != 0
+* @return index (0..63) of least significant one bit
+*/
+int bitScanForward(U64 bb) {
+   const U64 debruijn64 = C64(0x07EDD5E59A4E28C2);
+   return index64[((bb &amp; -bb) * debruijn64) &gt;&gt; 58];
+}</code></pre>
+<h4 id="bitscan-by-modulo">Bitscan by Modulo</h4>
+<p>Another idea is to apply a modulo operation of the isolated LS1B by the prime number 67 <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a><a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>. The remainder 0..66 can be used to <a href="/Hash_Table">perfectly hash</a> the bit-index table. Three gaps are 0, 17, and 34, so the mod 67 can make a branchless trailing zero count.</p>
+<pre><code>const int lookup67[67+1] = {
+   64,  0,  1, 39,  2, 15, 40, 23,
+    3, 12, 16, 59, 41, 19, 24, 54,
+    4, -1, 13, 10, 17, 62, 60, 28,
+   42, 30, 20, 51, 25, 44, 55, 47,
+    5, 32, -1, 38, 14, 22, 11, 58,
+   18, 53, 63,  9, 61, 27, 29, 50,
+   43, 46, 31, 37, 21, 57, 52,  8,
+   26, 49, 45, 36, 56,  7, 48, 35,
+    6, 34, 33, -1
+};
+
+/**
+* trailingZeroCount
+* @param bb bitboard to scan
+* @return index (0..63) of least significant one bit, 64 if bb is zero
+*/
+int trailingZeroCount(U64 bb) {
+   return lookup67[(bb &amp; -bb) % 67];
+}</code></pre>
+<p>Since div/mod is an expensive instruction, a modulo by constant is likely replaced by reciprocal fixed point multiplication to get the quotient and a second multiplication and difference to get the remainder. Compared with De Bruijn multiplication it is still to slow.</p>
+<h3 id="kindergarten-multiplication">Kindergarten Multiplication</h3>
+<p><em>see main article <a href="/Flipping_Mirroring_and_Rotating">Flipping Mirroring and Rotating</a></em></p>
+<p>Multiplication with <strong>disjoint</strong> intermediate results was nominated as Kindergarten Multiplication.</p>
+<p>Multiplying the masked A-file with the main-diagonal, maps the file-bits to the 8th rank, similar to a flip about the anti-diagonal A8-H1. Shifting down to the 1st rank, leaves the bits like a 90-degree anti clockwise rotation.</p>
+<pre><code>masked bits                             mapped to 8th rank
+bits on A-file   *  main-diagonal    =  with garbage     -&gt; 1st rank
+A . . . . . . .     . . . . . . . 1     A B C D E F G H     . . . . . . . .
+B . . . . . . .     . . . . . . 1 .     B C D E F G H .     . . . . . . . .
+C . . . . . . .     . . . . . 1 . .     C D E F G H . .     . . . . . . . .
+D . . . . . . .     . . . . 1 . . .     D E F G H . . .  &gt;&gt; . . . . . . . .
+E . . . . . . .  *  . . . 1 . . . .  =  E F G H . . . .  56 . . . . . . . .
+F . . . . . . .     . . 1 . . . . .     F G H . . . . .     . . . . . . . .
+G . . . . . . .     . 1 . . . . . .     G H . . . . . .     . . . . . . . .
+H . . . . . . .     1 . . . . . . .     H . . . . . . .     A B C D E F G H</code></pre>
+<p>That is straight forward multiplication of a masked diagonal or anti-diagonal with the A-file. To mask the garbage off, we further shift down by 7 ranks.</p>
+<pre><code>masked diagonal  *  A-file              mapped
+to 8th rank      -&gt;  1st rank
+. . . . . . . H     1 . . . . . . .     A B C D E F G H     . . . . . . . .
+. . . . . . G .     1 . . . . . . .     A B C D E F G .     . . . . . . . .
+. . . . . F . .     1 . . . . . . .     A B C D E F . .  &gt;&gt; . . . . . . . .
+. . . . E . . .     1 . . . . . . .     A B C D E . . .  56 . . . . . . . .
+. . . D . . . .  *  1 . . . . . . .  =  A B C D . . . .     . . . . . . . .
+. . C . . . . .     1 . . . . . . .     A B C . . . . .     . . . . . . . .
+. B . . . . . .     1 . . . . . . .     A B . . . . . .     . . . . . . . .
+A . . . . . . .     1 . . . . . . .     A . . . . . . .     A B C D E F G H</code></pre>
+<hr />
+<h2 id="attack-sets-as-base-for-bitboard-move-generation">Attack-Sets as Base for Bitboard Move-generation</h2>
+<p>Opposed to "None-sliding" pieces, Knight, King and Pawn, whose <strong>controls</strong> or <strong>attacks</strong> are determined by its origin <strong>square</strong> only, sliding piece attacks like Rook-, Bishop- and Queen-attacks are dependent on other pieces as well, which may <strong>block</strong> the attacking ray in one particular ray-direction.</p>
+<p>In Quiescence Search the performance of generating (winning) capture moves is crucial. Opposed to classical square-centric board-representations, which require loops over squares, bitboards permit more efficient algorithms in generating sliding attacks.</p>
+<h3 id="sliding-piece-attacks-on-the-otherwise-empty-board">Sliding piece Attacks on the otherwise empty board</h3>
+<p><em>see main article <a href="/On_an_empty_Board">On an empty Board</a></em></p>
+<p>Attacks of single sliding pieces on the otherwise empty board or their disjoint subsets on lines or rays are that simple than none sliding pieces. We simply use pre-calculated tables for each piece-type, line or ray, indexed by square-index.</p>
+<h4 id="ray-attacks">Ray Attacks</h4>
+<p>The mentioned square mapping implies following eight ray-directions as a compass-rose:</p>
+<pre><code>  northwest    north   northeast
+  noWe         nort         noEa
+          +7    +8    +9
+              \  |  /
+  west    -1 &lt;-  0 -&gt; +1    east
+              /  |  \
+          -9    -8    -7
+  soWe         sout         soEa
+  southwest    south   southeast</code></pre>
+<p>Positive Rays:</p>
+<pre><code>East (+1)           Nort (+8)            NoEa (+9)           NoWe (+7)
+. . . . . . . .     . . . 1 . . . .      . . . . . . . 1     . . . . . . . .
+. . . . . . . .     . . . 1 . . . .      . . . . . . 1 .     1 . . . . . . .
+. . . . . . . .     . . . 1 . . . .      . . . . . 1 . .     . 1 . . . . . .
+. . . . . . . .     . . . 1 . . . .      . . . . 1 . . .     . . 1 . . . . .
+. . . R 1 1 1 1     . . . R . . . .      . . . B . . . .     . . . B . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .     . . . . . . . .</code></pre>
+<p>Negative Rays:</p>
+<pre><code>West (-1)           Sout (-8)            SoWe (-9)           SoEa (-7)
+. . . . . . . .     . . . . . . . .      . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .     . . . . . . . .
+1 1 1 R . . . .     . . . R . . . .      . . . B . . . .     . . . B . . . .
+. . . . . . . .     . . . 1 . . . .      . . 1 . . . . .     . . . . 1 . . .
+. . . . . . . .     . . . 1 . . . .      . 1 . . . . . .     . . . . . 1 . .
+. . . . . . . .     . . . 1 . . . .      1 . . . . . . .     . . . . . . 1 .</code></pre>
+<h4 id="line-attacks">Line Attacks</h4>
+<pre><code>Rank                File                 Diagonal            Anti-Diagonal
+. . . . . . . .     . . . 1 . . . .      . . . . . . . 1     . . . . . . . .
+. . . . . . . .     . . . 1 . . . .      . . . . . . 1 .     1 . . . . . . .
+. . . . . . . .     . . . 1 . . . .      . . . . . 1 . .     . 1 . . . . . .
+. . . . . . . .     . . . 1 . . . .      . . . . 1 . . .     . . 1 . . . . .
+1 1 1 R 1 1 1 1     . . . R . . . .      . . . B . . . .     . . . B . . . .
+. . . . . . . .     . . . 1 . . . .      . . 1 . . . . .     . . . . 1 . . .
+. . . . . . . .     . . . 1 . . . .      . 1 . . . . . .     . . . . . 1 . .
+. . . . . . . .     . . . 1 . . . .      1 . . . . . . .     . . . . . . 1 .</code></pre>
+<h4 id="piece-attacks">Piece attacks</h4>
+<p>Piece attacks are the union of either orthogonal or diagonal lines. Queen attacks are the union of rook- and bishop attacks.</p>
+<pre><code>                                   Queen
+                               . . . 1 . . . 1
+                               1 . . 1 . . 1 .
+                               . 1 . 1 . 1 . .
+               Rook            . . 1 1 1 . . .         Bishop
+           . . . 1 . . . .     1 1 1 Q 1 1 1 1     . . . . . . . 1
+           . . . 1 . . . .     . . 1 1 1 . . .     1 . . . . . 1 .
+           . . . 1 . . . .     . 1 . 1 . 1 . .     . 1 . . . 1 . .
+           . . . 1 . . . .     1 . . 1 . . 1 .     . . 1 . 1 . . .
+           1 1 1 R 1 1 1 1                         . . . B . . . .
+           . . . 1 . . . .                         . . 1 . 1 . . .
+           . . . 1 . . . .                         . 1 . . . 1 . .
+           . . . 1 . . . .                         1 . . . . . 1 .</code></pre>
+<h2 id="sliding-attacks-by-calculation">Sliding Attacks by Calculation</h2>
+<p>For one single sliding piece, one may consider subtraction from the set of blockers, to determine attack sets. Zeros, that are empty squares, between the nearest blocker and the sliding pieces became "ones", the nearest blocker becomes zero. In fact all flipped bits are the attacked squares in positive ray direction.</p>
+<pre><code> occupied  11000101
+ slider    00000100 subset of occupied
+ o-s       11000001 resets the slider in occupied
+ o-2s      10111101 borrows the one from nearest blocker
+ occupied  11000101
+ o^(o-2s)  01111000 all flipped bits are the attacks in most significant bit direction</code></pre>
+<p>To restrict the operations to a certain line, rank file or diagonal, a leading intersection with the line mask is necessary, same for the final result.</p>
+<h3 id="subtraction-and-reverse-subtraction-of-rooks-from-blockers">Subtraction and Reverse Subtraction of rooks from blockers</h3>
+<p><em>see main article <a href="/Subtracting_a_Rook_from_a_Blocking_Piece">Subtracting a Rook from a Blocking Piece</a> and <a href="/Hyperbola_Quintessence">Hyperbola Quintessence</a></em></p>
+<p>With s (sliding piece) single element set and subset of o (occupied):</p>
+<pre><code>positiveRayAttacks = o  ^ (o - 2s);</code></pre>
+<p>The first subtraction resets the siding-piece-bit in occupied. The second subtraction borrows a one from nearest blocker (if any), and sets all intermediate zero bits (empty squares). The exclusive or gains all flipped bits, which turnes out to be the rook attacks in "positive" attacking direction.</p>
+<p>For negative directions one needs "reverse" arithmetic (2 + 2 == 1).</p>
+<pre><code>with o&#39; = reverse (o)
+and  s&#39; = reverse (s)
+negativeRayAttacks = reverse (o&#39; ^ (o&#39; - 2s&#39;));</code></pre>
+<p>Since bit-reversal or any mirroring or flipping is distributive over xor:</p>
+<pre><code>reverse(a ^ b) == reverse (a) ^ reverse(b)</code></pre>
+<p>One can reformulate negative rays</p>
+<pre><code>negativeRayAttacks = o  ^  reverse (o&#39; - 2s&#39;);</code></pre>
+<p>which leads to a simplification in the line-attacks, since positiveRayAttacks and negativeRayAttacks are disjoint sets for one particular sliding piece and may be combined by "xor", and o ^ o == 0.</p>
+<pre><code>lineAttacks = positiveRayAttacks ^ negativeRayAttacks;
+lineAttacks =         o ^ (o-2s) ^ reverse( o&#39;-2s&#39;) ^ o
+lineAttacks =             (o-2s) ^ reverse( o&#39;-2s&#39;)</code></pre>
+<p>Diagonal or vertical line occupancies need leading and trailing intersection with line-masks. Thanks to the little-endian versus big-endian war, recent processors have appropriate instructions to swap bytes (ranks) inside a 64-bit word for the reverse arithmetic, note that masked files or diagonals have only max one bit per rank:</p>
+<pre><code>U64 diagonalAttacks(U64 occ, int sqOfSlider) {
+   U64 forward, reverse, slider, lineMask;
+
+   lineMask = diagonalMaskEx[sqOfSlider]; // excludes square of slider
+   slider   = singleBitboard[sqOfSlider]; // single bit 1 &lt;&lt; sq, 2^sq
+
+   forward  = occ &amp; lineMask; // also performs the first subtraction by clearing the s in o
+   reverse  = byteswap( forward ); // o&#39;-s&#39;
+   forward -=         ( slider  ); // o -2s
+   reverse -= byteswap( slider  ); // o&#39;-2s&#39;
+   forward ^= byteswap( reverse );
+   return forward &amp; lineMask;      // mask the line again
+}</code></pre>
+<h3 id="flood-fill-techniques-with-multiple-sliders">Flood Fill Techniques with multiple sliders</h3>
+<p>Fill approaches determine attacks set-wise for multiple pieces (i.e. rooks and queen(s)) in one particular ray-direction. The flood stops on each particular ray (either 8 ranks or files, or 15 diagonals or anti-diagonals), if a square is not empty.</p>
+<h4 id="occluded-fill">Occluded Fill</h4>
+<p><em>see main article <a href="/Dumb7Fill">Dumb7Fill</a></em> For sliding piece-attacks one direction step can be repeated seven times, after each shift, intersecting with empty squares accumulating all intermediate results to a union set, which results in an occluded fill set, including the sliding piece but excluding the blocker.</p>
+<pre><code>U64 eastOccluded (U64 rooks, U64 empty) {
+   empty  = empty &amp; notAFile; // make A-File all occupied, to consider H-A-wraps after shift
+   rooks |= empty &amp; (rooks &lt;&lt; 1); // 1. fill
+   rooks |= empty &amp; (rooks &lt;&lt; 1); // 2. fill
+   rooks |= empty &amp; (rooks &lt;&lt; 1); // 3. fill
+   rooks |= empty &amp; (rooks &lt;&lt; 1); // 4. fill
+   rooks |= empty &amp; (rooks &lt;&lt; 1); // 5. fill
+   rooks |= empty &amp; (rooks &lt;&lt; 1); // 6. fill
+   rooks |= empty &amp; (rooks &lt;&lt; 1); // 7. fill // not necessary for further attack generation
+   return rooks;
+}</code></pre>
+<h4 id="kogge-stone-parallel-prefix-algorithm">Kogge-Stone Parallel Prefix Algorithm</h4>
+<p><em>see main article <a href="/Kogge-Stone_Algorithm">Kogge-Stone Algorithm</a> and <a href="/Parallel_Prefix_Algorithms">Parallel Prefix Algorithms</a></em> Occluded fill might be done more efficiently parallel prefix wise by Kogge-Stone Algorithms:</p>
+<pre><code>U64 eastOccluded(U64 rooks, U64 empty) {
+   empty  = empty &amp; notAFile; // make A-File all occupied, to consider H-A-wraps after shift
+   rooks |= empty &amp; (rooks &lt;&lt; 1);
+   empty  = empty &amp; (empty &lt;&lt; 1);
+   rooks |= empty &amp; (rooks &lt;&lt; 2);
+   empty  = empty &amp; (empty &lt;&lt; 2);
+   rooks |= empty &amp; (rooks &lt;&lt; 4);
+   return rooks;
+}</code></pre>
+<p>The Kogge-Stone <a href="/Parallel_Prefix_Algorithms">parallel prefix algorithm</a> for sliding piece attack generation was first introduced by <a href="/Steffan_Westcott">Steffan Westcott</a> in <a href="/CCC">CCC</a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>. It is a parallel prefix approach of a occluded <a href="/Dumb7Fill">dumb7</a> <a href="https://en.wikipedia.org/wiki/Flood_fill">flood-fill</a>, propagating sliding piece attacks in software like carries of a kogge-stone <a href="https://en.wikipedia.org/wiki/Carry_look-ahead_adder">hardware adder</a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>. We need to pass sliders as generator set and the set of empty squares as propagator set. For appropriate attacks we need to shift <a href="/General_Setwise_Operations">one step</a> further, considering wraps.</p>
+<h4 id="ray-wise-attacks-in-one-direction">Ray-wise Attacks in one Direction</h4>
+<p>For square attack sets, occluded fill sets need to be shifted one more step. Thus, the occluded fill needs one fill cycle less.</p>
+<pre><code>U64 eastAttacks (U64 rooks, U64 empty) {
+   empty  = empty &amp; notAFile; // make A-File all occupied, to consider H-A-wraps after shift
+   rooks |= empty &amp; (rooks &lt;&lt; 1); // 1. fill
+   rooks |= empty &amp; (rooks &lt;&lt; 1); // 2. fill
+   rooks |= empty &amp; (rooks &lt;&lt; 1); // 3. fill
+   rooks |= empty &amp; (rooks &lt;&lt; 1); // 4. fill
+   rooks |= empty &amp; (rooks &lt;&lt; 1); // 5. fill
+   rooks |= empty &amp; (rooks &lt;&lt; 1); // 6. fill
+   return notAFile&amp; (rooks &lt;&lt; 1);
+}</code></pre>
+<p>Because fill-approaches keep distinct ray-directions, there is still a unique source-target square relation. Fill approaches with pure calculation are Cpu-intensive, but require no memory reads. They are a domain of SIMD instruction sets like SSE2 with sixteen 128-bit registers, to process two or four distinct sets (e.g. white and black, sliders and king as queen like meta-slider) per register and several ray-directions simultaneously - e.g. three 128-bit instructions per cycle for core2duo.</p>
+<p>Keeping distinct ray-directions has some advantages, for instance in determining pinned pieces or discovered checks. Fill-Algorithms are great to feed in line-wise attack sets of single sliders, to determine a progressive mobility on the orthogonal rays, i.e. move targets in two moves, or trajectories against important squares or areas.</p>
+<pre><code> . . . . . . . .
+ . . . . \ . . .
+ . . . \ . 1 . .
+ . . \ . 1 . \ .
+ . \ . 1 . \ . .
+ . . 1 . \ . . .
+ . B . \ . . . .
+ . . . . . . . .</code></pre>
+<hr />
+<h2 id="lookup-techniques">Lookup Techniques</h2>
+<p>Lookup Techniques are used to hash pre-calculated attack-sets of a single pieces by square-index and occupancy of the affected lines.</p>
+<h3 id="rook-attacks-on-the-first-rank---as-a-base-of-occupancy-lookup">Rook Attacks on the first Rank - as a base of occupancy lookup</h3>
+<p><em>see main article <a href="/First_Rank_Attacks">First Rank Attacks</a></em> The first <a href="/Ranks">rank</a> is the ideal line to introduce occupancy lookups.</p>
+<h4 id="one-byte-only">One Byte Only</h4>
+<p>Assume we (temporary) reduce the chess-board to one <a href="/Ranks">rank</a>. Occupancy bitboard is one <a href="/Byte">byte</a> with up to 256 states. A <a href="/Rook">rook</a> attack-set from one of the eight <a href="/Squares">squares</a> (<a href="/Files">file</a>) on this single rank is also only one byte. Thus we can construct an array of bytes[256][8], indexed by all 256 occupancies and 8 files, to lookup the pre-calculated rank-attack bytes.</p>
+<table>
+<tbody>
+<tr>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="/assets/FirstRank.JPG" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+</tr>
+<tr>
+<td><p>Occupancy of the first rank = 01001010B</p></td>
+</tr>
+<tr>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="/assets/FirstRankA.JPG" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+</tr>
+<tr>
+<td><p>Rank-attacks ::= f (e-file, Occupancy) = 01110110B</p></td>
+</tr>
+</tbody>
+</table>
+
+<pre><code>BYTE arrFirstRankAttacks256x8[256][8]; // 2048 Bytes = 2KByte
+
+firstRankAttack = arrFirstRankAttacks256x8[rankOccupancy][squareOnRank];</code></pre>
+<h4 id="the-outer-squares">The Outer Squares</h4>
+<p>If we think about to the occupancy lookup, we may recognize that the outer squares don't matter. There are no more squares behind. The outer squares are either attacked or not - independent from their occupancy state. We can use the <strong>six inner bits</strong> only as lookup-index with two additional cheap instruction. This reduces the lookup-table by factor of <strong>four</strong>.</p>
+<pre><code>BYTE arrFirstRankAttacks64x8[64][8]; // 512 Bytes = 1/2KByte
+
+firstRankAttack = arrFirstRankAttacks64x8[(rankOccupancy &gt;&gt; 1)&amp; 63][squareOnRank];</code></pre>
+<h4 id="other-ranks">Other ranks</h4>
+<p>It is simple to shift other ranks to the first rank, and to shift back the attack set.</p>
+<h3 id="rotated-bitboards">Rotated Bitboards</h3>
+<p><em>see main article <a href="/Rotated_Bitboards">Rotated Bitboards</a></em></p>
+<p><strong>Rotated Bitboards</strong> are a bitboard move generation technique invented independently by <a href="/Robert_Hyatt">Robert Hyatt</a> <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> and by <a href="/Ernst_A._Heinz">Ernst A. Heinz</a> <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a> with <a href="/Peter_Gillgasch">Peter Gillgasch</a> from the <a href="/DarkThought">DarkThought</a> team. This variation uses rotated copies of the occupancy in order to place bits along a <a href="/Files">file</a> or <a href="/Diagonals">diagonal</a> in adjacent bits. Because of this, these bits can be easily extracted to obtain an occupancy map for a <a href="/Ranks">rank</a>, file, or diagonal. This is used, along with the square of a slider, to lookup a bitboard containing attacks in an array.</p>
+<p>Rotated bitboards are fast to extract the occupancy index and require 32 KByte for each line direction (rank, file, diagonal and anti-diagonal) for the lookup-tables, considering the inner six bits. However, there is more work in updating four occupied bitboards while making or unmaking moves, instead of one. The fast 64-bit multiplication of recent x64 processors (~4-cycles) with a throughput of up to one cycle, makes on the fly calculations of occupied states on files and diagonals more attractive.</p>
+<h3 id="kindergarten-bitboards">Kindergarten Bitboards</h3>
+<p><em>see main article <a href="/Kindergarten_Bitboards">Kindergarten Bitboards</a></em> Kindergarten Bitboards perform a fill-multiplication and uses a shared lookup table for ranks and diagonals.</p>
+<h4 id="ranks-and-diagonals">Ranks and Diagonals</h4>
+<p>Ranks and diagonals - that is their appropriate line-mask by square-index - are first intersected by the occupancy of the whole board. Doesn't matter whether the slider itself is cleared or not - it is redundant anyway, considered by the pre-calculated lookup-table. Since there is only up to one bit per file, the <a href="/General_Setwise_Operations">north-fill multiplication</a> by the A-file maps the diagonal to the 8th rank. Or - since we only need the inner six bits, we combine the required shift left one by multiplying with the B-file. Shifting right the product by 58 (64-6) leaves the six-bit occupancy-index in the 0..63 range.</p>
+<p>For instance the diagonal-attacks of a bishop on d4. 'A'-'H' represent the masked occupied bits along this diagonal, which are either zero or one. We need 'B'-'G' as six bit number:</p>
+<pre><code>masked line      *  B-File           =  B-G upper six       occupancy 6 bit
+. . . . . . . H     . 1 . . . . . .     . A[B C . E F G]    . . . . . . . .
+. . . . . . G .     . 1 . . . . . .     . A B C . E F G     . . . . . . . .
+. . . . . F . .     . 1 . . . . . .     . A B C . E F .     . . . . . . . .
+. . . . E . . .     . 1 . . . . . .     . A B C . E . .  &gt;&gt; . . . . . . . .
+. . . . . . . .  *  . 1 . . . . . .  =  . A B C . . . .  58 . . . . . . . .
+. . C . . . . .     . 1 . . . . . .     . A B C . . . .     . . . . . . . .
+. B . . . . . .     . 1 . . . . . .     . A B . . . . .     . . . . . . . .
+A . . . . . . .     . 1 . . . . . .     . A . . . . . .    [B C . E F G]. .</code></pre>
+<p>The pre-calculated lookup-table contains the attacks of the first rank - but eight copies in each rank or byte. It is indexed by the six bit occupied-state ('B'-'G') and the file of the slider's square. It needs to be intersected with the same line-mask as formerly the occupancy - to map the first rank attack bits to the appropriate line - that's all. Appropriate pre-calculated attack bits are represented by 'a'-'h':</p>
+<pre><code>fillUpAttacks[file == 3][B C . E F G]:
+
+8 copies of rank      the attack set
+attacks &amp; l-mask  -&gt;  of this line
+a b c . e f g h       . . . . . . . h
+a b c . e f g h       . . . . . . g .
+a b c . e f g h       . . . . . f . .
+a b c . e f g h       . . . . e . . .
+a b c . e f g h       . . . . . . . .
+a b c . e f g h       . . c . . . . .
+a b c . e f g h       . b . . . . . .
+a b c . e f g h       a . . . . . . .</code></pre>
+<p>Code spippets.</p>
+<pre><code>U64 fillUpAttacks[8][64];  // 4 KByte pre-calculated Lookup table
+const U64 bFile = C64(0x0202020202020202);
+
+U64 diagonalAttacks(U64 occ, enumSquare sq) {
+   occ = (diagonalMaskEx[sq] &amp; occ) * bFile &gt;&gt; 58;
+   return diagonalMaskEx[sq] &amp; fillUpAttacks[sq&amp;7][occ];
+}
+
+U64 antiDiagAttacks(U64 occ, enumSquare sq) {
+   occ = (antidiagMaskEx[sq] &amp; occ) * bFile &gt;&gt; 58;
+   return antidiagMaskEx[sq] &amp; fillUpAttacks[sq&amp;7][occ];
+}
+
+U64 rankAttacks(U64 occ, enumSquare sq) {
+   occ = (rankMaskEx[sq] &amp; occ) * bFile &gt;&gt; 58;
+   return rankMaskEx[sq] &amp; fillUpAttacks[sq&amp;7][occ];
+}</code></pre>
+<h4 id="files">Files</h4>
+<p>File attacks need tad more work:</p>
+<pre><code>U64 aFileAttacks [8][64];  // 4 KByte
+const U64 aFile   = C64(0x0101010101010101);
+const U64 diac2h7 = C64(0x0080402010080400);
+
+U64 fileAttacks(U64 occ, enumSquare sq) {
+   occ = aFile  &amp; (occ &gt;&gt; (sq&amp;7));
+   occ = (diac2h7 *  occ ) &gt;&gt; 58;
+   return aFileAttacksx[sq&gt;&gt;3][occ] &lt;&lt; (sq&amp;7);
+}</code></pre>
+<h3 id="congruent-modulo-bitboards">Congruent Modulo Bitboards</h3>
+<p><em>see main article <a href="/Congruent_Modulo_Bitboards">Congruent Modulo Bitboards</a></em></p>
+<p><strong>Congruent Modulo Bitboards</strong> was introduced by <a href="/Trevor_Fenner">Trevor Fenner</a> and <a href="/Mark_Levene">Mark Levene</a> in the <a href="/ICGA_Journal">ICGA Journal</a> Vol. 31, No. 1 in 2008 <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a>. While their <a href="/Hash_Table">Perfect Hashing</a> approach provides great mathematical insights in <a href="https://en.wikipedia.org/wiki/Modulo">Congruent Modulo</a> arithmetic, their final conclusion in comparison with <a href="/Hashing_Dictionaries">Hashing Dictionaries</a>, <a href="/Rotated_Bitboards">Rotated Bitboards</a> and <a href="/Magic_Bitboards">Magic Bitboards</a> was criticized by the obvious comparison with <a href="/Kindergarten_Bitboards">Kindergarten Bitboards</a> <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a>.</p>
+<p>Fenner and Levene use masked line modulo 514 for the diagonals, modulo 257 for the anti-diagonals and mod 258 for files, to calculate the occupied index, but they didn't consider the <a href="/First_Rank_Attacks">inner six bits</a> for a denser lookup. Of course, tables could made denser by storing indices, but that would require a second indirection. While Fenner and Levene used a <a href="https://en.wikipedia.org/wiki/MATLAB">Matlab</a> 32-bit implementation to conclude their approach might be competitive, this is how it may be implemented in <a href="/C">C</a> by looking up pre-calculated attack-bitboards:</p>
+<pre><code>U64 arrCmodDiaAttacks [514][64];  // 257 K
+U64 arrCmodAntiAttacks[257][64];
+U64 arrCmodFileAttacks[258][64];
+
+U64 diagonalAttacks(U64 occ, enumSquare sq) {
+   occ = (diagonalMask[sq] &amp; occ) % 514;
+   return arrCmodDiaAttacks[occ][sq];
+}
+
+U64 antiDiagAttacks(U64 occ, enumSquare sq) {
+   occ = (antiDiagMask[sq] &amp; occ) % 257;
+   return arrCmodAntiAttacks[occ][sq];
+}
+
+U64 fileAttacks(U64 occ, enumSquare sq) {
+   occ = (fileMask[sq] &amp; occ) % 258;
+   return arrCmodFileAttacks[occ][sq];
+}</code></pre>
+<h3 id="magic-bitboards">Magic Bitboards</h3>
+<p><em>see main article <a href="/Magic_Bitboards">Magic Bitboards</a></em></p>
+<p>Magic bitboards uses a multiply-right-shift <a href="/Hash_Table">perfect hashing</a> algorithm to index a attack bitboard database - which leaves both line-attacks of a bishop or rook in one run.</p>
+<p>The magic bitboard approach was introduced by <a href="/Lasse_Hansen">Lasse Hansen</a> in the <a href="/Computer_Chess_Forums">Winboard programming forum</a>. He had the idea to hash the up to twelve relevant occupied bits of <strong>both directions</strong> of a rook- or bishop movement simultaneously <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a>.</p>
+<p><a href="/Pradu_Kannan">Pradu Kannan's</a> improvements to Lasse Hansen's initial approach was to introduce a <a href="/Java">Java</a>-like, two-dimensional array with individual size for each square and all it's relevant occupancies <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a>. Big savings in table-size - since many squares on either orthogonals or diagonals require less bits than others, especially considering the <a href="/First_Rank_Attacks">inner six bits</a>. While center squares are more dense for rooks, it is the opposite for bishops <a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a>.</p>
+<h4 id="how-it-works">How it works</h4>
+<p>A magic move-bitboard generation technique consists of four key steps:</p>
+<ol type="1">
+<li>Mask the relevant occupancy bits to form a key. For example if you had a rook on a1, the relevant occupancy bits will be from a2-a7 and b1-g1.</li>
+<li>Multiply the key by a "magic number" to obtain an index mapping. This magic number can be generated by brute-force trial and error quite easily although it isn't 100% certain that the magic number is the best possible (see step 3).</li>
+<li>Right shift the index mapping by 64-n bits to create an index, where n is the number of bits in the index. A better magic number will have less bits required in the index.</li>
+<li>Use the index to reference a preinitialized move database.</li>
+</ol>
+<!-- -->
+
+<pre><code>any consecutive
+relevant occupancy                      combination of
+bishop b1, 5 bits                       the masked bits
+. . . . . . . .     . . . . . . . .     . . .[C D E F G]
+. . . . . . . .     . 1 . . . . . .     . . . . . . . .
+. . . . . . G .     . 1 . . . . . .     . . . . . . . .
+. . . . . F . .     . 1 . . . . . .     . . . . . . . .
+. . . . E . . .  *  . 1 . . . . . .  =  . .garbadge . .    &gt;&gt; (64- 5)
+. . . D . . . .     . 1 . . . . . .     . . . . . . . .
+. . C . . . . .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .
+
+any consecutive
+relevant occupancy                      combination of
+bishop d4, 9 bits                       the masked bits
+. . . . . . . .     . . . . . . . .     2 4 5 B C E F G]
+. . . . . . G .     . . .some . . .     . . . . . . .[1
+. 5 . . . F . .     . . . . . . . .     . . . . . . . .
+. . 4 . E . . .     . . .magic. . .     . . . . . . . .
+. . . . . . . .  *  . . . . . . . .  =  . .garbadge . .    &gt;&gt; (64- 9)
+. . C . 2 . . .     . . .bits . . .     . . . . . . . .
+. B . . . 1 . .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .
+
+any consecutive
+relevant occupancy                      combination of
+rook d4, 10 bits                        the masked bits
+. . . . . . . .     . . . . . . . .     4 5 6 B C E F G]
+. . . 6 . . . .     . . .some . . .     . . . . . .[1 2
+. . . 5 . . . .     . . . . . . . .     . . . . . . . .
+. . . 4 . . . .     . . .magic. . .     . . . . . . . .
+. B C . E F G .  *  . . . . . . . .  =  . .garbadge . .    &gt;&gt; (64-10)
+. . . 2 . . . .     . . .bits . . .     . . . . . . . .
+. . . 1 . . . .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .
+
+any consecutive
+relevant occupancy                      combination of
+rook a1, 12 bits                        the masked bits
+. . . . . . . .     . . . . . . . .     5 6 B C D E F G]
+6 . . . . . . .     . . .some . . .     . . . .[1 2 3 4
+5 . . . . . . .     . . . . . . . .     . . . . . . . .
+4 . . . . . . .     . . .magic. . .     . . . . . . . .
+3 . . . . . . .  *  . . . . . . . .  =  . .garbadge . .    &gt;&gt; (64-12)
+2 . . . . . . .     . . .bits . . .     . . . . . . . .
+1 . . . . . . .     . . . . . . . .     . . . . . . . .
+. B C D E F G .     . . . . . . . .     . . . . . . . .</code></pre>
+<p>The above illustration is correct for the b1 bishop, since it has only one ray and one bit per file and works kindergarten like. In general a one to one mapping of N scattered occupied bits to N consecutive bits is not always possible due to possible overflows. A perfect mapping of N scattered bits to N consecutive bits is likely not minimal for most squares. It requires one or two gaps inside the consecutive N bits, to avoid collisions, blowing up the table size.</p>
+<p>But the purpose is to perfectly hash attack-sets rather than consecutive occupied bits.</p>
+<p>The number of distinct attack-sets is much smaller than the relevant occupancies. Thus, with the help of constructive collisions, some initial guess how to map the bits, and/or trial and error, using exactly N bits is always possible. If we try hard enough to maximize constructive collisions - even less.</p>
+<h4 id="perfect-hashing">Perfect Hashing</h4>
+<p>Magic bitboards applies <a href="/Hash_Table">perfect hashing</a>. A <a href="https://en.wikipedia.org/wiki/Surjection">surjective function</a>, to map the vector of all relevant occupancies to a range of attack-sets per square. The less bits the attack-set - the closer the blockers, the more those attack-sets are shared by occupancies with different, but redundant outer squares.</p>
+<ul>
+<li>The <strong>cardinality</strong> of all <strong>relevant occupancies</strong> is determined by the number of bits to map, varying from five to twelve - thus, the cardinality is the power of two the number of bits, varying from 32 to 4096.</li>
+<li>The <strong>cardinality</strong> of <strong>distinct attack-sets</strong> is determined by the product of the length of each of the max four direction rays greater than zero (or one). The rook on d4 has 3*4*3*4 = 144 distinct attack-sets, a bishop on a8 has only 7.</li>
+</ul>
+<p>The <strong>ratio</strong> of both cardinalities, that is all <strong>relevant occupancies</strong> versus the all <strong>distinct attack-sets</strong> is illustrated below: As a quarter of a board - due to the symmetry, the other squares may deduced by flipping and mirroring. Noticeable is the huge 4096/49 ratio of 2^12 occupied states versus 7 times 7 attack-sets of the edge rooks - 12 bits instead of 6. Those "expensive" squares make constructive collisions very desirable. To become more "minimal" by saving an index bit - to halve down the table for one square or the other.</p>
+<table>
+<thead>
+<tr>
+<th colspan="5"><p>bishop on square</p></th>
+<th><p>#occs/<br />
+#attset</p></th>
+<th colspan="5"><p>rook on square</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td><p>A</p></td>
+<td><p>B</p></td>
+<td><p>C</p></td>
+<td><p>D</p></td>
+<td></td>
+<td><p>A</p></td>
+<td><p>B</p></td>
+<td><p>C</p></td>
+<td><p>D</p></td>
+<td></td>
+</tr>
+<tr>
+<td><p>8</p></td>
+<td style="text-align:right;"><p>64/7</p></td>
+<td style="text-align:right;"><p>32/6</p></td>
+<td style="text-align:right;"><p>32/10</p></td>
+<td style="text-align:right;"><p>32/12</p></td>
+<td rowspan="11"></td>
+<td><p>8</p></td>
+<td style="text-align:right;"><p>4096/49</p></td>
+<td style="text-align:right;"><p>2048/42</p></td>
+<td style="text-align:right;"><p>2048/70</p></td>
+<td style="text-align:right;"><p>2048/84</p></td>
+</tr>
+<tr>
+<td><p>7</p></td>
+<td style="text-align:right;"><p>32/6</p></td>
+<td style="text-align:right;"><p>32/6</p></td>
+<td style="text-align:right;"><p>32/10</p></td>
+<td style="text-align:right;"><p>32/ 12</p></td>
+<td><p>7</p></td>
+<td style="text-align:right;"><p>2048/42</p></td>
+<td style="text-align:right;"><p>1024/36</p></td>
+<td style="text-align:right;"><p>1024/ 60</p></td>
+<td style="text-align:right;"><p>1024/ 72</p></td>
+</tr>
+<tr>
+<td><p>6</p></td>
+<td style="text-align:right;"><p>32/10</p></td>
+<td style="text-align:right;"><p>32/10</p></td>
+<td style="text-align:right;"><p>128/40</p></td>
+<td style="text-align:right;"><p>128/ 48</p></td>
+<td><p>6</p></td>
+<td style="text-align:right;"><p>2048/70</p></td>
+<td style="text-align:right;"><p>1024/60</p></td>
+<td style="text-align:right;"><p>1024/100</p></td>
+<td style="text-align:right;"><p>1024/120</p></td>
+</tr>
+<tr>
+<td><p>5</p></td>
+<td style="text-align:right;"><p>32/12</p></td>
+<td style="text-align:right;"><p>32/12</p></td>
+<td style="text-align:right;"><p>128/48</p></td>
+<td style="text-align:right;"><p>512/108</p></td>
+<td><p>5</p></td>
+<td style="text-align:right;"><p>2048/84</p></td>
+<td style="text-align:right;"><p>1024/72</p></td>
+<td style="text-align:right;"><p>1024/120</p></td>
+<td style="text-align:right;"><p>1024/144</p></td>
+</tr>
+<tr>
+<td colspan="5"></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td colspan="5"><p>bishop on square</p></td>
+<td colspan="5"><p>rook on square</p></td>
+</tr>
+<tr>
+<td></td>
+<td><p>A</p></td>
+<td><p>B</p></td>
+<td><p>C</p></td>
+<td><p>D</p></td>
+<td></td>
+<td><p>A</p></td>
+<td><p>B</p></td>
+<td><p>C</p></td>
+<td><p>D</p></td>
+</tr>
+<tr>
+<td><p>8</p></td>
+<td style="text-align:right;"><p>9.14</p></td>
+<td style="text-align:right;"><p>5.33</p></td>
+<td style="text-align:right;"><p>3.20</p></td>
+<td style="text-align:right;"><p>2.67</p></td>
+<td><p>8</p></td>
+<td style="text-align:right;"><p>83.59</p></td>
+<td style="text-align:right;"><p>48.76</p></td>
+<td style="text-align:right;"><p>29.26</p></td>
+<td style="text-align:right;"><p>24.38</p></td>
+</tr>
+<tr>
+<td><p>7</p></td>
+<td style="text-align:right;"><p>5.33</p></td>
+<td style="text-align:right;"><p>5.33</p></td>
+<td style="text-align:right;"><p>3.20</p></td>
+<td style="text-align:right;"><p>2.67</p></td>
+<td><p>7</p></td>
+<td style="text-align:right;"><p>48.76</p></td>
+<td style="text-align:right;"><p>28.44</p></td>
+<td style="text-align:right;"><p>17.07</p></td>
+<td style="text-align:right;"><p>14.22</p></td>
+</tr>
+<tr>
+<td><p>6</p></td>
+<td style="text-align:right;"><p>3.20</p></td>
+<td style="text-align:right;"><p>3.20</p></td>
+<td style="text-align:right;"><p>3.20</p></td>
+<td style="text-align:right;"><p>2.67</p></td>
+<td><p>6</p></td>
+<td style="text-align:right;"><p>29.26</p></td>
+<td style="text-align:right;"><p>17.07</p></td>
+<td style="text-align:right;"><p>10.24</p></td>
+<td style="text-align:right;"><p>8.53</p></td>
+</tr>
+<tr>
+<td><p>5</p></td>
+<td style="text-align:right;"><p>2.67</p></td>
+<td style="text-align:right;"><p>2.67</p></td>
+<td style="text-align:right;"><p>2.67</p></td>
+<td style="text-align:right;"><p>4.74</p></td>
+<td><p>5</p></td>
+<td style="text-align:right;"><p>24.38</p></td>
+<td style="text-align:right;"><p>14.22</p></td>
+<td style="text-align:right;"><p>8.53</p></td>
+<td style="text-align:right;"><p>7.11</p></td>
+</tr>
+</tbody>
+</table>
+
+<p>The idea to implement minimal perfect hashing by an additional 16-bit indirection turned out to be slower.</p>
+<p>Recent table sizes were about <strong>38 KByte</strong> for the bishop attacks, but still about <strong>800 KByte</strong> for rook attacks. That sounds huge, considering L1 and L2 (L3) cache-sizes and number of cachelines and pages needed - we likely fetch distinct cachelines for each different square or occupancy. On the other hand caches and pages become larger in future processors. And occupancy and squares of the lookups don't change that randomly inside a search that we can still expect a lot of L1-hits. Unfortunately changes in occupancy outside the blockers and therefor not affecting the attack-set will introduce some more cache misses.</p>
+<h4 id="sample-code">Sample Code</h4>
+<p>Anyway, register usage and code size are important issues as well - and here <strong>magic bitboards</strong> are unbeatable - specially bishopAttacks, with respect to the relative small table.</p>
+<pre><code>U64 attacks_table[...]; // ~840K Byte all rook and bishop attacks
+
+struct SMagic {
+   U64* ptr;  // pointer to the attack-table for one particular square
+   U64 mask;  // to mask of both lines
+   U64 magic; // magic 64-bit factor
+   int shift; // shift right 
+};
+
+SMagic mBishopTbl[64];
+SMagic mRookTbl[64];
+
+U64 bishopAttacks(U64 occ, enumSquare sq) {
+   U64* aptr = mBishopTbl[sq].ptr;
+   occ      &amp;= mBishopTbl[sq].mask;
+   occ      *= mBishopTbl[sq].magic;
+   occ     &gt;&gt;= mBishopTbl[sq].shift;
+   return aptr[occ];
+}
+
+U64 rookAttacks(U64 occ, enumSquare sq) {
+   U64* aptr = mRookTbl[sq].ptr;
+   occ      &amp;= mRookTbl[sq].mask;
+   occ      *= mRookTbl[sq].magic;
+   occ     &gt;&gt;= mRookTbl[sq].shift;
+   return aptr[occ];
+}</code></pre>
+<h2 id="summary">Summary</h2>
+<p>The bitboard method for holding a board game appears to have been invented in the mid 1950's, by <a href="/Arthur_Samuel">Arthur Samuel</a> and was used in his checkers program. In computer chess bitboards were first described by <a href="/Georgy_Adelson-Velsky">Georgy Adelson-Velsky</a> et al. in 1967 <a href="#fn15" class="footnote-ref" id="fnref15" role="doc-noteref"><sup>15</sup></a>, reprinted 1970 <a href="#fn16" class="footnote-ref" id="fnref16" role="doc-noteref"><sup>16</sup></a>. Bitboards were used both in <a href="/Kaissa">Kaissa</a> and independently in <a href="/Chess_%28Program%29">Chess</a>. The invention and publication of <a href="/Rotated_Bitboards">Rotated Bitboards</a> by <a href="/Robert_Hyatt">Robert Hyatt</a> and <a href="/Peter_Gillgasch">Peter Gillgasch</a> with <a href="/Ernst_A._Heinz">Ernst A. Heinz</a> in the 90s was another milestone in the history of bitboards. While rotated bitboards was the mainstream in bitboard chess programs, <a href="/Magic_Bitboards">Magic Bitboards</a> become more populated nowadays. Finally, <a href="/Steffan_Westcott">Steffan Westcott's</a> innovations, too expensive with 32-bit <a href="/X86">x86</a> architectures, should be revisited with <a href="/X86-64">x86-64</a> and <a href="/SIMD_and_SWAR_Techniques">SIMD instructions</a> in mind.</p>
+<hr />
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Workshop_Chess_and_Mathematics">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.math.tu-dresden.de/num/chess2008/abstracts.pdf">Workshop Chess and Mathematics</a> (pdf) agenda and abstracts<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Charles_Leiserson">Charles E. Leiserson</a>, <a href="/Harald_Prokop">Harald Prokop</a>, <a href="/Keith_H._Randall">Keith H. Randall</a> (<strong>1998</strong>) <a href="http://supertech.csail.mit.edu/papers/debruijn.pdf">Using de Bruijn Sequences to Index a 1 in a Computer Word</a> (pdf)<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/d5dbf08c66e83517#">bitboard 2^i mod 67 is unique</a> by <a href="/Stefan_Plenkner">Stefan Plenkner</a>, <a href="/Computer_Chess_Forums">rec.games.chess.computer</a>, August 6, 1996<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/871851f83e2c429f#">bitboard 2^i mod 67 is unique</a> by <a href="/Joël_Rivat">Joël Rivat</a>, <a href="/Computer_Chess_Forums">rec.games.chess.computer</a>, September 2, 1996<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/9658009e315021fe#">bitboard 2^i mod 67 is unique</a> by <a href="/Stefan_Plenkner">Stefan Plenkner</a>, <a href="/Computer_Chess_Forums">rec.games.chess.computer</a>, August 7, 1996<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="https://www.stmintz.com/ccc/index.php?id=252289">Re: flood fill attack bitboards</a> by <a href="/Steffan_Westcott">Steffan Westcott</a>, <a href="/CCC">CCC</a>, September 15, 2002<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="http://www.aoki.ecei.tohoku.ac.jp/arith/mg/algorithm.html#fsa_pfx">Hardware algorithms for arithmetic modules</a> from the ARITH research group, Aoki lab., Tohoku University<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="/Robert_Hyatt">Robert Hyatt</a> (<strong>1999</strong>). <em><a href="http://www.craftychess.com/hyatt/bitmaps.html">Rotated Bitmaps, a New Twist on an Old Idea</a></em>. <a href="/ICGA_Journal">ICCA Journal</a>, <a href="http://www.cs.unimaas.nl/icga/journal/contents/content22-4.htm">Vol. 22, No. 4</a>, pp. 213–222.<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="http://people.csail.mit.edu/heinz/dt/node8.html">Rotated Bitboards by Ernst A. Heinz</a><a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="/Trevor_Fenner">Trevor Fenner</a>, <a href="/Mark_Levene">Mark Levene</a> (<strong>2008</strong>). <em>Move Generation with Perfect Hashing Functions.</em> <a href="/ICGA_Journal">ICGA Journal</a>, Vol. 31, No. 1, pp. 3-12. ISSN 1389-6911.<a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=20913">Nice Math - Strange Conclusions</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/CCC">CCC</a><a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="/Lasse_Hansen">Lasse Hansen's</a> <a href="http://www.open-aurec.com/wbforum/viewtopic.php?t=5015">Initial idea</a> from <a href="/Computer_Chess_Forums">Winboard Forum</a>, June 14, 2006<a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="http://www.pradu.us/old/Nov27_2008/Buzz/research/magic/Bitboards.pdf">Magic Move-Bitboard Generation in Computer Chess</a> (pdf) by <a href="/Pradu_Kannan">Pradu Kannan</a><a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p><a href="http://www.open-aurec.com/wbforum/viewtopic.php?t=5441">List of magics for bitboard move generation</a> thread started by <a href="/Pradu_Kannan">Pradu Kannan</a> from <a href="/Computer_Chess_Forums">Winboard Forum</a>, Aug 23, 2006<a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn15"><p><a href="https://groups.google.com/group/rec.games.chess/browse_frm/thread/0e3a93f45ff07d31#">Early Reference on Bit-Boards</a> by <a href="/Tony_Warnock">Tony Warnock</a>, October 29, 1994 <a href="https://groups.google.com/group/rec.games.chess/topics">rec.games.chess archive</a><a href="#fnref15" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn16"><p><a href="/Georgy_Adelson-Velsky">Georgy Adelson-Velsky</a>, <a href="/Vladimir_Arlazarov">Vladimir Arlazarov</a>, <a href="/Alexander_Bitman">Alexander Bitman</a>, <a href="/Alexander_Zhivotovsky">Alexander Zhivotovsky</a> and <a href="/Anatoly_Uskov">Anatoly Uskov</a> (<strong>1970</strong>). <em>Programming a Computer to Play Chess</em>. Russian Mathematical Surveys, Vol. 25, pp. 221-262<a href="#fnref16" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Efficient_Generation_of_Sliding_Piece_Attacks">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

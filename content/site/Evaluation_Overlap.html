@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evaluation Overlap - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Evaluation Overlap</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Organizations">Organizations</a> * <a href="/ICGA">ICGA</a> * <a href="/ICGA_Investigations">Investigations</a> * Evaluation Overlap</strong></p>
+<p>by <a href="/Mark_Watkins">Mark Watkins</a></p>
+<p>Here might be a historical perspective. From page 62 of <a href="/Jean_Hayes_Michie">Hayes</a> and <a href="/David_Levy">Levy</a>, <em>World Computer Chess</em>, Stockholm 1974 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#numerical-evaluation-of-positions">Numerical Evaluation of Positions</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#chaos">CHAOS</a></li>
+<li><a href="#the-ostrich">The Ostrich</a></li>
+<li><a href="#chess-40">Chess 4.0</a></li>
+<li><a href="#kaissa">Kaissa</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#analyse">Analyse</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#center-control">Center Control</a></li>
+<li><a href="#levy-development">Levy Development</a></li>
+<li><a href="#queen-bonus">Queen Bonus</a></li>
+<li><a href="#rook-bonus">Rook Bonus</a></li>
+<li><a href="#bishop-bonus">Bishop Bonus</a></li>
+<li><a href="#knight-mobility">Knight Mobility</a></li>
+<li><a href="#kings-mobility">King's mobility</a></li>
+<li><a href="#attackdefence">Attack/Defence</a></li>
+</ol>
+</details></li>
+<li><a href="#final-definition">Final Definition</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="numerical-evaluation-of-positions">Numerical Evaluation of Positions</h2>
+<p>In the section devoted to notes on the competing programs, the respective <a href="/Evaluation">evaluation</a> functions for <a href="/CHAOS">CHAOS</a> and <a href="/Ostrich">The Ostrich</a> are discussed in some detail. <em>CHAOS</em> uses nineteen features and <em>The Ostrich</em> only thirteen, but the latter plans to increase this number in later incarnations. They have approximately eleven features in common: 'approximately', because the concepts are divided differently. The overlap here is not surprising since all scoring functions aim to embody 'reliable' chess heuristics: the weightings may differ, but the features themselves are similar. One of the eleven concepts shared by <em>CHAOS</em> and <em>The Ostrich</em> is <a href="/Material">material</a>: this is the dominant factor no only in these two programs but also in the majority of chess playing programs. Exceptions are <a href="/Freedom">Freedom</a>, which stresses <a href="/Mobility">mobility</a>, and <a href="/Papa">Papa</a>, which concentrates on 'entropy' (basically a mobility measure). Other shared concepts include mobility, control of the centre, <a href="/Castling">castling</a>, <a href="/King_Safety">king safety</a> and assorted terms concerned with <a href="/Pawn_Structure">pawn structure</a>: the latter include bonus points for occupancy of the centre, advancement, <a href="/Passed_Pawn">passed pawns</a>, a bonus for <a href="/Doubled_Pawn">doubling opponents' pawns</a> with a penalty for doubling one's own, and a penalty for blocking development of one's own pieces. The delicate matter of handling pawn structures has not been mastered satisfactorily by any current program [...] For instance, all seem to place disproportionate faith in the concept of doubling the opponent's pawns (see records of games 1 and 4). <a href="/CHAOS">CHAOS</a> also considers the number of threatened pieces, <a href="/Pin">pins</a> and <a href="/Discovered_Check">discovered checks</a>, king end-game position, and capturing and mobility <em>potential</em>.</p>
+<p><em>The Ostrich</em> has an interesting term, concerned with <em><a href="/Tempo">tempi</a></em>, which aims to penalize time-wasting moves such as taking two moves to reach a square that could be reached in one, or repeating a move (see game 24, where the Swiss program <a href="/Tell">Tell</a> causes a <a href="/Repetitions">draw by repetition</a>). [...] <span id="Chaos"></span></p>
+<h3 id="chaos">CHAOS</h3>
+<p><strong>4. Evaluation function.</strong> [...] Nineteen factors are taken into account, and their weights modified according to the stage reached in the game.</p>
+<ul>
+<li>Threatened pieces, the sum of the value of all pieces which have enemy pieces bearing down on them, but not necessarily <em>en prise</em>.</li>
+<li>Capturing potential, an 'adjusted' sum of the value of capturing potentials on all squares on the board.</li>
+<li>Mobility, defined as the number of legal moves.</li>
+<li>Centre control, which covers both occupancy and attack on centre squares and reduces in importance as the game progresses.</li>
+<li>Pins and discovered checks.</li>
+<li>Material, which contributes the greatest amount to the evaluation. Values are the conventional ones with no values assigned for the king.</li>
+<li>Queen development, a penalty for developing early.</li>
+<li>Double threats and captures. Double threats carry the value of the second most valuable piece able to be captured by the moving side, on the grounds that if two pieces can be attacked, the lower valued one will be captured. Captures represent the total value of piece more strongly attacked than defended. This is also an 'adjusted' value which attempts to approximate the net value to the side moving, after an exchange has taken place.</li>
+<li>Attacked pieces, the total number of pieces attacked more strongly than defended.</li>
+<li>Rook usage, which rewards castling, doubling of rooks, occupation of open files, and rooks behind passed pawns.</li>
+<li>Mobility potential, a measurement of the legal moves as well as the 'not quite legal' moves (e.g. moves which guard, or would have been legal if out of check, or which bear through and along the line of attack of another piece, etc.). This carries less weight than mobility proper.</li>
+<li>Pawn usage, which includes pawn advancement, totally or partially unblocked pawns, connectedness, doubled pawns, etc.</li>
+<li>King endgame position. There are rewards for forcing the enemy king to the edge, stopping an opposing unblocked pawn, staying with the 'square' of the opponent's passed pawn, and king opposition, etc.</li>
+<li>Development. The early development of minor pieces is encouraged.</li>
+<li>Queen pins, which counts pieces pinned against the queen as well as discovered attacks on the queen.</li>
+<li>Attack on king. There is a reward for attacking close to the opponent's king.</li>
+<li>Best capture, the value of the highest valued piece left <em>en prise</em> after a move.</li>
+<li>King safety. There are incentives for attacking close to one's own king.</li>
+</ul>
+<p>The evaluation function has been based as far as possible on general principles, avoiding special cases. For testing purposes the weights of these factors were set differently for each side while the program played against itself. This yielded valuable information about best settings. <span id="Ostrich"></span></p>
+<h3 id="the-ostrich">The Ostrich</h3>
+<p><strong>The static evaluation function.</strong> This consists of thirteen subroutines each corresponding to a basic chess heuristic:</p>
+<ul>
+<li>Material. The subroutine which computes the difference between White's and Black's material the greatest single value to the overall scoring function. The pieces have their conventional values.</li>
+<li>Material ratio term, which computes whether an even exchange of material has occurred between the top node of the tree and the bottom position being evaluated; a bonus goes to the side ahead in material.</li>
+<li>Castling.</li>
+<li>Board control, which is intended to increase one's own mobility and restrict one's opponent's. There is a small bonus for each square controlled, centre squares and squares near the enemy king have the greatest score. 'Control' is defined as the ability of the piece in question to capture a hypothetical enemy piece on that square.</li>
+<li>Tempi. Moving the same piece twice in the opening, moving a king or rook before castling, moving a piece back to its immediately previous position and moving to a square in two moves when it could be done in one, all attract penalties.</li>
+<li>Early queen moves. These attract a penalty before the eighth move of the game; by which time most minor pieces are developed and the king has castled.</li>
+<li>Blocking central pawns. 'Clogging' a position is penalised.</li>
+<li>Development of pieces. Rapid development is encouraged by giving a penalty to unmoved minor pieces or central pawns.</li>
+<li>Central pawns. These carry a bonus</li>
+<li>Pawn structure. Advancement of pawns is encouraged and doubled pawns penalised.</li>
+<li>King safety. To guard against king-side pressure on the part of the opponent the program encourages its own pieces in its own king-sector.</li>
+<li>Passed pawns. The goal is to encourage the advancement and queening of pawns along with trading off the opponent's passed pawns before they become too advanced. A passed pawn receives credit according to its advancement.</li>
+</ul>
+<p><span id="Chess"></span></p>
+<h3 id="chess-40">Chess 4.0</h3>
+<p>[...] In addition to material score in <a href="/Chess_%28Program%29">Chess</a>, terms are added which express in a primitive way, notions of mobility (number of squares attacked), pawn structure (passed, <a href="/Isolated_Pawn">isolated</a>, doubled, <a href="/Backward_Pawn">backward</a>, etc.), piece placement (e.g. <a href="/Rook_on_Seventh">rooks on seventh rank</a>), and king safety (king in castled position, adequate pawn cover). [...]</p>
+<h3 id="kaissa">Kaissa</h3>
+<p>One of the papers which is available (<a href="/Georgy_Adelson-Velsky">Adelson-Velskii</a> <em>et al</em>. 1970 <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>) describes the program as it was in the late 1960s and from the evidence available it is likely that <a href="/Kaissa">Kaissa</a> has many of the same features. [...] This paper has notes on the evaluation function; the present function is likely to be similar, if not identical. Bonus points are given for:</p>
+<ul>
+<li>'A phalanx', i.e. two pawns side by side, on ranks 4-7 for White, and ranks 5-2 for Black. Three pawns side by side count as two phalanxes.</li>
+<li>Centre pawns.</li>
+<li>Pawn attack on the centre.</li>
+<li>Passed pawns.</li>
+<li>'Scope', which is the calculation of the influence that each piece exerts on all squares, occupied or unoccupied by either own or enemy pieces.</li>
+<li>Attack on undefended pieces and pawns on squares adjacent to the king.</li>
+<li>Attack by a minor piece on a 'hole' (weak square). A hole is defined as a square, on [ranks] 1-5 for white and 8-4 for black, under attack by an enemy pawn, undefended by own pawn and with no chance of defence even after pawn advance.</li>
+<li>Minor pieces standing in an opponent's hole.</li>
+<li>Knights in the centre.</li>
+<li>Rook on an open file, or threatening an open file.</li>
+<li>Castling.</li>
+</ul>
+<p>Penalties are incurred by</p>
+<ul>
+<li>A hole.</li>
+<li>A weak pawn (one behind a hole).</li>
+<li>Isolated pawns.</li>
+<li>Doubled pawns.</li>
+<li>Pawns which are isolated and doubled.</li>
+<li>Forfeiture of castling.</li>
+<li>Opponent's castling.</li>
+</ul>
+<h2 id="analyse">Analyse</h2>
+<p>Another thing to discuss could be Chapter 6 of <a href="/Dap_Hartmann">Hartmann's</a> <em>Notions of Evaluation Functions tested against Grandmaster Games</em> in <em><a href="/Advances_in_Computer_Chess_5">Advances in Computer Chess 5</a></em> (1989) <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>.</p>
+<p>Here is a brief synopsis. First there are three notions of mobility: Legal Moves, Pseudo Moves, and de Groot Moves. These should be self-explanatory.</p>
+<h3 id="center-control">Center Control</h3>
+<p>With B as a bonus for a given square, this is B*[AT+2*OC] where AT is #attackers and OC is #occupants.</p>
+<h3 id="levy-development">Levy Development</h3>
+<p>This is a rather complicated construct, that doesn't seem of much direct relevant here.</p>
+<h3 id="queen-bonus">Queen Bonus</h3>
+<p>CHESS 4.5 uses 0.8*AT-0.8*DI where AT is #squares attacked that are not attacked by enemy pawns or minor, and DI is the minimum of the rank/file differences to the enemy king. ANALYSE rescaled this to AT-DI (so as to make everything integral).</p>
+<h3 id="rook-bonus">Rook Bonus</h3>
+<p><em>Chess 4.5</em> used 1.6*AT-1.6*DI+8*DR+8*op+3*SO+22*SR where AT is #squares attacked, DI as above, DR is #rooks in file or rank w/o intervening pieces, SR is #rooks on 7th rank, OP is #rooks on open files, SO is #rooks on semi-open file (defined as File in which there is no [own] Pawn, and at least one enemy Pawn that is no defended by a Pawn and that cannot move one single square w/o being attacked by a Pawn). ANALYSE rescaled to make it integral.</p>
+<h3 id="bishop-bonus">Bishop Bonus</h3>
+<p>Jaap Herman helped with this, as PS+EM+OM+DL+OB+OW, where PS #pseudomoves, EM is sum of enemy material on diagonals of the Bishop (unclear if it includes x-rays, even for blocked pawns?) where P=0,NB=3,R=5,Q=9,K=10, OM is sum of own material forwards on diagonal of the Bishop, P=0,NB=3,R=5,Q=9,K=0, DL is length of diagonals [#pseudomoves on empty board] minus 7, OB is pawn obstruction of enemy pawns (-25,-15,-10,-5,+1 according to specific characteristics), OW is own pawns, every pawn on diagonal in front of bishop is -5 if rank &lt; 4 and +1 otherwise, and every pawn on diagonal behind the bishop is +1.</p>
+<h3 id="knight-mobility">Knight Mobility</h3>
+<p>Hartmann discusses having this, and then points out that it doesn't seem to contribute one way or the other, so he concludes "It is therefore no use to have a separate mobility component for the knight, detached from the Pseudo Mobility."</p>
+<h3 id="kings-mobility">King's mobility</h3>
+<p>Again Hartmann points out that this might be useless, but it seems OK in the endgame.</p>
+<h3 id="attackdefence">Attack/Defence</h3>
+<ul>
+<li>Different Attacked Squares: A number from 3 to 64 for each side.</li>
+<li>Attacked Own Squares: Only count those squares on ranks 1-4.</li>
+<li>Attacked Opponent Squares: Only count squares on ranks 5-8.</li>
+</ul>
+<h2 id="final-definition">Final Definition</h2>
+<pre><code>MAT+PS+DIF+0.5*CEN+LD+2*RB+QB+2*BB+0.5*DEF+OFF</code></pre>
+<p>MAT is material, PS is #pseudo-legal moves, DIF is #different attacked squares, CEN is centre control, LD is Levy development, RB is rook bonus, QB is queen bonus, BB is bishop bonus, DEF is #attacked own squares, OFF is #attacked opp squares.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Quantifying_Evaluation_Features">Quantifying Evaluation Features</a></li>
+<li><a href="/Rybka_Controversy">Rybka Controversy</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/ICGA_Investigations">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Jean_Hayes_Michie">Jean E. Hayes</a>, <a href="/David_Levy">David Levy</a> (<strong>1976</strong>). <em><a href="http://www.getcited.org/pub/101724802">The world computer chess championship, Stockholm 1974</a></em>. University Press (Edinburgh) ISBN 0852242859<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Georgy_Adelson-Velsky">Georgy Adelson-Velsky</a>, <a href="/Vladimir_Arlazarov">Vladimir Arlazarov</a>, <a href="/Alexander_Bitman">Alexander Bitman</a>, <a href="/Alexander_Zhivotovsky">Alexander Zhivotovsky</a> and <a href="/Anatoly_Uskov">Anatoly Uskov</a> (<strong>1970</strong>). <em>Programming a Computer to Play Chess</em>. Russian Mathematical Surveys, Vol. 25, pp. 221-262<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="/Dap_Hartmann">Dap Hartmann</a> (<strong>1989</strong>). <em>Notions of Evaluation Functions Tested against Grandmaster Games</em>. <a href="/Advances_in_Computer_Chess_5">Advances in Computer Chess 5</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Evaluation_Overlap">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

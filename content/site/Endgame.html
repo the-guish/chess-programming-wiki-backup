@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Endgame - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Endgame</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Evaluation">Evaluation</a> * <a href="/Game_Phases">Game Phases</a> * Endgame</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="https://www.dorotheatanning.org/life-and-work/view/229/" target="_blank" rel="noopener noreferrer"><img src="/assets/TanningEndGame.jpg" alt="Dorothea Tanning - End Game, 1944 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Dorothea_Tanning">Dorothea Tanning</a> - End Game, 1944 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="/Category:Dorothea_Tanning">Dorothea Tanning</a> - End Game, 1944, from <a href="http://www.artnet.com/magazineus/reviews/davis/davis11-1-05.asp">artnet Magazine - We Are Duchampians by Ben Davis</a>, <a href="https://www.dorotheatanning.org/life-and-work/view/229/">Endgame | Dorothea Tanning</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p>In the <strong>Endgame</strong> chess programs usually have quite a lot of difficulties. Even the most simple endgames often just lead to a mate after 10 to 15 plys or more, which is far beyond the horizon for engines without the specific endgame knowledge. There are some concepts that a chess programmer should implement to overcome the most basic problems. Usually chess engines activate this special Endgame knowledge as soon as the material on board reaches a certain lower-bound.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#transposition-tables">Transposition Tables</a></li>
+<li><a href="#evaluation">Evaluation</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#special-knowledge">Special Knowledge</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#king-and-pawns">King and Pawns</a></li>
+<li><a href="#pieces">Pieces</a></li>
+<li><a href="#endgame-tablebases">Endgame Tablebases</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#publications">Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1960-">1960 ...</a></li>
+<li><a href="#1970-">1970 ...</a></li>
+<li><a href="#1980-">1980 ...</a></li>
+<li><a href="#1990-">1990 ...</a></li>
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2000--1">2000 ...</a></li>
+<li><a href="#2010--1">2010 ...</a></li>
+<li><a href="#2020--1">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="transposition-tables">Transposition Tables</h2>
+<p>Nowhere else are the <a href="/Transposition_Table">Transposition Hash Tables</a> more efficient than in Endgames. They are invaluable.</p>
+<h2 id="evaluation">Evaluation</h2>
+<p>When doing a positional evaluation, in the endgame, the chess engines should change some parameters. So for example in the <a href="/Middlegame">middlegame</a>, if the opponent's <a href="/King">king</a> is trapped in the center, it should be evaluated much better for the program than the opponent's king, safely standing at the border. In the <strong>endgame</strong> however, its the other way round. A king on the edge or even in the corner has not so many squares to escape to and is more beneficial for the other player. Furthermore, if you only have one <a href="/Bishop">bishop</a>, it might be good to evaluate the opponent's king being forced to go to the corner with the <a href="/Color">color</a> of the bishop a higher bonus, than for the other corner. In addition Pawn promotion is a very important aim in most endgames. The chess engines should consider that by evaluating the strength of <a href="/Passed_Pawn">passed pawns</a>.</p>
+<h2 id="special-knowledge">Special Knowledge</h2>
+<p>Some endgames are extensively covered by theory, and for that reason one can supply a vast number of heuristics for playing them. Typical examples include:</p>
+<ul>
+<li><a href="/Blockage_Detection">Blockage Detection</a></li>
+<li><a href="/Draw_Evaluation">Draw Evaluation</a></li>
+<li><a href="/Mop-up_Evaluation">Mop-up Evaluation</a></li>
+</ul>
+<h3 id="king-and-pawns">King and Pawns</h3>
+<ul>
+<li><a href="/Corresponding_Squares">Corresponding Squares</a></li>
+<li><a href="/King_Centralization">King Centralization</a></li>
+<li><a href="/King_Pawn_Tropism">King Pawn Tropism</a></li>
+<li><a href="/KPK">KPK</a></li>
+<li><a href="/Pawn_Endgame">Pawn Endgame</a></li>
+<li><a href="/Rule_of_the_Square">Rule of the Square</a></li>
+</ul>
+<h3 id="pieces">Pieces</h3>
+<ul>
+<li><a href="/Bishops_of_Opposite_Colors">Bishops of Opposite Colors</a></li>
+<li><a href="/Wrong_Color_Bishop_and_Rook_Pawn">Wrong Color Bishop and Rook Pawn</a></li>
+<li><a href="/Bishop_versus_Knight">Bishop versus Knight</a></li>
+<li><a href="/KBNK_Endgame">KBNK Endgame</a></li>
+<li><a href="/KRK">KRK</a></li>
+<li><a href="/Rook_Endgame">Rook Endgame</a></li>
+<li>Queen Endgame</li>
+<li><a href="/Queen_versus_Pawn">Queen versus Pawn</a></li>
+</ul>
+<h3 id="endgame-tablebases">Endgame Tablebases</h3>
+<p><em>see main article <a href="/Endgame_Tablebases">Endgame Tablebases</a>.</em></p>
+<p>Currently many engines support the usage of <a href="/Endgame_Tablebases">Endgame Tablebases</a>, precalculated databases that hold for every possible position in a certain endgame, whether it is drawn or how many moves are left for a side to win/lose assuming perfect play. With the help of those, chess engines can simply lookup, if it is advisable to do a certain exchange or not, as well as how to finish some of the more tricky endgames. The advantage of Endgame Tablebases is the ability to determine the definite outcome of a certain position, but on the other side, Tablebases are very space consuming and the disk-access tends to be slow.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Endgame_Tablebases">Endgame Tablebases</a></li>
+<li><a href="/Opening">Opening</a></li>
+<li><a href="/Middlegame">Middlegame</a></li>
+<li><a href="/Retrograde_Analysis">Retrograde Analysis</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<h3 id="1960-">1960 ...</h3>
+<ul>
+<li><a href="/Barbara_Liskov">Barbara J. Huberman</a> (<strong>1968</strong>). <em>A Program to Play Chess End Games</em>. Technical Report no. CS-106, Ph.D. thesis. <a href="/Stanford_University">Stanford University</a>, Computer Science Department</li>
+</ul>
+<h3 id="1970-">1970 ...</h3>
+<ul>
+<li>Coen Zuidema (<strong>1974</strong>). <em>Chess: How to Program the Exceptions?</em> Technical Report IW21/74, Department of Informatics, <a href="https://en.wikipedia.org/wiki/Centrum_Wiskunde_%26_Informatica">Mathematical Center Amdsterdam</a>. <a href="http://oai.cwi.nl/oai/asset/9480/9480A.pdf">pdf</a></li>
+<li>Pericles Negri (<strong>1977</strong>). <em>Inductive Learning in a Hierarchical Model for Representing Knowledge in Chess End Games</em>. <a href="http://www.mli.gmu.edu/papers/69-78/77-2.pdf">pdf</a></li>
+<li><a href="/Ryszard_Michalski">Ryszard Michalski</a>, Pericles Negri (<strong>1977</strong>). <em>An experiment on inductive learning in chess endgames</em>. <a href="http://www.doc.ic.ac.uk/~shm/MI/mi8.html">Machine Intelligence 8</a>, <a href="http://www.mli.gmu.edu/papers/69-78/77-1.pdf">pdf</a></li>
+<li><a href="/Kenneth_W._Church">Kenneth W. Church</a> (<strong>1978</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=67030">Co-ordinate Squares: A Solution to Many Chess Pawn Endgames</a></em>. B.Sc. thesis, <a href="/Massachusetts_Institute_of_Technology">Massachusetts Institute of Technology</a>, reprinted 1988 in <a href="/Computer_Chess_Compendium">Computer Chess Compendium</a> » <a href="/Corresponding_Squares">Corresponding Squares</a></li>
+<li><a href="/Ivan_Bratko">Ivan Bratko</a>, <a href="/Tim_Niblett">Tim Niblett</a> (<strong>1979</strong>). <em>Conjectures and Refutations in a Framework for Chess Endgames</em>. in Expert Systems in the Micro-Electronic Age (<a href="/Donald_Michie">Donald Michie</a>, ed.), Edinburgh: Edinburgh University Press, 1979.</li>
+</ul>
+<h3 id="1980-">1980 ...</h3>
+<ul>
+<li><a href="/Danny_Kopec">Danny Kopec</a>, <a href="/Tim_Niblett">Tim Niblett</a> (<strong>1980</strong>). <em>How Hard is the Play of the King-Rook-King-Knight Ending?</em> <a href="/Advances_in_Computer_Chess_2">Advances in Computer Chess 2</a></li>
+<li><a href="/John_F._White">John F. White</a> (<strong>1981</strong>). <em><a href="http://yourcomputeronline.wordpress.com/2010/12/27/chess-end-game/">Chess-End-Game</a></em>. <a href="/Your_Computer">Your Computer</a>, <a href="http://yourcomputeronline.wordpress.com/2010/12/10/december-1981-%E2%80%93-contents-and-editorial/">December 1981</a></li>
+<li><a href="/Alen_Shapiro">Alen Shapiro</a>, <a href="/Tim_Niblett">Tim Niblett</a> (<strong>1982</strong>). <em>Automatic Induction of Classification Rules for Chess End game.</em> <a href="/Advances_in_Computer_Chess_3">Advances in Computer Chess 3</a></li>
+<li><a href="/Ross_Quinlan">Ross Quinlan</a> (<strong>1982</strong>). <em><a href="https://www.researchgate.net/publication/292173657_SEMI-AUTONOMOUS_ACQUISITION_OF_PATTERN-BASED_KNOWLEDGE">Semi-Autonomous Acquisition of Pattern-Based Knowledge</a></em>. <a href="https://archive.org/details/introductoryread0000mich">Introductory Readings in Expert Systems</a></li>
+<li><a href="/Ross_Quinlan">Ross Quinlan</a> (<strong>1983</strong>). <em><a href="https://link.springer.com/chapter/10.1007/978-3-662-12405-5_15">Learning Efficient Classification Procedures and Their Application to Chess End Games</a></em>. in <a href="https://link.springer.com/book/10.1007%2F978-3-662-12405-5">Machine Learning: An Artificial Intelligence Approach</a></li>
+<li>Denis Verhoef, Jacco H. Wesselius (<strong>1987</strong>). <em>Two-ply KRKN: Safely overtaking Quinlan</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 10, No. 4</a></li>
+<li><a href="/Lars_Rasmussen">Lars Rasmussen</a> (<strong>1987</strong>). <em>Correcting grandmasters' Analyses in Elementary Endgames</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 10, No. 4</a></li>
+</ul>
+<h3 id="1990-">1990 ...</h3>
+<ul>
+<li><a href="/Lars_Rasmussen">Lars Rasmussen</a> (<strong>1992</strong>). <em>Queen versus Rook and Pawn</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 15, No. 2</a></li>
+<li><a href="/Wilhelm_Barth">Wilhelm Barth</a>, Stephan Barth (<strong>1992</strong>). <em>Validating a Range of Endgame Programs</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 15, No. 3</a></li>
+<li><a href="/Jean-Christophe_Weill">Jean-Christophe Weill</a> (<strong>1994</strong>). <em>How Hard is the Correct Coding of an Easy Endgame?</em> <a href="/Advances_in_Computer_Chess_7">Advances in Computer Chess 7</a>, <a href="http://www.recherche.enac.fr/%7Eweill/publications/acc7.ps.gz">zipped ps</a></li>
+</ul>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li><a href="/Lewis_Stiller">Lewis Stiller</a> (<strong>1996</strong>). <em>Multilinear Algebra and Chess Endgames</em>. <a href="http://library.msri.org/books/Book29/index.html">Games of No Chance</a> edited by <a href="/Richard_J._Nowakowski">Richard J. Nowakowski</a>, <a href="http://www.msri.org/publications/books/Book29/files/stiller.pdf">pdf</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Roberto_Cifuentes">Roberto Cifuentes</a>, <a href="http://www.newinchess.com/De_Zeeuw__Maarten-ip-185.html">Maarten De Zeeuw</a>, <a href="/Jan_van_Reek">Jan van Reek</a> (<strong>1997</strong>). <em>Secrets of Chess Endings</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 20, No. 4</a></li>
+<li><a href="/Kevin_Coplan">Kevin Coplan</a> (<strong>1998</strong>). <em>Synthesis of Chess and Chess-like Endgames by Recursive Optimisation</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 21, No. 3</a></li>
+<li><a href="/Noam_Elkies">Noam D. Elkies</a> (<strong>1999</strong>). <em>On numbers and endgames: Combinatorial game theory in chess endgames</em>. <a href="http://arxiv.org/PS_cache/math/pdf/9905/9905198v1.pdf">pdf</a>, differs only in trivial stylistic details from the (<strong>1996</strong>) version published in <a href="http://library.msri.org/books/Book29/index.html">Games of No Chance</a> edited by <a href="/Richard_J._Nowakowski">Richard J. Nowakowski</a></li>
+<li>Philip G. K. Reiser, Patricia J. Riddle (<strong>1999</strong>). <em><a href="http://link.springer.com/chapter/10.1007%2F3-540-48873-1_19">Evolving Logic Programs to Classify Chess-Endgame Positions</a></em>. <a href="http://link.springer.com/book/10.1007%2F3-540-48873-1">Simulated Evolution and Learning</a>, <a href="https://en.wikipedia.org/wiki/Canberra">Canberra</a>, Australia. <a href="http://www.springer.com/series/1244">Lecture Notes in Artificial Intelligence</a>, No. 1585, <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a>, <a href="http://stancomb.co.uk/Papers/seal98.pdf">pdf</a> » <a href="/Learning">Learning</a></li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="/Matthias_Lüscher">Matthias Lüscher</a> (<strong>2000</strong>). <em>Automatic Generation of an Evaluation Function for Chess Endgames</em>. <a href="/ETH_Zurich">ETH Zurich</a> Supervisors: <a href="/Thomas_Lincke">Thomas Lincke</a> and <a href="/Christoph_Wirth">Christoph Wirth</a>, <a href="http://www.datacomm.ch/m.luescher/evaluation_function_en.pdf">pdf</a> » <a href="/Neural_Networks">Neural Networks</a></li>
+<li><a href="/Kevin_Coplan">Kevin Coplan</a> (<strong>2001</strong>). <em><a href="http://ilk.uvt.nl/icga/journal/contents/content24-1.htm#SYNTHESIS%20OF%20CHESS">Synthesis of Chess and Chess-like Endgames: A Proof of Correctness</a></em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 24, No. 1</a></li>
+<li><a href="/Kevin_Coplan">Kevin Coplan</a> (<strong>2001</strong>). <em>Synthesis of Chess-like Endgames: Towards a Proof of Correctness</em>. <a href="/Advances_in_Computer_Games_9">Advances in Computer Games 9</a></li>
+<li><a href="/Fabian_Mäser">Fabian Mäser</a> (<strong>2002</strong>). <em>Global Threats in Combinatorial Games: A Computation Model with Applications to Chess Endgames</em>. in <a href="/Richard_J._Nowakowski">Richard J. Nowakowski</a> (ed) (<strong>2002</strong>). <em><a href="http://library.msri.org/books/Book42/">More Games of No Chance</a></em>. <a href="https://en.wikipedia.org/wiki/Cambridge_University_Press">Cambridge University Press</a>, <a href="http://library.msri.org/books/Book42/files/maeser.pdf">pdf</a></li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li>Ami Hauptman, Moshe Sipper (<strong>2005</strong>). <em>GP-EndChess: Using Genetic Programming to Evolve Chess Endgame Players</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/eurogp/eurogp2005.html#HauptmanS05">EuroGP 2005</a>, <a href="http://www.cs.bgu.ac.il/~sipper/papabs/eurogpchess-final.pdf">pdf</a></li>
+<li><a href="/Eli_David">Omid David</a>, <a href="/Ariel_Felner">Ariel Felner</a>, <a href="/Nathan_S._Netanyahu">Nathan S. Netanyahu</a> (<strong>2006</strong>). <em>Blockage Detection in Pawn Endgames</em>. <a href="https://en.wikipedia.org/wiki/Lecture_Notes_in_Computer_Science">LNCS</a> 3846, <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a></li>
+<li>Ami Hauptman, Moshe Sipper (<strong>2007</strong>). <em>Emergence of Complex Strategies in the Evolution of Chess Endgame Players</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/journals/advcs/advcs10.html#HauptmanS07">Advances in Complex Systems 10</a></li>
+<li><a href="/John_Nunn">John Nunn</a> (<strong>2009</strong>). <em><a href="http://www.newinchess.com/Understanding_Chess_Endgames-p-1843.html">Understanding Chess Endgames</a></em>. <a href="https://en.wikipedia.org/wiki/Gambit_Publications">Gambit</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="/John_Nunn">John Nunn</a> (<strong>2010</strong>). <em><a href="http://www.newinchess.com/Nunn_s_Chess_Endings__Volume_1-p-5025.html">Nunn's Chess Endings, volume 1</a></em>. <a href="https://en.wikipedia.org/wiki/Gambit_Publications">Gambit</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></li>
+<li><a href="/John_Nunn">John Nunn</a> (<strong>2010</strong>). <em><a href="http://www.newinchess.com/Nunn_s_Chess_Endings__Volume_2-p-5053.html">Nunn's Chess Endings, volume 2</a></em>. <a href="https://en.wikipedia.org/wiki/Gambit_Publications">Gambit</a></li>
+<li><a href="/John_Nunn">John Nunn</a> (<strong>2013</strong>). <em>Discoveries in R+2P vs. R+P Endings</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 36, No. 3</a> » <a href="/Lomonosov_Tablebases">Lomonosov Tablebases</a></li>
+<li><a href="/Karsten_Müller">Karsten Müller</a>, <a href="/Guy_Haworth">Guy Haworth</a> (<strong>2013</strong>). <em>Rook vs. Bishop</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 36, No. 4</a></li>
+<li><a href="/Matej_Guid">Matej Guid</a>, <a href="/Martin_Možina">Martin Možina</a>, Ciril Bohak, <a href="/Aleksander_Sadikov">Aleksander Sadikov</a>, <a href="/Ivan_Bratko">Ivan Bratko</a> (<strong>2013</strong>). <em>Building an Intelligent Tutoring System for Chess Endgames</em>. <a href="http://dblp.uni-trier.de/db/conf/csedu/csedu2013.html#GuidMBSB13">CSEDU 2013</a></li>
+<li><a href="/Guy_Haworth">Guy Haworth</a> (<strong>2014</strong>). <em><a href="http://centaur.reading.ac.uk/34268/">Chess Endgame Records (dataset)</a></em>.</li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li>Michael Hartisch, <a href="/Ingo_Althöfer">Ingo Althöfer</a> (<strong>2015</strong>). <em>Optimal Robot Play in Certain Chess Endgame Situations</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 38, No. 3</a></li>
+<li>Efstratios Grivas (<strong>2017</strong>). <em>The Modern Endgame Manual</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 39, No. 2</a></li>
+<li><a href="/Karsten_Müller">Karsten Müller</a> (<strong>2017</strong>). <em>Tablebases, Fermat, Knights and Knightmares</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 39, No. 2</a></li>
+<li><a href="/Guy_Haworth">Guy Haworth</a> (<strong>2017</strong>). <em>Understanding Rook Endgames</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 39, No. 2</a></li>
+<li><a href="/Karsten_Müller">Karsten Müller</a>, <a href="/Guy_Haworth">Guy Haworth</a> (<strong>2018</strong>). <em>Chess Endgame News: The World Chess Championship, 2018</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 40, No. 4</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></li>
+<li><a href="/Karsten_Müller">Karsten Müller</a>, <a href="/Guy_Haworth">Guy Haworth</a> (<strong>2019</strong>). <em>FinalGen revisited: new discoveries</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 41, No. 1</a> » <a href="/FinalGen">FinalGen</a></li>
+<li><a href="/Guy_Haworth">Guy Haworth</a> (<strong>2019</strong>). <em>Chess endgame news: Understanding minor piece endgames</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 41, No. 2</a></li>
+<li><a href="/Guy_Haworth">Guy Haworth</a> (<strong>2019</strong>). <em>Chess endgame news: an endgame challenge for neural nets</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 41, No. 3</a> » <a href="/Neural_Networks">Neural Networks</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="/Guy_Haworth">Guy Haworth</a> (<strong>2020</strong>). <em>CEN: Understanding Rook vs Minor Piece Endgames</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 42, No. 1</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Mark_Dvoretsky">Mark Dvoretsky</a> (<strong>2020</strong>). <em><a href="https://www.newinchess.com/dvoretsky-s-endgame-manual-6270">Dvoretsky's Endgame Manual 5th Edition</a></em>. revised by <a href="/Karsten_Müller">Karsten Müller</a>, <a href="https://en.wikipedia.org/wiki/Hanon_Russell">Russell Enterprises</a></li>
+<li><a href="/Guy_Haworth">Guy Haworth</a> (<strong>2021</strong>). <em>Dvoretsky’s Endgame Manual, Edition 5: The bible evolves</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 43, No. 1</a></li>
+<li><a href="/Dave_Gomboc">Dave Gomboc</a>, Christian R. Shelton (<strong>2021</strong>). <em>Chess endgame compression via logic minimization</em>. <a href="/Advances_in_Computer_Games_17">Advances in Computer Games 17</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2000--1">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=198870">Endgame evaluation</a> by <a href="/Benny_Antonsson">Benny Antonsson</a>, <a href="/CCC">CCC</a>, November 25, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=348493">Piece Values in the Endgame</a> by <a href="/Guy_Haworth">Guy Haworth</a>, <a href="/CCC">CCC</a>, February 11, 2004 » <a href="/Point_Value">Point Value</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=358108">transition to endgame</a> by <a href="/Eric_Oldre">Eric Oldre</a>, <a href="/CCC">CCC</a>, April 02, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=359113">Improving the endgame of my engine</a> by <a href="/Albert_Bertilsson">Albert Bertilsson</a>, <a href="/CCC">CCC</a>, April 08, 2004 » <a href="/Sharper">Sharper</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=19296">Definition of "endgame"?</a> by <a href="/Jouni_Uski">Jouni Uski</a>, <a href="/CCC">CCC</a>, January 30, 2008</li>
+</ul>
+<h3 id="2010--1">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40629">End-game evaluation</a> by <a href="/Harm_Geert_Muller">H.G.Muller</a>, <a href="/CCC">CCC</a>, October 04, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47173">Start EndGame - A matter of fine tuning ???</a> by <a href="/Lourenço_Araujo_de_Oliveira_Junior">Lourenço Araujo de Oliveira Junior</a>, <a href="/CCC">CCC</a>, February 09, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51672">End Game Heuristics</a> by <a href="/Laurie_Tunnicliffe">Laurie Tunnicliffe</a>, <a href="/CCC">CCC</a>, March 20, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62153">Define end game</a> by <a href="/Laurie_Tunnicliffe">Laurie Tunnicliffe</a>, <a href="/CCC">CCC</a>, November 16, 2016 » <a href="/Tapered_Eval">Tapered Eval</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64356">Testing endgame strength</a> by <a href="/Álvaro_Begué">Álvaro Begué</a>, <a href="/CCC">CCC</a>, June 21, 2017 » <a href="/Engine_Testing">Engine Testing</a>, <a href="/RuyDos">RuyDos</a></li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/znU1a7aZ2XI/yJDFtOQnAwAJ">mg vs eg eval</a> by <a href="/Joost_VandeVondele">Joost VandeVondele</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, October 06, 2019 » <a href="/Middlegame">Middlegame</a>, <a href="/Stockfish">Stockfish</a></li>
+</ul>
+<h3 id="2020--1">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73012">Endgame woes</a> by <a href="/Tom_King">Tom King</a>, <a href="/CCC">CCC</a>, February 07, 2020 » <a href="/Draw_Evaluation">Draw Evaluation</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73713">Allowing null move pruning in the endgame</a> by Steven Griffin, <a href="/CCC">CCC</a>, April 20, 2020 » <a href="/Null_Move_Pruning">Null Move Pruning</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76521">Endgame recognition</a> by <a href="/Niels_Abildskov">Niels Abildskov</a>, <a href="/CCC">CCC</a>, February 07, 2021</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Chess_endgame">Chess endgame from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Pawnless_chess_endgame">Pawnless chess endgame from Wikipedia</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Game_Phases">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.chessbase.com/post/nunn-on-understanding-che-endgames">Nunn on Understanding Chess Endgames</a>, <a href="/ChessBase">ChessBase News</a>, September 13, 2009<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.chessbase.com/post/nunn-s-che-endings-volume-one">Nunn’s Chess Endings Volume One</a>, <a href="/ChessBase">ChessBase News</a>, May 28, 2010<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://en.wikipedia.org/wiki/World_Chess_Championship_2018">World Chess Championship 2018 from Wikipedia</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Dorothea_Tanning">Dorothea Tanning</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Endgame">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

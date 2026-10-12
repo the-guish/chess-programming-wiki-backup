@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Debugging - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Debugging</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Programming">Programming</a> * Debugging</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="http://www.wilhelm-busch-seiten.de/werke/maxundmoritz/streich5.html" target="_blank" rel="noopener noreferrer"><img src="/assets/Max_und_moritz-05-12.jpg" alt="Hin und her und rundherum Kriecht es, fliegt es mit Gebrumm 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Hin und her und rundherum<br /> Kriecht es, fliegt es mit Gebrumm <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://en.wikipedia.org/wiki/Wilhelm_Busch">Wilhelm-Busch</a>, <a href="http://www.wilhelm-busch-seiten.de/werke/maxundmoritz/streich5.html">Max und Moritz - Fünfter Streich</a> from <a href="http://www.wilhelm-busch-seiten.de/index.html">Wilhelm-Busch Seiten von Jochen Schöpflin</a> (German)<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Debugging</strong> is a process of finding and reducing <a href="/Engine_Testing">bugs</a> in a computer program. A <a href="https://en.wikipedia.org/wiki/Debugger">debugger</a>, usually in software, allows to execute the program (debugee) under its control, to set <a href="https://en.wikipedia.org/wiki/Breakpoint">breakpoints</a>, let the user step to single lines of his source or machine code, to inspect variables, memory and processor registers. Processors often provide special instructions for the purpose of debugging.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#x86-breakpoints">x86 Breakpoints</a></li>
+<li><a href="#compiler-support">Compiler Support</a></li>
+<li><a href="#debugging-the-search">Debugging the Search</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="x86-breakpoints">x86 Breakpoints</h2>
+<p><a href="/8086">8086</a>, <a href="/X86">x86</a> and <a href="/X86-64">x86-64</a> have the <a href="https://en.wikipedia.org/wiki/INT_%28x86_instruction%29#INT_3">int 3</a> one byte software <a href="https://en.wikipedia.org/wiki/Interrupt">interrupt</a> instruction with opcode 0xCC, which might be explicitly used, or implicitly in assertions. This instruction is also used, when setting a breakpoint from a debugger, where current opcode is (temporarily) replaced by the <em>int 3</em> opcode (0xCC), which when executed calls a special interrupt routine of the debugger or runtime system.</p>
+<p>Breakpoint opcode may be inserted inside the code at compile time, for instance with x86 <a href="/Assembly">inline assembly</a> or compiler intrinsic like <em>DebugBreak</em> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> :</p>
+<pre><code>  __asm int 3</code></pre>
+<h2 id="compiler-support">Compiler Support</h2>
+<p>Various compiler allow a special Debug build, which disables optimizations, default initialization of otherwise not initialized variables or memory, and/or enable runtime checking, like <a href="https://en.wikipedia.org/wiki/Bounds_checking">bounds checking</a> of <a href="/Array">array</a> access. Various <a href="https://en.wikipedia.org/wiki/Integrated_development_environment">integrated development environments</a> (IDE) provide an integrated debugger. <span id="Search"></span></p>
+<h2 id="debugging-the-search">Debugging the Search</h2>
+<p>A <a href="/Recursion">recursive</a> <a href="/Search">search</a> is quite hard to debug. Therefor chess programs may provide debug routines to use a sequence of certain <a href="/Moves">moves</a> or a <a href="/Zobrist_Hashing">zobrist key</a> as a precondition to break the search if they occur. Here are <a href="/Tord_Romstad">Tord Romstad's</a> suggestions in a reply to <a href="/Patrice_Duhamel">Patrice Duhamel</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>:</p>
+<ul>
+<li>Extend the <a href="/UCI">UCI</a>/<a href="/XBoard">XBoard</a> command set with a few commands of your own for use in debugging. In particular, it is useful to have a command for looking up the <a href="/Root">current position</a> in the <a href="/Transposition_Table">hash table</a> and printing the information (<a href="/Score">score</a>, <a href="/Score">score type</a>, <a href="/Best_Move">best move</a> , etc). to the standard output. You can use this to browse the <a href="/Search_Tree">search tree</a> after a search is finished. When you want to know why the program discarded some move, you can make the move and inspect the hash table entry for the corresponding position to find the score and refutation. I've found this to be a very valuable debugging technique, and even have a simple <a href="/GUI">GUI</a> app for browsing the tree (the GUI app communicates with the engine through pipes connected to the standard input and output).</li>
+<li>The technique above can be further enhanced by including lots of additional information in the hash table when debugging the program. I sometimes store complete <a href="/Move_List">move lists</a> with information about <a href="/Extensions">extension</a>, <a href="/Reductions">reduction</a> and <a href="/Pruning">pruning</a> decisions for each move in every transposition table entry. Of course this makes each entry huge and greatly slows down the search, but it can be useful when chasing bugs or looking for ways to make the search more efficient.</li>
+<li>Implement an <a href="/MTD%28f%29">MTD(f)</a> search, even if you intend to use <a href="/Principal_Variation_Search">PVS</a>. MTD(f) is great for debugging the hash table; all sorts of obscure bugs which are very tricky to find in PVS or other conventional searches suddenly become easy to spot.</li>
+<li>Whenever you add some non-trivial new function to your program, try to write two versions: One which is very slow and stupid, but almost certainly correct, and one which is highly optimized. Verify on a huge number of positions that they give the same results. Remove the slow version only when you feel 100% sure that the fast version is correct.</li>
+<li>Always make <a href="/Color_Flipping">symmetry tests</a> when you add a new term to your <a href="/Evaluation_Function">evaluation function</a> .</li>
+<li>Run through a simple tactical test like <a href="/Win_at_Chess">WAC</a> at 5 seconds/move every time you change something important in your search. Don't try to optimize the results, but just make sure that the score doesn't suddenly drop dramatically.</li>
+<li>Check the quality of your <a href="/Move_Ordering">move ordering</a> by measuring how often a <a href="/Beta-Cutoff">beta cutoff</a> occurs on the first move, and the frequencies with which the 1st, 2nd, 3rd, ... move turns out to be best at <a href="/Node_Types">PV nodes</a>.</li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Bibob">Bibob</a></li>
+<li><a href="/Engine_Testing">Engine Testing</a></li>
+<li><a href="/Engine_Testing">Famous Bugs</a></li>
+<li><a href="/InBetween">InBetween</a></li>
+<li><a href="/Logging">Logging</a></li>
+<li><a href="/Perft">Perft</a></li>
+<li><a href="/Fidelity_Electronics">Spracklens debugging with Apple II ICE</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li>Zhonghua Yang, <a href="/Tony_Marsland">Tony Marsland</a> (<strong>1992</strong>). <em>Global Snapshots for Distributed Debugging</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/icci/icci1992.html#YangM92">ICCI 1992</a>, pp. 436-440</li>
+<li>Zhonghua Yang, <a href="/Tony_Marsland">Tony Marsland</a> (<strong>1993</strong>). <em>Distributed Debugging in the Large</em>. <a href="http://webdocs.cs.ualberta.ca/~tony/RecentPapers/acsc17.pdf">pdf</a></li>
+<li><a href="/Chrilly_Donninger">Chrilly Donninger</a> (<strong>1999</strong>). <em>Computer machen keine Fehler</em>. <a href="/Computerschach_und_Spiele">CSS</a> 2/99, <a href="http://www.mustrum.de/chrilly/keine_fehler.pdf">pdf</a> (German)</li>
+<li><a href="/Yngvi_Björnsson">Yngvi Björnsson</a>, <a href="/Jónheiður_Ísleifsdóttir">Jónheiður Ísleifsdóttir</a> (<strong>2006</strong>). <em>Tools for debugging large game trees</em>. <a href="http://www.computer-shogi.org/gpw/gpw11_e.html">11th Game Programming Workshop</a>, <a href="https://en.wikipedia.org/wiki/Hakone,_Kanagawa">Hakone</a>, <a href="https://en.wikipedia.org/wiki/Japan">Japan</a> » <a href="/Search_Tree">Search Tree</a></li>
+<li><a href="/Jónheiður_Ísleifsdóttir">Jónheiður Ísleifsdóttir</a> (<strong>2007</strong>). <em>GTQL: A Query Language for Game Trees</em>. M.Sc. thesis, <a href="https://en.wikipedia.org/wiki/Reykjav%C3%ADk_University">Reykjavík University</a>, <a href="http://www.ru.is/lisalib/getfile.aspx?itemid=9655">pdf</a></li>
+<li><a href="/Jónheiður_Ísleifsdóttir">Jónheiður Ísleifsdóttir</a>, <a href="/Yngvi_Björnsson">Yngvi Björnsson</a>. (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_20">GTQ: A Language and Tool for Game-Tree Analysis</a></em>. <a href="/CG_2008">CG 2008</a>, <a href="http://www.ru.is/faculty/yngvi/pdf/IsleifsdottirB08.pdf">pdf</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=129676">Debug Help</a> by <a href="/Georg_von_Zimmermann">Georg von Zimmermann</a>, <a href="/CCC">CCC</a>, September 16, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=269311">Winboard.debug</a> by <a href="/David_Rasmussen">David Rasmussen</a>, <a href="/CCC">CCC</a>, December 07, 2002 » <a href="/WinBoard">WinBoard</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=367469">bugs, Bugs and BUGS!</a> by <a href="/Anastasios_Milikas">milix</a>, <a href="/CCC">CCC</a>, May 27, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=400603">Q. Why might node count differ between DEBUG and RELEASE</a> by <a href="/David_B._Weller">David B. Weller</a>, <a href="/CCC">CCC</a>, December 13, 2004</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=431392">General Tips and Tricks for debugging a search</a> by <a href="/Eric_Oldre">Eric Oldre</a>, <a href="/CCC">CCC</a>, June 15, 2005</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=5955">Testing and debugging chess engines</a> by <a href="/Patrice_Duhamel">Patrice Duhamel</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, December 03, 2006</li>
+</ul>
+<p><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=5955&amp;start=5">Re: Testing and debugging chess engines</a> by <a href="/Tord_Romstad">Tord Romstad</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, December 05, 2006</p>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=39390">Debugging regression tests</a> by <a href="/Onno_Garms">Onno Garms</a>, <a href="/CCC">CCC</a>, June 16, 2011 <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46968">DrMemory: memory debugger tool for Windows (and Linux)</a> by <a href="/Martin_Sedlak">Martin Sedlak</a>, <a href="/CCC">CCC</a>, January 22, 2013 » <a href="/Memory">Memory</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55578">OT: Finding the Line of the Assert Fail?</a> by <a href="/Steve_Maughan">Steve Maughan</a>, <a href="/CCC">CCC</a>, March 07, 2015 » <a href="/Maverick">Maverick</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59046">Best way to debug perft?</a> by Meni Rosenfeld, <a href="/CCC">CCC</a>, January 25, 2016 » <a href="/Perft">Perft</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=60912">Best way to debug search speed?</a> by <a href="/Vincent_Tang">Vincent Tang</a>, <a href="/CCC">CCC</a>, July 23, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61551">Help with Debugging My Chess Engine</a> by Pranav Deshpande, <a href="/CCC">CCC</a>, September 28, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61565">Help with Debugging My Chess Engine - 2</a> by Pranav Deshpande, <a href="/CCC">CCC</a>, September 30, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63119">How to go about chasing a bug like this?</a> by <a href="/Colin_Jenkins">Colin Jenkins</a>, <a href="/CCC">CCC</a>, February 09, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63454">How to find SMP bugs ?</a> by Lucas Braesch, <a href="/CCC">CCC</a>, March 15, 2017 » <a href="/Lazy_SMP">Lazy SMP</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65712">assert</a> by <a href="/Folkert_van_Heusden">Folkert van Heusden</a>, <a href="/CCC">CCC</a>, November 13, 2017 <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66124">How do I debug cutechess-cli engine input/output?</a> by Daniel Dugovic, <a href="/CCC">CCC</a>, December 25, 2017 » <a href="/Cutechess-cli">Cutechess-cli</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66366">Debugging UCI engine</a> by Cadel Watson, <a href="/CCC">CCC</a>, January 19, 2018 » <a href="/InBetween">InBetween</a>, <a href="/UCI">UCI</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=67599">Debugging a transposition table</a> by <a href="/Vincent_Tang">Vincent Tang</a>, <a href="/CCC">CCC</a>, May 29, 2018 » <a href="/Transposition_Table">Transposition Table</a>, <a href="/Lasker-Reichhelm_Position">Lasker-Reichhelm Position</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74931">Engine Crash Detective Story</a> by <a href="/Erik_Madsen">Erik Madsen</a>, <a href="/CCC">CCC</a>, August 29, 2020 » <a href="/MadChess">MadChess</a></li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79160">Resolving once in a trillion crashes</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, January 18, 2022 » <a href="/Ethereal">Ethereal</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Debug">Debugging from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Debugger">Debugger from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Assertion_(software_development)">Assertion (software development) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Regression_testing">Regression testing from Wikipedia</a></li>
+<li><a href="http://www.gnu.org/software/gdb/">GDB: The GNU Project Debugger</a></li>
+<li><a href="http://swik.net/gdb+eclipse">gdb + eclipse - SWiK</a></li>
+<li><a href="http://www.hex-rays.com/idapro/">IDA Pro Disassembler - multi-processor, windows hosted disassembler and debugger</a></li>
+<li><a href="https://en.wikipedia.org/wiki/SoftICE">SoftICE from Wikipedia</a></li>
+<li><a href="http://research.microsoft.com/en-us/projects/chess/">CHESS - Microsoft Research</a> a tool for finding and reproducing <a href="https://en.wikipedia.org/wiki/Unusual_software_bug">Heisenbugs</a> in concurrent programs.</li>
+<li><a href="http://cm.bell-labs.com/cm/cs/tpop/debugging.html">From Chapter 5, Debugging</a> excerpt from Chapter 5 of</li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/Brian_Kernighan">Brian W. Kernighan</a>, <a href="https://en.wikipedia.org/wiki/Rob_Pike">Rob Pike</a> (<strong>1999</strong>). <em><a href="https://en.wikipedia.org/wiki/The_Practice_of_Programming">The Practice of Programming</a></em>. <a href="https://en.wikipedia.org/wiki/Addison-Wesley">Addison-Wesley</a>, ISBN: ISBN 0-201-61586-X</p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Electric_Fence">Electric Fence (Memory Debugger) from Wikipedia</a> » <a href="/Memory">Memory</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Programming">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://msdn.microsoft.com/en-us/library/ms679297%28VS.85%29.aspx">DebugBreak Function (Windows)</a> from <a href="http://msdn.microsoft.com/en-us/default.aspx">Develop for Windows 7 and Windows Vista | MSDN</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=5955&amp;start=5">Re: Testing and debugging chess engines</a> by <a href="/Tord_Romstad">Tord Romstad</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, December 05, 2006<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://en.wikipedia.org/wiki/Regression_testing">Regression testing from Wikipedia</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://en.wikipedia.org/wiki/Assertion_(software_development)">Assertion (software development) from Wikipedia</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Debugging">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

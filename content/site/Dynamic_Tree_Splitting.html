@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dynamic Tree Splitting - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Dynamic Tree Splitting</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Search">Search</a> * <a href="/Parallel_Search">Parallel Search</a> * Dynamic Tree Splitting</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/3/38/Feeringbury_Manor_split_double_trunk_tree%2C_Feering_Essex_England_1.jpg" alt="Splitted tree 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Splitted tree <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1">A tree with a doubled split trunk on a lawn beside a drive at Feeringbury Manor in the <a href="https://en.wikipedia.org/wiki/Civil_parish">civil parish</a> of <a href="https://en.wikipedia.org/wiki/Feering">Feering</a>, <a href="https://en.wikipedia.org/wiki/Braintree_District">Braintree</a>, <a href="https://en.wikipedia.org/wiki/Essex">Essex</a>, England. <a href="https://commons.wikimedia.org/wiki/File:Feeringbury_Manor_split_double_trunk_tree,_Feering_Essex_England_1.jpg">Image</a> © by <a href="https://commons.wikimedia.org/wiki/User:Acabashi">Acabashi</a>, October 02, 2015, <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.en">Creative Commons CC BY-SA 4.0</a>, Source: <a href="https://en.wikipedia.org/wiki/Wikimedia_Commons">Wikimedia Commons</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Dynamic Tree Splitting</strong>, (DTS)<br />
+a <a href="https://en.wikipedia.org/wiki/Peer-to-peer">peer-to-peer</a> model of parallelism which divides the <a href="/Search_Tree">search tree</a> among several processors on a <a href="/Memory">shared memory</a> parallel machine, devised by <a href="/Robert_Hyatt">Robert Hyatt</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> , implemented in <a href="/Cray_Blitz">Cray Blitz</a> and tested on a 16 processor <a href="/Cray_X-MP">Cray C916/1024</a> with 1024 mebiwords of <a href="/Memory">memory</a> (8 <a href="https://en.wikipedia.org/wiki/Gibibyte">gibibytes</a>).DTS overcomes one problem of <a href="/Parallel_Search">principle variation splitting</a> (PVS) and enhanced principle variation splitting (EPVS) <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> with bushy trees, that processors assigned to a <a href="/Node">node</a> become and stay <a href="https://en.wikipedia.org/wiki/Idle_(CPU)">idle</a> while other processors are still busy on the same node. In DTS, busy processors publish their state of the tree in shared memory for idle processors to examine, to let them decide which (if any) of the busy processors to join, and to inform a busy processor of the chosen expceted <a href="/Node_Types">all-node</a> or <a href="/Node_Types">pv-node</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> , dubbed split point. The busy processor with that subtree in progress in turn, then copies the complete tree state with current <a href="/Chess_Position">board position</a>, <a href="/Bound">bounds</a>, <a href="/Move_List">move list</a>, <a href="/Repetitions">repetition list</a> and so forth to a shared memory area, becoming a so called "split block". Owner and helper processors can now extract moves from this shared data to search in parallel <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> .</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#performance-test">Performance Test</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#dts-speedups">DTS Speedups</a></li>
+<li><a href="#comparison">Comparison</a></li>
+</ol>
+</details></li>
+<li><a href="#recursive-dts">Recursive DTS</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="performance-test">Performance Test</h2>
+<p>Rather than to use a group of unrelated chess problems, the CB team took a segment of a real chess game from the <a href="/ACM_1993">ACM 1993</a> <a href="/ACM_1993">M-Chess Pro vs. Cray Blitz</a>, a sharp <a href="https://en.wikipedia.org/wiki/Vienna_Game">Vienna game</a> aka delayed [<a href="https://en.wikipedia.org/wiki/King%27s_Gambit#King.27s_Gambit_Accepted:_2">https://en.wikipedia.org/wiki/King%27s_Gambit#King.27s_Gambit_Accepted:_2</a>...exf4 kings gambit accepted] after CB was out of book after 1. e4 e5 2. Nc3 Nc6 3. f4 exf4 4. Nf3 g5 5. d4 g4 6. Bc4 gxf3 7. o-o d5 8. exd5 Bg4 9. Qd2, 24 positions in total. The results include two sets of numbers for each test, where a test used either one, two, four, eight or sixteen processors. The numbers are the clock time required for the search (wall clock time) and the number of nodes searched which shows how much extra work is added by using additional processors <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> .</p>
+<h3 id="dts-speedups">DTS Speedups</h3>
+<p><em>DTS Cray Blitz speedups on Cray C916/1024 over 24 test positions</em> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a></p>
+<table>
+<thead>
+<tr>
+<th><p>#proc</p></th>
+<th colspan="3"><p>1</p></th>
+<th colspan="3"><p>2</p></th>
+<th colspan="3"><p>4</p></th>
+<th colspan="3"><p>8</p></th>
+<th colspan="3"><p>16</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>pos</p></td>
+<td><p>sec</p></td>
+<td><p>nodes</p></td>
+<td><p>speedup</p></td>
+<td><p>sec</p></td>
+<td><p>nodes</p></td>
+<td><p>speedup</p></td>
+<td><p>sec</p></td>
+<td><p>nodes</p></td>
+<td><p>speedup</p></td>
+<td><p>sec</p></td>
+<td><p>nodes</p></td>
+<td><p>speedup</p></td>
+<td><p>sec</p></td>
+<td><p>nodes</p></td>
+<td><p>speedup</p></td>
+</tr>
+<tr>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>2,830</p></td>
+<td style="text-align:right;"><p>87,735,974</p></td>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>1,415</p></td>
+<td style="text-align:right;"><p>89,052,012</p></td>
+<td><p>2.0</p></td>
+<td style="text-align:right;"><p>832</p></td>
+<td style="text-align:right;"><p>105,025,123</p></td>
+<td><p>3.4</p></td>
+<td style="text-align:right;"><p>435</p></td>
+<td style="text-align:right;"><p>109,467,495</p></td>
+<td><p>6.5</p></td>
+<td style="text-align:right;"><p>311</p></td>
+<td style="text-align:right;"><p>155,514,410</p></td>
+<td><p>9.1</p></td>
+</tr>
+<tr>
+<td><p>2</p></td>
+<td style="text-align:right;"><p>2,849</p></td>
+<td style="text-align:right;"><p>88,954,757</p></td>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>1,424</p></td>
+<td style="text-align:right;"><p>90,289,077</p></td>
+<td><p>2.0</p></td>
+<td style="text-align:right;"><p>791</p></td>
+<td style="text-align:right;"><p>100,568,301</p></td>
+<td><p>3.6</p></td>
+<td style="text-align:right;"><p>438</p></td>
+<td style="text-align:right;"><p>110,988,161</p></td>
+<td><p>6.5</p></td>
+<td style="text-align:right;"><p>274</p></td>
+<td style="text-align:right;"><p>137,965,406</p></td>
+<td><p>10.4</p></td>
+</tr>
+<tr>
+<td><p>3</p></td>
+<td style="text-align:right;"><p>3,274</p></td>
+<td style="text-align:right;"><p>101,302,792</p></td>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>1,637</p></td>
+<td style="text-align:right;"><p>102,822,332</p></td>
+<td><p>2.0</p></td>
+<td style="text-align:right;"><p>884</p></td>
+<td style="text-align:right;"><p>111,433,074</p></td>
+<td><p>3.7</p></td>
+<td style="text-align:right;"><p>467</p></td>
+<td style="text-align:right;"><p>117,366,515</p></td>
+<td><p>7.0</p></td>
+<td style="text-align:right;"><p>239</p></td>
+<td style="text-align:right;"><p>119,271,093</p></td>
+<td><p>13.7</p></td>
+</tr>
+<tr>
+<td><p>4</p></td>
+<td style="text-align:right;"><p>2,308</p></td>
+<td style="text-align:right;"><p>71,726,853</p></td>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>1,154</p></td>
+<td style="text-align:right;"><p>72,802,754</p></td>
+<td><p>2.0</p></td>
+<td style="text-align:right;"><p>591</p></td>
+<td style="text-align:right;"><p>74,853,409</p></td>
+<td><p>3.9</p></td>
+<td style="text-align:right;"><p>349</p></td>
+<td style="text-align:right;"><p>88,137,085</p></td>
+<td><p>6.6</p></td>
+<td style="text-align:right;"><p>208</p></td>
+<td style="text-align:right;"><p>104,230,094</p></td>
+<td><p>11.1</p></td>
+</tr>
+<tr>
+<td><p>5</p></td>
+<td style="text-align:right;"><p>1,584</p></td>
+<td style="text-align:right;"><p>49,386,616</p></td>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>792</p></td>
+<td style="text-align:right;"><p>50,127,414</p></td>
+<td><p>2.0</p></td>
+<td style="text-align:right;"><p>440</p></td>
+<td style="text-align:right;"><p>55,834,316</p></td>
+<td><p>3.6</p></td>
+<td style="text-align:right;"><p>243</p></td>
+<td style="text-align:right;"><p>61,619,298</p></td>
+<td><p>6.5</p></td>
+<td style="text-align:right;"><p>178</p></td>
+<td style="text-align:right;"><p>89,506,306</p></td>
+<td><p>8.9</p></td>
+</tr>
+<tr>
+<td><p>6</p></td>
+<td style="text-align:right;"><p>4,294</p></td>
+<td style="text-align:right;"><p>133,238,718</p></td>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>2,147</p></td>
+<td style="text-align:right;"><p>135,237,296</p></td>
+<td><p>2.0</p></td>
+<td style="text-align:right;"><p>1,160</p></td>
+<td style="text-align:right;"><p>146,562,594</p></td>
+<td><p>3.7</p></td>
+<td style="text-align:right;"><p>670</p></td>
+<td style="text-align:right;"><p>168,838,428</p></td>
+<td><p>6.4</p></td>
+<td style="text-align:right;"><p>452</p></td>
+<td style="text-align:right;"><p>226,225,307</p></td>
+<td><p>9.5</p></td>
+</tr>
+<tr>
+<td><p>7</p></td>
+<td style="text-align:right;"><p>1,888</p></td>
+<td style="text-align:right;"><p>58,593,747</p></td>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>993</p></td>
+<td style="text-align:right;"><p>62,602,792</p></td>
+<td><p>1.9</p></td>
+<td style="text-align:right;"><p>524</p></td>
+<td style="text-align:right;"><p>66,243,490</p></td>
+<td><p>3.6</p></td>
+<td style="text-align:right;"><p>273</p></td>
+<td style="text-align:right;"><p>68,868,878</p></td>
+<td><p>6.9</p></td>
+<td style="text-align:right;"><p>187</p></td>
+<td style="text-align:right;"><p>93,575,946</p></td>
+<td><p>10.1</p></td>
+</tr>
+<tr>
+<td><p>8</p></td>
+<td style="text-align:right;"><p>7,275</p></td>
+<td style="text-align:right;"><p>225,906,282</p></td>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>3,637</p></td>
+<td style="text-align:right;"><p>229,294,872</p></td>
+<td><p>2.0</p></td>
+<td style="text-align:right;"><p>1,966</p></td>
+<td style="text-align:right;"><p>248,496,917</p></td>
+<td><p>3.7</p></td>
+<td style="text-align:right;"><p>1,039</p></td>
+<td style="text-align:right;"><p>261,728,552</p></td>
+<td><p>7.0</p></td>
+<td style="text-align:right;"><p>680</p></td>
+<td style="text-align:right;"><p>340,548,431</p></td>
+<td><p>10.7</p></td>
+</tr>
+<tr>
+<td><p>9</p></td>
+<td style="text-align:right;"><p>3,940</p></td>
+<td style="text-align:right;"><p>122,264,617</p></td>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>1,970</p></td>
+<td style="text-align:right;"><p>124,098,584</p></td>
+<td><p>2.0</p></td>
+<td style="text-align:right;"><p>1,094</p></td>
+<td style="text-align:right;"><p>138,226,951</p></td>
+<td><p>3.6</p></td>
+<td style="text-align:right;"><p>635</p></td>
+<td style="text-align:right;"><p>159,930,005</p></td>
+<td><p>6.2</p></td>
+<td style="text-align:right;"><p>398</p></td>
+<td style="text-align:right;"><p>199,204,874</p></td>
+<td><p>9.9</p></td>
+</tr>
+<tr>
+<td><p>10</p></td>
+<td style="text-align:right;"><p>2,431</p></td>
+<td style="text-align:right;"><p>75,301,353</p></td>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>1,215</p></td>
+<td style="text-align:right;"><p>76,430,872</p></td>
+<td><p>2.0</p></td>
+<td style="text-align:right;"><p>639</p></td>
+<td style="text-align:right;"><p>80,651,716</p></td>
+<td><p>3.8</p></td>
+<td style="text-align:right;"><p>333</p></td>
+<td style="text-align:right;"><p>83,656,702</p></td>
+<td><p>7.3</p></td>
+<td style="text-align:right;"><p>187</p></td>
+<td style="text-align:right;"><p>93,431,597</p></td>
+<td><p>13.0</p></td>
+</tr>
+<tr>
+<td><p>11</p></td>
+<td style="text-align:right;"><p>3,062</p></td>
+<td style="text-align:right;"><p>95,321,494</p></td>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>1,531</p></td>
+<td style="text-align:right;"><p>96,751,315</p></td>
+<td><p>2.0</p></td>
+<td style="text-align:right;"><p>827</p></td>
+<td style="text-align:right;"><p>104,853,646</p></td>
+<td><p>3.7</p></td>
+<td style="text-align:right;"><p>425</p></td>
+<td style="text-align:right;"><p>107,369,070</p></td>
+<td><p>7.2</p></td>
+<td style="text-align:right;"><p>247</p></td>
+<td style="text-align:right;"><p>123,994,812</p></td>
+<td><p>12.4</p></td>
+</tr>
+<tr>
+<td><p>12</p></td>
+<td style="text-align:right;"><p>2,518</p></td>
+<td style="text-align:right;"><p>79,975,416</p></td>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>1,325</p></td>
+<td style="text-align:right;"><p>85,447,418</p></td>
+<td><p>1.9</p></td>
+<td style="text-align:right;"><p>662</p></td>
+<td style="text-align:right;"><p>85,657,884</p></td>
+<td><p>3.8</p></td>
+<td style="text-align:right;"><p>364</p></td>
+<td style="text-align:right;"><p>94,000,085</p></td>
+<td><p>6.9</p></td>
+<td style="text-align:right;"><p>219</p></td>
+<td style="text-align:right;"><p>112,174,209</p></td>
+<td><p>11.5</p></td>
+</tr>
+<tr>
+<td><p>13</p></td>
+<td style="text-align:right;"><p>2,131</p></td>
+<td style="text-align:right;"><p>66,100,160</p></td>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>1,121</p></td>
+<td style="text-align:right;"><p>70,622,802</p></td>
+<td><p>1.9</p></td>
+<td style="text-align:right;"><p>560</p></td>
+<td style="text-align:right;"><p>70,796,754</p></td>
+<td><p>3.8</p></td>
+<td style="text-align:right;"><p>313</p></td>
+<td style="text-align:right;"><p>78,834,155</p></td>
+<td><p>6.8</p></td>
+<td style="text-align:right;"><p>192</p></td>
+<td style="text-align:right;"><p>96,053,649</p></td>
+<td><p>11.1</p></td>
+</tr>
+<tr>
+<td><p>14</p></td>
+<td style="text-align:right;"><p>1,871</p></td>
+<td style="text-align:right;"><p>58,099,574</p></td>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>935</p></td>
+<td style="text-align:right;"><p>58,971,066</p></td>
+<td><p>2.0</p></td>
+<td style="text-align:right;"><p>534</p></td>
+<td style="text-align:right;"><p>67,561,507</p></td>
+<td><p>3.5</p></td>
+<td style="text-align:right;"><p>296</p></td>
+<td style="text-align:right;"><p>74,791,668</p></td>
+<td><p>6.3</p></td>
+<td style="text-align:right;"><p>191</p></td>
+<td style="text-align:right;"><p>95,627,150</p></td>
+<td><p>9.8</p></td>
+</tr>
+<tr>
+<td><p>15</p></td>
+<td style="text-align:right;"><p>2,648</p></td>
+<td style="text-align:right;"><p>84,143,340</p></td>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>1,324</p></td>
+<td style="text-align:right;"><p>85,405,488</p></td>
+<td><p>2.0</p></td>
+<td style="text-align:right;"><p>715</p></td>
+<td style="text-align:right;"><p>92,557,676</p></td>
+<td><p>3.7</p></td>
+<td style="text-align:right;"><p>378</p></td>
+<td style="text-align:right;"><p>97,486,065</p></td>
+<td><p>7.0</p></td>
+<td style="text-align:right;"><p>243</p></td>
+<td style="text-align:right;"><p>124,516,703</p></td>
+<td><p>10.9</p></td>
+</tr>
+<tr>
+<td><p>16</p></td>
+<td style="text-align:right;"><p>2,347</p></td>
+<td style="text-align:right;"><p>75,738,094</p></td>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>1,235</p></td>
+<td style="text-align:right;"><p>80,920,173</p></td>
+<td><p>1.9</p></td>
+<td style="text-align:right;"><p>601</p></td>
+<td style="text-align:right;"><p>79,039,499</p></td>
+<td><p>3.9</p></td>
+<td style="text-align:right;"><p>321</p></td>
+<td style="text-align:right;"><p>84,141,904</p></td>
+<td><p>7.3</p></td>
+<td style="text-align:right;"><p>182</p></td>
+<td style="text-align:right;"><p>94,701,972</p></td>
+<td><p>12.9</p></td>
+</tr>
+<tr>
+<td><p>17</p></td>
+<td style="text-align:right;"><p>4,884</p></td>
+<td style="text-align:right;"><p>154,901,225</p></td>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>2,872</p></td>
+<td style="text-align:right;"><p>184,970,278</p></td>
+<td><p>1.7</p></td>
+<td style="text-align:right;"><p>1,878</p></td>
+<td style="text-align:right;"><p>242,480,013</p></td>
+<td><p>2.6</p></td>
+<td style="text-align:right;"><p>1,085</p></td>
+<td style="text-align:right;"><p>279,166,418</p></td>
+<td><p>4.5</p></td>
+<td style="text-align:right;"><p>814</p></td>
+<td style="text-align:right;"><p>416,426,105</p></td>
+<td><p>6.0</p></td>
+</tr>
+<tr>
+<td><p>18</p></td>
+<td style="text-align:right;"><p>646</p></td>
+<td style="text-align:right;"><p>20,266,629</p></td>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>358</p></td>
+<td style="text-align:right;"><p>22,856,254</p></td>
+<td><p>1.8</p></td>
+<td style="text-align:right;"><p>222</p></td>
+<td style="text-align:right;"><p>28,443,165</p></td>
+<td><p>2.9</p></td>
+<td style="text-align:right;"><p>124</p></td>
+<td style="text-align:right;"><p>31,608,146</p></td>
+<td><p>5.2</p></td>
+<td style="text-align:right;"><p>84</p></td>
+<td style="text-align:right;"><p>42,454,639</p></td>
+<td><p>7.7</p></td>
+</tr>
+<tr>
+<td><p>19</p></td>
+<td style="text-align:right;"><p>2,983</p></td>
+<td style="text-align:right;"><p>93,858,903</p></td>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>1,491</p></td>
+<td style="text-align:right;"><p>95,266,785</p></td>
+<td><p>2.0</p></td>
+<td style="text-align:right;"><p>785</p></td>
+<td style="text-align:right;"><p>100,527,830</p></td>
+<td><p>3.8</p></td>
+<td style="text-align:right;"><p>426</p></td>
+<td style="text-align:right;"><p>108,742,238</p></td>
+<td><p>7.0</p></td>
+<td style="text-align:right;"><p>226</p></td>
+<td style="text-align:right;"><p>114,692,731</p></td>
+<td><p>13.2</p></td>
+</tr>
+<tr>
+<td><p>20</p></td>
+<td style="text-align:right;"><p>7,473</p></td>
+<td style="text-align:right;"><p>231,206,390</p></td>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>3,736</p></td>
+<td style="text-align:right;"><p>234,674,482</p></td>
+<td><p>2.0</p></td>
+<td style="text-align:right;"><p>1,916</p></td>
+<td style="text-align:right;"><p>241,284,621</p></td>
+<td><p>3.9</p></td>
+<td style="text-align:right;"><p>1,083</p></td>
+<td style="text-align:right;"><p>271,751,263</p></td>
+<td><p>6.9</p></td>
+<td style="text-align:right;"><p>530</p></td>
+<td style="text-align:right;"><p>264,493,531</p></td>
+<td><p>14.1</p></td>
+</tr>
+<tr>
+<td><p>21</p></td>
+<td style="text-align:right;"><p>3,626</p></td>
+<td style="text-align:right;"><p>112,457,464</p></td>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>1,813</p></td>
+<td style="text-align:right;"><p>114,144,324</p></td>
+<td><p>2.0</p></td>
+<td style="text-align:right;"><p>906</p></td>
+<td style="text-align:right;"><p>114,425,474</p></td>
+<td><p>4.0</p></td>
+<td style="text-align:right;"><p>489</p></td>
+<td style="text-align:right;"><p>123,247,294</p></td>
+<td><p>7.4</p></td>
+<td style="text-align:right;"><p>237</p></td>
+<td style="text-align:right;"><p>118,558,091</p></td>
+<td><p>15.3</p></td>
+</tr>
+<tr>
+<td><p>22</p></td>
+<td style="text-align:right;"><p>2,560</p></td>
+<td style="text-align:right;"><p>81,302,340</p></td>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>1,347</p></td>
+<td style="text-align:right;"><p>86,865,131</p></td>
+<td><p>1.9</p></td>
+<td style="text-align:right;"><p>691</p></td>
+<td style="text-align:right;"><p>89,432,576</p></td>
+<td><p>3.7</p></td>
+<td style="text-align:right;"><p>412</p></td>
+<td style="text-align:right;"><p>106,348,704</p></td>
+<td><p>6.2</p></td>
+<td style="text-align:right;"><p>264</p></td>
+<td style="text-align:right;"><p>135,196,568</p></td>
+<td><p>9.7</p></td>
+</tr>
+<tr>
+<td><p>23</p></td>
+<td style="text-align:right;"><p>2,039</p></td>
+<td style="text-align:right;"><p>63,598,940</p></td>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>1,019</p></td>
+<td style="text-align:right;"><p>64,552,923</p></td>
+<td><p>2.0</p></td>
+<td style="text-align:right;"><p>536</p></td>
+<td style="text-align:right;"><p>68,117,815</p></td>
+<td><p>3.8</p></td>
+<td style="text-align:right;"><p>323</p></td>
+<td style="text-align:right;"><p>81,871,010</p></td>
+<td><p>6.3</p></td>
+<td style="text-align:right;"><p>206</p></td>
+<td style="text-align:right;"><p>103,621,303</p></td>
+<td><p>9.9</p></td>
+</tr>
+<tr>
+<td><p>24</p></td>
+<td style="text-align:right;"><p>2,563</p></td>
+<td style="text-align:right;"><p>80,413,971</p></td>
+<td><p>1</p></td>
+<td style="text-align:right;"><p>1,281</p></td>
+<td style="text-align:right;"><p>81,620,179</p></td>
+<td><p>2.0</p></td>
+<td style="text-align:right;"><p>657</p></td>
+<td style="text-align:right;"><p>83,919,196</p></td>
+<td><p>3.9</p></td>
+<td style="text-align:right;"><p>337</p></td>
+<td style="text-align:right;"><p>85,810,169</p></td>
+<td><p>7.6</p></td>
+<td style="text-align:right;"><p>178</p></td>
+<td style="text-align:right;"><p>90,074,814</p></td>
+<td><p>14.4</p></td>
+</tr>
+<tr>
+<td><p>avg</p></td>
+<td></td>
+<td></td>
+<td><p>1</p></td>
+<td></td>
+<td></td>
+<td><p>2.0</p></td>
+<td></td>
+<td></td>
+<td><p>3.7</p></td>
+<td></td>
+<td></td>
+<td><p>6.6</p></td>
+<td></td>
+<td></td>
+<td><p>11.1</p></td>
+</tr>
+</tbody>
+</table>
+
+<p>Despite Robert Hyatt mentioned DTS really will only scale as far as a shared memory architecture scales, and any delays (such as those in some architectures that use a <a href="/NUMA">hierarchical memory organization</a> with varying delays depending on how far the memory is from the requesting processor) will certainly have an adverse effect on DTS, the published speedups were heavily criticized by <a href="/Vincent_Diepeveen">Vincent Diepeveen</a> in 2002 <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> .</p>
+<h3 id="comparison">Comparison</h3>
+<p><em>Average Cray Blitz speedups on Cray C916/1024 over 24 test positions</em></p>
+<table>
+<thead>
+<tr>
+<th><p>#Procs<br />
+Algorithm</p></th>
+<th><p>1</p></th>
+<th><p>2</p></th>
+<th><p>4</p></th>
+<th><p>8</p></th>
+<th><p>16</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>PVS</p></td>
+<td style="text-align:right;"><p>1.0</p></td>
+<td style="text-align:right;"><p>1.8</p></td>
+<td style="text-align:right;"><p>3.0</p></td>
+<td style="text-align:right;"><p>4.1</p></td>
+<td style="text-align:right;"><p>4.6</p></td>
+</tr>
+<tr>
+<td><p>EPVS</p></td>
+<td style="text-align:right;"><p>1.0</p></td>
+<td style="text-align:right;"><p>1.9</p></td>
+<td style="text-align:right;"><p>3.4</p></td>
+<td style="text-align:right;"><p>5.4</p></td>
+<td style="text-align:right;"><p>6.0</p></td>
+</tr>
+<tr>
+<td><p>DTS</p></td>
+<td style="text-align:right;"><p>1.0</p></td>
+<td style="text-align:right;"><p>2.0</p></td>
+<td style="text-align:right;"><p>3.7</p></td>
+<td style="text-align:right;"><p>6.6</p></td>
+<td style="text-align:right;"><p>11.1</p></td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="recursive-dts">Recursive DTS</h2>
+<p>While searching various subtrees with different <a href="/Ply">ply</a> levels from the <a href="/Root">root</a> was quite straighforward to implement in <a href="/Cray_Blitz">Cray Blitz'</a> <a href="/Iterative_Search">iterative search</a> written in <a href="/Fortran">Fortran</a>, a <a href="/Recursion">recursive</a> <a href="/Negamax">Negamax</a> would have made it much more difficult, since the <a href="/Stack">call stack</a> is inaccessible to the search code and moving the tree state around would have been more difficult <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> . A recursive DTS-like algorithm was proposed by <a href="/Peter_Österlund">Peter Österlund</a> in 2013 <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a> , as implemented in <a href="/Texel">Texel</a>.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/ABDADA">ABDADA</a></li>
+<li><a href="/Jamboree">Jamboree</a></li>
+<li><a href="/Lazy_SMP">Lazy SMP</a></li>
+<li><a href="/NUMA">NUMA</a></li>
+<li><a href="/SMP">SMP</a></li>
+<li><a href="/Young_Brothers_Wait_Concept">Young Brothers Wait Concept</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Robert_Hyatt">Robert Hyatt</a> (<strong>1994</strong>). <em><a href="http://www.craftychess.com/hyatt/search.html">The DTS high-performance parallel tree search algorithm</a></em>.</li>
+<li><a href="/Robert_Hyatt">Robert Hyatt</a> (<strong>1997</strong>). <em><a href="http://www.craftychess.com/hyatt/search.html">The Dynamic Tree-Splitting Parallel Search Algorithm</a></em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 20, No. 1</a></li>
+<li><a href="/Valavan_Manohararajah">Valavan Manohararajah</a> (<strong>2001</strong>). <em>Parallel Alpha-Beta Search on Shared Memory Multiprocessors</em>. Masters Thesis, <a href="http://www.top-5000.nl/ps/Parallel%20Alpha-Beta%20Search%20on%20Shared%20Memory%20Multiprocessors.pdf">pdf</a></li>
+<li><a href="/David_J._Wu">David J. Wu</a> (<strong>2015</strong>). <em>Designing a Winning Arimaa Program</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 38, No. 1</a>, <a href="http://icosahedral.net/downloads/djwu2015arimaa_color.pdf">pdf</a> » <a href="/Arimaa">Arimaa</a> <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=249457">DTS article robert hyatt - revealing his bad math</a> by <a href="/Vincent_Diepeveen">Vincent Diepeveen</a>, <a href="/CCC">CCC</a>, September 03, 2002</li>
+</ul>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=249651">DTS NUMA</a> by <a href="/Vincent_Diepeveen">Vincent Diepeveen</a>, <a href="/CCC">CCC</a>, September 03, 2002 » <a href="/NUMA">NUMA</a></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=14832">Iterative DTS</a> by <a href="/Fritz_Reul">Fritz Reul</a>, <a href="/CCC">CCC</a>, July 02, 2007</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=34561">DTS Structure</a> by <a href="/Edmund_Moshammer">Edmund Moshammer</a>, <a href="/CCC">CCC</a>, May 28, 2010 » <a href="/Dynamic_Tree_Splitting">Dynamic Tree Splitting</a>, <a href="/Iterative_Search">Iterative Search</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=34633">DTS-ification of YBWC</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, June 01, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=42986">Parallelization questions, ABDADA or DTS?</a> by Benjamin Rosseaux, <a href="/CCC">CCC</a>, March 23, 2012 » <a href="/ABDADA">ABDADA</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48752">Recursive DTS-like search algorithm</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, July 24, 2013 » <a href="/Texel">Texel</a></li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2378">DTS-like SMP</a> by <a href="/ThinkingALot">ThinkingALot</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, July 25, 2013 » <a href="/Gull">Gull</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55649">Dynamic Tree Splitting</a> by <a href="/Syed_Fahad">Syed Fahad</a>, <a href="/CCC">CCC</a>, March 13, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56019">Empirical results with Lazy SMP, YBWC, DTS</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, April 16, 2015 » <a href="/Lazy_SMP">Lazy SMP</a>, <a href="/Young_Brothers_Wait_Concept">YBWC</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72167">Another take on DTS?</a> by <a href="/Marc-Philippe_Huget">Marc-Philippe Huget</a>, <a href="/CCC">CCC</a>, October 25, 2019</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="http://www.craftychess.com/hyatt/search.html">The DTS high-performance parallel tree search algorithm</a> by <a href="/Robert_Hyatt">Robert Hyatt</a></li>
+<li><a href="/Category:Porcupine_Tree">Porcupine Tree</a> - <a href="https://en.wikipedia.org/wiki/Octane_Twisted">Octane Twisted</a> (2012), recorded at <a href="https://en.wikipedia.org/wiki/Riviera_Theater">Riviera Theatre</a>, <a href="https://en.wikipedia.org/wiki/Chicago,_Illinois">Chicago</a>, April 30, 2010, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/LR-ikN7K8TM" title="YouTube video LR-ikN7K8TM" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=LR-ikN7K8TM">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Parallel_Search">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Robert_Hyatt">Robert Hyatt</a> (<strong>1994</strong>). <em><a href="http://www.craftychess.com/hyatt/search.html">The DTS high-performance parallel tree search algorithm</a></em><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Bruce_W._Suter">Bruce W. Suter</a>, <a href="/Harry_Nelson">Harry Nelson</a> (<strong>1989</strong>). <em>A Parallel Alpha-Beta Tree Searching Algorithm</em>. Parallel Computing, Vol. 10, No. 3.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=398061&amp;t=38317">Re: "CUT" vs "ALL" nodes</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, March 08, 2011<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.craftychess.com/hyatt/search.html">The DTS high-performance parallel tree search algorithm</a> by <a href="/Robert_Hyatt">Robert Hyatt</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="/Robert_Hyatt">Robert Hyatt</a> (<strong>1994</strong>). <em><a href="http://www.craftychess.com/hyatt/search.html">The DTS high-performance parallel tree search algorithm</a></em><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p>Table 4 Search Time in Seconds, Table 5 Total Nodes Searched, and Table 6 Parallel Processing Speedup, combined, in <a href="http://www.craftychess.com/hyatt/search.html">The DTS high-performance parallel tree search algorithm</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, and <a href="/Robert_Hyatt">Robert Hyatt</a> (<strong>1997</strong>). <em><a href="http://www.craftychess.com/hyatt/search.html">The Dynamic Tree-Splitting Parallel Search Algorithm</a></em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 20, No. 1</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="https://www.stmintz.com/ccc/index.php?id=249457">DTS article robert hyatt - revealing his bad math</a> by <a href="/Vincent_Diepeveen">Vincent Diepeveen</a>, <a href="/CCC">CCC</a>, September 03, 2002<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="http://www.craftychess.com/hyatt/search.html">The DTS high-performance parallel tree search algorithm</a> by <a href="/Robert_Hyatt">Robert Hyatt</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=48752">Recursive DTS-like search algorithm</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, July 24, 201<a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="https://www.game-ai-forum.org/viewtopic.php?f=2&amp;t=83">Paper describing "Sharp" the program that won the Arimaa Challenge</a> by ddyer, <a href="/Computer_Chess_Forums">Game-AI Forum</a>, January 14, 2016<a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Porcupine_Tree">Porcupine Tree</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Dynamic_Tree_Splitting">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

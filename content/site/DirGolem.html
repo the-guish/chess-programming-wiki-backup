@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DirGolem - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">DirGolem</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Move_Generation">Move Generation</a> * DirGolem</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/3/32/Golem_1920_Poster.jpg" alt="The Golem 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">The Golem <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://en.wikipedia.org/wiki/The_Golem:_How_He_Came_into_the_World">The Golem: How He Came Into the World, from Wikipedia</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>DirGolem</strong>,<br />
+Direction-wise Generation of <a href="/Legal_Move">Legal Moves</a>, is best done with vectors of <a href="/Bitboards">bitboards</a> applying <a href="/AltiVec">AltiVec</a>, <a href="/SSE2">SSE2</a>, <a href="/AVX2">AVX2</a> or similar <a href="/SIMD_and_SWAR_Techniques">SIMD architectures</a> with appropriate register sets. Legal moves are stored as target-bitboards for all 16 <a href="/Direction">move directions</a> as a kind of unsorted <a href="/Move_List">move list</a> inside the state of a <a href="/Node">node</a>. That are four orthogonal directions with rook-, queen- and king-moves including <a href="/Castling">castling</a> and vertical <a href="/Pawn_Push">pawn-pushes</a>, four diagonal directions with bishop-, queen- and king-moves and pawn-captures including <a href="/En_passant">en passant</a>, and eight knight directions. Each <a href="/Target_Square">target square</a> of each direction set has an unique one-to-one relation to it's <a href="/Origin_Square">source square</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#prospect">Prospect</a></li>
+<li><a href="#basics">Basics</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#move-target-sets">Move Target Sets</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#black-attacks">Black Attacks</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#sliders--super-king">Sliders &amp;amp; Super King</a></li>
+<li><a href="#none-sliding-pieces">None Sliding Pieces</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#generating-white-moves">Generating White Moves</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#in-check">In Check?</a></li>
+<li><a href="#sliding-pieces">Sliding Pieces</a></li>
+<li><a href="#none-sliding-pieces-1">None Sliding Pieces</a></li>
+</ol>
+</details></li>
+<li><a href="#finally">Finally</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="prospect">Prospect</h2>
+<p>To get the idea, the following description with scalar <a href="/Cpp">C++</a> code intended as pseudo code, is a rough translation of HansDamf's intrinsic SSE2 code by <a href="/Gerd_Isenberg">Gerd Isenberg</a>. It assumes White to move within a <a href="/Color_Flipping">color flipper</a> approach. More information for a set-wise <a href="/Static_Exchange_Evaluation">SEE</a>, determining <a href="/Check">check</a> giving moves including <a href="/Discovered_Check">discovered checks</a>, etc. may be collected and considered. There are zillions of implementation nuances to utilize up to 16 128-bit XMM-, 16 256-bit YMM (AVX2), or even <a href="/AVX-512">AVX-512</a> 32 512-bit ZMM-SIMD registers <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. The generation is completely branch-less, does not use huge lookup tables, and is intended to hide the latency of a <a href="https://en.wikipedia.org/wiki/Prefetching">prefetched</a> <a href="/Transposition_Table">TT</a> probe. However, picking any moves or move proposals like <a href="/Hash_Move">hash</a>- or <a href="/Killer_Move">killer moves</a> from that list is more expensive and is typically done by a <a href="https://en.wikipedia.org/wiki/Finite-state_machine">finite state machine</a> to ensure proper <a href="/Move_Ordering">move ordering</a> considering <a href="/MVV-LVA">MVV-LVA</a>, <a href="/Hanging_Piece">hanging pieces</a>, etc., as mentioned in <a href="/Pieces_versus_Directions">pieces versus directions</a>.</p>
+<h2 id="basics">Basics</h2>
+<ul>
+<li><a href="/King_Pattern">King Attacks by Calculation</a></li>
+<li><a href="/Knight_Pattern">Multiple Knight Attacks</a></li>
+<li><a href="/Sliding_Piece_Attacks">Multiple Sliding Pieces</a></li>
+<li><a href="/General_Setwise_Operations">One Step Only</a></li>
+<li><a href="/Checks_and_Pinned_Pieces_%28Bitboards%29">Opposite Ray-Directions</a></li>
+<li><a href="/Pawn_Attacks_%28Bitboards%29">Pawn Attacks set-wise</a></li>
+<li><a href="/Pawn_Pushes_%28Bitboards%29">Pawn Pushes set-wise</a></li>
+<li><a href="/Pieces_versus_Directions">Pieces versus Directions</a></li>
+</ul>
+<table>
+<tbody>
+<tr>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6" style="--wiki-img-w:220px"><a href="/Square_Mapping_Considerations"><img src="/assets/Cpwmappinghint.JPG" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></a></span></td>
+<td><p><em>Code samples and bitboard diagrams rely on <a href="/Square_Mapping_Considerations">Little endian file and rank mapping</a></em>.</p></td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="move-target-sets">Move Target Sets</h2>
+<p>To determine white <a href="/Pin">absolutely pinned pieces</a> and squares attacked by black pieces, pawns, and king, taboo for the white king, black attacks are generated in a first phase. Those attacks are also utilized to detect whether the own king is in <a href="/Check">check</a>. Aggregated collected information is then used in a second phase of legal move target generation.</p>
+<h3 id="black-attacks">Black Attacks</h3>
+<h4 id="sliders--super-king">Sliders &amp; Super King</h4>
+<p>First, all black sliding attacks are generated by <a href="/Dumb7Fill">Dumb7</a>- or <a href="/Kogge-Stone_Algorithm">Kogge-Stone fill</a>, unrolled for all eight <a href="/Direction">ray directions</a>, to aggregate them into a white king taboo bitboard, and to determine and keep line-wise <a href="/Square_Attacked_By">in-between</a> bitboards by intersection with <a href="/Checks_and_Pinned_Pieces_%28Bitboards%29">opposite ray-direction</a> attacks of the white king as sliding super piece, best generated by the <a href="/Classical_Approach">classical approach</a>, or alternatively along with the sliding pieces itself as additional SIMD data element processing two opponent fill direction in one run.</p>
+<p><span id="Xray"></span>The occupancy for the black sliding attacks has the white king excluded, so that in case of check by a sliding piece the king is <a href="/X-ray">x-rayed</a> to later avoid king moves to otherwise non attacked squares. The in-between sets intersected with own pieces leave <a href="/Pin">pinned pieces</a>, but are also handy to determine an interposing block target set in case of distant sliding checks. In total, seven bitboards are processed as used in the second part of the routine, four line-wise in-between sets, orthogonal and diagonal white king super piece attacks to later determine a possible sliding checking piece, and the aggregated black attacks.</p>
+<pre><code>  U64 horInbetween, verInbetween, diaInbetween, antInbetween;   
+  U64 wKSuperAttacksOrth, wKSuperAttacksDia , bAnyAttacks;</code></pre>
+<p>Intended members associated with a position object have a m_-prefix, scratch or register variables an underscore:</p>
+<pre><code>  /* black rooks and queens west */
+  _bAttacks = westAttacks (m_bRooks | m_bQueens, m_occ ^ m_wKbb);
+  bAnyAttacks         = _bAttacks;
+  _wKSuperAttacks     = slidingRayEastAttacks(m_wKsq, m_occ);
+  wKSuperAttacksOrth  = _wKSuperAttacks;
+  horInbetween        = _bAttacks &amp; _wKSuperAttacks;
+  /* black rooks and queens east */
+  _bAttacks = eastAttacks (m_bRooks | m_bQueens, m_occ ^ m_wKbb);
+  bAnyAttacks        |= _bAttacks;
+  _wKSuperAttacks     = slidingRayWestAttacks(m_wKsq, m_occ);
+  wKSuperAttacksOrth |= _wKSuperAttacks;
+  horInbetween       |= _bAttacks &amp; _wKSuperAttacks;
+  /* black rooks and queens north */
+  _bAttacks = nortAttacks (m_bRooks | m_bQueens, m_occ ^ m_wKbb);
+  bAnyAttacks        |= _bAttacks;
+  _wKSuperAttacks     = slidingRaySoutAttacks(m_wKsq, m_occ);
+  wKSuperAttacksOrth |= _wKSuperAttacks;
+  verInbetween        = _bAttacks &amp; _wKSuperAttacks;
+  /* black rooks and queens south */
+  _bAttacks = soutAttacks (m_bRooks | m_bQueens, m_occ ^ m_wKbb);
+  bAnyAttacks        |= _bAttacks;
+  _wKSuperAttacks     = slidingRayNortAttacks(m_wKsq, m_occ);
+  wKSuperAttacksOrth |= _wKSuperAttacks;
+  verInbetween       |= _bAttacks &amp; _wKSuperAttacks;
+
+  /* black bishops and queens north east */
+  _bAttacks = noEaAttacks (m_bBishops | m_bQueens, m_occ ^ m_wKbb);
+  bAnyAttacks        |= _bAttacks;
+  _wKSuperAttacks     = slidingRaySoWeAttacks(m_wKsq, m_occ);
+  wKSuperAttacksDia   = _wKSuperAttacks;
+  diaInbetween        = _bAttacks &amp; _wKSuperAttacks;
+  /* black bishops and queens south west */
+  _bAttacks = soWeAttacks (m_bBishops | m_bQueens, m_occ ^ m_wKbb);
+  bAnyAttacks        |= _bAttacks;
+  _wKSuperAttacks     = slidingRayNoEaAttacks(m_wKsq, m_occ);
+  wKSuperAttacksDia  |= _wKSuperAttacks;
+  diaInbetween       |= _bAttacks &amp; _wKSuperAttacks;
+  /* black bishops and queens north west */
+  _bAttacks = noWeAttacks (m_bBishops | m_bQueens, m_occ ^ m_wKbb);
+  bAnyAttacks        |= _bAttacks;
+  _wKSuperAttacks     = slidingRaySoEaAttacks(m_wKsq, m_occ);
+  wKSuperAttacksDia  |= _wKSuperAttacks;
+  antInbetween        = _bAttacks &amp; _wKSuperAttacks;
+  /* black bishops and queens south east */
+  _bAttacks = soEaAttacks (m_bBishops | m_bQueens, m_occ ^ m_wKbb);
+  bAnyAttacks        |= _bAttacks;
+  _wKSuperAttacks     = slidingRayNoWeAttacks(m_wKsq, m_occ);
+  wKSuperAttacksDia  |= _wKSuperAttacks;
+  antInbetween       |= _bAttacks &amp; _wKSuperAttacks;</code></pre>
+<h4 id="none-sliding-pieces">None Sliding Pieces</h4>
+<p>Black <a href="/Pawn_Attacks_%28Bitboards%29">pawn-</a> and knight- attacks are best determined by disjoint direction-wise steps and the <a href="/Knight_Pattern">multiple knight attacks</a> routine. Black <a href="/King_Pattern">king attacks</a> may be determined by lookup or <a href="/King_Pattern">calculation</a>:</p>
+<pre><code>  /* black knight attacks */
+  bAnyAttacks  |= _knightAttacks  (m_bKnights);
+  /* black pawn attacks */
+  bAnyAttacks |= _bPawnEastAttacks(m_bPawns);
+  bAnyAttacks |= _bPawnWestAttacks(m_bPawns);
+  /* black king attacks */
+  bAnyAttacks |= _kingAttacks(m_bKbb);</code></pre>
+<h3 id="generating-white-moves">Generating White Moves</h3>
+<p>Now, with all black attacks and black sliding vs white king in-between sets processed, one generates all legal white moves into 16 move-target bitboards.</p>
+<h4 id="in-check">In Check?</h4>
+<p>To make <a href="/Check">in check</a> or <a href="/Double_Check">double check</a> handling <a href="/Avoiding_Branches">branch-less</a>, a target mask for all non king moves is calculated, which is needed anyway to remove own white pieces from the attack sets. In case of check it only contains the check giving piece as capture target - distant sliding checks include the in-between set intersected with empty squares as target set for blocking the check. The rare case of double check is considered by a mask (_nullIfDblCheck) computed from the set of check giving pieces - which leaves <a href="/General_Setwise_Operations">empty</a> if <a href="/Population_Count">population greater one</a> and the universe (~empty) otherwise. Note that the ones' decrement of any single populated bitboard is always positive and leaves the empty set if shifted right 63 arithmetically:</p>
+<pre><code>  U64 allInbetween = horInbetween | verInbetween | diaInbetween | antInbetween;
+  _blocks      =  allInbetween &amp; ~m_occ; /* in case of distant check */
+  _checkFrom   = (wKSuperAttacksOrth    &amp; (m_bRooks  | m_bQueens) )
+ (wKSuperAttacksDia     &amp; (m_bBishop | m_bQueens) )
+ (knightAttacks(m_wKbb) &amp;  m_bKnights )
+ (wPawnAttacks (m_wKbb) &amp;  m_bPawns )
+               ;
+  I64 _nullIfcheck    = ( (I64)( bAnyAttacks &amp; m_wKbb ) - 1) &gt;&gt; 63; /* signed shifts */
+  I64 _nullIfDblCheck = ( (I64)( checkFrom &amp; (checkFrom-1) ) - 1) &gt;&gt; 63; 
+
+  _checkTo     = _checkFrom | _blocks  | _nullIfcheck;
+  targetMask   = ~m_wPieces &amp; _checkTo &amp; _nullIfDblCheck;</code></pre>
+<h4 id="sliding-pieces">Sliding Pieces</h4>
+<p>Moves by white sliding pieces are computed with eight Dumb7 or Kogge-Stone fills. Pinned sliders are considered <a href="/Pin">partial pinned</a> to move along the pinned direction:</p>
+<pre><code>  /* horizontal rook and queen moves */
+  _sliders = (m_wRooks | m_wQueens) &amp; ~(allInbetween ^ horInbetween);
+  m_moveTargets[eWest] = westAttacks (_sliders, m_occ) &amp; targetMask;
+  m_moveTargets[eEast] = eastAttacks (_sliders, m_occ) &amp; targetMask;
+  /* vertical rook and queen moves*/
+  _sliders = (m_wRooks | m_wQueens) &amp; ~(allInbetween ^ verInbetween);
+  m_moveTargets[eNort] = nortAttacks (_sliders, m_occ) &amp; targetMask;
+  m_moveTargets[eSout] = soutAttacks (_sliders, m_occ) &amp; targetMask;
+  /* diagonal bishop and queen moves */
+  _sliders = (m_wBishops | m_wQueens) &amp; ~(allInbetween ^ diaInbetween);
+  m_moveTargets[eNoEa] = noEaAttacks (_sliders, m_occ) &amp; targetMask;
+  m_moveTargets[eSoWe] = soWeAttacks (_sliders, m_occ) &amp; targetMask;
+  /* antidiagonal bishop and queen moves */
+  _sliders = (m_wBishops | m_wQueens) &amp; ~(allInbetween ^ antInbetween);
+  m_moveTargets[eNoWe] = noWeAttacks (_sliders, m_occ) &amp; targetMask;
+  m_moveTargets[eSoEa] = soEaAttacks (_sliders, m_occ) &amp; targetMask;</code></pre>
+<h4 id="none-sliding-pieces-1">None Sliding Pieces</h4>
+<p>Knight moves with their disjoint unique directions are generated by eight appropriate <a href="/Knight_Pattern">direction shifts</a> with all white knights not <a href="/Pin">pinned</a>, using the same targetMask considering in check. Pawn captures and <a href="/Pawn_Pushes_%28Bitboards%29">Pawn pushes</a> also consider <a href="/Pin">partial pins</a>. A given <a href="/En_passant">en passant</a> target square implies a strictly legal move, as already secured while making the triggering double pawn push.</p>
+<p>Finally king move targets are generated by eight <a href="/General_Setwise_Operations">one step direction shifts</a>, masking off target squares occupied by own pieces, or attacked by black, including <a href="/DirGolem">x-rays</a> through the white king in case of check by a sliding piece. <a href="/Castling">Castling</a> is left to the ambitious reader. In orthodox chess, west or east castling can simply distinguished from ordinal king moves due to the double king step, but requires some more tinkering in <a href="/Chess960">Chess960</a>.</p>
+<pre><code>  /* knight moves */
+  _knights = m_wKnights &amp; ~allInbetween;
+  m_moveTargets[eNoNoEa] = noNoEa(_knights) &amp; targetMask; 
+  m_moveTargets[eNoEaEa] = noEaEa(_knights) &amp; targetMask; 
+  m_moveTargets[eSoEaEa] = soEaEa(_knights) &amp; targetMask; 
+  m_moveTargets[eSoSoEa] = soSoEa(_knights) &amp; targetMask; 
+  m_moveTargets[eNoNoWe] = noNoWe(_knights) &amp; targetMask; 
+  m_moveTargets[eNoWeWe] = noWeWe(_knights) &amp; targetMask; 
+  m_moveTargets[eSoWeWe] = soWeWe(_knights) &amp; targetMask; 
+  m_moveTargets[eSoSoWe] = soSoWe(_knights) &amp; targetMask; 
+  /* pawn captures and en passant */
+  _targets = ( m_bPieces &amp; targetMask) | (C64(1) &lt;&lt; m_epTarget);
+  _pawns   = m_wPans &amp; ~(allInbetween ^ diaInbetween);
+  m_moveTargets[eNoEa] |=  noEaOne (_pawns) &amp; _targets ;
+  _pawns   = m_wPans &amp; ~(allInbetween ^ antInbetween);
+  m_moveTargets[eNoWe] |= noWeOne(_pawns) &amp; _targets;
+  /* pawn pushes ... */
+  _pawns   = m_wPans  &amp; ~(allInbetween ^ verInbetween);
+  _pawnPushs = nortOne (_pawns) &amp; ~m_occ;
+  m_moveTargets[eNort] |= _pawnPushs &amp; targetMask;
+  /* and double pushs */
+  _rank4 = C64(0x00000000FF000000);
+  m_moveTargets[eNort] |= nortOne (_pawnPushs) &amp; ~m_occ &amp; targetMask &amp; _rank4;
+  /* king moves */
+  targetMask = ~(m_wPieces | bAnyAttacks);
+  m_moveTargets[eWest] |= westOne (m_wKbb) &amp; targetMask;
+  m_moveTargets[eEast] |= eastOne (m_wKbb) &amp; targetMask;
+  m_moveTargets[eNort] |= nortOne (m_wKbb) &amp; targetMask;
+  m_moveTargets[eSout] |= soutOne (m_wKbb) &amp; targetMask;
+  m_moveTargets[eNoEa] |= noEaOne (m_wKbb) &amp; targetMask;
+  m_moveTargets[eSoWe] |= soWeOne (m_wKbb) &amp; targetMask;
+  m_moveTargets[eNoWe] |= noWeOne (m_wKbb) &amp; targetMask;
+  m_moveTargets[eSoEa] |= soEaOne (m_wKbb) &amp; targetMask;</code></pre>
+<h3 id="finally">Finally</h3>
+<p>Additionally, all 16 move target bitboards might be aggregated into a union set, so that <a href="/Checkmate">checkmate</a> and <a href="/Stalemate">stalemate</a> is indicated by the zero flag for early returns, wasting a TT prefetch. Further, some disjoint and aggregated attack and pinned piece information might be utilized in <a href="/Evaluation">evaluation</a>, maybe best associated with <a href="/Thread">thread</a> local memory shared by all <a href="/Node">nodes</a> searched, and allocated at the bottom of the <a href="/Stack">stack</a> referred by a (this) pointer, with the limited validity from generation until evaluation or the first (null) move is deepened.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/AVX2">AVX2</a></li>
+<li><a href="/AVX2">AVX2 Dumb7Fill</a></li>
+<li><a href="/AVX2">AVX2 Knight Attacks</a></li>
+<li><a href="/Checks_and_Pinned_Pieces_%28Bitboards%29">Checks and Pinned Pieces (Bitboards)</a></li>
+<li><a href="/Dumb7Fill">Dumb7Fill</a></li>
+<li><a href="/Fill_by_Subtraction">Fill by Subtraction</a></li>
+<li><a href="/Fill_Algorithms">Fill Algorithms</a></li>
+<li><a href="/GPU">GPU</a></li>
+<li><a href="/Kogge-Stone_Algorithm">Kogge-Stone Algorithm</a></li>
+<li><a href="/Pigeon">Pigeon</a></li>
+<li><a href="/SSE2">SSE2</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=43971">Is there such a thing as branchless move generation?</a> by <a href="/John_Hamlen">John Hamlen</a>, <a href="/CCC">CCC</a>, June 07, 2012</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Golem">Golem from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Golem_%28disambiguation%29">Golem (disambiguation) from Wikipedia</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Move_Generation">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://software.intel.com/en-us/blogs/2013/avx-512-instructions">AVX-512 instructions | Intel® Developer Zone</a>, by <a href="http://software.intel.com/en-us/user/335550">James Reinders</a>, July 23, 2013<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/DirGolem">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exploding Bitboards - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Exploding Bitboards</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * <a href="/Sliding_Piece_Attacks">Sliding Piece Attacks</a> * Exploding Bitboards</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/3/31/NTS_-_BEEF_-_WATUSI.jpg" alt="Nevada Test Site - Big Explosives Experimental Facility (BEEF) 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="https://en.wikipedia.org/wiki/Nevada_Test_Site#Area_4">Nevada Test Site - Big Explosives Experimental Facility</a> (BEEF) <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://en.wikipedia.org/wiki/Explosion">Explosion from Wikipedia</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p>The expanding or <strong>exploding bitboards</strong> were created by <a href="/Harald_Lüßen">Harald Lüßen</a> with some help from other people in <a href="/CCC">CCC</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> . The idea is to generate the attacks of a sliding piece from its square outside on all its rays in parallel like the waves of a stone thrown into water. This is done in some steps with multiplications and shifts like in the <a href="/Kindergarten_Bitboards">kindergarten bitboards</a>. At each step or distance from the original square the rays can be expanded or stopped by other pieces from an occupied bitboard. There are some nasty overflow problems at the border of the board that must be solved. This approach is slower than other techniques. The code below is taken from the chess engine <a href="/Elephant">Elephant</a> which is known for some bitboard comparisons but not for <a href="/Playing_Strength">playing strength</a>.</p>
+<p>In the example this <a href="/Square_Mapping_Considerations">big-endian file-mapping</a> is used:</p>
+<pre><code>    directions and shifts
+    +-----+-----+-----+
+&lt;&lt;= 9|&lt;&lt;= 8|&lt;&lt;= 7|
+    +-----+-----+-----+
+&lt;&lt;= 1|     |&gt;&gt;= 1|
+    +-----+-----+-----+
+&gt;&gt;= 7|&gt;&gt;= 8|&gt;&gt;= 9|
+    +-----+-----+-----+
+
+    +-------------------------+
+ 63 62 61 60 59 58 57 56 | 8
+ 55 54 53 52 51 50 49 48 | 7
+ 47 46 45 44 43 42 41 40 | 6
+ 39 38 37 36 35 35 33 32 | 5
+ 31 30 29 28 27 26 25 24 | 4
+ 23 22 21 20 19 18 17 16 | 3
+ 15 14 13 12 11 10  9  8 | 2
+  7  6  5  4  3  2  1  0 | 1
+    +-------------------------+
+       a  b  c  d  e  f  g  h</code></pre>
+<p>The general trick of chasing and pushing around the bits on the board is this: First shift down and sideways far enough to get a good start. Then multiply with 2 to shift one square to the side (left in this mapping) and multiply with 2^8 = 0x100 to move the bit upwards. Use any power of 2 that helps you. Build the sum of all the multiplication factors of all moves for all bits and multiply with that number. There will probably be more bits in the result than there should be because the multiplication works on all original bits. Use a mask to get rid of all the bad bits.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#bishops">Bishops</a></li>
+<li><a href="#rooks">Rooks</a></li>
+<li><a href="#results">Results</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="bishops">Bishops</h2>
+<p>For each square there is an ignition of the explosion.</p>
+<pre><code>/*
+First expanding step (explosion) for a bishop
+ . . . . . . . .
+ . . . . . . . .
+ . . . . . . . .
+ . . 1 . 1 . . .
+ . . .sq . . . .
+ . . 1 . 1 . . .
+ . . . . . . . .
+ . . . . . . . .
+*/
+Bitboard initB[64];
+void makeInitB()
+{
+    for ( int sq = 0; sq &lt; 64; ++sq )
+    {
+        Bitboard bb = C64(1) &lt;&lt; sq;
+        initB[sq]  = (bb &gt;&gt; 9) &amp; C64(0x7f7f7f7f7f7f7f7f);
+        initB[sq] |= (bb &gt;&gt; 7) &amp; C64(0xfefefefefefefefe);
+        initB[sq] |= (bb &lt;&lt; 9) &amp; C64(0xfefefefefefefefe);
+        initB[sq] |= (bb &lt;&lt; 7) &amp; C64(0x7f7f7f7f7f7f7f7f);
+    }
+}</code></pre>
+<p>The explosion is only allowed along the rays.</p>
+<pre><code>/*
+Mask for bishop attack rays
+ . . . . . . . 1
+ 1 . . . . . 1 .
+ . 1 . . . 1 . .
+ . . 1 . 1 . . .
+ . . .sq . . . .
+ . . 1 . 1 . . .
+ . 1 . . . 1 . .
+ 1 . . . . . 1 .
+*/
+Bitboard maskB[64];
+void makeMaskB()
+{
+    int sq;
+    for ( sq = 0; sq &lt; 64; ++sq )
+    {
+        maskB[sq] = 0;
+        int i;
+        for ( i = sq - 9; i &gt;= 0 &amp;&amp; i % 8 != 7; i -= 9 )
+            maskB[sq] |= C64(1) &lt;&lt; i;
+        for ( i = sq - 7; i &gt;= 0 &amp;&amp; i % 8 != 0; i -= 7 )
+            maskB[sq] |= C64(1) &lt;&lt; i;
+        for ( i = sq + 9; i &lt; 64 &amp;&amp; i % 8 != 0; i += 9 )
+            maskB[sq] |= C64(1) &lt;&lt; i;
+        for ( i = sq + 7; i &lt; 64 &amp;&amp; i % 8 != 7; i += 7 )
+            maskB[sq] |= C64(1) &lt;&lt; i;
+    }
+}</code></pre>
+<p>For each square there is a maximum number of steps to take.</p>
+<pre><code>/*
+Number of expanding steps (explosions) for a bishop
+*/
+const int repsB[64] =
+{
+    6, 5, 4, 3, 3, 4, 5, 6,
+    5, 5, 4, 3, 3, 4, 5, 5,
+    4, 4, 4, 3, 3, 4, 4, 4,
+    3, 3, 3, 3, 3, 3, 3, 3,
+    3, 3, 3, 3, 3, 3, 3, 3,
+    4, 4, 4, 3, 3, 4, 4, 4,
+    5, 5, 4, 3, 3, 4, 5, 5,
+    6, 5, 4, 3, 3, 4, 5, 6,
+};</code></pre>
+<p>This does one step of the explosion.</p>
+<pre><code>/*
+= init               &gt;&gt;= 9               *= 0x5005          &amp;= mask            at |= bb
+ . . . . . . . .     . . . . . . . .     . . . . . . . .    . . . . . . . .    . . . . . . . .
+ . . . . . . . .     . . . . . . . .     . . . . . . . .    . . . . . . . .    . . . . . . . .
+ . . . . . . . .     . . . . . . . .     . 1 1 . . 1 . .    . 1 . . . 1 . .    . 1 . . . 1 . .
+ . . 1 . 1 . . .     . . . . . . . .     . . . . . . . .    . . . . . . . .    . . 1 . 1 . . .
+ . . . s . . . .     . . . 1 . 1 . .     1 1 . . 1 . . .    . . . s . . . .    . . . s . . . .
+ . . 1 . 1 . . .     . . . . . . . .     . . . . . . . .    . . . . . . . .    . . 1 . 1 . . .
+ . . . . . . . .     . . . 1 . 1 . .     . 1 1 . . 1 . .    . 1 . . . 1 . .    . 1 . . . 1 . .
+ . . . . . . . .     . . . . . . . .     . . . . . . . .    . . . . . . . .    . . . . . . . .
+*/
+Bitboard bishopAttacks( int sq, const Bitboard &amp;free )
+{
+    Bitboard msk = maskB[sq];
+    Bitboard bb  = initB[sq];
+    Bitboard at  = bb;
+    bb &amp;= free;
+    switch ( repsB[sq] )
+    {
+      case 6:
+        bb &gt;&gt;= 9; bb *= 0x00050005; bb &amp;= msk; at |= bb; bb &amp;= free;
+      case 5:
+        bb &gt;&gt;= 9; bb *= 0x00050005; bb &amp;= msk; at |= bb; bb &amp;= free;
+      case 4:
+        bb &gt;&gt;= 9; bb *= 0x00050005; bb &amp;= msk; at |= bb; bb &amp;= free;
+      case 3:
+        bb &gt;&gt;= 9; bb *= 0x00050005; bb &amp;= msk; at |= bb; bb &amp;= free;
+        bb &gt;&gt;= 9; bb *= 0x00050005; bb &amp;= msk; at |= bb; bb &amp;= free;
+        bb &gt;&gt;= 9; bb *= 0x00050005; bb &amp;= msk; at |= bb;
+    }
+    return at;
+}</code></pre>
+<p>There are some possible optimisations when the repsB[] array is modified in the corners during the game or search. Some numbers 7, 8, 9 combined with additional switch cases can work as a shortcut for bishops in the corners behind pawns.</p>
+<h2 id="rooks">Rooks</h2>
+<p>For each square there is an ignition of the explosion.</p>
+<pre><code>/*
+First expanding step (explosion) for a rook
+ . . . . . . . .
+ . . . . . . . .
+ . . . . . . . .
+ . . . 1 . . . .
+ . . 1sq 1 . . .
+ . . . 1 . . . .
+ . . . . . . . .
+ . . . . . . . .
+*/
+Bitboard initR[64];
+void makeInitR()
+{
+    for ( int sq = 0; sq &lt; 64; ++sq )
+    {
+        Bitboard bb = C64(1) &lt;&lt; sq;
+        initR[sq]  = (bb &gt;&gt; 8);
+        initR[sq] |= (bb &gt;&gt; 1) &amp; C64(0x7f7f7f7f7f7f7f7f);
+        initR[sq] |= (bb &lt;&lt; 1) &amp; C64(0xfefefefefefefefe);
+        initR[sq] |= (bb &lt;&lt; 8);
+        //logf &lt;&lt; &quot;initR[sq] &quot; &lt;&lt; sq &lt;&lt; endl;
+        //logf &lt;&lt; initR[sq].txt8lines() &lt;&lt; endl;
+    }
+}</code></pre>
+<p>The explosion is only allowed along the rays.</p>
+<pre><code>/*
+Mask for rook attack rays
+ . . . 1 . . . .
+ . . . 1 . . . .
+ . . . 1 . . . .
+ . . . 1 . . . .
+ 1 1 1sq 1 1 1 1
+ . . . 1 . . . .
+ . . . 1 . . . .
+ . . . 1 . . . .
+*/
+Bitboard maskR[64];
+void makeMaskR()
+{
+    int sq;
+    for ( sq = 0; sq &lt; 64; ++sq )
+    {
+        maskR[sq] = 0;
+        int i;
+        for ( i = sq - 8; i &gt;= 0; i -= 8 )
+            maskR[sq] |= C64(1) &lt;&lt; i;
+        for ( i = sq - 1; i &gt;= 0 &amp;&amp; (i &amp; 7) != 7; --i )
+            maskR[sq] |= C64(1) &lt;&lt; i;
+        for ( i = sq + 1; i &lt; 64 &amp;&amp; (i &amp; 7) != 0; ++i )
+            maskR[sq] |= C64(1) &lt;&lt; i;
+        for ( i = sq + 8; i &lt; 64; i += 8 )
+            maskR[sq] |= C64(1) &lt;&lt; i;
+    }
+}</code></pre>
+<p>For each square there is a maximum number of steps to take. The number 8 is just a variant of the 7th step.</p>
+<pre><code>/**
+Number of expanding steps (explosions) for a rook
+*/
+const int repsR[64] =
+{
+    7, 6, 6, 6, 6, 6, 6, 8,
+    7, 5, 5, 5, 5, 5, 5, 8,
+    7, 5, 4, 4, 4, 4, 5, 8,
+    7, 5, 4, 3, 3, 4, 5, 8,
+    7, 5, 4, 3, 3, 4, 5, 8,
+    7, 5, 4, 4, 4, 4, 5, 8,
+    7, 5, 5, 5, 5, 5, 5, 8,
+    7, 6, 6, 6, 6, 6, 6, 8,
+};</code></pre>
+<p>This does one step of the explosion. We have a lot of work to avoid overflows, wrap around the unwanted bits.</p>
+<pre><code>/*
+= init               &gt;&gt;= 8               *= 0x10281         &amp;= mask            at |= bb
+ . . . . . . . .     . . . . . . . .     . . . . . . . .    . . . . . . . .    . . . . . . . .
+ . . . . . . . .     . . . . . . . .     . . . . . . . .    . . . . . . . .    . . . . . . . .
+ . . . . . . . .     . . . . . . . .     . . . 1 . . . .    . . . 1 . . . .    . . . 1 . . . .
+ . . . 1 . . . .     . . . . . . . .     . . 1 . 1 . . .    . . . . . . . .    . . . 1 . . . .
+ . . 1 s 1 . . .     . . . 1 . . . .     . 1 . 1 . 1 . .    . 1 . s . 1 . .    . 1 1 s 1 1 . .
+ . . . 1 . . . .     . . 1 . 1 . . .     . . 1 . 1 . . .    . . . . . . . .    . . . 1 . . . .
+ . . . . . . . .     . . . 1 . . . .     . . . 1 . . . .    . . . 1 . . . .    . . . 1 . . . .
+ . . . . . . . .     . . . . . . . .     . . . . . . . .    . . . . . . . .    . . . . . . . .
+                                       and nasty overflows
+*/
+Bitboard rookAttacks( int sq, const Bitboard &amp;free )
+{
+    Bitboard msk = maskR[sq];   // The mask kills scattered bits
+    Bitboard bb  = initR[sq];   // This drives the expansion/explosion. Here is the start.
+    Bitboard at  = bb;          // Collecting the resulting attacks
+    Bitboard cl  = at;          // Clears some intermediate overflows
+    Bitboard ov;                // A nasty overflow bit when 4 directions in first step are possible.
+                                // Not nessessary on left side of board for repsR[sq] = 4 or 5.
+                                // Invent new numbers?
+    // Perhaps it would be easier and faster to use rankR[][] on all ranks.
+    // But I like the &#39;explosive&#39; algorithm. And I want to show that it works.
+int repsLeft = 0; // will be overwritten
+    bb &amp;= free;
+    bb &gt;&gt;= 8;
+    switch ( repsR[sq] )
+    {
+      case 8:
+        bb *= 0x00010081;
+        repsLeft = 5;
+        break;
+      case 7:
+        bb *= 0x00010201;
+        repsLeft = 5;
+        break;
+      case 6:
+        bb *= 0x00010281;
+        bb &amp;= ~(C64(1) &lt;&lt; (sq - 6));      // Clears for b-squares a nasty overflow from south-west-first-step to h file
+        repsLeft = 5;
+        break;
+      case 5:
+        bb *= 0x00010281;
+        ov = (C64(1) &lt;&lt; (sq + 3));
+        bb |= (bb &amp; ov) &gt;&gt; 1;
+        bb &amp;= ~ov;
+        bb &amp;= ~(C64(1) &lt;&lt; (sq - 6));      // Clears for b-squares a nasty overflow from south-west-first-step to h file
+        repsLeft = 4;
+        break;
+      case 4:
+        bb *= 0x00010281;
+        ov = (C64(1) &lt;&lt; (sq + 3));
+        bb |= (bb &amp; ov) &gt;&gt; 1;
+        bb &amp;= ~ov;
+        repsLeft = 3;
+        break;
+      case 3:
+        bb *= 0x00010281;
+        ov = (C64(1) &lt;&lt; (sq + 3));
+        bb |= (bb &amp; ov) &gt;&gt; 1;
+        bb &amp;= ~ov;
+        repsLeft = 2;
+        break;
+      }
+      default:
+      /* reaching here is an error */
+      break;
+    }
+    bb &amp;= msk; at |= bb;
+    while(repsLeft-- &gt; 0)
+    {
+        bb &amp;= free; bb &amp;= ~cl;
+        cl = at;
+        bb &gt;&gt;= 8; bb *= 0x00010281; bb &amp;= msk; at |= bb;
+    }
+    if ( sq &lt; 8 ) // or do this before the switch
+    {
+        int a1a8 = free ;
+        at |= rankR[sq][a1a8 &amp; 0x7e];
+    }
+    return at;
+}</code></pre>
+<p>There are some possible optimisations when the repsR[] array is modified in the corners during the game or search. Some numbers 9, 10, 11 combined with additional switch cases can work as a shortcut for rooks in the corners behind pawns.</p>
+<p>In the function rookAttacks() rankR is the well know simple lookup table from other bitboard algorithms.</p>
+<pre><code>int rankR[8][128];
+void makeRankR()
+{
+    for ( int sq = 0; sq &lt; 8; ++sq )
+    {
+        for ( int i = 0; i &lt; 128; i += 2 )
+        {
+            int rr = 0;
+            int j;
+            for ( j = sq - 1; j &gt;= 0; --j )
+            {
+                rr |= (1 &lt;&lt; j);
+                if ( !(i &amp; (1 &lt;&lt; j)) )  // the 1 bits are the free squares
+                    break;
+            }
+            for ( j = sq + 1; j &lt; 8; ++j )
+            {
+                rr |= (1 &lt;&lt; j);
+                if ( !(i &amp; (1 &lt;&lt; j)) )  // the 1 bits are the free squares
+                    break;
+            }
+            rankR[sq][i  ] = rr;
+            rankR[sq][i+1] = rr;
+        }
+    }
+}</code></pre>
+<h2 id="results">Results</h2>
+<p>The results can be masked or combined just like in other attack bitboards.</p>
+<pre><code>/*
+Get a bitboard with all positions set to 1 which can be attacked
+from a rook or queen on the square.
+*/
+Bitboard Board::orthogonal_attacks( byte square ) const
+{
+    Bitboard free = ~(wpieces_ | bpieces_); // from the board representation in the board class
+    Bitboard result = rookAttacks( square, free );
+    return result;
+}
+
+/*
+Get a bitboard with all positions set to 1 which can be attacked
+from a bishop or queen on the square.
+*/
+Bitboard Board::diagonal_attacks( byte square ) const
+{
+    Bitboard free = ~(wpieces_ | bpieces_); // from the board representation in the board class
+    Bitboard result = bishopAttacks( square, free );
+    return result;
+}</code></pre>
+<p>Another usage requires masks</p>
+<pre><code>const Bitboard dirMaskRight[8] =
+{
+    // 0, line_h, line_gh, line_fh, line_eh, line_dh, line_ch, line_bh,
+    0, C64(0x0101010101010101), C64(0x0303030303030303), C64(0x0707070707070707), C64(0x0f0f0f0f0f0f0f0f),
+    C64(0x1f1f1f1f1f1f1f1f), C64(0x3f3f3f3f3f3f3f3f), C64(0x7f7f7f7f7f7f7f7f)
+};
+
+const Bitboard dirMaskLeft[8] =
+{
+    // line_ag, line_af, line_ae, line_ad, line_ac, line_ab, line_a, 0,
+    C64(0xfefefefefefefefe), C64(0xfcfcfcfcfcfcfcfc), C64(0xf8f8f8f8f8f8f8f8), C64(0xf0f0f0f0f0f0f0f0),
+    C64(0xe0e0e0e0e0e0e0e0), C64(0xc0c0c0c0c0c0c0c0), C64(0x8080808080808080), 0
+};
+
+const Bitboard dirMaskUp[8] =
+{
+    // row_28, row_38, row_48, row_58, row_68, row_78, row_8, 0,
+    C64(0xffffffffffffff00), C64(0xffffffffffff0000), C64(0xffffffffff000000), C64(0xffffffff00000000),
+    C64(0xffffff0000000000), C64(0xffff000000000000), C64(0xff00000000000000), 0
+};
+
+const Bitboard dirMaskDown[8] =
+{
+    // 0, row_1, row_12, row_13, row_14, row_15, row_16, row_17,
+    0, C64(0x00000000000000ff), C64(0x000000000000ffff), C64(0x0000000000ffffff), C64(0x00000000ffffffff),
+    C64(0x000000ffffffffff), C64(0x0000ffffffffffff), C64(0x00ffffffffffffff)
+};</code></pre>
+<p>to generate attacks in one direction.</p>
+<pre><code>/*
+Get a bitboard with all positions set to 1 which can be attacked
+from a bishop, rook or queen on the square moving in the direction.
+*/
+Bitboard Board::direction_attacks( byte square, byte dir ) const
+{
+    Bitboard result;
+    Bitboard free = ~(wpieces_ | bpieces_); // from the board representation in the board class
+    // 4 3 2
+    // 5 0 1
+    // 6 7 8
+    switch ( dir )
+    {
+      case 1:
+        result = rookAttacks( square, free );
+        result &amp;= dirMaskRight[square &amp; 7];
+        break;
+      case 5:
+        result = rookAttacks( square, free );
+        result &amp;= dirMaskLeft[square &amp; 7];
+        break;
+      case 7:
+        result = rookAttacks( square, free );
+        result &amp;= dirMaskDown[square &gt;&gt; 3];
+        break;
+      case 3:
+        result = rookAttacks( square, free );
+        result &amp;= dirMaskUp[square &gt;&gt; 3];
+        break;
+      case 8:
+        result = bishopAttacks( square, free );
+        result &amp;= dirMaskRight[square &amp; 7];
+        result &amp;= dirMaskDown[square &gt;&gt; 3];
+        break;
+      case 4:
+        result = bishopAttacks( square, free );
+        result &amp;= dirMaskLeft[square &amp; 7];
+        result &amp;= dirMaskUp[square &gt;&gt; 3];
+        break;
+      case 2:
+        result = bishopAttacks( square, free );
+        result &amp;= dirMaskRight[square &amp; 7];
+        result &amp;= dirMaskUp[square &gt;&gt; 3];
+        break;
+      case 6:
+        result = bishopAttacks( square, free );
+        result &amp;= dirMaskLeft[square &amp; 7];
+        result &amp;= dirMaskDown[square &gt;&gt; 3];
+        break;
+      default:
+        result = 0;
+        break;
+    }
+    return result;
+}</code></pre>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Sliding_Piece_Attacks">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=4523&amp;start=80">Re: Compact Bitboard Attacks</a> by <a href="/Harald_Lüßen">Harald Lüßen</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, September 13, 2006<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Exploding_Bitboards">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

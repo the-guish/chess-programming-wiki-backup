@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dynamic Programming - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Dynamic Programming</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Programming">Programming</a> * <a href="/Algorithms">Algorithms</a> * Dynamic Programming</strong></p>
+<p><strong>Dynamic Programming</strong>, (DP)<br />
+a mathematical, algorithmic optimization method of <a href="/Recursion">recursively</a> nesting <a href="https://en.wikipedia.org/wiki/Overlapping_subproblems">overlapping sub problems</a> of <a href="https://en.wikipedia.org/wiki/Optimal_substructure">optimal substructure</a> inside larger decision problems. The term DP was coined by <a href="/Richard_E._Bellman">Richard E. Bellman</a> in the 50s not as programming in the sense of producing computer code, but mathematical programming, planning or optimization similar to <a href="https://en.wikipedia.org/wiki/Linear_programming">linear programming</a>, devoted to the study of multistage processes. These processes are composed of sequences of operations in which the outcome of those preceding may be used to guide the course of future ones <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#dp-in-computer-chess">DP in Computer Chess</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#selected-publications">Selected Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1953-">1953 ...</a></li>
+<li><a href="#1960-">1960 ...</a></li>
+<li><a href="#1970-">1970 ...</a></li>
+<li><a href="#1980-">1980 ...</a></li>
+<li><a href="#1990-">1990 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="dp-in-computer-chess">DP in Computer Chess</h2>
+<p>In computer chess, dynamic programming is applied in <a href="/Depth-First">depth-first</a> <a href="/Search">search</a> with <a href="https://en.wikipedia.org/wiki/Memoization">memoization</a> aka using a <a href="/Transposition_Table">transposition table</a> and/or other <a href="/Hash_Table">hash tables</a> while traversing a <a href="/Search_Tree">tree</a> of overlapping sub problems aka child positions after making a move by one side in top-down manner, gaining from stored <a href="/Chess_Position">positions</a> of sibling subtrees due to <a href="/Transposition">transpositions</a> and/or common aspects of positions, in particular effective inside an <a href="/Iterative_Deepening">iterative deepening</a> framework. Another approach of dynamic programming in computer chess or computer games is the application of <a href="/Retrograde_Analysis">retrograde analysis</a>, to solve a problem by solving subproblems in bottom-up manner starting from terminal nodes <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Michael_L._Littman">Markov Models</a> by <a href="/Michael_L._Littman">Michael L. Littman</a></li>
+<li><a href="/Reinforcement_Learning">Reinforcement Learning</a></li>
+<li><a href="/Temporal_Difference_Learning">Temporal Difference Learning</a></li>
+</ul>
+<h2 id="selected-publications">Selected Publications</h2>
+<h3 id="1953-">1953 ...</h3>
+<ul>
+<li><a href="/Richard_E._Bellman">Richard E. Bellman</a> (<strong>1953</strong>). <em><a href="http://www.rand.org/pubs/reports/R245.html">An Introduction to the Theory of Dynamic Programming</a></em>. R-245, <a href="https://en.wikipedia.org/wiki/RAND_Corporation">RAND Corporation</a></li>
+<li><a href="/Richard_E._Bellman">Richard E. Bellman</a> (<strong>1954</strong>). <em>The Theory of Dynamic Programming</em>. P-550, <a href="https://en.wikipedia.org/wiki/RAND_Corporation">RAND Corporation</a>, <a href="http://www.rand.org/content/dam/rand/pubs/papers/2008/P550.pdf">pdf</a></li>
+<li><a href="/Richard_E._Bellman">Richard E. Bellman</a> (<strong>1954</strong>). <em>On a new Iterative Algorithm for Finding the Solutions of Games and Linear Programming Problems</em>. Technical Report P-473, <a href="https://en.wikipedia.org/wiki/RAND_Corporation">RAND Corporation</a>, U. S. Air Force Project RAND</li>
+<li><a href="/Mathematician">Samuel Karlin</a> (<strong>1955</strong>). <em><a href="http://onlinelibrary.wiley.com/doi/10.1002/nav.3800020408/abstract">The Stucture of Dynamic Programming Models</a></em>. <a href="https://en.wikipedia.org/wiki/Naval_Research_Logistics">Naval Research Logistics</a>, Vol. 2</li>
+<li><a href="/Richard_E._Bellman">Richard E. Bellman</a> (<strong>1957</strong>). <em>Dynamic Programming</em>. <a href="https://en.wikipedia.org/wiki/Princeton_University_Press">Princeton University Press</a></li>
+<li><a href="/Richard_E._Bellman">Richard E. Bellman</a> (<strong>1958</strong>). <em><a href="http://www.sciencedirect.com/science/article/pii/S0019995858800030">Dynamic Programming and Stochastic Control Processes</a></em>. <a href="https://en.wikipedia.org/wiki/RAND_Corporation">RAND Corporation</a>, <a href="https://en.wikipedia.org/wiki/Santa_Monica,_California">Santa Monica, CA</a>, <a href="http://www.sciencedirect.com/science/journal/00199958/1/3">Information and Control 1</a></li>
+</ul>
+<h3 id="1960-">1960 ...</h3>
+<ul>
+<li><a href="/Richard_E._Bellman">Richard E. Bellman</a> (<strong>1960</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=321011">Sequential Machines, Ambiguity, and Dynamic Programming</a></em>. <a href="/ACM">Journal of the ACM</a>, Vol. 7, No. 1</li>
+<li><a href="/Mathematician">Ronald A. Howard</a> (<strong>1960</strong>). <em>Dynamic Programming and Markov Processes</em>. <a href="https://en.wikipedia.org/wiki/MIT_Press">MIT Press</a>, <a href="https://www.amazon.com/Programming-Processes-Technology-Research-Monographs/dp/0262080095">amazon</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></li>
+<li><a href="/Richard_E._Bellman">Richard E. Bellman</a>, <a href="/Mathematician">Stuart E. Dreyfus</a> (<strong>1962</strong>). <em>Applied Dynamic Programming</em>. <a href="https://en.wikipedia.org/wiki/RAND_Corporation">RAND Corporation</a>, <a href="https://en.wikipedia.org/wiki/Princeton_University_Press">Princeton University Press</a>, <a href="https://www.rand.org/content/dam/rand/pubs/reports/2006/R352.pdf">pdf</a></li>
+<li><a href="/Richard_E._Bellman">Richard E. Bellman</a> (<strong>1962</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=321111">Dynamic Programming Treatment of the Travelling Salesman Problem</a></em>. <a href="/ACM">Journal of the ACM</a>, Vol. 9, No. 1, <a href="http://www.akira.ruc.dk/~keld/teaching/algoritmedesign_f08/Artikler/05/Bellman61.pdf">1961 pdf preprint</a></li>
+<li><a href="/Mathematician">David Blackwell</a> (<strong>1962</strong>). <em><a href="https://projecteuclid.org/euclid.aoms/1177704593">Discrete Dynamic Programming</a></em>. <a href="https://en.wikipedia.org/wiki/Annals_of_Mathematical_Statistics">Annals of Mathematical Statistics</a>, Vol. 33, No. 2</li>
+<li><a href="/Richard_E._Bellman">Richard E. Bellman</a> (<strong>1965</strong>). <em><a href="http://www.rand.org/pubs/papers/P3013/">On the Application of Dynamic Programming to the Determination of Optimal Play in Chess and Checkers</a>.</em> <a href="https://en.wikipedia.org/wiki/Proceedings_of_the_National_Academy_of_Sciences_of_the_United_States_of_America">PNAS</a></li>
+<li><a href="/Mathematician">David Blackwell</a> (<strong>1965</strong>). <em><a href="https://projecteuclid.org/euclid.aoms/1177700285">Discounted Dynamic Programming</a></em>. <a href="https://en.wikipedia.org/wiki/Annals_of_Mathematical_Statistics">Annals of Mathematical Statistics</a>, Vol. 36, No. 1 <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a></li>
+<li><a href="/Mathematician">David Blackwell</a> (<strong>1967</strong>). <em><a href="https://projecteuclid.org/euclid.bsmsp/1200513001">Positive Dynamic Programming</a></em>. <a href="https://projecteuclid.org/euclid.bsmsp/1200512974">Proc. 5th Berkeley Symposium on Mathematical Statistics and Probability</a></li>
+</ul>
+<h3 id="1970-">1970 ...</h3>
+<ul>
+<li><a href="/Mathematician">David Blackwell</a> (<strong>1976</strong>). <em><a href="https://projecteuclid.org/euclid.aos/1176343412">The Stochastic Processes of Borel Gambling and Dynamic Programming</a></em>. <a href="https://en.wikipedia.org/wiki/Annals_of_Statistics">Annals of Statistics</a>, Vol. 4, No. 2</li>
+<li><a href="/Mathematician">Stuart E. Dreyfus</a>, <a href="http://www.averill-law.com/about/">Averill M. Law</a> (<strong>1977</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=578655">Art and Theory of Dynamic Programming</a></em>. <a href="https://en.wikipedia.org/wiki/Academic_Press">Academic Press</a></li>
+<li><a href="/Mathematician">Steven E. Shreve</a>, <a href="/Mathematician">Dimitri Bertsekas</a> (<strong>1979</strong>). <em><a href="http://pubsonline.informs.org/doi/abs/10.1287/moor.4.1.15?journalCode=moor">Universally Measurable Policies in Dynamic Programming</a></em>. <a href="https://en.wikipedia.org/wiki/Mathematics_of_Operations_Research">Mathematics of Operations Research</a>, Vol. 4, No. 1</li>
+</ul>
+<h3 id="1980-">1980 ...</h3>
+<ul>
+<li><a href="/David_Eppstein">David Eppstein</a>, <a href="/Mathematician">Zvi Galil</a>, <a href="/Mathematician">Raffaele Giancarlo</a> (<strong>1988</strong>). <em><a href="https://ieeexplore.ieee.org/document/21965">Speeding up Dynamic Programming</a></em>. <a href="https://dblp.uni-trier.de/db/conf/focs/focs88.html">FOCS 1988</a></li>
+<li><a href="/Andrew_Barto">Andrew Barto</a>, <a href="/Richard_Sutton">Richard Sutton</a>, <a href="https://dblp.uni-trier.de/pers/hd/w/Watkins:Christopher_J=_C=_H=">Christopher J. C. H. Watkins</a> (<strong>1989</strong>). <em><a href="https://papers.nips.cc/paper/194-sequential-decision-problems-and-neural-networks">Sequential Decision Problems and Neural Networks</a></em>. <a href="https://dblp.uni-trier.de/db/conf/nips/nips1989.html">NIPS 1989</a></li>
+</ul>
+<h3 id="1990-">1990 ...</h3>
+<ul>
+<li><a href="/David_Eppstein">David Eppstein</a>, <a href="/Mathematician">Zvi Galil</a>, <a href="/Mathematician">Raffaele Giancarlo</a>, <a href="/Mathematician">Giuseppe F. Italiano</a> (<strong>1990</strong>). <em>Sparse Dynamic Programming</em>. <a href="https://dblp.uni-trier.de/db/conf/soda/soda90.html">SODA 1990</a>, <a href="http://www.cs.ust.hk/mjg_lib/bibs/DPSu/DPSu.Files/p513-eppstein.pdf">pdf</a></li>
+<li><a href="/Mathematician">Dimitri Bertsekas</a> (<strong>1996, 2017</strong>). <em><a href="http://www.athenasc.com/dpbook.html">Dynamic Programming and Optimal Control</a></em>. <a href="http://www.athenasc.com/index.html">Athena Scientific</a></li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="/Mathematician">Dimitri Bertsekas</a> (<strong>2001</strong>). <em>Neuro-Dynamic Programming: An Overview</em>. <a href="http://link.springer.com/referencework/10.1007%2F0-306-48332-7">Encyclopedia of Optimization</a>, <a href="http://web.mit.edu/people/dimitrib/NDP_Encycl.pdf">pdf</a>, <a href="http://www.math.s.chiba-u.ac.jp/~yasuda/open2all/Neuro/NDP_Overview.pdf">slides as pdf</a></li>
+<li><a href="/Mathematician">Stuart E. Dreyfus</a> (<strong>2002</strong>). <em>Richard Bellman on the Birth of Dynamic Programming</em>. <a href="https://en.wikipedia.org/wiki/Operations_Research:_A_Journal_of_the_Institute_for_Operations_Research_and_the_Management_Sciences">Operations Research</a>, Vol. 50, No. 1, <a href="http://www.cas.mcmaster.ca/~se3c03/journal_papers/dy_birth.pdf">pdf</a></li>
+<li><a href="/Richard_E._Bellman">Richard E. Bellman</a> (<strong>2003</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=862270">Dynamic Programming</a></em>. <a href="https://en.wikipedia.org/wiki/Dover_Publications">Dover Publications</a></li>
+<li><a href="/Mathematician">Sanjoy Dasgupta</a>, <a href="/Mathematician">Christos H. Papadimitriou</a>, <a href="/Mathematician">Umesh Vazirani</a> (<strong>2006</strong>). <em><a href="http://www.cs.berkeley.edu/%7Evazirani/algorithms.html">Algorithms</a></em>. <a href="https://en.wikipedia.org/wiki/McGraw-Hill">McGraw-Hill</a>, <a href="https://people.eecs.berkeley.edu/~vazirani/algorithms/chap6.pdf">Chapter 6 Dynamic programming</a> (pdf)</li>
+<li><a href="/Sylvain_Gelly">Sylvain Gelly</a>, <a href="/Jérémie_Mary">Jérémie Mary</a>, <a href="/Olivier_Teytaud">Olivier Teytaud</a> (<strong>2006</strong>). <em>Learning for stochastic dynamic programming</em>. <a href="http://www.lri.fr/%7Egelly/paper/lfordp.pdf">pdf</a>, <a href="http://www.grappa.univ-lille3.fr/~mary/paper/lfordp.pdf">pdf</a></li>
+<li><a href="/Sylvain_Gelly">Sylvain Gelly</a>, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, <a href="/Jérémie_Mary">Jérémie Mary</a> (<strong>2007</strong>). <em>Active learning in regression, with application to stochastic dynamic programming</em>. ICINCO and CAP, 2007, <a href="http://www.grappa.univ-lille3.fr/~mary/paper/ldsfordp.pdf">pdf</a></li>
+<li><a href="http://dblp.uni-trier.de/pers/hd/p/Powell:Warren_B=">Warren B. Powell</a> (<strong>2007</strong>). <em>Approximate Dynamic Programming - Solving the Curses of Dimensionality</em>. <a href="https://en.wikipedia.org/wiki/John_Wiley_%26_Sons">Wiley</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="/Richard_E._Bellman">Richard E. Bellman</a> (<strong>2010</strong>). <em><a href="http://press.princeton.edu/titles/9234.html">Dynamic Programming</a></em>. With a new introduction by <a href="/Mathematician">Stuart E. Dreyfus</a>, <a href="https://en.wikipedia.org/wiki/Princeton_University_Press">Princeton University Press</a></li>
+<li><a href="/Andrew_Barto">Andrew Barto</a> (<strong>2010</strong>). <em>Adaptive Real-Time Dynamic Programming</em>. Encyclopedia of Machine Learning 2010, Springer</li>
+<li><a href="/Rémi_Munos">Rémi Munos</a> (<strong>2010</strong>). <em>Approximate dynamic programming</em>. In <a href="http://www.isir.upmc.fr/?op=view_profil&amp;id=28&amp;old=N&amp;lang=en">Olivier Sigaud</a> and <a href="http://www.loria.fr/~buffet/">Olivier Buffet</a>, editors, <a href="http://eu.wiley.com/WileyCDA/WileyTitle/productCd-1848211678.html">Markov Decision Processes in Artificial Intelligence</a>, chapter 3, ISTE Ltd and <a href="http://eu.wiley.com/WileyCDA/">John Wiley &amp; Sons Inc.</a>, <a href="http://researchers.lille.inria.fr/~munos/papers/files/MDPIA_chap3.pdf">pdf</a></li>
+<li><a href="http://dblp.uni-trier.de/pers/hd/p/Powell:Warren_B=">Warren B. Powell</a> (<strong>2011</strong>). <em><a href="http://adp.princeton.edu/">Approximate Dynamic Programming - Solving the Curses of Dimensionality</a></em>. 2nd edition, <a href="https://en.wikipedia.org/wiki/John_Wiley_%26_Sons">Wiley</a></li>
+<li><a href="/Mathematician">Dimitri Bertsekas</a> (<strong>2013</strong>). <em><a href="http://www.athenasc.com/abstractdp.html">Abstract Dynamic Programming</a></em>. <a href="http://www.athenasc.com/index.html">Athena Scientific</a></li>
+<li><a href="/Richard_E._Bellman">Richard E. Bellman</a>, <a href="/Mathematician">Stuart E. Dreyfus</a> (<strong>2015</strong>). <em><a href="http://press.princeton.edu/titles/100.html">Applied Dynamic Programming</a></em>. <a href="https://en.wikipedia.org/wiki/Princeton_University_Press">Princeton University Press</a></li>
+<li><a href="/Andrew_Barto">Andrew Barto</a> (<strong>2017</strong>). <em>Adaptive Real-Time Dynamic Programming</em>. <a href="https://link.springer.com/referencework/10.1007%2F978-1-4899-7687-1">Encyclopedia of Machine Learning and Data Mining 2017</a>, <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Dynamic_programming">Dynamic programming from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/Dynamic_programming#Algorithms_that_use_dynamic_programming">Algorithms that use dynamic programming</a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Bellman_equation">Bellman equation from Wikipedia</a></li>
+<li><a href="https://en.wikibooks.org/wiki/Algorithms/Dynamic_Programming">Algorithms/Dynamic Programming - Wikibooks</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Stochastic_dynamic_programming">Stochastic dynamic programming from Wikipedia</a></li>
+<li><a href="https://www.topcoder.com/community/data-science/data-science-tutorials/dynamic-programming-from-novice-to-advanced/">Dynamic Programming – From Novice to Advanced – topcoder</a></li>
+<li><a href="https://www.codechef.com/wiki/tutorial-dynamic-programming">Tutorial for Dynamic Programming | CodeChef</a></li>
+<li><a href="http://www.geeksforgeeks.org/category/dynamic-programming/">Dynamic Programming Archives - GeeksforGeeks</a></li>
+<li><a href="https://people.cs.clemson.edu/~bcdean/dp_practice/">Dynamic Programming Practice Problems</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Algorithms">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Richard_E._Bellman">Richard E. Bellman</a> (<strong>1953</strong>). <em><a href="http://www.rand.org/pubs/reports/R245.html">An Introduction to the Theory of Dynamic Programming</a></em>. R-245, <a href="https://en.wikipedia.org/wiki/RAND_Corporation">RAND Corporation</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Richard_E._Bellman">Richard E. Bellman</a> (<strong>1965</strong>). <em><a href="http://www.rand.org/pubs/papers/P3013/">On the Application of Dynamic Programming to the Determination of Optimal Play in Chess and Checkers</a>.</em> <a href="https://en.wikipedia.org/wiki/Proceedings_of_the_National_Academy_of_Sciences_of_the_United_States_of_America">PNAS</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://en.wikipedia.org/wiki/Markov_chain">Markov chain from Wikipedia</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://users.stat.umn.edu/~sudde001/personal_page/DBDP.pdf">David Blackwell and Dynamic Programming</a> (pdf) by <a href="/Mathematician">William Sudderth</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Dynamic_Programming">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

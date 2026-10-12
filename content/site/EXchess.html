@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EXchess - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">EXchess</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Engines">Engines</a> * EXchess</strong></p>
+<p><strong>EXchess</strong>, (Experimental Chess Program)<br />
+a <a href="/Chess_Engine_Communication_Protocol">Chess Engine Communication Protocol</a> compatible experimental <a href="/Category:Open_Source">open source chess engine</a> by <a href="/Daniel_Homan">Daniel Homan</a>, written in <a href="/Cpp">C++</a>, released under the <a href="/Free_Software_Foundation">GNU Public License</a>. EXchess may optionally use an own <a href="/GUI">GUI</a> based on the <a href="https://en.wikipedia.org/wiki/FLTK">Fast Light Tool Kit (FLTK)</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#board-representation">Board Representation</a></li>
+<li><a href="#search">Search</a></li>
+<li><a href="#lazy-smp">Lazy SMP</a></li>
+<li><a href="#td-leaf">TD-leaf</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1997-">1997 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="board-representation">Board Representation</h2>
+<p>EXchess utilizes an <a href="/8x8_Board">8x8 Board</a> and <a href="/Piece-Lists">piece lists</a> as demonstrated in its <a href="/Move_Generation">move generation routine</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> :</p>
+<pre><code>// Typedef for square using unsigned 8 bits...  
+//  -- first 3 bits for piece type (0-6)
+//  -- next bit for side of piece (1 = white, 0 = black)
+// See define.h for marcos and definitions to handle these
+
+typedef uint8_t square;
+
+struct position {
+   square sq[64];
+   ...
+   uint8_t plist[2][7][10];
+   ...
+};
+
+void position::allmoves(move_list *list, ts_thread_data *tdata) {
+   ...
+  for(i=1;i&lt;=plist[wtm][PAWN][0];i++) 
+    pawn_moves(list, plist[wtm][PAWN][i], tdata);
+  for(i=1;i&lt;=plist[wtm][KNIGHT][0];i++) 
+    knight_moves(list, plist[wtm][KNIGHT][i], tdata);
+  for(i=1;i&lt;=plist[wtm][BISHOP][0];i++) 
+    bishop_moves(list, plist[wtm][BISHOP][i], tdata);
+  for(i=1;i&lt;=plist[wtm][ROOK][0];i++) 
+    rook_moves(list, plist[wtm][ROOK][i], tdata);
+  for(i=1;i&lt;=plist[wtm][QUEEN][0];i++) {
+    bishop_moves(list, plist[wtm][QUEEN][i], tdata);
+    rook_moves(list, plist[wtm][QUEEN][i], tdata);
+  }
+  for(i=1;i&lt;=plist[wtm][KING][0];i++) 
+    king_moves(list, plist[wtm][KING][i], tdata);
+}</code></pre>
+<h2 id="search">Search</h2>
+<p>The ches engine performs advanced <a href="/Search">search</a> algorithms including <a href="/Principal_Variation_Search">principle variation search</a>, <a href="/Null_Move_Pruning">null move</a>, <a href="/Null_Move_Pruning">null move verification</a>, <a href="/Extensions">dynamic search extensions</a>, <a href="/Futility_Pruning">futility pruning</a>, <a href="/Hash_Table">hash tables</a>, <a href="/History_Heuristic">history tables</a>, <a href="/Quiescence_Search">quiescence search</a>, and a <a href="/Static_Exchange_Evaluation">material swap function</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>. <span id="LazySMP"></span></p>
+<h2 id="lazy-smp">Lazy SMP</h2>
+<p><a href="/Daniel_Homan">Daniel Homan</a> in July 2013 on his <a href="/Lazy_SMP">Lazy SMP</a> implementation and work sharing <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>:</p>
+<p><code>I changed the work-sharing approach to Lazy SMP in EXchess to be closer to the </code><a href="/ABDADA"><code>ABDADA</code></a><code> model after </code><a href="/Daniel_Shawul"><code>Daniel Shawul's</code></a><code> posts about his tests on the subject </code><a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a><code>. However, I didn't want to use a </code><a href="/Transposition_Table"><code>hash table</code></a><code> to keep a counter for the </code><a href="/Thread"><code>threads</code></a><code> working on a given position. My hash table already had a 16 byte long entry, so I didn't want to expand it, and I also didn't like the idea of having to make each move before seeing whether another thread was searching it.</code></p>
+<p><code>So as an alternative to the hash table, I made a simple work sharing data structure. In the end, it was just a single hash key for a position which is OR'd with the move being searched and the depth of the search. I use this to keep track of the move being searched at each ply of the tree for a given thread. Then, before I search a move at a given ply, I can just check the same ply in the other threads to see that the move is not already being worked on at that depth. If it is, then the move get placed at the end of the move list to be searched last. This doesn't allow for </code><a href="/Transposition"><code>transpositions</code></a><code> , but I expected the most likely work collisions to be as the threads are walking the </code><a href="/Principal_Variation"><code>PV</code></a><code> where they will initially all be the same. Indeed, this scheme only helps in the PV, and if I check for work sharing in </code><a href="/Node_Types"><code>non-PV nodes</code></a><code>, it only slows things down a bit.</code></p>
+<p><code>My previous Lazy SMP work sharing was just to alternate moves (odd-even) in the root node for the odd-even threads. The above approach is about 10% faster than my previous scheme, and I get a time-to-depth improvement of roughly 1.65 for 2 threads compared to 1 thread and roughly 2.5 for 4 threads compared to 1 thread. Maybe not quite as good as ABDADA with a hash table counter, but not too bad for the simplicity.  </code></p>
+<h2 id="td-leaf">TD-leaf</h2>
+<p>EXchess applies <a href="/Evaluation">evaluation</a> <a href="/Learning">learning</a> using the <a href="/Temporal_Difference_Learning">Temporal Difference Learning</a> (TD-leaf) <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>.</p>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1997-">1997 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=13011">First win against a crafty clone</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, December 16, 1997 » <a href="/Crafty">Crafty</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=16657">New version of EXchess released</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, April 08, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=20450">EXchess 2.37</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, June 13, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=31385">New EXchess Version</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, November 02, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=82280">EXchess pre-release testers sought</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, December 13, 1999</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=108784">version 3.14 of EXchess released</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, May 02, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=117970">Pseudo-code for TD learning</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, July 06, 2000 » <a href="/Temporal_Difference_Learning">Temporal Difference Learning</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=139716">New version of EXchess</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, November 18, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=162704">EXchess v4.02 released</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, April 10, 2001</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=18&amp;t=43496">Wb2UCI and Problems with ExChess4.03a and GnuChess4.0.8</a> by <a href="/Arturo_Ochoa">Arturo Ochoa</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, July 24, 2003 » <a href="/Wb2UCI">Wb2UCI</a>, <a href="/InBetween">InBetween</a></li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=483082">New Version of EXchess</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, Januaray 29, 2006</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=27266">Insanity... or Tal style?</a> by <a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a>, <a href="/CCC">CCC</a>, April 01, 2009 (refers EXchess) » <a href="/Automated_Tuning">Automated Tuning</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41666">EXchess v6.01</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, December 29, 2011</li>
+</ul>
+<p><strong>2012</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=42202">EXchess v6.10 released</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, January 29, 2012 » <a href="/CLOP">CLOP</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=44842">EXchess v6.50 released</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, August 19, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46513">EXchess v6.70 released</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, December 20, 2012</li>
+</ul>
+<p><strong>2013</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46858">Lazy SMP, part 2</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, January 12, 2013 » <a href="/Lazy_SMP">Lazy SMP</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47473">EXchess v7.01 Released</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, March 10, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47528">EXchess v7.02 released</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, March 16, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47643">EXchess v7.03 released (bugfix + speed improved version</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, March 29, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48448">EXchess v7.11 released</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, June 27, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48536">Lazy SMP and Work Sharing</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, July 03, 2013 » <a href="/Lazy_SMP">Lazy SMP</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49356">EXchess v7.17 released</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, September 14, 2013</li>
+</ul>
+<p><strong>2014</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52241">EXchess v7.26 released</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, May 07, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53319">EXchess v7.31 released</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, August 17, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54756">EXchess v7.51 released</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, December 26, 2014</li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56519">EXchess v7.71 released</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, May 29, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58737">EXchess v7.88 Released</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, December 30, 2015</li>
+</ul>
+<p><strong>2016</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60121">EXchess v7.91 released</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, May 10, 2016</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=60121&amp;start=2">EXchess v7.92 released</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, May 11, 2016</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61650">EXchess v7.92 and AMD Processors</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, October 08, 2016</li>
+</ul>
+<p><strong>2017</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62995">EXchess v7.96</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, January 31, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63044">EXchess v7.97</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, February 04, 2017</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://sites.google.com/site/experimentalchessprogram/">Experimental Chess Program</a></li>
+<li><a href="http://computerchess.org.uk/ccrl/4040/cgi/compare_engines.cgi?family=EXchess&amp;print=Rating+list&amp;print=Results+table&amp;print=LOS+table&amp;print=Ponder+hit+table&amp;print=Eval+difference+table&amp;print=Comopp+gamenum+table&amp;print=Overlap+table&amp;print=Score+with+common+opponents">EXchess</a> in <a href="/CCRL">CCRL 40/40</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Engines">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p>EXchess v7.97 beta source code, chess.h, moves.cpp<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://www.stmintz.com/ccc/index.php?id=161209">SEE and possible EXChess bug</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, <a href="/CCC">CCC</a>, April 01, 2001<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://www.stmintz.com/ccc/index.php?id=162704">EXchess v4.02 released</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, April 10, 2001<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=48536">Lazy SMP and Work Sharing</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, July 03, 2013<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=47887"><code>ABDADA speedup results</code></a><code>by</code><a href="/Daniel_Shawul"><code>Daniel Shawul</code></a><code>, </code><a href="/CCC"><code>CCC</code></a><code>, May 01, 2013</code><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="https://www.stmintz.com/ccc/index.php?id=117970">Pseudo-code for TD learning</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, July 06, 2000<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="https://www.stmintz.com/ccc/index.php?id=139716">New version of EXchess</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, November 18, 2000<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Open_Source">Open Source</a> · <a href="/Category:GPL">GPL</a> · <a href="/Category:WinBoard">WinBoard</a> · <a href="/Category:XBoard">XBoard</a> · <a href="/Category:Mac">Mac</a> · <a href="/Category:Acronym">Acronym</a> · <a href="/Category:Chess_Suffix">Chess Suffix</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/EXchess">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

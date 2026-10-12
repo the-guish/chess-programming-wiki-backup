@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Double - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Double</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Programming">Programming</a> * <a href="/Data">Data</a> * Double</strong></p>
+<p><strong>Double</strong> is a 64-bit data type representing the <a href="https://en.wikipedia.org/wiki/Double_precision_floating-point_format">double precision floating-point format</a>, in <a href="https://en.wikipedia.org/wiki/IEEE_754-1985">IEEE 754-1985</a> called double, in <a href="https://en.wikipedia.org/wiki/IEEE_754-2008">IEEE 754-2008</a> 64-bit base 2 format is officially referred to as binary64. Due to <a href="https://en.wikipedia.org/wiki/Normal_number_%28computing%29">normalization</a> the true <a href="https://en.wikipedia.org/wiki/Significand">significand</a> includes an implicit leading one bit unless the exponent is stored with all bits zeros or ones which are reserved for <a href="https://en.wikipedia.org/wiki/Subnormal_numbers">Denormal numbers</a>. Thus only 52 bits of the significand are stored but the total precision is 53 bits (≈15.955 decimal digits). <a href="https://en.wikipedia.org/wiki/Exponent_bias">Exponent bias</a> is 0x3FF (1023).</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#format">Format</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#x86-instruction-sets">x86 Instruction Sets</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#integer-to-double-conversion">Integer to Double Conversion</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#x87">X87</a></li>
+<li><a href="#sse2">SSE2</a></li>
+</ol>
+</details></li>
+</ol>
+</details></li>
+<li><a href="#bitscan-purpose">BitScan Purpose</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="format">Format</h2>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/IEEE_754_Double_Floating_Point_Format.svg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span> <a href="https://en.wikipedia.org/wiki/Double_precision_floating-point_format">Double precision floating-point format</a></p>
+<h2 id="x86-instruction-sets">x86 Instruction Sets</h2>
+<p>Recent <a href="/X86">x86</a> and <a href="/X86-64">x86-64</a> processors provide <a href="https://en.wikipedia.org/wiki/X87">x87</a>, and <a href="/SSE2">SSE2</a> double precision floating point instruction sets. Since SSE2 is not obligatory for x86-32, 32-bit operating systems rely on x87. x86-64 64-bit operating systems may use the faster SSE2 instructions, but so far only 64-bit compiler for 64-bit <a href="/Windows">Windows</a> emit those instructions implicitly for double precision floating point operations <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> . SSE2 instructions can be mixed with x87 and are explicitly available through (inline) <a href="/Assembly">Assembly</a> or intrinsics of various <a href="/C">C</a>-Compilers.</p>
+<h3 id="integer-to-double-conversion">Integer to Double Conversion</h3>
+<h4 id="x87">X87</h4>
+<p>To convert a signed or unsigned integer to float, two x87 instructions are needed, FILD and FSTP working on the x87 floating point stack <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> .</p>
+<p><strong>FILD</strong> The FILD instruction converts a signed-integer in memory to <a href="https://en.wikipedia.org/wiki/Extended_precision">double-extended-precision</a> (10 bytes) format and pushes the value onto the x87 register stack. The value can be a 16-bit, 32-bit, or 64- bit integer value. Signed values from memory can always be represented exactly in x87 registers without rounding.</p>
+<p><strong>FSTP</strong> The FSTP instruction pops the x87 stack after copying the value. The instruction FSTP ST(0) is the same as popping the stack with no data transfer. If the specified destination is a single-precision (4 bytes) or double-precision (8 bytes) memory location, the instruction converts the value to the appropriate precision format. It does this by rounding the significand of the source value as specified by the rounding mode determined by the RC field of the x87 control word and then converting to the format of destination. It also converts the exponent to the width and bias of the destination format.</p>
+<h4 id="sse2">SSE2</h4>
+<p><a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a><a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> <strong>CVTDQ2PD</strong> Converts two packed 32-bit signed integer values in the low-order 64 bits of an XMM register or a 64-bit memory location to two packed double-precision floating-point values and writes the converted values in another XMM register.</p>
+<ul>
+<li>Mnemonic: CVTDQ2PD xmm1, xmm2/mem64</li>
+<li>Intrinsic: <a href="http://msdn.microsoft.com/en-us/library/fhwkxa6t%28v=VS.100%29.aspx">_mm_cvtepi32_pd</a></li>
+</ul>
+<p><strong>CVTPI2PD</strong> Converts two packed 32-bit signed integer values in an MMX register or a 64-bit memory location to two double-precision floating-point values and writes the converted values in an XMM register.</p>
+<ul>
+<li>Mnemonic: CVTPI2PD xmm, mmx/mem64</li>
+<li>Intrinsic: <a href="http://msdn.microsoft.com/en-us/library/ahh5bb05%28v=VS.100%29.aspx">_mm_cvtpi32_pd</a></li>
+</ul>
+<p><strong>CVTSI2SD</strong> Converts a 32-bit or 64-bit signed integer value in a general-purpose register or memory location to a double-precision floating-point value and writes the converted value in the low-order 64 bits of an XMM register. The high-order 64 bits in the destination XMM register are not modified.</p>
+<ul>
+<li>Mnemonic: CVTSI2SD xmm, reg/mem32 (reg/mem64)</li>
+<li>Intrinsic: <a href="http://msdn.microsoft.com/en-us/library/b60kza8a%28v=VS.100%29.aspx">_mm_cvtsi32_sd</a></li>
+</ul>
+<h2 id="bitscan-purpose">BitScan Purpose</h2>
+<p>Integer to Double conversion can be used as base 2 logarithm of a power of two value of a 64-bit signed or unsigned integer, which might be used as 64-bit <a href="/BitScan">bitscan</a>, as mentioned in <a href="/BitScan">Double conversion of LS1B</a> and <a href="/BitScan">Double conversion</a>.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Quad_Word">Quad Word</a></li>
+<li><a href="/SSE">SSE</a></li>
+<li><a href="/SSE2">SSE2</a></li>
+<li><a href="/Float">Float</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li>David Goldberg (<strong>1991</strong>). <em>What every computer scientist should know about floating-point arithmetic</em>. <a href="/ACM">ACM Computing Surveys</a>, <a href="https://www.itu.dk/~sestoft/bachelor/IEEE754_article.pdf">pdf</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=28207">Bitboards using 2 DOUBLE's ?</a> by <a href="/Carey_Bloodworth">Carey</a>, <a href="/CCC">CCC</a>, June 02, 2009 » <a href="/Bitboards">Bitboards</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Floating_point">Floating point from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Double_precision_floating-point_format">Double precision floating-point format</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Extended_precision">Extended precision</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Quadruple_precision">Quadruple precision floating-point format</a></li>
+<li><a href="http://www.mrob.com/pub/math/floatformats.html">Survey of Floating-Point Formats</a> by <a href="http://www.mrob.com/pub/index.html">Robert Munafo</a></li>
+<li><a href="http://info.uptrend.ch/uptrend/page/display/numerische-probleme-mit-reals?v=54">About Floating Point Arithmetic</a> from <a href="/Johann_Joss">Johanns Blog</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Data">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.agner.org/optimize/calling_conventions.pdf">Calling conventions for different C++ compilers and operating systems</a> (pdf) by <a href="http://www.agner.org/">Agner Fog</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.amd.com/us-en/assets/content_type/white_papers_and_tech_docs/26569.pdf">AMD64 ArchitectureProgrammer’s Manual Volume 5: 64-Bit Media and x87 Floating-Point Instructions</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://support.amd.com/TechDocs/26568.pdf">AMD64 Architecture, Programmer’s Manual, Volume 4: 128-Bit and 256-Bit Media Instructions</a> (pdf)<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://msdn.microsoft.com/en-us/library/9b07190d%28v=VS.100%29.aspx">Floating-Point Intrinsics Using Streaming SIMD Extensions 2 Instructions</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Double">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Endgame Bitbases - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Endgame Bitbases</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Knowledge">Knowledge</a> * <a href="/Endgame_Tablebases">Endgame Tablebases</a> * Bitbases</strong></p>
+<p><strong>Endgame Bitbases</strong>,<br />
+are compact endgame tablebases with game theoretical values of one or two bits per position stored. They are sufficient for various material configurations to reside inside <a href="/Memory">RAM</a> for short probing access time, intended to use deep inside the <a href="/Search">search</a>. The boolean or four valued ranges are either {<em>won</em>, <em>not_won</em>} or {<em>won</em>, <em>draw</em>, <em>loss</em>, <em>invalid</em>}. While WDL information is sufficient to guide the search into won positions, it lacks any sense of progress in won positions. Therefor, programs either probe full tablebases at the <a href="/Root">root</a> to reveal the number of moves until conversion or mate, or combine WDL-scores with heuristic evaluation <a href="/Score">scores</a>, considering <a href="/Material">material</a>, ply-distance to the root, pawn closeness to promotion, <a href="/Distance">distance</a> of pieces to opponent king, etc.. Endgame Bitbases were described in 1999 by <a href="/Ernst_A._Heinz">Ernst A. Heinz</a> in <em>Knowledgeable Encoding and Querying of Endgame Databases</em>, as applied with 4-men in <a href="/DarkThought">DarkThought</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#bitbase-implementations">Bitbase Implementations</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2000">2000</a></li>
+<li><a href="#2005">2005</a></li>
+<li><a href="#2010">2010</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="bitbase-implementations">Bitbase Implementations</h2>
+<ul>
+<li><a href="/Gaviota_Tablebases">Gaviota Tablebases</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></li>
+<li><a href="/Scorpio_Bitbases">Scorpio Bitbases</a></li>
+<li><a href="/Shredder">Shredderbases</a></li>
+<li><a href="/Syzygy_Bases">Syzygy Bases</a></li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Interior_Node_Recognizer">Interior Node Recognizer</a></li>
+<li><a href="/KPK">KPK</a></li>
+<li><a href="/Retrograde_Analysis">Retrograde Analysis</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Ken_Thompson">Ken Thompson</a> (<strong>1996</strong>). <em>6-Piece Endgames</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 19, No. 4</a></li>
+<li><a href="/Ernst_A._Heinz">Ernst A. Heinz</a> (<strong>1999</strong>). <em>Knowledgeable Encoding and Querying of Endgame Databases.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 22, No. 2</a>, <a href="http://people.csail.mit.edu/heinz/ps/know_edb.ps.gz">ps</a></li>
+<li><a href="/Ren_Wu">Ren Wu</a>, <a href="/Don_Beal">Don Beal</a> (<strong>2001</strong>). <em>Fast, Memory-efficient Retrograde Algorithms</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 24, No. 3</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2000">2000</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=162252">EGTB: Better algorithm</a> by <a href="/Urban_Koistinen">Urban Koistinen</a>, <a href="/CCC">CCC</a>, April 07, 2001 <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=200335">Generating egtbs ICGAJ</a> by <a href="/Tony_van_Roon-Werten">Tony Werten</a>, <a href="/CCC">CCC</a>, December 04, 2001 <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a></li>
+</ul>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=200376">Wu/Beal predates Koistinen</a> by <a href="/Guy_Haworth">Guy Haworth</a>, <a href="/CCC">CCC</a>, December 04, 2001</p>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=290629">EGTB generation with 1 bit per position?</a> by <a href="/Martin_Fierz">Martin Fierz</a>, <a href="/CCC">CCC</a>, March 25, 2003</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=18&amp;t=47383">Need help: End Game Table Base and BitBase</a> by <a href="/Josué_Forte">Josué Forte</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, April 24, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=370997">Any programs besides Yace and Patzer that can use bitbase files</a> by <a href="/Dann_Corbit">Dann Corbit</a>, <a href="/CCC">CCC</a>, June 17, 2004 » <a href="/Patzer">Patzer</a>, <a href="/Yace">Yace</a></li>
+</ul>
+<h3 id="2005">2005</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=467250">Bitbases - yace, scorpio, gambitfruit</a> by Bernhard Bauer, <a href="/CCC">CCC</a>, December 06, 2005</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=12987">Open Source bitbase program</a> by <a href="/Peter_Fendrich">Peter Fendrich</a>, <a href="/CCC">CCC</a>, April 09, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=13511">KQKB and KQKN heuristic for bitbases?!</a> by Jesper Nielsen, <a href="/CCC">CCC</a>, May 01, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=14687">bitbases and Linux</a> by <a href="/Charles_Roberson">Charles Roberson</a>, <a href="/CCC">CCC</a>, June 26, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=19361">Question about bitbases</a> by <a href="/Thomas_Gaksch">Thomas Gaksch</a>, <a href="/CCC">CCC</a>, February 02, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=19575">How to generate a "simple" bitbase?</a> by <a href="/Alessandro_Scotti">Alessandro Scotti</a>, <a href="/CCC">CCC</a>, February 12, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=21301">How much are bitbases worth?</a> by <a href="/Tord_Romstad">Tord Romstad</a>, <a href="/CCC">CCC</a>, May 22, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=27722">Bitbases</a> by <a href="/Frank_Phillips">Frank Phillips</a>, <a href="/CCC">CCC</a>, May 03, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=28944">Endgame bitbase / tablebase compromise?</a> by clgd, <a href="/CCC">CCC</a>, July 13, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=29390">Bitbase indexing and en passant</a> by <a href="/Tord_Romstad">Tord Romstad</a>, <a href="/CCC">CCC</a>, August 14, 2009</li>
+</ul>
+<h3 id="2010">2010</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=32835">Gaviota TBs [0.1.6.1</a>, bitbase-like interface] by <a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a>, <a href="/CCC">CCC</a>, February 22, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=33382">Gaviota TBs Probing Code (v0.2) UPDATE, Bitbases on the fly</a> by <a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a>, <a href="/CCC">CCC</a>, March 20, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=33781">hard-wired bitbases</a> by Ben Stoker, <a href="/CCC">CCC</a>, April 13, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=34634">Stockfish bitbase</a> by <a href="/Chua_Kong_Sian">kongsian</a>, <a href="/CCC">CCC</a>, June 01, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=45009">Search with bitbase</a> by <a href="/Pham_Hong_Nguyen">Pham Hong Nguyen</a>, <a href="/CCC">CCC</a>, September 05, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46893">KPK bitbase</a> by Maarten Bults, <a href="/CCC">CCC</a>, January 16, 2013 » <a href="/KPK">KPK</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49684">What happens using egbb</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, October 12, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50894">Scorpio 6men EGBB Now available</a> by Joshua Shriver, <a href="/CCC">CCC</a>, January 14, 2014 » <a href="/Scorpio_Bitbases">Scorpio Bitbases</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57517">Yet another KPK endgame table generator: pfkpk</a> by <a href="/Marcel_van_Kervinck">Marcel van Kervinck</a>, <a href="/CCC">CCC</a>, September 05, 2015 » <a href="/KPK">KPK</a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70815">Eucalyptus - KPK Bitbases Generator</a> by <a href="/Toni_Helminen">Toni Helminen</a>, <a href="/CCC">CCC</a>, May 24, 2019</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70942">The Poor Man's KP Bitbase</a> by <a href="/Dennis_Sceviour">Dennis Sceviour</a>, <a href="/CCC">CCC</a>, June 07, 2019</li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75803">EGBB (endgame bitbases) questions ...</a> by <a href="/Frank_Quisinsky">Frank Quisinsky</a>, <a href="/CCC">CCC</a>, November 15, 2020 » <a href="/Scorpio_Bitbases">Scorpio Bitbases</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Endgame_tablebase#Computer_chess">Endgame tablebase | Computer chess - Wikipedia</a></li>
+<li><a href="http://www.abc.se/~m10051/eg.txt">Computing endgames with few men</a> by <a href="/Urban_Koistinen">Urban Koistinen</a></li>
+<li><a href="https://github.com/dshawul/Scorpio">dshawul/Scorpio · GitHub</a> includes Six men egbb code » <a href="/Scorpio_Bitbases">Scorpio Bitbases</a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a></li>
+<li><a href="https://github.com/kervinck/pfkpk">kervinck/pfkpk · GitHub</a> » <a href="/KPK">KPK</a> Bitbase by <a href="/Marcel_van_Kervinck">Marcel van Kervinck</a> <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Endgame_Tablebases">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Ernst_A._Heinz">Ernst A. Heinz</a> (<strong>1999</strong>). <em>Knowledgeable Encoding and Querying of Endgame Databases.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 22, No. 2</a>, <a href="http://people.csail.mit.edu/heinz/ps/know_edb.ps.gz">ps</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=32835">Gaviota TBs [0.1.6.1</a>, bitbase-like interface] by <a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a>, <a href="/CCC">CCC</a>, February 22, 2010<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://www.stmintz.com/ccc/index.php?id=200335">Generating egtbs ICGAJ</a> by <a href="/Tony_van_Roon-Werten">Tony Werten</a>, <a href="/CCC">CCC</a>, December 04, 2001, with reference to <a href="http://www.abc.se/~m10051/eg.txt">Computing endgames with few men</a> by <a href="/Urban_Koistinen">Urban Koistinen</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.abc.se/~m10051/eg.txt">Computing endgames with few men</a> by <a href="/Urban_Koistinen">Urban Koistinen</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="/Ren_Wu">Ren Wu</a>, <a href="/Don_Beal">Don Beal</a> (<strong>2001</strong>). <em>Fast, Memory-efficient Retrograde Algorithms</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 24, No. 3</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="https://github.com/kervinck/pfkpk">kervinck/pfkpk · GitHub</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=50894">Scorpio 6men EGBB Now available</a> by Joshua Shriver, <a href="/CCC">CCC</a>, January 14, 2014<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=57517">Yet another KPK endgame table generator: pfkpk</a> by <a href="/Marcel_van_Kervinck">Marcel van Kervinck</a>, <a href="/CCC">CCC</a>, September 05, 2015<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Endgame_Bitbases">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

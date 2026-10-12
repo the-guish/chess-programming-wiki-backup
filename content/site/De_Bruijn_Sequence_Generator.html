@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>De Bruijn Sequence Generator - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">De Bruijn Sequence Generator</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Programming">Programming</a> * <a href="/Algorithms">Algorithms</a> * <a href="/Backtracking">Backtracking</a> * De Bruijn Sequence Generator</strong></p>
+<p>A <a href="/Recursion">recursive</a> backtracking implementation of a <a href="/Bitboards">64-bit</a> <a href="/De_Bruijn_Sequence">De Bruijn Sequence</a> generator in <a href="/Cpp">C++</a>, to build a "private" <a href="/BitScan">bitScanForward</a>-routine. Compile the program, and start it with a parameter between 1 and 67108864 (2^26). Test-output with some "unique" private number. By <a href="/Gerd_Isenberg">Gerd Isenberg</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#program-output">Program Output</a></li>
+<li><a href="#source">Source</a></li>
+<li><a href="#remarks">Remarks</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+</ol>
+</details><h2 id="program-output">Program Output</h2>
+<pre><code>C:\source\DeBruijn&gt;debruijn 4061955
+
+const BitBoard magic = 0x022fdd63cc95386d; // the 4061955.
+
+const unsigned int magictable[64] =
+{
+    0,  1,  2, 53,  3,  7, 54, 27,
+    4, 38, 41,  8, 34, 55, 48, 28,
+   62,  5, 39, 46, 44, 42, 22,  9,
+   24, 35, 59, 56, 49, 18, 29, 11,
+   63, 52,  6, 26, 37, 40, 33, 47,
+   61, 45, 43, 21, 23, 58, 17, 10,
+   51, 25, 36, 32, 60, 20, 57, 16,
+   50, 31, 19, 15, 30, 14, 13, 12,
+};
+
+unsigned int bitScanForward (BitBoard b) {
+    return magictable[((b&amp;-b)*magic) &gt;&gt; 58];
+}</code></pre>
+<h2 id="source">Source</h2>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;time.h&gt;
+
+typedef unsigned __int64 U64; // long long
+
+class CGenBitScan
+{
+public:
+   //==========================================
+   // constructor immediately starts the search
+   //==========================================
+   CGenBitScan(int match4nth) {
+      clock_t start, stop;
+      m_dBCount = 0;
+      m_Match4nth  = match4nth;
+      initPow2();
+      start = clock();
+      m_Lock = pow2[32]; // optimization to exclude 32, see remarks 
+      try {findDeBruijn(0, 64-6, 0, 6);} catch(int){}
+      stop = clock();
+      printf(&quot;\n%.3f Seconds for %d De Bruijn Sequences found\n&quot;, (float)(stop - start) / CLOCKS_PER_SEC, m_dBCount);
+   }
+
+private:
+   U64 pow2[64];    // single bits
+   U64 m_Lock;      // locks each bit used
+   int m_dBCount;   // counter
+   int m_Match4nth; // to match
+
+   //==========================================
+   // on the fly initialization of pow2
+   //==========================================
+   void initPow2()  {
+      pow2[0] = 1;
+      for (int i=1; i &lt; 64; i++)
+         pow2[i] = 2*pow2[i-1];
+   }
+
+   //==========================================
+   // print the bitscan routine and throw
+   //==========================================
+   void bitScanRoutineFound(U64 deBruijn) {
+      int index[64], i;
+      for (i=0; i&lt;64; i++) // init magic array
+         index[ (deBruijn&lt;&lt;i) &gt;&gt; (64-6) ] = i;
+      printf(&quot;\nconst U64 magic = 0x%08x%08x; // the %d.\n\n&quot;,
+              (int)(deBruijn&gt;&gt;32), (int)(deBruijn), m_dBCount);
+      printf(&quot;const unsigned int magictable[64] =\n{\n&quot;);
+      for (i=0; i&lt;64; i++) {
+         if ( (i &amp; 7) == 0 ) printf(&quot;\n  &quot;);
+         printf(&quot; %2d,&quot;, index[i]);
+      }
+      printf(&quot;\n};\n\nunsigned int bitScanForward (U64 b) {\n&quot;);
+      printf(&quot;    return magictable[((b&amp;-b)*magic) &gt;&gt; 58];\n}\n&quot;);
+      // throw 0; // unwind the stack until catched
+   }
+
+   //============================================
+   // recursive search
+   //============================================
+   void findDeBruijn(U64 seq, int depth, int vtx, int nz) {
+      if ( (m_Lock &amp; pow2[vtx]) == 0 &amp;&amp; nz &lt;= 32 ) { // only if vertex is not locked
+         if ( depth == 0 ) { // depth zero, De Bruijn Sequence found, see remarks
+            if ( ++m_dBCount == m_Match4nth )
+               bitScanRoutineFound(seq);
+         } else {
+            m_Lock ^= pow2[vtx]; // set bit, lock the vertex to don&#39;t appear multiple
+            if ( vtx == 31 &amp;&amp; depth &gt; 2 ) { // optimization, see remarks
+                findDeBruijn( seq | pow2[depth-1], depth-2, 62, nz+1);
+            } else {
+                findDeBruijn( seq, depth-1, (2*vtx)&amp;63, nz+1); // even successor
+                findDeBruijn( seq | pow2[depth-1], depth-1, (2*vtx+1)&amp;63, nz); // odd successor
+            }
+            m_Lock ^= pow2[vtx]; // reset bit, unlock
+         }
+      }
+   }
+};
+
+int main(int argc, char* argv[])
+{
+   if (argc &lt; 2)
+      printf(&quot;usage: genBitScan 1 .. %d\n&quot;, 1&lt;&lt;26);
+   else
+      CGenBitScan(atoi(argv[1]));
+   return 0;
+}</code></pre>
+<h2 id="remarks">Remarks</h2>
+<p>With findDeBruijn(0, 64-6, 0, 6), starting with six leading zeros on its most significant top, the routine has 58 decrements to reach depth zero claiming a found De Bruijn Sequence. The algorithm does not explicitly prove the uniqueness of six remaining indices which result from the up to five trailing hidden zeros with 100000B = 32 as least significant subsequence. However, the constraints of the odd De Bruin sequence seem strong enough to make that test redundant, that is proving 64-6 unique keys seems sufficient.</p>
+<p>As demonstrated in the <a href="/De_Bruijn_Sequence">De Bruijn Graph on a Chess Board</a>, there are two branch-less series {32, 0, 1} and {31, 63, 62} respectively. The recursive search routine performs some kind of pruning and reductions to take advantage of that. 63 to follow 31 must not be locked and skipped for the 62 with an extra depth reduction. 32 can not appear as index inside the 58 recursive tests in one path, and is therefor locked initially before the findDeBruijn(0, 64-6, 0, 6) call.</p>
+<p>A small improvement was introducing an additional parameter for the number of binary zeros to check it not to become greater 32. This makes also the depth &gt; 0 condition for the even successors no longer necessary, to enumerate all 2^26 De Bruijn Sequences.</p>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=339184">De Bruijn Sequence Generator</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/CCC">CCC</a>, December 30, 2003</li>
+</ul>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=339225">Re: De Bruijn Sequence Generator</a> by <a href="/Dieter_Bürßner">Dieter Bürßner</a>, <a href="/CCC">CCC</a>, December 30, 2003 » <a href="/BitScan">BitScan</a></p>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/De_Bruijn_sequence">De Bruijn sequence from Wikipedia</a></li>
+<li><a href="https://sites.google.com/site/sydfhd/articles-tutorials/de-bruijn-sequence-generator">De Bruijn Sequence Generator</a> from <a href="/Syed_Fahad">Syed Fahad's</a> Website</li>
+</ul>
+<p><strong><a href="/Backtracking">Up one Level</a></strong></p>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/De_Bruijn_Sequence_Generator">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

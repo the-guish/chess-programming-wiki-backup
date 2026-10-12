@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>En passant - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">En passant</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Chess">Chess</a> * <a href="/Moves">Moves</a> * En passant</strong></p>
+<p><strong>En passant</strong> (from French: "in passing") <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> is a special <a href="/Pawn">pawn</a> <a href="/Captures">capture move</a>, which is only possible immediately after an opposing pawn tried passing an advanced pawn on the fifth <a href="/Ranks">rank</a> (or fourth for black pawns) by a <a href="/Pawn_Push">double pawn push</a>. This double pushed pawn can then be captured the same way, as it would only performed a single push - but only as an immediate reply.</p>
+<p>This chess rule makes chess programming a bit harder. First, the target square of the en passant capture is not identical with origin of the captured pawn, opposed to all other captures. Second, the double pawn push, which triggered the immediate possibility of an en passant capture, must be part of the <a href="/Chess_Position">chess position</a>. The information required is whether there was a previous pawn push, and if so, at least the <a href="/Files">file number</a> of that pawn, considered as <a href="/Forsyth-Edwards_Notation">en passant target square</a> inside the <a href="/Forsyth-Edwards_Notation">Forsyth-Edwards Notation</a> (FEN), albeit with the redundant rank (3 or 6) as well.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#legality-test">Legality Test</a></li>
+<li><a href="#en-passant-bugs">En passant bugs</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1999">1999</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="legality-test">Legality Test</h2>
+<p>To prove an en passant capture is actually possible, at least the <a href="/Forsyth-Edwards_Notation">en passant target square</a> should be under attack of an opponent pawn for <a href="/Pseudo-Legal_Move">pseudo legality</a>. Further, for <a href="/Legal_Move">strict legality</a>, the ep capturing pawn should not be <a href="/Pin">absolutely pinned</a>, which additionally requires a horizontal pin test of both involved pawns, which disappear from the same rank.</p>
+<div class="chess-fen" data-fen="8/6bb/8/8/R1pP2k1/4P3/P7/K7"><code>8/6bb/8/8/R1pP2k1/4P3/P7/K7</code></div>
+
+<p><code>8/6bb/8/8/R1pP2k1/4P3/P7/K7 b - d3 after d2-d4</code></p>
+<p>The legality test should be best applied in <a href="/Make_Move">making</a> of the <a href="/Pawn_Push">double pawn push</a>, also considering <a href="/Incremental_Updates">updating</a> <a href="/Zobrist_Hashing">Zobist keys</a> to avoid dissimilarity of otherwise <a href="/Repetitions">repeated</a> <a href="/Chess_Position">positions</a> if the first occurrence happened after a double pawn push with no en passant capture actually possible <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> . <span id="bugs"></span></p>
+<h2 id="en-passant-bugs">En passant bugs</h2>
+<p>The implementation of the en passant rule often caused subtle <a href="/Engine_Testing">bugs</a>. Almost every chess programmer had various issues with it <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> , most notable <a href="/Louis_Kessler">Louis Kessler</a> with his <a href="/Brute_Force_%28Program%29">Program Brute Force</a>. <a href="/Gerd_Isenberg">Gerd Isenberg</a> had a special en passant experience with <a href="/IsiChess">IsiChess</a> at <a href="/Aegon_1994">Aegon 1994</a> in the game versus Henk Arnoldus. IsiChess pushed its white pawn from b2 to b4 "between" the two advanced pawns a4 and c4 from Henk, allowing two possible en passant options. Unfortunately IsiChess only generated one - the "wrong" one (an assembly bug due to jc instead if jnz or that like, otherwise it would not have played it), and was immediately lost after Henk played the "right" one <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> :</p>
+<pre><code>[Event &quot;9th AEGON man-comp&quot;]
+[Site &quot;The Hague NED&quot;]
+[Date &quot;1994.05.02&quot;]
+[Round &quot;4&quot;]
+[White &quot;IsiChess&quot;]
+[Black &quot;Henk Arnoldus&quot;]
+[Result &quot;0-1&quot;]
+
+1.e4 e6 2.d4 d5 3.Nd2 Nf6 4.e5 Nfd7 5.Bd3 b6 6.Ngf3 Ba6 7.O-O Bxd3
+8.cxd3 Be7 9.Nb3 O-O 10.Bd2 Na6 11.Qe2 Qc8 12.Rac1 Qb7 13.Rc2 c5
+14.Rfc1 Rfc8 15.dxc5 bxc5 16.Qe3 Nb4 17.Bxb4 Qxb4 18.Nbd2 a5 19.a3 Qb7
+20.Kh1 Ra6 21.d4 c4 22.Qc3 a4 23.b4 axb3 24.Nxb3 Rxa3 25.Nfd2 Rb8
+26.Rb1 cxb3 27.Rcb2 Bb4 28.Qc1 Bxd2 29.Rxd2 Ra2 30.Rdb2 Rxb2
+31.Qxb2 Qb4 32.f4 g6 33.h3 Qc4 34.Rc1 Qd3 35.f5 Qxf5 0-1</code></pre>
+<div class="chess-fen" data-fen="2r3k1/1q1nbppp/r3p3/3pP3/pPpP4/P1Q2N2/2RN1PPP/2R4K"><code>2r3k1/1q1nbppp/r3p3/3pP3/pPpP4/P1Q2N2/2RN1PPP/2R4K</code></div>
+
+<p><code>2r3k1/1q1nbppp/r3p3/3pP3/pPpP4/P1Q2N2/2RN1PPP/2R4K b - b3 0 23</code></p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Algebraic_Chess_Notation">Algebraic Chess Notation - En passant</a></li>
+<li><a href="/Captures">Captures</a></li>
+<li><a href="/Castling">Castling</a></li>
+<li><a href="/Forsyth-Edwards_Notation">FEN - En passant target square</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1999">1999</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=41612">Hash Tables - Should one store EP, Castling rights etc?</a> by <a href="/Steve_Maughan">Steve Maughan</a>, <a href="/CCC">CCC</a>, January 30, 1999 » <a href="/Castling_Rights">Castling Rights</a>, <a href="/Transposition_Table">Transposition Table</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=42421">en-passant move generation</a> by Larry Griffiths, <a href="/CCC">CCC</a>, February 06, 1999</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=79362">Unique nodes, en passant and perfect hashing</a> by Andreas Stabel, <a href="/CCC">CCC</a>, November 25, 1999</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=99216">Does your program understand castling/en passant rights on 3x repetition</a> by Richard A. Fowell, <a href="/CCC">CCC</a>, February 27, 2000 » <a href="/Castling_Rights">Castling Rights</a>, <a href="/Repetitions">Repetitions</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=332375">annoying en passant x-ray</a> by <a href="/Georg_von_Zimmermann">Georg von Zimmermann</a>, <a href="/CCC">CCC</a>, November 30, 2003</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=13557">Programmer bug hunt challenge</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, May 04, 2007 » <a href="/Portable_Game_Notation">Portable Game Notation</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=33397">en passant and hash key calculation</a> by Fred Hamilton, <a href="/CCC">CCC</a>, March 21, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40248">Komodo 3 and a minor bug</a> by <a href="/Jouni_Uski">Jouni Uski</a>, <a href="/CCC">CCC</a>, September 02, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47622&amp;start=6">Re: Causes for inconsistent benchmark signatures</a> by <a href="/Evert_Glebbeek">Evert Glebbeek</a>, <a href="/CCC">CCC</a>, March 27, 2013 » <a href="/Forsyth-Edwards_Notation">Forsyth-Edwards Notation</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49316">polyglot en passant square</a> by <a href="/Marco_Belli">Marco Belli</a>, <a href="/CCC">CCC</a>, September 12, 2013 » <a href="/PolyGlot">PolyGlot</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49362">ep and castle rights hashing</a> by Natale Galioto, <a href="/CCC">CCC</a>, September 15, 2013 » <a href="/Castling_Rights">Castling Rights</a>, <a href="/Repetitions">Repetitions</a>, <a href="/Transposition_Table">Transposition Table</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51988">Abundance of castling vs en passant rights</a> by <a href="/Kirill_Kryukov">Kirill Kryukov</a>, <a href="/CCC">CCC</a>, April 14, 2014 » <a href="/Castling">Castling</a></li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2697">En-passant legality test</a> by tetra, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, August 07, 2014 » <a href="/Legal_Move">Legal Move</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55290">En passant bonus</a> by <a href="/Lyudmil_Tsvetkov">Lyudmil Tsvetkov</a>, <a href="/CCC">CCC</a>, February 10, 2015 » <a href="/Pawn_Structure">Pawn Structure</a></li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2885">Dynamic EP flag</a> by thevinenator, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, October 02, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60075">Triple Repitition: Is this considered a repitition or not?</a> by Jayakiran Akurathi, <a href="/CCC">CCC</a>, May 07, 2016 » <a href="/Repetitions">Repetitions</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62733">Enpass + Castling for Zorbist hashes</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, January 06, 2017 » <a href="/Castling_Rights">Castling Rights</a>, <a href="/Zobrist_Hashing">Zobrist Hashing</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=65218">Stockfish Chess 8 - en passant rule</a> by <a href="/Norbert_Raimund_Leisner">Norbert Raimund Leisner</a>, <a href="/CCC">CCC</a>, September 19, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66323">3-fold repetition and cutechess-cli</a> by Lars Mathiesen, <a href="/CCC">CCC</a>, January 14, 2018 » <a href="/Repetitions">Repetitions</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=71512">SYZYGY question</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, August 11, 2019 » <a href="/Crafty">Crafty</a>, <a href="/Syzygy_Bases">Syzygy Bases</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77350">Being silly with perft and legal move generation</a> by Jakob Progsch, <a href="/CCC">CCC</a>, May 19, 2021 » <a href="/Perft">Perft</a>, <a href="/Move_Generation">Legal Move Generation</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/En_passant">En passant from Wikipedia</a></li>
+<li><a href="https://boylston-chess-club.blogspot.com/2008/08/en-passant.html">Boylston Chess Club Weblog: En passant</a></li>
+<li><a href="http://www.cs.cmu.edu/%7Ebwl/EnPassant.htm">En Passant - The Bimonthly Journal of the Pittsburgh Chess Club</a> by <a href="/Bruce_W._Leverett">Bruce W. Leverett</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Moves">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.chesshistory.com/winter/extra/earliest.html">Earliest Occurrences of Chess Terms</a> by <a href="https://en.wikipedia.org/wiki/Edward_Winter_%28chess_historian%29">Edward Winter</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=33397">en passant and hash key calculation</a> by Fred Hamilton, <a href="/CCC">CCC</a>, March 21, 2010<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="/Chrilly_Donninger">Chrilly Donninger</a> (<strong>1999</strong>). <em>Computer machen keine Fehler</em>. <a href="/Computerschach_und_Spiele">CSS</a> 2/99, <a href="http://www.mustrum.de/chrilly/keine_fehler.pdf">pdf</a> (German)<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.csvn.nl/index.php?option=com_docman&amp;task=cat_view&amp;gid=40&amp;Itemid=26&amp;lang=en">CSVN Downloads Games Aegon Tournaments</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="https://groups.google.com/group/rec.games.chess/browse_frm/thread/8dbd04e027108e0c">Aegon 1994 Round 4 (REPOST)</a> by <a href="/Dap_Hartmann">Dap Hartmann</a>, <a href="/Computer_Chess_Forums">rgc</a>, May 09, 1994<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/En_passant">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
