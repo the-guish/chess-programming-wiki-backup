@@ -1,0 +1,1019 @@
+0x401740: mov    %rcx,0x8(%rsp)
+0x401745: mov    %rsp,%r11
+0x401748: sub    $0xa8,%rsp
+0x40174f: mov    0x26ceef(%rip),%edx # 0x66e644  upper 32-bits of mat token
+0x401755: mov    %rbx,0x10(%r11)
+0x401759: mov    0x26cee0(%rip),%rbx # 0x66e640  all the mat token
+0x401760: mov    %rsi,0x20(%r11)
+0x401764: and    $0x3ffff,%ebx                   bottom 19 bits of mat token
+0x40176a: lea    -0x1771(%rip),%r9 # 0x400000
+0x401771: mov    0x29940(%r9,%rbx,8),%rbx        material imbalance lookup
+0x401779: mov    %edx,%eax                       1,3,5,10 part of mat token
+0x40177b: mov    %rdi,-0x8(%r11)
+0x40177f: imul   $0xd47,%eax,%eax                multiply it by 3399
+0x401785: mov    %rbx,%rsi                       move mat-imbalance to %rsi
+0x401788: mov    %rcx,%r8
+0x40178b: shr    $0x20,%rsi                      get score part of mat-lookup
+0x40178f: mov    %rbx,0x20(%rsp)
+0x401794: mov    %rbx,0x30(%rsp)
+0x401799: add    %eax,%esi                       add 1-3-5-10 mat + imbalance
+0x40179b: cmp    0x26acbf(%rip),%edx # 0x66c460  compare to -0x1f4
+0x4017a1: mov    %esi,%edi
+0x4017a3: jle    0x40293b                        if so, lazy eval
+0x4017a9: cmp    0x26acb5(%rip),%edx # 0x66c464  compare to +0x1f4
+0x4017af: jge    0x40293b                        if so, lazy eval
+0x4017b5: mov    %rbx,%rax
+0x4017b8: shr    $0x18,%rax                      get lazy flag of mat-lookup
+0x4017bc: test   %al,%al
+0x4017be: jne    0x40293b                        if zero, do lazy eval
+0x4017c4: mov    0x26ce6d(%rip),%rax # 0x66e638  get pawn hash
+0x4017cb: mov    %rbp,0x18(%r11)
+0x4017cf: mov    %r12,-0x10(%r11)
+0x4017d3: and    $0x7ffff,%eax                   bottom 19 bits of pawn hash
+0x4017d8: mov    %r13,-0x18(%r11)
+0x4017dc: mov    %r14,-0x20(%r11)
+0x4017e0: lea    (%rax,%rax,2),%rcx              multiply by 3 (24 bytes)
+0x4017e4: mov    0x26ab05(%rip),%rax # 0x66c2f0  pawn hash table pointer
+0x4017eb: mov    %r15,-0x28(%r11)
+0x4017ef: prefetchnta (%rax,%rcx,8)              prefetch pawn hash entry
+0x4017f3: prefetchnta 0x20(%rax,%rcx,8)
+0x401800: add    0x26ce22(%rip),%esi # 0x66e628  add static values
+0x401806: add    0x26ce20(%rip),%edi # 0x66e62c     opening/endgame
+0x4017f8: bsf    0x26cde0(%rip),%rax # 0x66e5e0  white king
+0x40180c: mov    0x26cd6d(%rip),%r10 # 0x66e580  white occupied
+0x401813: mov    0x26cd86(%rip),%r8  # 0x66e5a0  white knights
+0x40181a: mov    %rax,0x48(%rsp)
+0x40181f: mov    0x249d40(%r9,%rax,8),%rax
+0x401827: xor    %r13d,%r13d
+0x40182a: mov    $0xffff7f7f7f7f7f7f,%rcx        ignore h-file mask (rcx)
+0x401834: mov    %rax,0x50(%rsp)
+0x401839: bsf    0x26cda7(%rip),%rax # 0x66e5e8  scan black king bitboard
+0x401841: mov    %r13d,%ebp
+0x401844: mov    0x249d40(%r9,%rax,8),%r15       %r15 has squares around bK
+0x40184c: mov    %rax,0x40(%rsp)
+0x401851: mov    0x26cd38(%rip),%rax # 0x66e590  white pawns
+0x401858: mov    %rax,%r14
+0x40185b: not    %r10
+0x40185e: mov    $0x5555555555555555,%r11
+0x401868: and    %rcx,%r14                       ignore h-file
+0x40186b: mov    $0xfefefefefefefe,%rcx          ignore a-file mask (rcx)
+0x401875: mov    $0x3333333333333333,%r9
+0x40187f: and    %rcx,%rax                       ignore a-file
+0x401882: shl    $0x2,%r14                       get half of the attacks
+0x401886: mov    %r15,0x60(%rsp)
+0x40188b: or     %rax,%r14                       other half of attacks
+0x40188e: mov    $0x1,%eax                       set %eax to one
+0x401893: mov    %r13d,%r12d
+0x401896: shl    $0x7,%r14                       squares attacked by wP
+0x40189a: mov    %r10,0x28(%rsp)
+0x40189f: mov    %r11,0x58(%rsp)
+0x4018a4: test   %r14,%r15                       if wP attacks near bK
+0x4018a7: mov    %r9,0x68(%rsp)
+0x4018ac: cmovne %eax,%ebp                          add one to attackers
+0x4018af: test   %r8,%r8                         if no white knights
+0x4018b2: je     0x401949                           skip the next loop
+0x4018b8: lea    -0x18bf(%rip),%rbx # 0x400000
+0x4018bf: mov    $0xf0f0f0f0f0f0f0f,%r13
+0x4018c9: xchg   %ax,%ax
+0x4018cc: xchg   %ax,%ax
+0x4018d0: bsf    %r8,%rax                       looping over white knights
+0x4018d4: mov    0x249b40(%rbx,%rax,8),%rdx      get square this N attacks
+0x4018dc: or     %rdx,%r14                       OR with squares Wh attacks
+0x4018df: test   %rdx,%r15                       if attacks around bK
+0x4018e2: je     0x4018ee
+0x4018e4: add    $0x1,%ebp                        add 1 to attackers
+0x4018e7: add    $0x3ad,%r12d                     and 941 to attack weight
+0x4018ee: and    %r10,%rdx                       AND with Wh occupied
+0x4018f1: mov    %rdx,%rax                       [mobility computation]
+0x4018f4: shr    %rax
+0x4018f7: and    %r11,%rax
+0x4018fa: sub    %rax,%rdx
+0x4018fd: mov    %rdx,%rax
+0x401900: and    %r9,%rdx
+0x401903: shr    $0x2,%rax
+0x401907: and    %r9,%rax
+0x40190a: add    %rdx,%rax
+0x40190d: mov    %rax,%rcx
+0x401910: shr    $0x4,%rcx
+0x401914: add    %rax,%rcx
+0x401917: mov    $0x101010101010101,%rax         [popcnt]
+0x401921: and    %r13,%rcx
+0x401924: imul   %rax,%rcx
+0x401928: shr    $0x38,%rcx
+0x40192c: mov    %ecx,%eax
+0x40192e: imul   $0x79,%ecx,%ecx                 121 in the opening
+0x401931: imul   $0xe,%eax,%eax                   14 in the endgame
+0x401934: add    %ecx,%edi                        for each mobility
+0x401936: add    %eax,%esi
+0x401938: lea    -0x1(%r8),%rax
+0x40193c: and    %rax,%r8
+0x40193f: jne    0x4018d0                       END White Knights Loop
+0x401941: mov    0x20(%rsp),%rbx
+0x401946: xor    %r13d,%r13d
+0x401949: mov    0x26cc60(%rip),%r9 # 0x66e5b0  white bishops
+0x401950: mov    0x26cca9(%rip),%r11 # 0x66e600  (rotated occupied bitboard)
+0x401957: test   %r9,%r9                        if no wB, skip this
+0x40195a: je     0x401a48
+0x401960: lea    -0x1967(%rip),%rbx # 0x400000
+0x401967: mov    $0x3333333333333333,%r13
+0x401971: mov    0x26cc90(%rip),%rdx # 0x66e608  (rotated occupied bitboard)
+0x401978: bsf    %r9,%rax                       White Bishop Loop
+0x40197c: mov    %eax,%r8d
+0x40197f: lea    0x0(,%rax,4),%rax
+0x401987: movzbl 0x29640(%rax,%rbx,1),%ecx       compute squares attacked
+0x40198f: shl    $0x6,%r8
+0x401993: shr    %cl,%rdx
+0x401996: movzbl 0x29540(%rax,%rbx,1),%ecx       
+0x40199e: mov    %r11,%rax
+0x4019a1: shr    %cl,%rax
+0x4019a4: and    $0x3f,%edx
+0x4019a7: add    %r8,%rdx
+0x4019aa: and    $0x3f,%eax
+0x4019ad: mov    0x231940(%rbx,%rdx,8),%rcx      same in other direction
+0x4019b5: add    %r8,%rax
+0x4019b8: or     0x229940(%rbx,%rax,8),%rcx
+0x4019c0: or     %rcx,%r14                       save mobility in %r14
+0x4019c3: test   %rcx,%r15                       test if attacks near bK
+0x4019c6: je     0x4019d2
+0x4019c8: add    $0x1,%ebp                        if so add 1 to attackers
+0x4019cb: add    $0x1a2,%r12d                     and 418 to attack weight
+0x4019d2: and    %r10,%rcx                       AND with white occupied
+0x4019d5: mov    $0x5555555555555555,%rdx         then popcnt the mobility
+0x4019df: mov    %rcx,%rax
+0x4019e2: shr    %rax
+0x4019e5: and    %rdx,%rax
+0x4019e8: sub    %rax,%rcx
+0x4019eb: mov    %rcx,%rax
+0x4019ee: and    %r13,%rcx
+0x4019f1: shr    $0x2,%rax
+0x4019f5: and    %r13,%rax
+0x4019f8: add    %rcx,%rax
+0x4019fb: mov    %rax,%rcx
+0x4019fe: shr    $0x4,%rcx
+0x401a02: add    %rax,%rcx
+0x401a05: mov    $0xf0f0f0f0f0f0f0f,%rax          [popcnt]
+0x401a0f: and    %rax,%rcx
+0x401a12: mov    $0x101010101010101,%rax
+0x401a1c: imul   %rax,%rcx
+0x401a20: shr    $0x38,%rcx
+0x401a24: mov    %ecx,%eax
+0x401a26: imul   $0x74,%ecx,%ecx                  116 for each in opening
+0x401a29: imul   $0x95,%eax,%eax                  149 for each in endgame
+0x401a2f: add    %ecx,%edi
+0x401a31: add    %eax,%esi
+0x401a33: lea    -0x1(%r9),%rax
+0x401a37: and    %rax,%r9
+0x401a3a: jne    0x401971                        END White bishop loop
+0x401a40: mov    0x20(%rsp),%rbx
+0x401a45: xor    %r13d,%r13d
+0x401a48: mov    0x26cb71(%rip),%r10 # 0x66e5c0  white rooks
+0x401a4f: mov    0x26cba2(%rip),%rax # 0x66e5f8   (rotated bitboard)
+0x401a56: mov    0x26cb3b(%rip),%r15 # 0x66e598   black pawns
+0x401a5d: test   %r10,%r10
+0x401a60: je     0x401c06                        if no white rooks, skip
+0x401a66: mov    0x28(%rsp),%rbx
+0x401a6b: mov    0x60(%rsp),%r13
+0x401a70: mov    %rax,%rdx
+0x401a73: bsf    %r10,%r9                        BEGIN white rooks loop
+0x401a77: lea    -0x1a7e(%rip),%rcx # 0x400000
+0x401a7e: movzbl 0x29840(%rcx,%r9,4),%ecx
+0x401a87: lea    -0x1a8e(%rip),%rax # 0x400000
+0x401a8e: mov    %r9d,%r8d
+0x401a91: shr    %cl,%rdx
+0x401a94: movzbl 0x29740(%rax,%r9,4),%ecx         [rotated bitboards]
+0x401a9d: mov    0x26cb4c(%rip),%rax # 0x66e5f0
+0x401aa4: shr    %cl,%rax
+0x401aa7: shl    $0x6,%r8
+0x401aab: and    $0x3f,%edx
+0x401aae: add    %r8,%rdx
+0x401ab1: and    $0x3f,%eax
+0x401ab4: add    %r8,%rax
+0x401ab7: lea    -0x1abe(%rip),%r8 # 0x400000
+0x401abe: mov    0x241940(%r8,%rdx,8),%rcx
+0x401ac6: or     0x239940(%r8,%rax,8),%rcx
+0x401ace: or     %rcx,%r14                       squares attacked by wR
+0x401ad1: test   %rcx,%r13                       test if attacks near bK 
+0x401ad4: je     0x401ae0
+0x401ad6: add    $0x1,%ebp                        if so, add 1 to attackers
+0x401ad9: add    $0x29a,%r12d                     and 666 to attack weight
+0x401ae0: and    %rbx,%rcx                       AND with white occupied
+0x401ae3: mov    $0x5555555555555555,%rdx        then count mobility
+0x401aed: mov    %rcx,%rax
+0x401af0: shr    %rax
+0x401af3: and    %rdx,%rax
+0x401af6: mov    $0x3333333333333333,%rdx
+0x401b00: sub    %rax,%rcx
+0x401b03: mov    %rcx,%rax
+0x401b06: and    %rdx,%rcx
+0x401b09: shr    $0x2,%rax
+0x401b0d: and    %rdx,%rax
+0x401b10: add    %rcx,%rax
+0x401b13: mov    %rax,%rcx
+0x401b16: shr    $0x4,%rcx
+0x401b1a: add    %rax,%rcx
+0x401b1d: mov    $0xf0f0f0f0f0f0f0f,%rax          [popcnt]
+0x401b27: and    %rax,%rcx
+0x401b2a: mov    $0x101010101010101,%rax
+0x401b34: imul   %rax,%rcx
+0x401b38: shr    $0x38,%rcx
+0x401b3c: mov    %ecx,%eax
+0x401b3e: imul   $0x4f,%ecx,%ecx                 79 for each in opening
+0x401b41: imul   $0x54,%eax,%eax                 84 in endgame
+0x401b44: add    %ecx,%edi
+0x401b46: add    %eax,%esi
+0x401b48: mov    0x24a340(%r8,%r9,8),%rax        mask for open files
+0x401b50: test   %rax,0x26ca39(%rip) # 0x66e590  white pawns
+0x401b57: jne    0x401b96
+0x401b59: add    $0x40,%esi                      if on half-open file
+0x401b5c: add    $0x100,%edi                      add 64 in op, 256 in end
+0x401b62: test   %r15,%rax                        if on full-open file (bP)
+0x401b65: jne    0x401b73
+0x401b67: add    $0x3cb,%esi                      add 971 in op, 172 in end
+0x401b6d: add    $0xac,%edi
+0x401b73: testb  $0x80,0x31(%rsp)                see if king-safety used
+0x401b78: je     0x401ba8
+0x401b7a: test   %rax,%r13                        and if file is adj to bK
+0x401b7d: je     0x401b9f
+0x401b7f: mov    0x26ca62(%rip),%rdx # 0x66e5e8
+0x401b86: add    $0x79,%esi                        if so, add 121 in opening
+0x401b89: test   %rdx,%rax                          and if file is same as bK
+0x401b8c: je     0x401baf
+0x401b8e: add    $0x355,%esi                         add 853 more in opening
+0x401b94: jmp    0x401baf
+0x401b96: mov    0x26ca4b(%rip),%rdx # 0x66e5e8
+0x401b9d: jmp    0x401baf
+0x401b9f: mov    0x26ca42(%rip),%rdx # 0x66e5e8
+0x401ba6: jmp    0x401baf
+0x401ba8: mov    0x26ca39(%rip),%rdx # 0x66e5e8
+0x401baf: and    $0xfffffffffffffff8,%r9d        see if wR square
+0x401bb3: cmp    $0x30,%r9d                       is on 7th rank
+0x401bb7: jne    0x401bea
+0x401bb9: mov    $0xff000000000000,%rax           if so, see if Black
+0x401bc3: mov    %r15,%rcx                         has a pawn on the 7th
+0x401bc6: and    %rax,%rcx
+0x401bc9: mov    %rdx,%rax                         or a king
+0x401bcc: mov    $0xff00000000000000,%rdx           on the 8th
+0x401bd6: and    %rdx,%rax
+0x401bd9: or     %rax,%rcx
+0x401bdc: je     0x401bea                           if so,
+0x401bde: add    $0xf6,%esi                          add 246 in opening,
+0x401be4: add    $0x402,%edi                         and 1026 in endgame
+0x401bea: lea    -0x1(%r10),%rax
+0x401bee: and    %rax,%r10
+0x401bf1: mov    0x26ca00(%rip),%rax # 0x66e5f8
+0x401bf8: jne    0x401a70                       END White Rook Loop
+0x401bfe: mov    0x20(%rsp),%rbx
+0x401c03: xor    %r13d,%r13d
+0x401c06: mov    0x26c9c3(%rip),%r11 # 0x66e5d0 white queens
+0x401c0d: test   %r11,%r11                      if none, skip this
+0x401c10: je     0x401da4
+0x401c16: mov    0x28(%rsp),%rbx
+0x401c1b: mov    0x60(%rsp),%r13
+0x401c20: lea    -0x1c27(%rip),%rdx # 0x400000
+0x401c27: xchg   %ax,%ax
+0x401c2a: xchg   %ax,%ax
+0x401c2d: xchg   %ax,%ax
+0x401c30: bsf    %r11,%r15                      BEGIN White Queen loop
+0x401c34: lea    -0x1c3b(%rip),%r10 # 0x400000
+0x401c3b: lea    0x0(,%r15,4),%r8
+0x401c43: mov    %r15d,%r9d
+0x401c46: movzbl 0x29840(%r8,%rdx,1),%ecx
+0x401c4f: mov    %rax,%rdx
+0x401c52: mov    0x26c997(%rip),%rax # 0x66e5f0  [rotated bitboard]
+0x401c59: shr    %cl,%rdx
+0x401c5c: movzbl 0x29740(%r8,%r10,1),%ecx
+0x401c65: shl    $0x6,%r9
+0x401c69: shr    %cl,%rax
+0x401c6c: and    $0x3f,%edx
+0x401c6f: and    $0x3f,%eax
+0x401c72: add    %r9,%rdx
+0x401c75: mov    0x241940(%r10,%rdx,8),%r10
+0x401c7d: add    %r9,%rax
+0x401c80: lea    -0x1c87(%rip),%rdx # 0x400000
+0x401c87: or     0x239940(%rdx,%rax,8),%r10
+0x401c8f: movzbl 0x29640(%r8,%rdx,1),%ecx
+0x401c98: mov    0x26c969(%rip),%rax # 0x66e608
+0x401c9f: shr    %cl,%rax
+0x401ca2: movzbl 0x29540(%r8,%rdx,1),%ecx
+0x401cab: and    $0x3f,%eax
+0x401cae: add    %r9,%rax
+0x401cb1: or     0x231940(%rdx,%rax,8),%r10
+0x401cb9: mov    0x26c940(%rip),%rax # 0x66e600
+0x401cc0: shr    %cl,%rax
+0x401cc3: and    $0x3f,%eax
+0x401cc6: add    %r9,%rax
+0x401cc9: or     0x229940(%rdx,%rax,8),%r10
+0x401cd1: or     %r10,%r14                       compute squares attacked
+0x401cd4: test   %r10,%r13                       if attacks near bK 
+0x401cd7: je     0x401ce3
+0x401cd9: add    $0x1,%ebp                        add one to attackers
+0x401cdc: add    $0x214,%r12d                     and 532 to attack weight
+0x401ce3: and    %rbx,%r10                       AND with White occupied
+0x401ce6: mov    $0x5555555555555555,%rcx        then popcnt mobility...
+0x401cf0: and    $0xfffffffffffffff8,%r15d
+0x401cf4: mov    %r10,%rax
+0x401cf7: shr    %rax
+0x401cfa: and    %rcx,%rax
+0x401cfd: mov    $0x3333333333333333,%rcx
+0x401d07: sub    %rax,%r10
+0x401d0a: mov    %r10,%rax
+0x401d0d: and    %rcx,%r10
+0x401d10: shr    $0x2,%rax
+0x401d14: and    %rcx,%rax
+0x401d17: add    %r10,%rax
+0x401d1a: mov    %rax,%rcx
+0x401d1d: shr    $0x4,%rcx
+0x401d21: add    %rax,%rcx
+0x401d24: mov    $0xf0f0f0f0f0f0f0f,%rax
+0x401d2e: and    %rax,%rcx
+0x401d31: mov    $0x101010101010101,%rax
+0x401d3b: imul   %rax,%rcx
+0x401d3f: shr    $0x38,%rcx
+0x401d43: mov    %ecx,%eax
+0x401d45: imul   $0x25,%ecx,%ecx                 37 per square in opening
+0x401d48: imul   $0x36,%eax,%eax                 54 per square in endgame
+0x401d4b: add    %ecx,%edi
+0x401d4d: add    %eax,%esi
+0x401d4f: cmp    $0x30,%r15d                     see if on 7th rank
+0x401d53: jne    0x401d88                        if so,
+0x401d55: mov    0x26c83c(%rip),%rcx # 0x66e598   see if bP
+0x401d5c: mov    $0xff000000000000,%rax
+0x401d66: mov    $0xff00000000000000,%r8
+0x401d70: and    %rax,%rcx                         is on 7th
+0x401d73: mov    0x26c86e(%rip),%rax # 0x66e5e8    or bK
+0x401d7a: and    %r8,%rax                          is on 8th
+0x401d7d: or     %rax,%rcx
+0x401d80: je     0x401d88                           and if either
+0x401d82: add    $0x58c,%edi                         add 1420 in endgame
+0x401d88: lea    -0x1(%r11),%rax
+0x401d8c: and    %rax,%r11
+0x401d8f: mov    0x26c862(%rip),%rax # 0x66e5f8
+0x401d96: jne    0x401c30                        END White Queen Loop
+0x401d9c: mov    0x20(%rsp),%rbx
+0x401da1: xor    %r13d,%r13d
+0x401da4: mov    0x50(%rsp),%r15
+0x401da9: or     %r15,%r14
+0x401dac: mov    %r14,0x38(%rsp)
+0x401db1: callq  0x4087b0                        CALL pawneval
+0x401db6: mov    0x26c85b(%rip),%r9d # 0x66e618   castling flags
+0x401dbd: mov    %rax,%r8
+0x401dc0: mov    %rax,0x28(%rsp)
+0x401dc5: movswl 0x4(%rax),%eax
+0x401dc9: add    %eax,%esi                        add op score from pawneval
+0x401dcb: movswl 0x6(%r8),%eax
+0x401dd0: add    %eax,%edi                        add eg score from pawneval
+0x401dd2: testb  $0x80,0x31(%rsp)                test to skip bK safety
+0x401dd7: je     0x401e36
+0x401dd9: mov    0x40(%rsp),%rax
+0x401dde: lea    -0x1de5(%rip),%rcx # 0x400000
+0x401de5: mov    0x262e80(%rcx,%rbp,4),%ecx       lookup attacker multiplier
+0x401dec: imul   %r12d,%ecx
+0x401df0: lea    -0x1df7(%rip),%r12 # 0x400000
+0x401df7: sar    $0x5,%ecx
+0x401dfa: movzbl 0x260b50(%rax,%r12,1),%eax        [get FileWing]
+0x401e03: add    %ecx,%esi                        add to opening score
+0x401e05: test   $0x4,%r9b                        test for black oo
+0x401e09: movzwl 0xe(%r8,%rax,2),%edx             put ShelStorm(FileWing)->edx
+0x401e0f: mov    %edx,%ecx                        copy this to ecx
+0x401e11: je     0x401e1d                         if black oo rights exist
+0x401e13: movzwl 0x12(%r8),%eax                    and ShelStorm(g8)
+0x401e18: cmp    %edx,%eax                         is better,
+0x401e1a: cmovb  %eax,%ecx                          move this into ecx 
+0x401e1d: test   $0x8,%r9b                        test for black ooo
+0x401e21: je     0x401e2d                         if black ooo rights exist
+0x401e23: movzwl 0xe(%r8),%eax                     and ShelStorm(c8)
+0x401e28: cmp    %ecx,%eax                         is better
+0x401e2a: cmovb  %eax,%ecx                          move this into ecx
+0x401e2d: lea    (%rcx,%rdx,1),%eax               take the ecx/edx average
+0x401e30: shr    %eax                              (add then div by 2)
+0x401e32: add    %eax,%esi                        add to opening score
+0x401e34: jmp    0x401e3d
+0x401e36: lea    -0x1e3d(%rip),%r12 # 0x400000   Now Repeat for Black...
+0x401e3d: mov    0x26c754(%rip),%rax # 0x66e598  Black Pawns
+0x401e44: mov    0x26c73d(%rip),%r11 # 0x66e588  Black occupied
+0x401e4b: mov    0x26c756(%rip),%r8  # 0x66e5a8  Black knights
+0x401e52: mov    %rax,%rbp
+0x401e55: mov    $0x3fbfbfbfbfbfbf80,%rcx
+0x401e5f: mov    %r13d,%r10d
+0x401e62: shr    $0x2,%rbp
+0x401e66: not    %r11
+0x401e69: and    %rcx,%rbp
+0x401e6c: mov    $0x7f7f7f7f7f7f7f00,%rcx
+0x401e76: mov    %r11,0x70(%rsp)
+0x401e7b: and    %rcx,%rax
+0x401e7e: or     %rax,%rbp
+0x401e81: mov    $0x1,%eax
+0x401e86: shr    $0x7,%rbp
+0x401e8a: test   %rbp,%r15
+0x401e8d: cmovne %eax,%r10d
+0x401e91: test   %r8,%r8
+0x401e94: je     0x401f36
+0x401e9a: mov    $0x5555555555555555,%rbx
+0x401ea4: mov    $0x3333333333333333,%r14
+0x401eae: xchg   %ax,%ax
+0x401eb0: bsf    %r8,%rax                         LOOP Black Knights
+0x401eb4: mov    0x249b40(%r12,%rax,8),%rdx
+0x401ebc: or     %rdx,%rbp
+0x401ebf: test   %rdx,%r15
+0x401ec2: je     0x401ecf
+0x401ec4: add    $0x1,%r10d
+0x401ec8: add    $0x3ad,%r13d
+0x401ecf: and    %r11,%rdx
+0x401ed2: mov    %rdx,%rax
+0x401ed5: shr    %rax
+0x401ed8: and    %rbx,%rax
+0x401edb: sub    %rax,%rdx
+0x401ede: mov    %rdx,%rax
+0x401ee1: and    %r14,%rdx
+0x401ee4: shr    $0x2,%rax
+0x401ee8: and    %r14,%rax
+0x401eeb: add    %rdx,%rax
+0x401eee: mov    %rax,%rcx
+0x401ef1: shr    $0x4,%rcx
+0x401ef5: add    %rax,%rcx
+0x401ef8: mov    $0xf0f0f0f0f0f0f0f,%rax
+0x401f02: and    %rax,%rcx
+0x401f05: mov    $0x101010101010101,%rax
+0x401f0f: imul   %rax,%rcx
+0x401f13: shr    $0x38,%rcx
+0x401f17: mov    %ecx,%eax
+0x401f19: imul   $0xffffffffffffff87,%ecx,%ecx
+0x401f1c: imul   $0xfffffffffffffff2,%eax,%eax
+0x401f1f: add    %ecx,%edi
+0x401f21: add    %eax,%esi
+0x401f23: lea    -0x1(%r8),%rax
+0x401f27: and    %rax,%r8
+0x401f2a: jne    0x401eb0
+0x401f2c: mov    0x20(%rsp),%rbx
+0x401f31: mov    0x38(%rsp),%r14
+0x401f36: mov    0x26c67b(%rip),%r9 # 0x66e5b8
+0x401f3d: mov    0x26c6bc(%rip),%r12 # 0x66e600
+0x401f44: test   %r9,%r9
+0x401f47: je     0x40203a
+0x401f4d: lea    -0x1f54(%rip),%rbx # 0x400000
+0x401f54: mov    $0x3333333333333333,%r14
+0x401f5e: xchg   %ax,%ax
+0x401f60: mov    0x26c6a1(%rip),%rdx # 0x66e608
+0x401f67: bsf    %r9,%rax                       LOOP Black Bishops
+0x401f6b: mov    %eax,%r8d
+0x401f6e: lea    0x0(,%rax,4),%rax
+0x401f76: movzbl 0x29640(%rax,%rbx,1),%ecx
+0x401f7e: shl    $0x6,%r8
+0x401f82: shr    %cl,%rdx
+0x401f85: movzbl 0x29540(%rax,%rbx,1),%ecx
+0x401f8d: mov    %r12,%rax
+0x401f90: shr    %cl,%rax
+0x401f93: and    $0x3f,%edx
+0x401f96: add    %r8,%rdx
+0x401f99: and    $0x3f,%eax
+0x401f9c: mov    0x231940(%rbx,%rdx,8),%rcx
+0x401fa4: add    %r8,%rax
+0x401fa7: or     0x229940(%rbx,%rax,8),%rcx
+0x401faf: or     %rcx,%rbp
+0x401fb2: test   %rcx,%r15
+0x401fb5: je     0x401fc2
+0x401fb7: add    $0x1,%r10d
+0x401fbb: add    $0x1a2,%r13d
+0x401fc2: and    %r11,%rcx
+0x401fc5: mov    $0x5555555555555555,%rdx
+0x401fcf: mov    %rcx,%rax
+0x401fd2: shr    %rax
+0x401fd5: and    %rdx,%rax
+0x401fd8: sub    %rax,%rcx
+0x401fdb: mov    %rcx,%rax
+0x401fde: and    %r14,%rcx
+0x401fe1: shr    $0x2,%rax
+0x401fe5: and    %r14,%rax
+0x401fe8: add    %rcx,%rax
+0x401feb: mov    %rax,%rcx
+0x401fee: shr    $0x4,%rcx
+0x401ff2: add    %rax,%rcx
+0x401ff5: mov    $0xf0f0f0f0f0f0f0f,%rax
+0x401fff: and    %rax,%rcx
+0x402002: mov    $0x101010101010101,%rax
+0x40200c: imul   %rax,%rcx
+0x402010: shr    $0x38,%rcx
+0x402014: mov    %ecx,%eax
+0x402016: imul   $0xffffffffffffff8c,%ecx,%ecx
+0x402019: imul   $0xffffff6b,%eax,%eax
+0x40201f: add    %ecx,%edi
+0x402021: add    %eax,%esi
+0x402023: lea    -0x1(%r9),%rax
+0x402027: and    %rax,%r9
+0x40202a: jne    0x401f60
+0x402030: mov    0x20(%rsp),%rbx
+0x402035: mov    0x38(%rsp),%r14
+0x40203a: mov    0x26c587(%rip),%r11 # 0x66e5c8
+0x402041: mov    0x26c5b0(%rip),%rdx # 0x66e5f8
+0x402048: mov    0x26c591(%rip),%r15 # 0x66e5e0
+0x40204f: test   %r11,%r11
+0x402052: je     0x4021b7
+0x402058: mov    0x26c531(%rip),%rbx # 0x66e590
+0x40205f: mov    0x70(%rsp),%r14
+0x402064: bsf    %r11,%r9                          LOOP Black Rooks
+0x402068: lea    -0x206f(%rip),%rax # 0x400000
+0x40206f: movzbl 0x29840(%rax,%r9,4),%ecx
+0x402078: mov    %r9d,%r8d
+0x40207b: shr    %cl,%rdx
+0x40207e: movzbl 0x29740(%rax,%r9,4),%ecx
+0x402087: mov    0x26c562(%rip),%rax # 0x66e5f0
+0x40208e: shr    %cl,%rax
+0x402091: shl    $0x6,%r8
+0x402095: and    $0x3f,%edx
+0x402098: add    %r8,%rdx
+0x40209b: and    $0x3f,%eax
+0x40209e: add    %r8,%rax
+0x4020a1: lea    -0x20a8(%rip),%r8 # 0x400000
+0x4020a8: mov    0x241940(%r8,%rdx,8),%rcx
+0x4020b0: mov    0x50(%rsp),%rdx
+0x4020b5: or     0x239940(%r8,%rax,8),%rcx
+0x4020bd: or     %rcx,%rbp
+0x4020c0: test   %rcx,%rdx
+0x4020c3: je     0x4020d0
+0x4020c5: add    $0x1,%r10d
+0x4020c9: add    $0x29a,%r13d
+0x4020d0: and    %r14,%rcx
+0x4020d3: mov    %rcx,%rax
+0x4020d6: shr    %rax
+0x4020d9: and    0x58(%rsp),%rax
+0x4020de: sub    %rax,%rcx
+0x4020e1: mov    %rcx,%rax
+0x4020e4: and    0x68(%rsp),%rcx
+0x4020e9: shr    $0x2,%rax
+0x4020ed: and    0x68(%rsp),%rax
+0x4020f2: add    %rcx,%rax
+0x4020f5: mov    %rax,%rcx
+0x4020f8: shr    $0x4,%rcx
+0x4020fc: add    %rax,%rcx
+0x4020ff: mov    $0xf0f0f0f0f0f0f0f,%rax
+0x402109: and    %rax,%rcx
+0x40210c: mov    $0x101010101010101,%rax
+0x402116: imul   %rax,%rcx
+0x40211a: shr    $0x38,%rcx
+0x40211e: mov    %ecx,%eax
+0x402120: imul   $0xffffffffffffffb1,%ecx,%ecx
+0x402123: imul   $0xffffffffffffffac,%eax,%eax
+0x402126: add    %ecx,%edi
+0x402128: mov    0x26c469(%rip),%rcx # 0x66e598
+0x40212f: add    %eax,%esi
+0x402131: mov    0x24a540(%r8,%r9,8),%rax
+0x402139: test   %rax,%rcx
+0x40213c: jne    0x402172
+0x40213e: sub    $0x40,%esi
+0x402141: sub    $0x100,%edi
+0x402147: test   %rax,%rbx
+0x40214a: jne    0x402158
+0x40214c: sub    $0x3cb,%esi
+0x402152: sub    $0xac,%edi
+0x402158: testb  $0x8,0x31(%rsp)
+0x40215d: je     0x402172
+0x40215f: test   %rax,%rdx
+0x402162: je     0x402172
+0x402164: sub    $0x79,%esi
+0x402167: test   %rax,%r15
+0x40216a: je     0x402172
+0x40216c: sub    $0x355,%esi
+0x402172: and    $0xfffffffffffffff8,%r9d
+0x402176: cmp    $0x8,%r9d
+0x40217a: jne    0x402199
+0x40217c: mov    %rbx,%rax
+0x40217f: movzbl %r15b,%ecx
+0x402183: and    $0xff00,%eax
+0x402188: or     %rax,%rcx
+0x40218b: je     0x402199
+0x40218d: sub    $0xf6,%esi
+0x402193: sub    $0x402,%edi
+0x402199: mov    0x26c458(%rip),%rdx # 0x66e5f8
+0x4021a0: lea    -0x1(%r11),%rax
+0x4021a4: and    %rax,%r11
+0x4021a7: jne    0x402064
+0x4021ad: mov    0x20(%rsp),%rbx
+0x4021b2: mov    0x38(%rsp),%r14
+0x4021b7: mov    0x26c41a(%rip),%r11 # 0x66e5d8
+0x4021be: test   %r11,%r11
+0x4021c1: mov    %r11,%r12
+0x4021c4: je     0x40234d
+0x4021ca: mov    0x26c3bf(%rip),%rbx # 0x66e590
+0x4021d1: mov    0x70(%rsp),%r14
+0x4021d6: xchg   %ax,%ax
+0x4021da: xchg   %ax,%ax
+0x4021dd: xchg   %ax,%ax
+0x4021e0: bsf    %r12,%rax                        LOOP Black Queens
+0x4021e4: lea    -0x21eb(%rip),%r11 # 0x400000
+0x4021eb: lea    0x0(,%rax,4),%r8
+0x4021f3: mov    %eax,%r9d
+0x4021f6: mov    %rax,0x58(%rsp)
+0x4021fb: movzbl 0x29840(%r8,%r11,1),%ecx
+0x402204: mov    0x26c3e5(%rip),%rax # 0x66e5f0
+0x40220b: shl    $0x6,%r9
+0x40220f: shr    %cl,%rdx
+0x402212: movzbl 0x29740(%r8,%r11,1),%ecx
+0x40221b: shr    %cl,%rax
+0x40221e: and    $0x3f,%edx
+0x402221: and    $0x3f,%eax
+0x402224: add    %r9,%rdx
+0x402227: mov    0x241940(%r11,%rdx,8),%r11
+0x40222f: add    %r9,%rax
+0x402232: lea    -0x2239(%rip),%rdx # 0x400000
+0x402239: or     0x239940(%rdx,%rax,8),%r11
+0x402241: movzbl 0x29640(%r8,%rdx,1),%ecx
+0x40224a: mov    0x26c3b7(%rip),%rax # 0x66e608
+0x402251: shr    %cl,%rax
+0x402254: movzbl 0x29540(%r8,%rdx,1),%ecx
+0x40225d: and    $0x3f,%eax
+0x402260: add    %r9,%rax
+0x402263: or     0x231940(%rdx,%rax,8),%r11
+0x40226b: mov    0x26c38e(%rip),%rax # 0x66e600
+0x402272: shr    %cl,%rax
+0x402275: and    $0x3f,%eax
+0x402278: add    %r9,%rax
+0x40227b: or     0x229940(%rdx,%rax,8),%r11
+0x402283: mov    0x50(%rsp),%rax
+0x402288: or     %r11,%rbp
+0x40228b: test   %r11,%rax
+0x40228e: je     0x40229b
+0x402290: add    $0x1,%r10d
+0x402294: add    $0x214,%r13d
+0x40229b: and    %r14,%r11
+0x40229e: mov    $0x5555555555555555,%rcx
+0x4022a8: mov    %r11,%rax
+0x4022ab: shr    %rax
+0x4022ae: and    %rcx,%rax
+0x4022b1: mov    $0x3333333333333333,%rcx
+0x4022bb: sub    %rax,%r11
+0x4022be: mov    %r11,%rax
+0x4022c1: and    %rcx,%r11
+0x4022c4: shr    $0x2,%rax
+0x4022c8: and    %rcx,%rax
+0x4022cb: add    %r11,%rax
+0x4022ce: mov    %rax,%rcx
+0x4022d1: shr    $0x4,%rcx
+0x4022d5: add    %rax,%rcx
+0x4022d8: mov    $0xf0f0f0f0f0f0f0f,%rax
+0x4022e2: and    %rax,%rcx
+0x4022e5: mov    $0x101010101010101,%rax
+0x4022ef: imul   %rax,%rcx
+0x4022f3: shr    $0x38,%rcx
+0x4022f7: mov    %ecx,%eax
+0x4022f9: imul   $0xffffffffffffffdb,%ecx,%ecx
+0x4022fc: imul   $0xffffffffffffffca,%eax,%eax
+0x4022ff: add    %ecx,%edi
+0x402301: add    %eax,%esi
+0x402303: mov    0x58(%rsp),%rax
+0x402308: and    $0xfffffffffffffff8,%eax
+0x40230b: cmp    $0x8,%eax
+0x40230e: jne    0x402327
+0x402310: mov    %rbx,%rax
+0x402313: movzbl %r15b,%ecx
+0x402317: and    $0xff00,%eax
+0x40231c: or     %rax,%rcx
+0x40231f: je     0x402327
+0x402321: sub    $0x58c,%edi
+0x402327: mov    0x26c2ca(%rip),%rdx # 0x66e5f8
+0x40232e: lea    -0x1(%r12),%rax
+0x402333: and    %rax,%r12
+0x402336: jne    0x4021e0                       END Black Queen Loop
+0x40233c: mov    0x20(%rsp),%rbx
+0x402341: mov    0x38(%rsp),%r14
+0x402346: mov    0x26c28b(%rip),%r11 # 0x66e5d8
+0x40234d: or     0x60(%rsp),%rbp
+0x402352: testb  $0x8,0x31(%rsp)                test to use white king safety
+0x402357: je     0x4023bf
+0x402359: mov    0x28(%rsp),%r8
+0x40235e: mov    0x26c2b3(%rip),%r9d # 0x66e618
+0x402365: mov    %r10d,%eax
+0x402368: lea    -0x236f(%rip),%r10 # 0x400000
+0x40236f: mov    0x262e80(%r10,%rax,4),%ecx
+0x402377: mov    0x48(%rsp),%rax
+0x40237c: movzbl 0x260b50(%rax,%r10,1),%eax
+0x402385: imul   %r13d,%ecx
+0x402389: sar    $0x5,%ecx
+0x40238c: movzwl 0x8(%r8,%rax,2),%edx
+0x402392: sub    %ecx,%esi
+0x402394: test   $0x1,%r9b
+0x402398: mov    %edx,%ecx
+0x40239a: je     0x4023a6
+0x40239c: movzwl 0xc(%r8),%eax
+0x4023a1: cmp    %edx,%eax
+0x4023a3: cmovb  %eax,%ecx
+0x4023a6: test   $0x2,%r9b
+0x4023aa: je     0x4023b6
+0x4023ac: movzwl 0x8(%r8),%eax
+0x4023b1: cmp    %ecx,%eax
+0x4023b3: cmovb  %eax,%ecx
+0x4023b6: lea    (%rcx,%rdx,1),%eax
+0x4023b9: shr    %eax
+0x4023bb: sub    %eax,%esi
+0x4023bd: jmp    0x4023cb                       End of White King Safety
+0x4023bf: mov    0x28(%rsp),%r8
+0x4023c4: lea    -0x23cb(%rip),%r10 # 0x400000
+0x4023cb: movzbl 0x14(%r8),%r9d                 White passer files (pawninfo)
+0x4023d0: mov    0x26c1a9(%rip),%r12 # 0x66e580      [white occupied %r12]
+0x4023d7: test   %r9d,%r9d                      if none
+0x4023da: je     0x40252f                        skip all this
+0x4023e0: or     0x26c1e1(%rip),%r11 # 0x66e5c8
+0x4023e7: mov    0x26c1fa(%rip),%r13 # 0x66e5e8
+0x4023ee: mov    0x26c19b(%rip),%rbx # 0x66e590
+0x4023f5: or     0x26c1bc(%rip),%r11 # 0x66e5b8
+0x4023fc: or     0x26c1a5(%rip),%r11 # 0x66e5a8  [black non-king/pawns]
+0x402403: nop
+0x402404: xchg   %ax,%ax
+0x402408: xchg   %ax,%ax
+0x40240c: xchg   %ax,%ax
+0x402410: mov    0x260b90(%r10,%r9,4),%eax     LOOP over White passer files
+0x402418: mov    0x260b10(%r10,%rax,8),%rax
+0x402420: and    %rbx,%rax
+0x402423: bsr    %rax,%r10                      get board-square of pawn
+0x402427: lea    -0x242e(%rip),%rax # 0x400000
+0x40242e: mov    0x24a340(%rax,%r10,8),%rcx
+0x402436: mov    %r10d,%r8d
+0x402439: shr    $0x3,%r8                       get rank of pawn
+0x40243d: add    0x260f90(%rax,%r8,4),%esi       opening bonus (rank-based)
+0x402445: add    0x260fb0(%rax,%r8,4),%edi       endgame bonus (rank-based)
+0x40244d: test   %r11,%r11                      IF black has no pieces
+0x402450: jne    0x40248a
+0x402452: test   %rcx,%r12                       
+0x402455: jne    0x402478
+0x402457: mov    0x26c1b3(%rip),%eax # 0x66e610  and the pawn is not blocked
+0x40245d: lea    (%rax,%r10,2),%rcx
+0x402461: lea    -0x2468(%rip),%rax # 0x400000
+0x402468: test   %r13,0x262280(%rax,%rcx,8)      and bK is not in the "square"
+0x402470: je     0x402478
+0x402472: add    $0x6400,%edi                     add 25600 in the endgame
+0x402478: test   %r15,0x262a80(%rax,%r10,8)      ["square" when turn switched]
+0x402480: je     0x4024d1
+0x402482: add    $0x6400,%edi                     [similarly add 25600]
+0x402488: jmp    0x4024d1
+0x40248a: test   %rcx,%r12                      ELSE if White doesn't block
+0x40248d: jne    0x402497
+0x40248f: add    0x260fd0(%rax,%r8,4),%edi       add a rank-based bonus
+0x402497: mov    0x26c0ea(%rip),%rax # 0x66e588
+0x40249e: test   %rcx,%rax                       if Black doesn't block
+0x4024a1: jne    0x4024b4
+0x4024a3: lea    -0x24aa(%rip),%rdx # 0x400000    
+0x4024aa: add    0x260ff0(%rdx,%r8,4),%edi        add a rank-based bonus
+0x4024b2: jmp    0x4024bb
+0x4024b4: lea    -0x24bb(%rip),%rdx # 0x400000
+0x4024bb: mov    %r14,%rax
+0x4024be: not    %rax                            if Black attacks no square
+0x4024c1: and    %rcx,%rax                        unattacked by White
+0x4024c4: test   %rax,%rbp                        in the path of the pawn
+0x4024c7: jne    0x4024d1
+0x4024c9: add    0x261010(%rdx,%r8,4),%edi        add a rank-based bonus
+0x4024d1: mov    0x40(%rsp),%rax
+0x4024d6: lea    0x8(%r10),%ecx
+0x4024da: lea    -0x24e1(%rip),%r10 # 0x400000
+0x4024e1: shl    $0x6,%rcx
+0x4024e5: add    %rcx,%rax
+0x4024e8: movzbl 0x261280(%rax,%r10,1),%edx       lookup distance from bK
+0x4024f1: mov    0x48(%rsp),%rax                   to square in front of wP
+0x4024f6: add    %rcx,%rax
+0x4024f9: imul   0x261050(%r10,%r8,4),%edx         mult by rank-based number
+0x402502: movzbl 0x261280(%rax,%r10,1),%ecx
+0x40250b: lea    -0x1(%r9),%eax
+0x40250f: imul   0x261030(%r10,%r8,4),%ecx        similarly for wK-to-wP dist,
+0x402518: sub    %ecx,%edx                         which is subtracted
+0x40251a: add    %edx,%edi                        and both put into the total
+0x40251c: and    %eax,%r9d
+0x40251f: jne    0x402410                      END White passer file loop
+0x402525: mov    0x20(%rsp),%rbx
+0x40252a: mov    0x28(%rsp),%r8
+0x40252f: movzbl 0x15(%r8),%r10d
+0x402534: mov    0x26c075(%rip),%rcx # 0x66e5b0
+0x40253b: mov    0x26c07e(%rip),%r8  # 0x66e5c0
+0x402542: test   %r10d,%r10d
+0x402545: je     0x4026b3
+0x40254b: mov    0x26c07e(%rip),%r13 # 0x66e5d0
+0x402552: mov    0x26c08f(%rip),%rbx # 0x66e5e8
+0x402559: lea    -0x2560(%rip),%r11 # 0x400000
+0x402560: or     %r8,%r13
+0x402563: or     %rcx,%r13
+0x402566: or     0x26c033(%rip),%r13 # 0x66e5a0
+0x40256d: xchg   %ax,%ax
+0x402570: mov    0x260b90(%r11,%r10,4),%eax     BEGIN Black passer loop
+0x402578: mov    0x260b10(%r11,%rax,8),%rax
+0x402580: and    0x26c011(%rip),%rax # 0x66e598
+0x402587: bsf    %rax,%r11
+0x40258b: lea    -0x2592(%rip),%rax # 0x400000
+0x402592: mov    0x24a540(%rax,%r11,8),%rdx
+0x40259a: mov    $0x7,%eax
+0x40259f: mov    %r11d,%ecx
+0x4025a2: shr    $0x3,%ecx
+0x4025a5: sub    %ecx,%eax
+0x4025a7: lea    -0x25ae(%rip),%rcx # 0x400000
+0x4025ae: sub    0x260f90(%rcx,%rax,4),%esi
+0x4025b5: sub    0x260fb0(%rcx,%rax,4),%edi
+0x4025bc: test   %r13,%r13
+0x4025bf: mov    %eax,%r8d
+0x4025c2: jne    0x402613
+0x4025c4: mov    0x26bfbd(%rip),%rax # 0x66e588
+0x4025cb: test   %rdx,%rax
+0x4025ce: jne    0x402601
+0x4025d0: mov    0x26c03a(%rip),%eax # 0x66e610
+0x4025d6: lea    (%rax,%r11,2),%rcx
+0x4025da: lea    -0x25e1(%rip),%rax # 0x400000
+0x4025e1: test   %r15,0x262680(%rax,%rcx,8)
+0x4025e9: je     0x4025fa
+0x4025eb: sub    $0x6400,%edi
+0x4025f1: lea    -0x25f8(%rip),%rcx # 0x400000
+0x4025f8: jmp    0x402601
+0x4025fa: lea    -0x2601(%rip),%rcx # 0x400000
+0x402601: test   %rbx,0x262c80(%rcx,%r11,8)
+0x402609: je     0x40264a
+0x40260b: sub    $0x6400,%edi
+0x402611: jmp    0x40264a
+0x402613: mov    0x26bf6e(%rip),%rax # 0x66e588
+0x40261a: test   %rdx,%rax
+0x40261d: jne    0x402627
+0x40261f: sub    0x260fd0(%rcx,%r8,4),%edi
+0x402627: test   %rdx,%r12
+0x40262a: jne    0x402634
+0x40262c: sub    0x260ff0(%rcx,%r8,4),%edi
+0x402634: mov    %rbp,%rax
+0x402637: not    %rax
+0x40263a: and    %rdx,%rax
+0x40263d: test   %rax,%r14
+0x402640: jne    0x40264a
+0x402642: sub    0x261010(%rcx,%r8,4),%edi
+0x40264a: mov    0x40(%rsp),%rax
+0x40264f: lea    -0x8(%r11),%ecx
+0x402653: lea    -0x265a(%rip),%r11 # 0x400000
+0x40265a: shl    $0x6,%rcx
+0x40265e: add    %rcx,%rax
+0x402661: movzbl 0x261280(%rax,%r11,1),%edx
+0x40266a: mov    0x48(%rsp),%rax
+0x40266f: add    %rcx,%rax
+0x402672: imul   0x261030(%r11,%r8,4),%edx
+0x40267b: movzbl 0x261280(%rax,%r11,1),%ecx
+0x402684: lea    -0x1(%r10),%eax
+0x402688: imul   0x261050(%r11,%r8,4),%ecx
+0x402691: sub    %ecx,%edx
+0x402693: add    %edx,%edi
+0x402695: and    %eax,%r10d
+0x402698: jne    0x402570                       END Black Passer Loop
+0x40269e: mov    0x20(%rsp),%rbx
+0x4026a3: mov    0x26bf06(%rip),%rcx # 0x66e5b0  white bishops
+0x4026aa: mov    0x26bf0f(%rip),%r8  # 0x66e5c0  white rooks
+0x4026b1: jmp    0x4026ba
+0x4026b3: lea    -0x26ba(%rip),%r11 # 0x400000
+0x4026ba: mov    0x26bed7(%rip),%r10 # 0x66e598  black pawns
+0x4026c1: mov    0x90(%rsp),%r13
+0x4026c9: mov    0x98(%rsp),%r12
+0x4026d1: mov    %rcx,%rax
+0x4026d4: mov    $0x4020200000000,%rdx           Mask: B5, B6, C7
+0x4026de: shr    $0x7,%rax
+0x4026e2: and    %r10,%rax                       Mask with black pawns
+0x4026e5: test   %rax,%rdx                       test with white bishops
+0x4026e8: jne    0x402703
+0x4026ea: mov    %rcx,%rax
+0x4026ed: mov    $0x20404000000000,%rdx          Mask: G5, G6, F7
+0x4026f7: shr    $0x9,%rax
+0x4026fb: and    %r10,%rax
+0x4026fe: test   %rax,%rdx                       if trapped bishop
+0x402701: je     0x40270f                      
+0x402703: sub    $0x70a,%esi                       subtract 1802 for opening
+0x402709: sub    $0x70a,%edi                                     and endgame
+0x40270f: mov    0x26bea2(%rip),%r9  # 0x66e5b8  black bishops
+0x402716: mov    0x26be73(%rip),%rdx # 0x66e590  white pawns
+0x40271d: mov    %r9,%rax
+0x402720: and    $0x10102,%eax                   Mask: B1 A2 A3
+0x402725: shl    $0x9,%rax
+0x402729: test   %rax,%rdx
+0x40272c: jne    0x40273f
+0x40272e: mov    %r9,%rax
+0x402731: and    $0x808040,%eax                  Mask: G1 H2 H3
+0x402736: shl    $0x7,%rax
+0x40273a: test   %rax,%rdx                       if trapped bishop
+0x40273d: je     0x40274b
+0x40273f: add    $0x70a,%esi                       add 1802 for opening
+0x402745: add    $0x70a,%edi                                and endgame
+0x40274b: test   $0x4,%cl                        check if C1 sq of wB is set
+0x40274e: je     0x402776                       
+0x402750: bt     $0xb,%rdx                       check if D2 sq of wP is set
+0x402755: jae    0x40276d                       
+0x402757: mov    0x26be92(%rip),%rax # 0x66e5f0
+0x40275e: bt     $0x13,%rax                      check if D3 sq is nonempty
+0x402763: jae    0x40277d                        (BlockedBishop)
+0x402765: sub    $0x780,%esi                     if all true, sub 1920 in op
+0x40276b: jmp    0x40277d
+0x40276d: mov    0x26be7c(%rip),%rax # 0x66e5f0
+0x402774: jmp    0x40277d
+0x402776: mov    0x26be73(%rip),%rax # 0x66e5f0
+0x40277d: test   $0x20,%cl                       check if F1 sq of wB is et
+0x402780: je     0x402796
+0x402782: bt     $0xc,%rdx                       check if E2 sq of wP is set
+0x402787: jae    0x402796
+0x402789: bt     $0x14,%rax                      check if E3 sq is nonempty
+0x40278e: jae    0x402796                        (BlockedBishop)
+0x402790: sub    $0x780,%esi                     if all true, sub 1920 in op
+0x402796: mov    $0x400000000000000,%rdx         check if C8 sq of bB is set
+0x4027a0: test   %r9,%rdx
+0x4027a3: je     0x4027c9
+0x4027a5: mov    $0x8000000000000,%rdx           check if D7 sq of bP is set
+0x4027af: test   %r10,%rdx
+0x4027b2: je     0x4027c9
+0x4027b4: mov    $0x80000000000,%rdx             check if D6 sq is nonempty
+0x4027be: test   %rax,%rdx
+0x4027c1: je     0x4027c9                        (BlockedBishop)
+0x4027c3: add    $0x780,%esi                     if all true, add 1920 in op
+0x4027c9: mov    $0x2000000000000000,%rdx        check if F8 sq of bB is set
+0x4027d3: test   %r9,%rdx
+0x4027d6: je     0x4027fc
+0x4027d8: mov    $0x10000000000000,%rdx          check if E7 sq of bP is set
+0x4027e2: test   %r10,%rdx
+0x4027e5: je     0x4027fc
+0x4027e7: mov    $0x100000000000,%rdx            check if E6 sq is nonempty
+0x4027f1: test   %rax,%rdx
+0x4027f4: je     0x4027fc                        (BlockedBishop)
+0x4027f6: add    $0x780,%esi                     if all true, add 1920 in op
+0x4027fc: test   $0x103,%r8                      Mask A1,A2,B1 to wR
+0x402803: je     0x402811
+0x402805: test   $0x6,%r15b                      Mask B1,C1 to wK
+0x402809: je     0x402811                        (BlockedRook)
+0x40280b: sub    $0x780,%esi                     if both true, sub 1920 in op
+0x402811: test   $0x80c0,%r8                     Mask G1,H1,H2 to wR
+0x402818: je     0x402826
+0x40281a: test   $0x60,%r15b                     Mask F1,G1 to wK
+0x40281e: je     0x402826                        (BlockedRook)
+0x402820: sub    $0x780,%esi                     if both true, sub 1920 in op
+0x402826: mov    0x26bd9b(%rip),%rax # 0x66e5c8
+0x40282d: mov    $0x301000000000000,%rdx         Mask A7,A8,B8 to bR
+0x402837: test   %rax,%rdx
+0x40283a: je     0x40285a                       
+0x40283c: mov    0x26bda5(%rip),%r8 # 0x66e5e8
+0x402843: mov    $0x600000000000000,%rdx         Mask B8, C8 to bK
+0x40284d: test   %r8,%rdx
+0x402850: je     0x402861                        (BlockedRook)
+0x402852: add    $0x780,%esi                     if both true, add 1920 in op
+0x402858: jmp    0x402861
+0x40285a: mov    0x26bd87(%rip),%r8 # 0x66e5e8
+0x402861: mov    $0xc080000000000000,%rdx        Mask H7, G8, H8 to bR
+0x40286b: test   %rax,%rdx
+0x40286e: je     0x402885
+0x402870: mov    $0x6000000000000000,%rax        Mask G8, F8 to bK
+0x40287a: test   %r8,%rax
+0x40287d: je     0x402885                        (BlockedRook)
+0x40287f: add    $0x780,%esi                     if both true, add 1920 in op
+0x402885: test   %bl,%bl                         Check for bishop ending
+0x402887: je     0x4028bc                         (from the material table)
+0x402889: or     %rcx,%r9
+0x40288c: mov    $0x55aa55aa55aa55aa,%rax        see if really opp coloured
+0x402896: test   %r9,%rax
+0x402899: je     0x4028bc
+0x40289b: mov    $0xaa55aa55aa55aa55,%rax
+0x4028a5: test   %r9,%rax
+0x4028a8: je     0x4028bc                        if so
+0x4028aa: mov    %esi,%eax
+0x4028ac: cltd   
+0x4028ad: sub    %edx,%eax
+0x4028af: sar    %eax                             divide op eval by 2
+0x4028b1: mov    %eax,%esi
+0x4028b3: mov    %edi,%eax
+0x4028b5: cltd   
+0x4028b6: sub    %edx,%eax
+0x4028b8: sar    %eax                             divide eg eval by 2
+0x4028ba: mov    %eax,%edi
+0x4028bc: movzbl 0x32(%rsp),%eax
+0x4028c1: mov    0x261074(%r11,%rax,8),%ecx     Final interpolation
+0x4028c9: mov    0x261070(%r11,%rax,8),%eax      of op/eg scores
+0x4028d1: imul   %edi,%ecx
+0x4028d4: imul   %esi,%eax
+0x4028d7: add    %eax,%ecx
+0x4028d9: sar    $0xd,%ecx
+0x4028dc: cmpl   $0x0,0x26bd2d(%rip) # 0x66e610  IF not wtm
+0x4028e3: jne    0x402902
+0x4028e5: lea    0x3(%rcx),%eax                   add 3 to score
+0x4028e8: mov    0xb0(%rsp),%rcx
+0x4028f0: test   %rbp,%r15
+0x4028f3: mov    %eax,0x18(%rcx)                  save positional score
+0x4028f6: setne  %al
+0x4028f9: mov    %r14,(%rcx)                      save mobility
+0x4028fc: mov    %rbp,0x8(%rcx)                   save mobility
+0x402900: jmp    0x402921
+0x402902: mov    $0x3,%eax                       ELSE
+0x402907: sub    %ecx,%eax                        subtract score from 3
+0x402909: mov    0xb0(%rsp),%rcx
+0x402911: test   %r8,%r14
+0x402914: mov    %eax,0x18(%rcx)                  save positional score
+0x402917: setne  %al
+0x40291a: mov    %rbp,(%rcx)                      save mobility
+0x40291d: mov    %r14,0x8(%rcx)                   save mobility
+0x402921: mov    0x80(%rsp),%r15
+0x402929: mov    0x88(%rsp),%r14
+0x402931: mov    0xc0(%rsp),%rbp
+0x402939: jmp    0x40295f                        SKIP TO END
+0x40293b: mov    0x26bccf(%rip),%eax # 0x66e610  from lazy eval
+0x402941: mov    $0x1,%ecx
+0x402946: sar    $0x5,%esi
+0x402949: add    %eax,%eax
+0x40294b: sub    %eax,%ecx
+0x40294d: imul   %esi,%ecx
+0x402950: add    $0x3,%ecx
+0x402953: mov    %ecx,0x18(%r8)
+0x402957: mov    %r8,%rcx
+0x40295a: callq  0x401240                         call mobility-only
+0x40295f: mov    0xa0(%rsp),%rdi
+0x402967: mov    0xc8(%rsp),%rsi
+0x40296f: mov    0xb8(%rsp),%rbx
+0x402977: add    $0xa8,%rsp
+0x40297e: retq   

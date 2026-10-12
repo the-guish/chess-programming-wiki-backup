@@ -1,0 +1,106 @@
+0x46fd72: cmp    $0x2,%ebx             # compare depth to 2 half-ply
+0x46fd75: jne    0x46fda1              # if equal
+0x46fd77: cmp    %ebp,(0x7f4834)         # see if RML[1] is null (ebp)
+0x46fd7d: je     0x46fda1                # if more than one legal move
+0x46fd7f: movzbl (0x7dd2f8),%ecx           # load "easy"
+0x46fd86: mov    (0x7f43c4),%eax           # load value 2nd best move
+0x46fd8c: add    $0xc8,%eax                # add 200
+0x46fd91: cmp    %eax,(0x7f43c0)           # compare to val best move
+0x46fd97: cmovae %r14d,%ecx                # if margin is large
+0x46fd9b: mov    %cl,(0x7dd2f8)              # set "easy" as true
+0x46fda1: mov    %edx,(0x7dd2f0)   
+0x46fdad* mov    (0x7dd2f6),%r10b      # load "change"
+0x46fda7: callq  *0xfa283(%rip)        # GetTickCount
+0x46fdb4: mov    %eax,%r11d            # copy TickCount to r11
+0x46fdb7: sub    (0x7dd2d8),%r11d      # subtract start time -> USED
+0x46fdbe: cmp    %ebp,(0x7745f0)       # if SomeTimeFlag is false
+0x46fdc4: jne    0x46fde3 [0x46fdea*]
+0x46fdc6: cmp    (0x7dd1b0),%r11d        # cmp TargetTime to USED
+0x46fdcd: jb     0x46fdd7                # if USED is large
+0x46fdcf: mov    $0x1,%r8b                 # set "flag" to true
+0x46fdd2: jmpq   0x46fe99 [0x46fe92*]
+0x46fdd7: mov    (0x7dd2f9),%r8b         
+0x46fdde: jmpq   0x46fe99 [0x46fe92*]    # jump to BELOW
+0x46fdea* movzbl (0x7dd2f5),%esi       # load "bad_2"
+0x46fde3: mov    (0x7dd1b0),%r9d       # put TargetTime into r9
+0x46fdf6* lea    0x0(,%r9,4),%ecx      # multiply by 4
+0x46fdf1: mov    $0xcccccccd,%eax      # multiply by 4/5
+0x46fdfe: mul    %ecx
+0x46fe00: shr    $0x2,%edx             # divide by 4
+0x46fe03: cmp    %edx,%r11d            # cmp 4/5*TargetTime to USED
+0x46fe06: jb     0x46fe19              # if USED is large
+0x46fe08: movzbl (0x7dd2f9),%r8d         # load "flag"
+0x46fe10: test   %sil,%sil               # if bad_2 is false
+0x46fe13: cmove  %r14d,%r8d                # set "flag"
+0x46fe17: jmp    0x46fe20
+0x46fe19: mov    (07dd2f9),%r8b        # load "flag"
+0x46fe20: mov    $0xcccccccd,%eax      
+0x46fe25: mul    %r9d                  # multiply TargetTime by 4/5
+0x46fe28: shr    $0x2,%edx             # divide by 4
+0x46fe2b: cmp    %edx,%r11d            # cmp 1/5*TargetTime to USED
+0x46fe2e: jb     0x46fe3f              # if USED is large
+0x46fe30: cmp    %bpl,(0x7dd2f8)         # check if "easy" is true
+0x46fe37: movzbl %r8b,%r8d
+0x46fe3b: cmovne %r14d,%r8d                # if so, set "flag"
+0x46fe3f: mov    %r9d,%ecx
+0x46fe42: mov    $0xcccccccd,%eax
+0x46fe47: imul   $0x7,%ecx,%ecx        # multiply TargetTime by 7
+0x46fe4a: mul    %ecx                  # then by 4/5
+0x46fe4c: shr    $0x3,%edx             # and divide by 8
+0x46fe4f: cmp    %edx,%r11d            # cmp 7/10*TargetTime to USED
+0x46fe52: jb     0x46fe64              # if USED is large
+0x46fe54: test   %sil,%sil               # test "bad2"
+0x46fe57: jne    0x46fe64                # if false
+0x46fe59: movzbl %r8b,%r8d
+0x46fe5d: test   %r10b,%r10b               # test "change"
+0x46fe60: cmove  %r14d,%r8d                # if false then set "flag"
+0x46fe64: lea    (%r9,%r9,2),%ecx      # multiply TargetTime by 3
+0x46fe6d* add    %ecx,%ecx             # then by 2
+0x46fe68: mov    $0xcccccccd,%eax      # then by 4/5
+0x46fe6f: mul    %ecx
+0x46fe71: shr    $0x3,%edx             # then divide by 8
+0x46fe74: cmp    %edx,%r11d            # cmp 3/5*TargetTime to USED
+0x46fe77: jb     0x46fe92              # if USED is large
+0x46fe79: test   %sil,%sil               # test "bad2"
+0x46fe7c: jne    0x46fe92                # if true
+0x46fe7e: test   %r10b,%r10b               # test "change"
+0x46fe81: jne    0x46fe92                  # if true
+0x46fe83: cmp    %bpl,(0x7dd2f7)             # test another condition
+0x46fe8a: movzbl %r8b,%r8d
+0x46fe8e: cmove  %r14d,%r8d                    # if false, set "flag"
+0x46fe99: movzbl (0x7dd1cd),%edx BELOW # load Ponder (?)
+0x46fea0: movzbl (0x7dd1cc),%ecx       # load Infinite
+0x46fea7: movzbl %r8b,%eax             # transfer "flag" to eax
+0x46feab: mov    (0x7dd314),%r8d       # load score
+0x46fe92* cmp    (0x7dd1b4),%r11d      # if time >= AbsoluteTime
+0x46feb2: cmovae %r14d,%eax              # set "flag"
+0x46febd: mov    %al,(0x7dd2f9)        # store "flag"
+0x46feb6: cmp    $0xffff86e8,%r8d      # if score <= -MATE 
+0x46fec3: jle    0x46fece              
+0x46fec5: cmp    $0x7918,%r8d          # or score >= MATE
+0x46fecc: jl     0x46fedb
+0x46fece: test   %cl,%cl                 # and (!Infinite
+0x46fed0: je     0x46fed6
+0x46fed2: test   %dl,%dl                 #       or Ponder)
+0x46fed4: je     0x46fedb
+0x46fed6: cmp    $0xc,%ebx               # and dp >= 12 half-ply
+0x46fed9: jge    0x46ff28                  # then break
+0x46fedb: cmp    $0xffff86e8,%r8d      # if score <= -MATE
+0x46fee2: jg     0x46fef9
+0x46fee4: cmp    $0xc,%ebx             # and dp >= 12 half-play
+0x46fee7: jl     0x46fef9
+0x46fee9: test   %cl,%cl                 # and (!Infinite
+0x46feeb: je     0x46fef1                
+0x46feed: test   %dl,%dl                 #      or Ponder)
+0x46feef: je     0x46fef9
+0x46fef1: mov    $0x1,%al
+0x46fef3: mov    %al,(0x7dd2f9)            # set "flag"
+0x46fef9: cmp    %bpl,(0x7dd2d0)       # if "stop" is true
+0x46ff00: jne    0x46ff28                # then break 
+0x46ff02: test   %al,%al               # if "flag"
+0x46ff04: je     0x46ff0a
+0x46ff06: test   %cl,%cl               # and !Infinite
+0x46ff08: je     0x46ff28                # then break
+0x46ff0a: add    $0x2,%ebx             # inc depth by 2 half-ply
+0x46ff1d: cmp    $0x7e,%ebx            # if less than 126
+0x46ff20: jb     0x46fb40                # then loop
