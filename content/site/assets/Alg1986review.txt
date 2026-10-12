@@ -1,0 +1,369 @@
+DRAFT
+
+Review of a nullmove-quiescence search mechanism from 1986
+
+This article describes, in modern pseudocode, how the 1986 chess
+program ("BCP") produced the results published in the AI Journal
+in a paper called "a generalised quiescence search" and an earlier
+version in "Advances in Computer Chess 5" called "Experiments
+with the null move".
+
+It is now twenty years since these results were first publicised.
+During that time, there have been major changes in computer hardware
+that have had a substantial effect on the relative performance of some
+key algorithms, and there have been many new algorithms published
+during that time.  The information in this article is intended to
+be helpful to anyone interested in seeing more detail on how the
+1986 results were obtained, and as an insight into the evolution
+of algorithms for computer chess.  
+
+The 1986 program was written in assembler for a z8000 and is no
+longer runnable.  What I provide here is C-style pseudocode that
+explains how a modern program could obtain the same or similar results.
+
+
+The essential core of the tactics program was a routine called "t2v"
+which performed a "nullmove quiescence" search as described in the AI
+Journal paper.  The "evaluation function" called by "t2v" was itself
+another quiescence search called "xt1v".  "xt1v" stood for extended
+t1v.  "t1v" was a simple capture-tree search (equivalent to nullmove
+quiescence on material) augmented by a routine to detect simple
+checkmates.  To quote from the 1986 papers:
+------------------------
+"The performance of second-order quiescence on material was tested
+on the 300 tactical positions in the Reinfeld book "Win at Chess"
+(Dover books, 1945).  This test set has been used on other chess
+programs and algorithms.
+
+One modification was made to the definition of second-order quiescence.
+That was to enhance the value returned from the first-order quiescence
+(i.e. the result from a capture tree) with the ability to see checkmates.
+This is an ad hoc modification, but is a cost-effective compromise
+between putting the knowledge about checkmate in with the material
+balance evaluation (where it might be thought to belong, but where
+it is very costly in program time) and leaving it out altogether.
+
+With this modification, material double-quiescence solved 276
+of the 300 positions."
+------------------------
+
+
+I know of some differences between the pseudocode and my 1986 program. 
+
+1) The 1986 program tracked distance to mate.  That is omitted from
+the pseudocode for simplicity.
+
+2) The 1986 program had special-case routines for t2v at depths
+one and two.  The pseudocode below doesn't.  Using special-case
+conditions when only one or two ply away from the horizon of the
+second-order quiesce brought some efficiency gains, but I haven't
+estimated how much.
+
+3) Modern programs use a hash table to obtain move ordering from
+iteration to iteration.  In 1986, with memory limited to just 5K
+position entries I used a different method.  The 1986 program
+maintained a linked-list tree from iteration to iteration.  The tree
+was built and pruned continuuously throughout the searches, and ensured
+that a bestmove from the previous iteration was always available, 
+using internal iterative deepening if necessary.  Nowadays it is
+simpler to just use a large hash table.
+
+4) The "see checkmates" function in the assembler originated as
+an ambitious (and unfulfilled) goal of detecting checkmates as readily
+as detecting captures.  It used knowledge of the king positions, and
+geometric properties of moves, to reduce the work required. Search
+was still needed, but was limited by specialised code to generate
+moves that were checks and to generate moves that escaped from
+check.    The pseudocode does not attempt to recreate the specialised
+assembler code but simply does a 2-ply search to detect checkmates.
+
+5) The pseudocode in this article describes ONLY the tactical
+quiescence search.  The chess playing program "BCP" used a top
+level scan of legal moves, and positional scoring as well as
+evaluating moves via the tactics search.
+
+
+There may be other differences.  Twenty years on, I now find it
+slow going to read the assembler code, and I suspect the preserved
+code files are not identical to the version I used for the null move
+experiments.  I am not even sure if the preserved code would be directly
+runnable if an assembler exists - it may have been archived while
+parts were undergoing rewriting.
+
+Nevertheless I hope the pseudocode below is sufficiently close to the
+mechanism of the 1986 nullmove experiments to serve as a fairly close
+description of the algorithm. 
+
+
+
+Here is the (untested) pseudocode that I think will obtain solutions
+to approximately the same set of WAC300 positions as solved by
+the 1986 program:
+
+-------------------------------
+// UNTESTED pseudocode, version 1:
+global int  board[];  // board representation is global
+global int  mb;   // mb = material score from pt of view of side to play
+global int piecevalues[];  // WP=1,WN=3,WB=3,WR=5,WQ=9,WK=99,BP=-1, etc
+
+t1v(lv,uv)  // capture tree (first order quiesce)
+{ bestv=max(lv,mb);  // use null move value
+  if(bestv>=uv)  return(uv);
+  ml= listcapts();  // includes promotions as these also change mat score
+  if(kingcapt found)  return(lv);
+  while(*++ml)
+  { m= selectlargestremainingcapt(ml);  // search in order of material gain
+    vm= matgain(m);  // material change as a result of capture or promotion
+    newmb= mb+vm;
+    if(newmb<=bestv) break;
+    make(m);  v= -t1v(-uv,-bestv);  unmake();
+    if(v>bestv)  bestv= v;
+    if(bestv>=uv) return(uv);
+  }
+  return(bestv);
+}
+
+matev(n)  // returns 1 if side to play has a checkmate move available
+          // n determines the type of checkmates seen, n=1 for mates-in-1 only
+          // n=2 for some mates in two
+{ ml= listchecks();
+  while(m= *++ml)
+  { make(m);  t= mated(n);  unmake();
+    if(t) return(1);
+  }
+  return(0);
+}
+
+mated(n)  // returns 1 if side to play is checkmated
+{ ml= outchecks();
+  if(*ml==0) return(1);
+  if(n>1 && *ml==1)  // single reply extension
+  { make(*++ml);  t= matev(n-1);  unmake();
+    if(t) return(1);
+  } 
+  return(0);
+}
+
+xt1v(lv,uv)  // 1st-order quiesce augmented by see-checkmates
+{ v= t1v(lv,uv);
+  if(v>=uv) return(uv);
+  t= matev(1);  // look for checkmates  ?? not sure what depth was used
+                // for nullmove experiments - may have been matev(2) ??
+  if(t) return(uv);
+  return(v);
+}
+
+t2v(d,lv,uv) // second order quiesce
+{ if( position_is_repetition() )  return(0);  // draw
+  if(d==0)  return( xt1v(lv,uv) );  // horizon of second-order quiesce
+  make(null);  v= -xt1v(-uv,-lv);  unmake();  // (1st-order quiesce) after null
+  bestv= max(lv,v);  // use null move value
+  if(bestv>=uv) return(uv);
+  prevm= previousbest;  // from hash (or from stored tree in 1986 program)
+  if(prevm!=null)
+  { make(m);  v= -t2v(d-1,-uv,-bestv);  unmake();
+    if(v>bestv) bestv=v;
+    if(bestv>=uv)  return(uv);
+  }
+  ml= listallmoves();
+  while(m= *++ml)
+  { if(m==prevm) continue;
+    make(m);  v= -t2v(d-1,-uv,-bestv);  unmake();
+    if(v>bestv) bestv=v;
+    if(bestv>=uv)  return(uv);
+  }
+  return(bestv);
+}
+
+it2v(targetd,lv,uv)  // iterative deepening of second-order quiesce
+{ for(d=0; d<=targetd; d++)  v= t2v(d,lv,uv);  return(v);  }
+
+-------------------------------
+
+The pseudocode above is much simpler than the algorithm in the 1986
+program. However, I think it will solve approximately the same set
+of positions from WAC300, given enough time.
+
+To recreate something closer in efficiency to the 1986 program it
+is necessary to store information from iteration to iteration to
+avoid unncessary work.
+It is also necessary to consider the differences between "nullmove
+quiescence" and "nullmove depth-reduction" in respect of iterative
+deepening.  ("nullmove depth reduction" is the method published by
+Donninger in the ICCA Journal later.)  In "nullmove quiescence" the
+evaluation after the null move does not change with search depth.
+Consequently the set of "t2v-eligible" moves (i.e. moves that are not
+going to suffer a nullmove prune at the next ply) at a t2v node does
+not change as the t2v search iteratively deepens.
+In the 1986 program a saving of execution time was made by storing
+eligible move lists from iteration to iteration.  This was part of
+the function of the stored tree.  In a modern program (large memory)
+it is easier to use a hash table to store data from iteration to iteration.
+
+It is also necessary of course to obtain good move ordering to
+maximise alpha-beta cut offs.  The ordering scheme used in the 1986
+program was simple.  Moves were ordered by their score under the
+eval being used by the quiescence search.  Thus in t1v, the captures
+were ordered by the amount of material captured.  In t2v the
+eligible moves were ordered by their score from t1v.
+
+The pseudocode below includes use of a modern hash table to obtain
+some of the advantages of the stored tree of the 1986 program.
+
+However, the nodecounts in the pseudocode below will be higher,
+because typical modern use of a hash table does not allow entire
+move lists to be entered in a hash table entry.  Therefore the code
+below will count nodes at non-horizon nodes which return "lv"
+(a.k.a. fail-low ) whereas in the 1986 program these would
+not require the generation of a move list (assuming the same
+alpha-beta bounds, the usual case), and would not attract a
+nodecount.
+
+-------------------------------
+// UNTESTED pseudocode, version 2.  This uses a hash table.  It is
+// intended to be a step towards a program that could have similar
+// efficiency to the 1986 program.
+// (some efficiency tricks are omitted for simplicity in the
+// belief that their contribution was minor):
+
+global int  board;  // board representation is global
+global int  mb;   // mb = material score from pt of view of side to play
+global int piecevalues[];  // WP=1,WN=3,WB=3,WR=5,WQ=9,WK=99,BP=-1, etc
+
+t1v(lv,uv)  // capture tree (first order quiesce)
+{ bestv=max(lv,mb);  // use null move value
+  bestm= null;
+  if(bestv>=uv)  goto ret;
+  found, m, v= hashretrieve(); // obtain previous iteration data
+  if(found==FLAGexact) return(v); 
+  if(found && m!=null)
+  { vm= matgain(m);  // material change as a result of capture or promotion
+    newmb= mb + vm;
+    make(m);  v= -t1v(-uv,-bestv);  unmake();
+    if(v>bestv)  { bestv= v;  bestm= m;  }
+    if(bestv>=uv) goto ret;
+  }
+  nodes++;  // increment nodecount at positions where we list moves
+  ml= listcapts();  // includes promotions as these also change mat score
+  if(kingcapt found) 
+    { hashstore(FLAGexact,*(ml+1),KINGCAPT,lv,uv);  return(KINGCAPT);  }
+  while(*++ml)
+  { m= selectlargestremainingcapt(ml);  // search in order of material gain
+    if(m==prevm)  continue;
+    newmb= mb+matgain(m);
+    if(newmb<=bestv) break;
+    make(m);  v= -t1v(-uv,-bestv);  unmake();
+    if(v>bestv)  { bestv= v;  bestm= m;  }
+    if(bestv>=uv) goto ret;
+  }
+ret:
+  hashstore(FLAGt1v,bestm,bestv,lv,uv);
+  return(bestv);
+}
+
+matev(n)  // returns 1 if side to play has a checkmate move available
+          // n determines the type of checkmates seen, n=1 for mates-in-1 only
+          // n=2 for some mates in two
+{ nodes++;
+  ml= listchecks();
+  while(m= *++ml)
+  { make(m);  t= mated(n);  unmake();
+    if(t) { hashstore(FLAGexact,m,MATEV,-INF,INF);  return(1);  }
+  }
+  return(0);
+}
+
+mated(n)  // returns 1 if side to play is checkmated
+{ nodes++;
+  ml= outchecks();
+  if(*ml==0) return(1);
+  if(n>1 && *ml==1)  // single reply extension 
+  { make(*++ml);  t= matev(n-1);  unmake();
+    if(t) return(1);
+  } 
+  return(0);
+}
+
+xt1v(lv,uv)  // 1st-order quiesce augmented by see-checkmates
+{ v= t1v(lv,uv);
+  if(v>=uv) return(uv);
+  t= matev(1);  // look for checkmates  ?? not sure what depth was used
+                // for nullmove experiments - may have been matev(2) ??
+  if(t) return(uv);
+  return(v);
+}
+
+t2v(d,lv,uv) // second order quiesce, using hash table to improve efficiency
+{ if( position_is_repetition() )  return(0);  // draw
+  // retrieve information from hashtable (from stored tree in 1986 program)
+  found, prevm, v, hlv, huv= hashretrieve(); // obtain previous iteration data
+  if(found=FLAGexact) return(v);
+  if(d==0)  return( xt1v(lv,uv) );  // horizon of second-order quiesce
+  bestm= null;
+  make(null);  v= -xt1v(-uv,-lv);  unmake();  // (1st-order quiesce) after null
+  bestv= max(lv,v);  // use null move value
+  if(bestv>=uv) goto ret;
+  if( !found || (d>1 && found==FLAGt1v) || hlv>lv || huv<uv )
+  { // rebuild or broaden by internal iterative deepening
+    return( it2v(d,lv,uv) );
+  }
+  if(prevm!=null)
+  { make(m);  v= -t2v(d-1,-uv,-bestv);  unmake();
+    if(v>bestv) { bestm=m;  bestv=v; }
+    if(bestv>=uv)  goto ret;
+  }
+  nodes++;
+  ml= listallmoves();
+  if(d>1)  sortbyt1v(ml);  // uses hashtable entries to order moves
+  while(m= *++ml)
+  { if(m==prevm) continue;
+    make(m);  v= -t2v(d-1,-uv,-bestv);  unmake();
+    if(v>bestv) { bestm=m;  bestv=v; }
+    if(bestv>=uv)  goto ret;
+  }
+ret:
+  hashstore(FLAGt2v,bestm,bestv,lv,uv); 
+  return(bestv);
+}
+
+it2v(targetd,lv,uv)  // iterative deepening of second-order quiesce
+{ clearhash();  for(d=0; d<=targetd; d++)  v= t2v(d,lv,uv);  return(v);  }
+
+hashstore(FLAG,bestm,bestv,lv,uv)
+// stores best move, value and sufficient information to know whether
+// the stored value is a bound, exact value, or heuristic value.
+// A flag indicating LOWER or UPPER bound is the usual hash method,
+// but the stored tree held both bounds, as this was the easiest
+// way to establish whether the eligible move list was still valid
+
+
+-------------------------------
+
+The hash table version of the pseudocode above will not have the same
+nodecounts as the 1986 program, because the stored tree, together with
+the property of nullmove quiescence that the eligible moves do not
+change as the search deepens (assuming the same alpha-beta bounds which
+is usually the case for material only scores), meant that there was
+typically no significant work (and no nodes counted) to traverse the
+current search tree to the horizon.  Only the new nodes added at the
+horizon (or new nodes elsewhere due to changes in alpha-beta bounds)
+would add to the nodecount.  Whereas, using typical modern hash techniques,
+the traversal of the existing tree would typically require repeating
+the move generation at all "fail-low" nodes, which adds to nodecount.
+
+It would be possible to write modern code that stores move lists
+in hash entries, and recreates the nodecount performance of the 1986
+program, but I have not attempted that here.
+
+Also, the execution time performance of a modern program will differ
+greatly from the 1986 program, even if it follows exactly the
+1986 algorithm.  This is mainly due to the effect of memory random
+access times which have changed from being approximately the same
+as an instruction execution (z8000) to being about a thousand times
+slower (and rather variable depending on processor and operating
+system).  There are undoubtedly many other effects due to slower
+memory access but I think effort to analyse this would be more
+trouble than it's worth.  
+
+
+Don Beal, March 2006.
