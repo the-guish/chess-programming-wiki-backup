@@ -1,0 +1,988 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Match Statistics - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Match Statistics</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Engine_Testing">Engine Testing</a> * Match Statistics</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="https://commons.wikimedia.org/wiki/File:Standard_deviation_diagram.svg" target="_blank" rel="noopener noreferrer"><img src="/assets/MatchStatistics.jpg" alt="Match Statistics 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Match Statistics <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1">Image based on <a href="https://commons.wikimedia.org/wiki/File:Standard_deviation_diagram.svg">Standard deviation diagram</a> by <a href="https://commons.wikimedia.org/wiki/User:Mwtoews">Mwtoews</a>, April 7, 2007 with <a href="https://en.wikipedia.org/wiki/R_(programming_language)">R code</a> given, <a href="https://creativecommons.org/licenses/by/2.5/deed.en">CC BY 2.5</a>, <a href="https://en.wikipedia.org/wiki/Wikimedia_Commons">Wikimedia Commons</a>, <a href="https://en.wikipedia.org/wiki/Normal_distribution">Normal distribution from Wikipedia</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Match Statistics</strong>,<br />
+the <a href="https://en.wikipedia.org/wiki/Statistics">statistics</a> of chess <a href="/Tournaments_and_Matches">tournaments and matches</a>, that is a collection of <a href="/Chess_Game">chess games</a> and the presentation, <a href="https://en.wikipedia.org/wiki/Analysis">analysis</a>, and interpretation of game related data, most common game results to determine the relative <a href="/Playing_Strength">playing strength</a> of chess playing entities, here with focus on <a href="/Engines">chess engines</a>. To apply match statistics, beside considering <a href="https://en.wikipedia.org/wiki/Statistical_population">statistical population</a>, it is conventional to hypothesize a <a href="https://en.wikipedia.org/wiki/Statistical_model">statistical model</a> describing a set of <a href="https://en.wikipedia.org/wiki/Probability_distribution">probability distributions</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#ratios--operating-figures">Ratios / Operating Figures</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#number-of-games">Number of games</a></li>
+<li><a href="#score">Score</a></li>
+<li><a href="#win--draw-ratio">Win &amp;amp; Draw Ratio</a></li>
+<li><a href="#elo-rating--win-probability">Elo-Rating &amp;amp; Win-Probability</a></li>
+<li><a href="#likelihood-of-superiority">Likelihood of Superiority</a></li>
+<li><a href="#statistical-analysis">Statistical Analysis</a></li>
+<li><a href="#sprt">SPRT</a></li>
+</ol>
+</details></li>
+<li><a href="#tournaments">Tournaments</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#publications">Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1920-">1920 ...</a></li>
+<li><a href="#1930-">1930 ...</a></li>
+<li><a href="#1940-">1940 ...</a></li>
+<li><a href="#1950-">1950 ...</a></li>
+<li><a href="#1960-">1960 ...</a></li>
+<li><a href="#1970-">1970 ...</a></li>
+<li><a href="#1980-">1980 ...</a></li>
+<li><a href="#1990-">1990 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum--blog-postings">Forum &amp;amp; Blog Postings</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1996-">1996 ...</a></li>
+<li><a href="#2000--1">2000 ...</a></li>
+<li><a href="#2005--1">2005 ...</a></li>
+<li><a href="#2010--1">2010 ...</a></li>
+<li><a href="#2015--1">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#rating-systems">Rating Systems</a></li>
+<li><a href="#tools">Tools</a></li>
+<li><a href="#statistics">Statistics</a></li>
+<li><a href="#hypothesis-testing">Hypothesis Testing</a></li>
+<li><a href="#sequential-analysis">Sequential Analysis</a></li>
+<li><a href="#data-visualization">Data Visualization</a></li>
+<li><a href="#misc">Misc</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="ratios--operating-figures">Ratios / Operating Figures</h2>
+<p>Common tools, ratios and figures to illustrate a tournament outcome and provide a base for its interpretation.</p>
+<h3 id="number-of-games">Number of games</h3>
+<p>The total number of games played by an engine in a tournament.</p>
+<p><span style="font-size:140%;"><code>N = wins + draws + losses</code></span></p>
+<h3 id="score">Score</h3>
+<p>The score is a representation of the tournament-outcome from the viewpoint of a certain engine.</p>
+<p><span style="font-size:140%;"><code>score_difference = wins - losses</code></span></p>
+<p><span style="font-size:140%;"><code>score = wins + draws/2</code></span></p>
+<p><span id="ratio"></span></p>
+<h3 id="win--draw-ratio">Win &amp; Draw Ratio</h3>
+<p><span style="font-size:140%;"><code>win_ratio  = score/N</code></span></p>
+<p><span style="font-size:140%;"><code>draw_ratio = draws/N</code></span></p>
+<p>These two ratios depend on the <a href="/Playing_Strength">strength</a> difference between the competitors, the average strength level, the color and the drawishness of the <a href="/Opening_Book">opening book-line</a>. Due to the second reason given, these ratios are very much influenced by the <a href="/Time_Management">timecontrol</a>, what is also confirmed by the published statistics of the testing orgnisations <a href="/CCRL">CCRL</a> and <a href="/CEGT">CEGT</a>, showing an increase of the <a href="/Draw">draw</a> rate at longer time controls. This correlation was also shown by <a href="/Kirill_Kryukov">Kirill Kryukov</a>, who was analyzing statistics of his test-games <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> . The program playing white seems to be more supported by the additional level of strength. So, although one would expect with increasing draw rates the win ratio to approach 50%, in fact it is remaining about equal.</p>
+<table>
+<thead>
+<tr>
+<th>Timecontrol</th>
+<th>Draw Ratio</th>
+<th>Win Ratio (white)</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>40/4</td>
+<td>30.9%</td>
+<td>55.0%</td>
+<td>CEGT</td>
+</tr>
+<tr>
+<td>40/20</td>
+<td>35.6%</td>
+<td>54.6%</td>
+<td>CEGT</td>
+</tr>
+<tr>
+<td>40/120</td>
+<td>41.3%</td>
+<td>55.4%</td>
+<td>CEGT</td>
+</tr>
+<tr>
+<td>40/120 (4cpu)</td>
+<td>45.2%</td>
+<td>55.9%</td>
+<td>CEGT</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Timecontrol</th>
+<th>Draw Ratio</th>
+<th>Win Ratio (white)</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>40/4</td>
+<td>31.0%</td>
+<td>54.1%</td>
+<td>CCRL</td>
+</tr>
+<tr>
+<td>40/40</td>
+<td>37.2%</td>
+<td>54.6%</td>
+<td>CCRL</td>
+</tr>
+</tbody>
+</table>
+<p><span id="DoublingTC"></span> <strong>Doubling Time Control</strong> As posted in October 2016 <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> , <a href="/Andreas_Strangmüller">Andreas Strangmüller</a> conducted an experiment with <a href="/Komodo">Komodo 9.3</a>, <a href="/Time_Management">time control</a> doubling matches under <a href="/Cutechess-cli">Cutechess-cli</a>, playing 3000 games with 1500 <a href="/Opening">opening</a> positions each, without <a href="/Pondering">pondering</a>, <a href="/Learning">learning</a>, and <a href="/Endgame_Tablebases">tablebases</a>, <a href="https://en.wikipedia.org/wiki/List_of_Intel_Core_i5_microprocessors#Desktop_processors">Intel i5-750</a> @ 3.5 GHz, 1 Core, 128 MB Hash <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> , see also <a href="/Kai_Laskos">Kai Laskos'</a> 2013 results with <a href="/Houdini">Houdini 3</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> and <a href="/Depth">Diminishing Returns</a>:</p>
+<table>
+<thead>
+<tr>
+<th><p>Time Control</p></th>
+<th><p>2<br />
+vs 1</p></th>
+<th><p>20+0.2<br />
+10+0.1</p></th>
+<th><p>40+0.4<br />
+20+0.2</p></th>
+<th><p>80+0.8<br />
+40+0.4</p></th>
+<th><p>160+1.6<br />
+80+0.8</p></th>
+<th><p>320+3.2<br />
+160+1.6</p></th>
+<th><p>640+6.4<br />
+320+3.2</p></th>
+<th><p>1280+12.8<br />
+640+6.4</p></th>
+<th><p>2560+25.6<br />
+1280+12.8</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td colspan="2"><p>Elo</p></td>
+<td style="text-align:center;"><p>144</p></td>
+<td style="text-align:center;"><p>133</p></td>
+<td style="text-align:center;"><p>112</p></td>
+<td style="text-align:center;"><p>101</p></td>
+<td style="text-align:center;"><p>93</p></td>
+<td style="text-align:center;"><p>73</p></td>
+<td style="text-align:center;"><p>59</p></td>
+<td style="text-align:center;"><p>51</p></td>
+</tr>
+<tr>
+<td colspan="2"><p>Win</p></td>
+<td style="text-align:right;"><p>44.97%</p></td>
+<td style="text-align:right;"><p>41.27%</p></td>
+<td style="text-align:right;"><p>36.67%</p></td>
+<td style="text-align:right;"><p>32.67%</p></td>
+<td style="text-align:right;"><p>30.47%</p></td>
+<td style="text-align:right;"><p>25.17%</p></td>
+<td style="text-align:right;"><p>21.77%</p></td>
+<td style="text-align:right;"><p>18.97%</p></td>
+</tr>
+<tr>
+<td colspan="2"><p>Draw</p></td>
+<td style="text-align:right;"><p>49.20%</p></td>
+<td style="text-align:right;"><p>54.00%</p></td>
+<td style="text-align:right;"><p>57.93%</p></td>
+<td style="text-align:right;"><p>63.03%</p></td>
+<td style="text-align:right;"><p>65.33%</p></td>
+<td style="text-align:right;"><p>70.47%</p></td>
+<td style="text-align:right;"><p>73.17%</p></td>
+<td style="text-align:right;"><p>76.63%</p></td>
+</tr>
+<tr>
+<td colspan="2"><p>Loss</p></td>
+<td style="text-align:right;"><p>5.83%</p></td>
+<td style="text-align:right;"><p>4.73%</p></td>
+<td style="text-align:right;"><p>5.40%</p></td>
+<td style="text-align:right;"><p>4.30%</p></td>
+<td style="text-align:right;"><p>4.20%</p></td>
+<td style="text-align:right;"><p>4.37%</p></td>
+<td style="text-align:right;"><p>5.07%</p></td>
+<td style="text-align:right;"><p>4.40%</p></td>
+</tr>
+</tbody>
+</table>
+
+<h3 id="elo-rating--win-probability">Elo-Rating &amp; Win-Probability</h3>
+<p><em>see <a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">Pawn Advantage, Win Percentage, and Elo</a></em></p>
+<p><span style="font-size:140%;"><code>Expected win_ratio, win_probability (E)</code></span></p>
+<p><span style="font-size:140%;"><code>Elo Rating Difference (Δ) = Elo_Player1 - Elo_Player2</code></span></p>
+<p><span style="font-size:140%;"><code>E = 1 / ( 1 + 10</code><span style="vertical-align: super;"><code>-Δ/400</code></span><code>)</code></span></p>
+<p><span style="font-size:140%;"><code>Δ = 400 log</code><span style="vertical-align: sub;"><code>10</code></span><code>(E / (1 - E))</code></span></p>
+<p>Generalization of the Elo-Formula: <em>win_probability of player i in a tournament with n players</em></p>
+<p><span style="font-size:140%;"><code>E</code><span style="vertical-align: sub;"><code>i</code></span><code> = 10</code><span style="vertical-align: super;"><code>Elo</code><span style="vertical-align: sub;"><code>i</code></span></span><code> / (10</code><span style="vertical-align: super;"><code>Elo</code><span style="vertical-align: sub;"><code>1</code></span></span><code> + 10</code><span style="vertical-align: super;"><code>Elo</code><span style="vertical-align: sub;"><code>2</code></span></span><code> + ... + 10</code><span style="vertical-align: super;"><code>Elo</code><span style="vertical-align: sub;"><code>n-1</code></span></span><code> + 10</code><span style="vertical-align: super;"><code>Elo</code><span style="vertical-align: sub;"><code>n</code></span></span><code>)</code></span></p>
+<h3 id="likelihood-of-superiority">Likelihood of Superiority<span id="Likelihood of superiority"></span></h3>
+<p><em>See <a href="/LOS_Table">LOS Table</a></em></p>
+<p>The likelihood of superiority (LOS) denotes how likely it would be for two players of the same <a href="/Playing_Strength">strength</a> to reach a certain result - in other fields called a <a href="https://en.wikipedia.org/wiki/P-value">p-value</a>, a measure of <a href="https://en.wikipedia.org/wiki/Statistical_significance">statistical significance</a> of a departure from the <a href="https://en.wikipedia.org/wiki/Null_hypothesis">null hypothesis</a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>. Doing this analysis after the tournament one has to differentiate between the case where one knows that a certain engine is either stronger or equally strong (directional or one-tailed test) or the case where one has no information of whether the other engine is stronger or weaker (non-directional or <a href="https://en.wikipedia.org/wiki/Two-tailed_test">two-tailed test</a>). The latter due to the reduced information results in larger <a href="https://en.wikipedia.org/wiki/Confidence_interval">confidence intervals</a>.</p>
+<p><strong>Two-tailed Test</strong><br />
+<a href="https://en.wikipedia.org/wiki/Null_hypothesis">Null</a>- and <a href="https://en.wikipedia.org/wiki/Alternative_hypothesis">alternative hypothesis</a>:</p>
+<p><span style="font-size:140%;"><code>H</code><span style="vertical-align: sub;"><code>0</code></span><code> : Elo_Player1 = Elo_Player2 </code></span></p>
+<p><span style="font-size:140%;"><code>H</code><span style="vertical-align: sub;"><code>1</code></span><code> : Elo_Player1 ≠ Elo_Player2</code></span><code> </code></p>
+<p><span style="font-size:140%;"><code>LOS = P(Score &gt; score of 2 programs with equal strength)</code></span></p>
+<p>The probability of the <a href="https://en.wikipedia.org/wiki/Null_hypothesis">null hypothesis</a> being true can be calculated given the tournament outcome. In other words, how likely would it be for two players of the same strength to reach a certain result. The LOS would then be the inverse, 1 - the resulting probability.</p>
+<p>For this type of analysis the <a href="https://en.wikipedia.org/wiki/Multinomial_distribution">trinomial distribution</a>, a generalization of the <a href="https://en.wikipedia.org/wiki/Binomial_distribution">binomial distribution</a>, is needed. Whilest the binomial distribution can only calculate the probability to reach a certain outcome with two possible events, the trinominal distribution can account for all three possible events (win, draw, loss).</p>
+<p>The following functions gives the probability of a certain game outcome assuming both players were of equal strength:</p>
+<p><span style="font-size:140%;"><code>win_probability = (1 - draw_ratio) / 2</code></span></p>
+<p><span style="font-size:140%;"><code>P(wins,draws,losses) = N!/(wins! draws! losses!) win_probability</code><span style="vertical-align: super;"><code>wins</code></span><code> draw_ratio</code><span style="vertical-align: super;"><code>drwas</code></span><code> win_probability</code><span style="vertical-align: super;"><code>losses</code></span></span></p>
+<p>This calculation becomes very inefficient for larger number of games. In this case the <a href="https://en.wikipedia.org/wiki/Normal_distribution#Standard_normal_distribution">standard normal distribution</a> can give a good approximation:</p>
+<p><span style="font-size:140%;"><em><strong><code>N</code></strong></em><code>(N/2, N(1-draw_ratio))</code></span></p>
+<p>where N(1 - draw_ratio) is the sum of wins and losses:</p>
+<p><span style="font-size:140%;"><em><strong><code>N</code></strong></em><code>(N/2, wins + losses)</code></span></p>
+<p>To calculate the LOS one needs the <a href="https://en.wikipedia.org/wiki/Cumulative_distribution_function">cumulative distribution function</a> of the given normal distribution. However, as pointed out by <a href="/Rémi_Coulom">Rémi Coulom</a>, calculation can be done cleverly, and the normal approximation is not really required <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> . As further emphasized by <a href="/Kai_Laskos">Kai Laskos</a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> and Rémi Coulom <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a> , draws do not count in LOS calculation and don't make a difference whether the game results were obtained when playing Black or White. It is a good approximation when the two players played the same number of games with each color:</p>
+<p><span style="font-size:140%;"><code>LOS = ϕ((wins - losses)/√(wins + losses))</code></span></p>
+<p><span style="font-size:140%;"><code>LOS = ½[1 + erf((wins - losses)/√(2wins + 2losses))]</code></span></p>
+<p><a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a> <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a> <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a></p>
+<p><strong>One-tailed Test</strong><br />
+<a href="https://en.wikipedia.org/wiki/Null_hypothesis">Null</a>- and <a href="https://en.wikipedia.org/wiki/Alternative_hypothesis">alternative hypothesis</a>:</p>
+<p><span style="font-size:140%;"><code>H</code><span style="vertical-align: sub;"><code>0</code></span><code> : Elo_Player1 ≤ Elo_Player2</code></span><code> </code></p>
+<p><span style="font-size:140%;"><code>H</code><span style="vertical-align: sub;"><code>1</code></span><code> : Elo_Player1 &gt; Elo_Player2</code></span><code> </code></p>
+<p><span id="Sample"></span> <strong>Sample Program</strong><br />
+A tiny <a href="/Cpp">C++11</a> program to compute Elo difference and LOS from W/L/D counts was given by <a href="/Álvaro_Begué">Álvaro Begué</a> <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a> :</p>
+<pre><code>#include &lt;cstdio&gt;
+#include &lt;cstdlib&gt;
+#include &lt;cmath&gt;
+
+int main(int argc, char **argv) {
+  if (argc != 4) {
+    std::printf(&quot;Wrong number of arguments.\n\nUsage:%s &lt;wins&gt; &lt;losses&gt; &lt;draws&gt;\n&quot;, argv[0]);
+    return 1;
+  }
+  int wins = std::atoi(argv[1]);
+  int losses = std::atoi(argv[2]);
+  int draws = std::atoi(argv[3]);
+
+  double games = wins + losses + draws;
+  std::printf(&quot;Number of games: %g\n&quot;, games);
+  double winning_fraction = (wins + 0.5*draws) / games;
+  std::printf(&quot;Winning fraction: %g\n&quot;, winning_fraction);
+  double elo_difference = -std::log(1.0/winning_fraction-1.0)*400.0/std::log(10.0);
+  std::printf(&quot;Elo difference: %+g\n&quot;, elo_difference);
+  double los = .5 + .5 * std::erf((wins-losses)/std::sqrt(2.0*(wins+losses)));
+  std::printf(&quot;LOS: %g\n&quot;, los);
+}</code></pre>
+<h3 id="statistical-analysis">Statistical Analysis</h3>
+<p><strong>The trinomial versus the 5-nomial model</strong></p>
+<p>As indicated above a match between two engines is usually modeled as a sequence of independent trials taken from a trinomial distribution with probabilities (win_ratio,draw_ratio,loss_ratio). This model is appropriate for a match with randomly selected opening positions and randomly assigned colors (to maintain fairness). However one may show that under reasonable elo models the trinomial model is not correct in case games are played in pairs with reversed colors (as is commonly the case) and unbalanced opening positions are used.</p>
+<p>This was also empirically observed by <a href="/Kai_Laskos">Kai Laskos</a> <a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a> . He noted that the statistical predictions of the trinomial model do not match reality very well in the case of paired games. In particular he observed that for some data sets the variance of the match score as predicted by the trinomial model greatly exceeds the variance as calculated by the <a href="https://en.wikipedia.org/wiki/Jackknife_resampling">jackknife</a> estimator. The jackknife estimator is a non-parametric estimator, so it does not depend on any particular statistical model. It appears the mismatch may even occur for balanced opening positions, an effect which can only be explained by the existence of correlations between paired games - something not considered by any elo model.</p>
+<p>Over estimating the variance of the match score implies that derived quantities such as the number of games required to establish the superiority of one engine over another with a given level of significance are also over estimated. To obtain agreement between statistical predictions and actual measurements one may adopt the more general 5-nomial model. In the 5-nomial model the outcome of paired games is assumed to follow a 5-nomial distribution with probabilities</p>
+<p><span style="font-size:140%;"><code>(p</code><span style="vertical-align: sub;"><code>0</code></span><code>, p</code><span style="vertical-align: sub;"><code>1/2</code></span><code>, p</code><span style="vertical-align: sub;"><code>1</code></span><code>, p</code><span style="vertical-align: sub;"><code>3/2</code></span><code>, p</code><span style="vertical-align: sub;"><code>2</code></span><code>)</code></span></p>
+<p>These unknown probabilities may be estimated from the outcome frequencies of the paired games and then subsequently be used to compute an estimate for the variance of the match score. Summarizing: in the case of paired games the 5-nomial model handles the following effects correctly which the trinomial model does not:</p>
+<ul>
+<li>Unbalanced openings</li>
+<li>Correlations between paired games</li>
+</ul>
+<p>For further discussion on the potential use of unbalanced opening positions in engine testing see the posting by <a href="/Kai_Laskos">Kai Laskos</a> <a href="#fn15" class="footnote-ref" id="fnref15" role="doc-noteref"><sup>15</sup></a> .</p>
+<h3 id="sprt">SPRT</h3>
+<p>The <a href="https://en.wikipedia.org/wiki/Sequential_probability_ratio_test">sequential probability ratio test</a> (SPRT) is a specific <a href="https://en.wikipedia.org/wiki/Sequential_analysis">sequential hypothesis test</a> - a statistical analysis where the <a href="https://en.wikipedia.org/wiki/Sample_size_determination">sample size</a> is not fixed in advance - developed by <a href="/Mathematician">Abraham Wald</a> <a href="#fn16" class="footnote-ref" id="fnref16" role="doc-noteref"><sup>16</sup></a> . While originally developed for use in quality control studies in the realm of manufacturing, SPRT has been formulated for use in the computerized testing of human examinees as a termination criterion <a href="#fn17" class="footnote-ref" id="fnref17" role="doc-noteref"><sup>17</sup></a>. As mentioned by <a href="/Arthur_Guez">Arthur Guez</a> in this 2015 Ph.D. thesis <em>Sample-based Search Methods for Bayes-Adaptive Planning</em> <a href="#fn18" class="footnote-ref" id="fnref18" role="doc-noteref"><sup>18</sup></a>, <a href="/Alan_Turing">Alan Turing</a> assisted by <a href="/Jack_Good">Jack Good</a> used a similar sequential testing technique to help decipher <a href="https://en.wikipedia.org/wiki/Enigma_machine">enigma codes</a> at <a href="https://en.wikipedia.org/wiki/Bletchley_Park">Bletchley Park</a> <a href="#fn19" class="footnote-ref" id="fnref19" role="doc-noteref"><sup>19</sup></a>. SPRT is applied in <a href="/Stockfish">Stockfish</a> testing to terminate self-testing series early if the result is likely outside a given elo-window <a href="#fn20" class="footnote-ref" id="fnref20" role="doc-noteref"><sup>20</sup></a> . In August 2016, <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a> posted following <a href="/Python">Python</a> code in <a href="/CCC">CCC</a> to implement the SPRT a la <a href="/Cutechess-cli">Cutechess-cli</a> or <a href="/Stockfish">Fishtest</a>: <a href="#fn21" class="footnote-ref" id="fnref21" role="doc-noteref"><sup>21</sup></a> <a href="#fn22" class="footnote-ref" id="fnref22" role="doc-noteref"><sup>22</sup></a></p>
+<pre><code>from __future__ import division
+
+import math
+
+def LL(x):
+    return 1/(1+10**(-x/400))
+
+def LLR(W,D,L,elo0,elo1):
+    &quot;&quot;&quot;
+This function computes the log likelihood ratio of H0:elo_diff=elo0 versus
+H1:elo_diff=elo1 under the logistic elo model
+
+expected_score=1/(1+10**(-elo_diff/400)).
+
+W/D/L are respectively the Win/Draw/Loss count. It is assumed that the outcomes of
+the games follow a trinomial distribution with probabilities (w,d,l). Technically
+this is not quite an SPRT but a so-called GSPRT as the full set of parameters (w,d,l)
+cannot be derived from elo_diff, only w+(1/2)d. For a description and properties of
+the GSPRT (which are very similar to those of the SPRT) see
+
+http://stat.columbia.edu/~jcliu/paper/GSPRT_SQA3.pdf
+
+This function uses the convenient approximation for log likelihood
+ratios derived here:
+
+http://hardy.uhasselt.be/Toga/GSPRT_approximation.pdf
+
+The previous link also discusses how to adapt the code to the 5-nomial model
+discussed above.
+&quot;&quot;&quot;
+# avoid division by zero
+    if W==0 or D==0 or  L==0:
+        return 0.0
+    N=W+D+L
+    w,d,l=W/N,D/N,L/N
+    s=w+d/2
+    m2=w+d/4
+    var=m2-s**2
+    var_s=var/N
+    s0=LL(elo0)
+    s1=LL(elo1)
+    return (s1-s0)*(2*s-s0-s1)/var_s/2.0
+
+def SPRT(W,D,L,elo0,elo1,alpha,beta):
+    &quot;&quot;&quot;
+This function sequentially tests the hypothesis H0:elo_diff=elo0 versus
+the hypothesis H1:elo_diff=elo1 for elo0&lt;elo1. It should be called after
+each game until it returns either &#39;H0&#39; or &#39;H1&#39; in which case the test stops
+and the returned hypothesis is accepted.
+
+alpha is the probability that H1 is accepted while H0 is true
+(a false positive) and beta is the probability that H0 is accepted
+while H1 is true (a false negative). W/D/L are the current win/draw/loss
+counts, as before.
+&quot;&quot;&quot;
+    LLR_=LLR(W,D,L,elo0,elo1)
+    LA=math.log(beta/(1-alpha))
+    LB=math.log((1-beta)/alpha)
+    if LLR_&gt;LB:
+        return &#39;H1&#39;
+    elif LLR_&lt;LA:
+        return &#39;H0&#39;
+    else:
+        return &#39;&#39;</code></pre>
+<p>Beside the above SPRT implementation using pentanomial frequencies and a simulation tool in <a href="/Python">Python</a> <a href="#fn23" class="footnote-ref" id="fnref23" role="doc-noteref"><sup>23</sup></a> <a href="#fn24" class="footnote-ref" id="fnref24" role="doc-noteref"><sup>24</sup></a>, <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a> wrote a much faster multi-threaded <a href="/C">C</a> version <a href="#fn25" class="footnote-ref" id="fnref25" role="doc-noteref"><sup>25</sup></a> <a href="#fn26" class="footnote-ref" id="fnref26" role="doc-noteref"><sup>26</sup></a>.</p>
+<p><span id="TournamentManager"></span></p>
+<h2 id="tournaments">Tournaments</h2>
+<ul>
+<li><a href="/Chess_Server">Chess Server</a></li>
+<li><a href="/Engine_Rating_Lists">Engine Rating Lists</a></li>
+<li><a href="/Tournament_Manager">Tournament Manager</a></li>
+<li><a href="/Tournaments_and_Matches">Tournaments and Matches</a></li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Automated_Tuning">Automated Tuning</a></li>
+<li><a href="/Bishop_versus_Knight">Bishop versus Knight - Winning Percentages</a></li>
+<li><a href="/Depth">Depth | Diminishing Returns</a></li>
+<li><a href="/Draw">Draw</a></li>
+<li><a href="/Engine_Similarity">Engine Similarity</a></li>
+<li><a href="/LOS_Table">LOS Table</a></li>
+<li><a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">Pawn Advantage, Win Percentage, and Elo</a></li>
+<li><a href="/Playing_Strength">Playing Strength</a></li>
+<li><a href="/Search_Statistics">Search Statistics</a></li>
+<li><a href="/Alexander_Szabo">The Technology Curve</a></li>
+<li><a href="/Time_Management">Time Controls</a></li>
+<li><a href="/Jean-Marc_Alliot">Who is the Master?</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<h3 id="1920-">1920 ...</h3>
+<ul>
+<li><a href="/Mathematician">L. L. Thurstone</a> (<strong>1927</strong>). <em><a href="https://psycnet.apa.org/record/1928-00527-001">A law of comparative judgement</a></em>. <a href="https://en.wikipedia.org/wiki/Psychological_Review">Psychological Review</a>, Vol. 34, No. 4 <a href="#fn27" class="footnote-ref" id="fnref27" role="doc-noteref"><sup>27</sup></a></li>
+<li><a href="/Ernst_Zermelo">Ernst Zermelo</a> (<strong>1929</strong>). <em>Die Berechnung der Turnier-Ergebnisse als ein Maximumproblem der Wahrscheinlichkeitsrechnung</em>. <a href="http://gdz.sub.uni-goettingen.de/dms/load/img/?IDDOC=82727">pdf</a> (German)</li>
+</ul>
+<h3 id="1930-">1930 ...</h3>
+<ul>
+<li><a href="/Mathematician">Alexander Aitken</a> (<strong>1935</strong>). <em><a href="https://www.cambridge.org/core/journals/proceedings-of-the-royal-society-of-edinburgh/article/ivon-least-squares-and-linear-combination-of-observations/7106C26F19F2EBF75BCEE7FA285780B9">On Least Squares and Linear Combinations of Observations</a></em>. Proceedings of the <a href="https://en.wikipedia.org/wiki/Royal_Society_of_Edinburgh">Royal Society of Edinburgh</a></li>
+</ul>
+<h3 id="1940-">1940 ...</h3>
+<ul>
+<li><a href="/Mathematician">Abraham Wald</a> (<strong>1945</strong>). <em>Sequential Tests of Statistical Hypotheses</em>. <a href="https://en.wikipedia.org/wiki/Annals_of_Mathematical_Statistics">Annals of Mathematical Statistics</a>, Vol. 16, No. 2, <a href="https://en.wikipedia.org/wiki/Digital_object_identifier">doi</a>: <a href="http://projecteuclid.org/euclid.aoms/1177731118">10.1214/aoms/1177731118</a></li>
+<li><a href="/Mathematician">Abraham Wald</a> (<strong>1947</strong>). <em>Sequential Analysis</em>. <a href="https://en.wikipedia.org/wiki/John_Wiley_%26_Sons">John Wiley and Sons</a>, <a href="http://www.abebooks.com/book-search/title/sequential-analysis/author/abraham-wald/">AbeBooks</a></li>
+</ul>
+<h3 id="1950-">1950 ...</h3>
+<ul>
+<li><a href="/Mathematician">Frederick Mosteller</a> (<strong>1951</strong>). <em><a href="https://psycnet.apa.org/record/1951-07176-001">Remarks on the method of paired comparisons: I. The least squares solution assuming equal standard deviations and equal correlations</a></em>. <a href="https://en.wikipedia.org/wiki/Psychometrika">Psychometrika</a>, Vol. 16, No. 1</li>
+<li><a href="/Mathematician">Ralph A. Bradley</a>, <a href="/Mathematician">Milton E. Terry</a> (<strong>1952</strong>). <em><a href="http://biomet.oxfordjournals.org/content/39/3-4/324.citation">Rank Analysis of Incomplete Block Designs: I. The Method of Paired Comparisons</a></em>. <a href="https://en.wikipedia.org/wiki/Biometrika">Biometrika</a>, Vol. 39, Nos. 3/4</li>
+</ul>
+<h3 id="1960-">1960 ...</h3>
+<ul>
+<li><a href="/Mathematician">William A. Glenn</a>, <a href="/Mathematician">Herbert A. David</a> (<strong>1960</strong>). <em><a href="https://www.jstor.org/stable/2527957?seq=1#page_scan_tab_contents">Ties in Paired-Comparison Experiments Using a Modified Thurstone-Mosteller Model</a></em>. <a href="https://en.wikipedia.org/wiki/Biometrics_(journal)">Biometrics</a>, Vol. 16, No. 1</li>
+<li><a href="/Mathematician">Florence Nightingale David</a> (<strong>1962</strong>). <em><a href="https://books.google.com/books/about/Games_Gods_and_Gambling.html?id=8ddP8zNx9nQC&amp;redir_esc=y">Games, Gods &amp; Gambling: A History of Probability and Statistical Ideas</a></em>. <a href="https://en.wikipedia.org/wiki/Dover_Publications">Dover Publications</a></li>
+<li><a href="/Mathematician">P. V. Rao</a>, <a href="/Mathematician">L. L. Kupper</a> (<strong>1967</strong>). <em><a href="https://www.tandfonline.com/doi/abs/10.1080/01621459.1967.10482901">Ties in Paired-Comparison Experiments: A Generalization of the Bradley-Terry Model</a></em>. <a href="https://en.wikipedia.org/wiki/Journal_of_the_American_Statistical_Association">Journal of the American Statistical Association</a>, Vol. 62, No. 317</li>
+</ul>
+<h3 id="1970-">1970 ...</h3>
+<ul>
+<li><a href="https://www.semanticscholar.org/author/Roger-R.-Davidson/32819150">Roger R. Davidson</a> (<strong>1970</strong>). <em><a href="https://www.jstor.org/stable/2283595">On Extending the Bradley-Terry Model to Accommodate Ties in Paired Comparison Experiments</a></em>. <a href="https://en.wikipedia.org/wiki/Journal_of_the_American_Statistical_Association">Journal of the American Statistical Association</a>, Vol. 64, No. 329</li>
+<li><span id="Bloss"></span><a href="http://what-when-how.com/earth-scientists/bloss-f-donald-earth-scientist/">F. Donald Bloss</a> (<strong>1973</strong>). <em><a href="https://www.amazon.de/Rate-Your-Chess-F-Donald-Bloss/dp/0442008295">Rate your own Chess</a></em>. Van Nostrand Reinhold Inc.</li>
+<li><a href="/Tony_Marsland">Tony Marsland</a>, <a href="/Paul_Rushton">Paul Rushton</a> (<strong>1973</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=805703">Mechanisms for Comparing Chess Programs</a>.</em> <a href="/ACM_1973">ACM Annual Conference</a>, <a href="http://webdocs.cs.ualberta.ca/~tony/OldPapers/Marsland-Rushton-ACM73">pdf</a></li>
+<li><a href="/James_Gillogly">James Gillogly</a> (<strong>1978</strong>). <em>Performance Analysis of the Technology Chess Program</em>. Ph.D. Thesis. Tech. Report CMU-CS-78-189, <a href="/Carnegie_Mellon_University">Carnegie Mellon University</a>, <a href="http://reports-archive.adm.cs.cmu.edu/anon/anon/usr/ftp/scan/CMU-CS-77-gillogly.pdf">CMU-CS-77 pdf</a> » <a href="/Tech">Tech</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Arpad_Elo">Arpad Elo</a> (<strong>1978</strong>). <em>The Rating of Chessplayers, Past and Present</em>. Arco Publications <a href="#fn28" class="footnote-ref" id="fnref28" role="doc-noteref"><sup>28</sup></a></li>
+<li><a href="/David_Cahlander">David Cahlander</a> (<strong>1979</strong>). <em>Strength of a Chess Playing Computer</em>. <a href="/ICGA_Journal">ICCA Newsletter, Vol. 2, No. 1</a></li>
+<li><a href="/Jack_Good">Jack Good</a> (<strong>1979</strong>). <em>On the Grading of Chess Players</em>. <a href="/Personal_Computing">Personal Computing, Vol. 3, No. 3</a>, pp. 47</li>
+<li><span id="Ratliff"></span>Gary L. Ratliff (<strong>1979</strong>). <em>Practical Rating Program</em>. <a href="/Personal_Computing">Personal Computing, Vol. 3, No. 9</a>, pp. 62 » Bloss</li>
+<li><a href="/Frieder_Schwenkel">Frieder Schwenkel</a> (<strong>1979</strong>). <em>Berating the ratings system</em>. <a href="/Personal_Computing">Personal Computing, Vol. 3, No. 11</a>, pp. 77 » Ratliff, Bloss</li>
+<li>John Shaposka (<strong>1979</strong>). <em>"JS" Takes the Bloss Test</em>. <a href="/Personal_Computing">Personal Computing, Vol. 3, No. 12</a>, pp. 75 » Ratliff, Bloss</li>
+</ul>
+<h3 id="1980-">1980 ...</h3>
+<ul>
+<li>Floyd R. Kirk (<strong>1980</strong>). <em>Bloss Flunks Test</em>. <a href="/Personal_Computing">Personal Computing, Vol. 4, No. 8</a>, pp. 72 » Ratliff, Bloss</li>
+<li><a href="/John_F._White">John F. White</a> (<strong>1981</strong>). <em><a href="http://yourcomputeronline.wordpress.com/2010/12/10/survey-chess-games/">Survey-Chess Games</a></em>. <a href="/Your_Computer">Your Computer</a>, <a href="http://yourcomputeronline.wordpress.com/2010/10/31/augustseptember-1981-contents-and-editorial/">August/September 1981</a> <a href="#fn29" class="footnote-ref" id="fnref29" role="doc-noteref"><sup>29</sup></a></li>
+<li><a href="/Ken_Thompson">Ken Thompson</a> (<strong>1982</strong>). <em>Computer Chess Strength</em>. <a href="/Advances_in_Computer_Chess_3">Advances in Computer Chess 3</a></li>
+<li><a href="/Mathematician">David Siegmund</a> (<strong>1985</strong>). <em>Sequential Analysis. Tests and confidence intervals</em>. <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a></li>
+<li><a href="/Hans_Berliner">Hans Berliner</a>, <a href="/Gordon_Goetsch">Gordon Goetsch</a>, <a href="/Murray_Campbell">Murray Campbell</a>, <a href="/Carl_Ebeling">Carl Ebeling</a> (<strong>1989</strong>). <em>Measuring the Performance Potential of Chess Programs</em>, <a href="/Advances_in_Computer_Chess_5">Advances in Computer Chess 5</a></li>
+<li><a href="/Eric_Hallsworth">Eric Hallsworth</a> (<strong>1989</strong>). <em>Playing Levels</em>. <a href="/Selective_Search">Computer Chess News Sheet</a> 23, pp 2, <a href="http://www.chesscomputeruk.com/SS_23.pdf">pdf</a> hosted by <a href="/Mike_Watters">Mike Watters</a></li>
+</ul>
+<h3 id="1990-">1990 ...</h3>
+<ul>
+<li><a href="/Hans_Berliner">Hans Berliner</a>, <a href="/Gordon_Goetsch">Gordon Goetsch</a>, <a href="/Murray_Campbell">Murray Campbell</a>, <a href="/Carl_Ebeling">Carl Ebeling</a> (<strong>1990</strong>). <em>Measuring the Performance Potential of Chess Programs.</em> <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 43, No. 1</li>
+<li><a href="/Mathematician">Hal Stern</a> (<strong>1990</strong>). <em>Are all Linear Paired Comparison Models Equivalent</em>. <a href="http://www.dtic.mil/dtic/tr/fulltext/u2/a236856.pdf">pdf</a></li>
+<li><a href="/Eric_Hallsworth">Eric Hallsworth</a> (<strong>1990</strong>). <em>Speed, Processors and Ratings</em>. <a href="/Selective_Search">Computer Chess News Sheet</a> 25, pp 6, <a href="http://www.chesscomputeruk.com/SS_25.pdf">pdf</a> hosted by <a href="/Mike_Watters">Mike Watters</a></li>
+<li><a href="/Hans_Berliner">Hans Berliner</a>, <a href="/Danny_Kopec">Danny Kopec</a>, <a href="/Ed_Northam">Ed Northam</a> (<strong>1991</strong>). <em>A taxonomy of concepts for evaluating chess strength: examples from two difficult categories</em>. <a href="/Advances_in_Computer_Chess_6">Advances in Computer Chess 6</a>, <a href="http://www.sci.brooklyn.cuny.edu/%7Ekopec/Publications/Publications/O_20_C.pdf">pdf</a></li>
+<li><a href="/Steve_Maughan">Steve Maughan</a> (<strong>1992</strong>). <em>Are You Sure It's Better?</em> <a href="/Selective_Search">Selective Search</a> 40, pp. 21, <a href="http://www.chesscomputeruk.com/SS_40.pdf">pdf</a> hosted by <a href="/Mike_Watters">Mike Watters</a></li>
+<li><a href="/Warren_D._Smith">Warren D. Smith</a> (<strong>1993</strong>). <em>Rating Systems for Gameplayers, and Learning</em>. <a href="http://scorevoting.net/WarrenSmithPages/homepage/ratingspap.ps">ps</a></li>
+<li>Mark E. Glickman (<strong>1993</strong>). <em>Paired Comparison Models with Time Varying Parameters</em>. Ph.D. thesis, <a href="/Harvard_University">Harvard University</a>, advisor <a href="/Mathematician">Hal Stern</a>, <a href="http://www.glicko.net/research/thesis.pdf">pdf</a></li>
+<li>Mark E. Glickman (<strong>1995</strong>). <em>A Comprehensive Guide To Chess Ratings</em>. <a href="http://www.glicko.net/research/acjpaper.pdf">pdf</a></li>
+<li>Mark E. Glickman, <a href="/Christopher_Chabris">Christopher Chabris</a> (<strong>1996</strong>). <em>Using Chess Ratings as Data in Psychological Research</em>. <a href="https://pdfs.semanticscholar.org/1ffd/3432f56476f0047426b37f7f433f5a6575b0.pdf">pdf</a></li>
+<li><a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Monroe_Newborn">Monroe Newborn</a> (<strong>1997</strong>). <em>CRAFTY Goes Deep</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 20, No. 2</a> » <a href="/Crafty">Crafty</a></li>
+<li>Mark E. Glickman, <a href="/Mathematician">Albyn C. Jones</a> (<strong>1999</strong>). <em>Rating the Chess Rating System</em>. <a href="http://www.glicko.net/research/chance.pdf">pdf</a></li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="/Ernst_A._Heinz">Ernst A. Heinz</a> (<strong>2000</strong>). <em><a href="http://link.springer.com/chapter/10.1007/3-540-45579-5_18">New Self-Play Results in Computer Chess</a></em>. <a href="/CG_2000">CG 2000</a></li>
+<li><a href="/Ernst_A._Heinz">Ernst A. Heinz</a> (<strong>2001</strong>). <em>Self-play Experiments in Computer Chess Revisited.</em> <a href="/Advances_in_Computer_Games_9">Advances in Computer Games 9</a></li>
+<li><a href="/Ernst_A._Heinz">Ernst A. Heinz</a> (<strong>2001</strong>). <em>Modeling the “Go Deep” Behaviour of CRAFTY and DARK THOUGHT.</em> <a href="/Advances_in_Computer_Games_9">Advances in Computer Games 9</a> » <a href="/Crafty">Crafty</a>, Dark Thought</li>
+<li><a href="/Ernst_A._Heinz">Ernst A. Heinz</a> (<strong>2001</strong>). <em>Self-Play, Deep Search and Diminishing Returns.</em> <a href="/ICGA_Journal">ICGA Journal, Vol. 24, No. 2</a></li>
+<li><a href="/Guy_Haworth">Guy Haworth</a> (<strong>2002</strong>). <em><a href="http://centaur.reading.ac.uk/5952/">Self-play: Statistical Significance</a></em>. <a href="/7th_Computer_Olympiad">7th Computer Olympiad Workshop</a></li>
+<li><a href="/Guy_Haworth">Guy Haworth</a> (<strong>2003</strong>). <em><a href="http://centaur.reading.ac.uk/4549/">Self-Play: Statistical Significance</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 26, No. 2</a></li>
+<li><a href="/Ernst_A._Heinz">Ernst A. Heinz</a> (<strong>2003</strong>). <em>Follow-Up on Self-Play, Deep Search, and Diminishing Returns.</em> <a href="/ICGA_Journal">ICGA Journal, Vol. 26, No. 2</a></li>
+<li><a href="/Mathematician">David R. Hunter</a> (<strong>2004</strong>). <em>MM Algorithms for Generalized Bradley-Terry Models</em>. <a href="https://en.wikipedia.org/wiki/Annals_of_Statistics">The Annals of Statistics</a>, Vol. 32, No. 1, 384–406, <a href="http://sites.stat.psu.edu/~dhunter/papers/bt.pdf">pdf</a> <a href="#fn30" class="footnote-ref" id="fnref30" role="doc-noteref"><sup>30</sup></a> <a href="#fn31" class="footnote-ref" id="fnref31" role="doc-noteref"><sup>31</sup></a> <a href="#fn32" class="footnote-ref" id="fnref32" role="doc-noteref"><sup>32</sup></a> <a href="#fn33" class="footnote-ref" id="fnref33" role="doc-noteref"><sup>33</sup></a></li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="/Jan_Renze_Steenhuisen">Jan Renze Steenhuisen</a> (<strong>2005</strong>). <em>New Results in Deep-Search Behaviour</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 28, No. 4</a>, <a href="http://www.st.ewi.tudelft.nl/%7Erenze/doc/ICGA_2005_4_DeepSearch.pdf">pdf</a></li>
+<li><a href="/Mark_Levene">Mark Levene</a>, <a href="/Judit_Bar-Ilan">Judit Bar-Ilan</a> (<strong>2005</strong>). <em><a href="https://www.researchgate.net/publication/220174440_Comparing_Move_Choices_of_Chess_Search_Engines">Comparing Move Choices of Chess Search Engines</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 28, No. 2</a>, <a href="http://www.dcs.bbk.ac.uk/~mark/download/fritz_junior_icga.pdf">pdf</a> » <a href="/Fritz">Fritz</a>, <a href="/Junior">Junior</a></li>
+<li><a href="/Mark_Levene">Mark Levene</a>, <a href="/Judit_Bar-Ilan">Judit Bar-Ilan</a> (<strong>2006</strong>). <em>Comparing Typical Opening Move Choices Made by Humans and Chess Engines</em>. <a href="https://arxiv.org/abs/cs/0610060">arXiv:cs/0610060</a></li>
+<li><a href="/Mark_Levene">Mark Levene</a>, <a href="/Judit_Bar-Ilan">Judit Bar-Ilan</a> (<strong>2007</strong>). <em>Comparing Typical Opening Move Choices Made by Humans and Chess Engines</em>. <a href="https://en.wikipedia.org/wiki/The_Computer_Journal">The Computer Journal</a>, Vol. 50, No. 5</li>
+<li><a href="/Matej_Guid">Matej Guid</a>, <a href="/Ivan_Bratko">Ivan Bratko</a> (<strong>2007</strong>). <em>Factors affecting diminishing returns for searching deeper</em>. <a href="/CGW_2007">CGW 2007</a> » <a href="/Crafty">Crafty</a>, <a href="/Rybka">Rybka</a>, <a href="/Shredder">Shredder</a>, <a href="/Depth">Diminishing Returns</a></li>
+<li><a href="/Jeff_Rollason">Jeff Rollason</a> (<strong>2007</strong>). <em><a href="http://www.aifactory.co.uk/newsletter/2007_04_stat_minefields.htm">Statistical Minefields with Version Testing</a></em>. <a href="/AI_Factory">AI Factory</a>, Winter 2007 » <a href="/Engine_Testing">Engine Testing</a></li>
+<li><a href="/Shogo_Takeuchi">Shogo Takeuchi</a>, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a>, <a href="/Kazunori_Yamaguchi">Kazunori Yamaguchi</a>, <a href="/Satoru_Kawai">Satoru Kawai</a> (<strong>2007</strong>). <em>Visualization and Adjustment of Evaluation Functions Based on Evaluation Values and Win Probability</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/aaai/aaai2007.html">AAAI 2007</a>, <a href="https://www.aaai.org/Papers/AAAI/2007/AAAI07-136.pdf">pdf</a></li>
+<li><a href="/Rémi_Coulom">Rémi Coulom</a> (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_11">Whole-History Rating: A Bayesian Rating System for Players of Time-Varying Strength</a></em>. <a href="/CG_2008">CG 2008</a>, <a href="http://remi.coulom.free.fr/WHR/WHR.pdf">draft as pdf</a></li>
+<li>Giuseppe Di Fatta, <a href="/Guy_Haworth">Guy McCrossan Haworth</a>, <a href="/Kenneth_W._Regan">Kenneth W. Regan</a> (<strong>2009</strong>). <em>Skill Rating by Bayesian Inference</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/cidm/cidm2009.html">CIDM 2009</a>, <a href="http://www.cse.buffalo.edu/~regan/papers/pdf/DFHR09.pdf">pdf</a> <a href="#fn34" class="footnote-ref" id="fnref34" role="doc-noteref"><sup>34</sup></a></li>
+<li><a href="/Guy_Haworth">Guy McCrossan Haworth</a>, <a href="/Kenneth_W._Regan">Kenneth W. Regan</a>, Giuseppe Di Fatta (<strong>2009</strong>). <em>Performance and Prediction: Bayesian Modelling of Fallible Choice in Chess</em>. <a href="/Advances_in_Computer_Games_12">Advances in Computer Games 12</a>, <a href="http://www.cse.buffalo.edu/faculty/regan/papers/pdf/HRdF10.pdf">pdf</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="/Diogo_R._Ferreira">Diogo R. Ferreira</a> (<strong>2010</strong>). <em><a href="http://web.ist.utl.pt/diogo.ferreira/chess/">Predicting the Outcome of Chess Games based on Historical Data</a></em>. <a href="https://en.wikipedia.org/wiki/Instituto_Superior_T%C3%A9cnico">IST</a> - <a href="https://en.wikipedia.org/wiki/Technical_University_of_Lisbon">Technical University of Lisbon</a> <a href="#fn35" class="footnote-ref" id="fnref35" role="doc-noteref"><sup>35</sup></a></li>
+<li><a href="/Kenneth_W._Regan">Kenneth W. Regan</a>, <a href="/Guy_Haworth">Guy Haworth</a> (<strong>2011</strong>). <em><a href="http://www.aaai.org/ocs/index.php/AAAI/AAAI11/paper/view/3779">Intrinsic Chess Ratings</a></em>. <a href="http://www.informatik.uni-trier.de/%7Eley/db/conf/aaai/aaai2011.html#ReganH11">AAAI 2011</a>, <a href="http://www.aaai.org/ocs/index.php/AAAI/AAAI11/paper/view/3779/3962">pdf</a>, <a href="http://www.cse.buffalo.edu/%7Eregan/Talks/IntrinsicRatings.pdf">slides as pdf</a> <a href="#fn36" class="footnote-ref" id="fnref36" role="doc-noteref"><sup>36</sup></a></li>
+<li><a href="/Kenneth_W._Regan">Kenneth W. Regan</a>, Bartłomiej Macieja, <a href="/Guy_Haworth">Guy McCrossan Haworth</a> (<strong>2011</strong>). <em><a href="http://centaur.reading.ac.uk/23800/">Understanding Distributions of Chess Performances</a></em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a>, <a href="http://www.cse.buffalo.edu/~regan/papers/pdf/RMH11.pdf">pdf</a></li>
+<li><a href="/Trevor_Fenner">Trevor Fenner</a>, <a href="/Mark_Levene">Mark Levene</a>, <a href="/Mathematician">George Loizou</a> (<strong>2011</strong>). <em>A Discrete Evolutionary Model for Chess Players' Ratings</em>. <a href="https://arxiv.org/abs/1103.1530">arXiv:1103.1530</a></li>
+<li><a href="/Diogo_R._Ferreira">Diogo R. Ferreira</a> (<strong>2012</strong>). <em>Determining the Strength of Chess Players based on actual Play</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 35, No. 1</a></li>
+<li><a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/Rémi_Coulom">Rémi Coulom</a> (<strong>2013</strong>). <em>Paired Comparisons with Ties: Modeling Game Outcomes in Chess</em>. <a href="#fn37" class="footnote-ref" id="fnref37" role="doc-noteref"><sup>37</sup></a> <a href="#fn38" class="footnote-ref" id="fnref38" role="doc-noteref"><sup>38</sup></a></li>
+<li><a href="/Diogo_R._Ferreira">Diogo R. Ferreira</a> (<strong>2013</strong>). <em>The Impact of the Search Depth on Chess Playing Strength</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 36, No. 2</a> » <a href="/Depth">Depth</a>, <a href="/Depth">Diminishing Returns</a>, <a href="/Playing_Strength">Playing Strength</a>, <a href="/Houdini">Houdini</a> <a href="#fn39" class="footnote-ref" id="fnref39" role="doc-noteref"><sup>39</sup></a></li>
+<li><a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a> (<strong>2014</strong>). <em>ORDO v0.9.6 Ratings for chess and other games</em>. September 2014, <a href="https://docs.google.com/viewer?a=v&amp;pid=sites&amp;srcid=ZGVmYXVsdGRvbWFpbnxnYXZpb3RhY2hlc3NlbmdpbmV8Z3g6NmQ0NmNhNGM4YjA3YTc5ZQ">pdf</a> » Ordo <a href="#fn40" class="footnote-ref" id="fnref40" role="doc-noteref"><sup>40</sup></a></li>
+<li><a href="/Don_Dailey">Don Dailey</a>, <a href="/Adam_Hair">Adam Hair</a>, <a href="/Mark_Watkins">Mark Watkins</a> (<strong>2014</strong>). <em><a href="http://www.sciencedirect.com/science/article/pii/S1875952113000177">Move Similarity Analysis in Chess Programs</a></em>. <a href="http://www.journals.elsevier.com/entertainment-computing/">Entertainment Computing</a>, Vol. 5, No. 3, <a href="http://magma.maths.usyd.edu.au/~watkins/papers/DHW.pdf">preprint as pdf</a> <a href="#fn41" class="footnote-ref" id="fnref41" role="doc-noteref"><sup>41</sup></a></li>
+<li><a href="/Kenneth_W._Regan">Kenneth W. Regan</a>, <a href="/Tamal_T._Biswas">Tamal T. Biswas</a>, Jason Zhou (<strong>2014</strong>). <em>Human and Computer Preferences at Chess</em>. <a href="http://www.cse.buffalo.edu/~regan/papers/pdf/RBZ14aaai.pdf">pdf</a></li>
+<li>Erik Varend (<strong>2014</strong>). <em>Quality of play in chess and methods for measuring</em>. <a href="http://www.chessanalysis.ee/Quality%20of%20play%20in%20chess%20and%20methods%20for%20measuring.pdf">pdf</a> <a href="#fn42" class="footnote-ref" id="fnref42" role="doc-noteref"><sup>42</sup></a> <a href="#fn43" class="footnote-ref" id="fnref43" role="doc-noteref"><sup>43</sup></a></li>
+<li><a href="/Mathematician">Xiaoou Li</a>, <a href="/Mathematician">Jingchen Liu</a>, <a href="/Mathematician">Zhiliang Ying</a> (<strong>2014</strong>). <em><a href="https://www.tandfonline.com/doi/abs/10.1080/07474946.2014.961861">Generalized Sequential Probability Ratio Test for Separate Families of Hypotheses</a></em>. <a href="https://www.tandfonline.com/loi/lsqa20?open=36&amp;year=2017&amp;repitition=0">Sequential Analysis</a>, Vol. 33, No. 4, <a href="http://stat.columbia.edu/~jcliu/paper/GSPRT_SQA3.pdf">pdf</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="/Tamal_T._Biswas">Tamal T. Biswas</a>, <a href="/Kenneth_W._Regan">Kenneth W. Regan</a> (<strong>2015</strong>). <em>Quantifying Depth and Complexity of Thinking and Knowledge</em>. <a href="http://www.icaart.org/EuropeanProjectSpace.aspx?y=2015">ICAART 2015</a>, <a href="http://www.cse.buffalo.edu/~regan/papers/pdf/BiReICAART15CR.pdf">pdf</a></li>
+<li><a href="/Tamal_T._Biswas">Tamal T. Biswas</a>, <a href="/Kenneth_W._Regan">Kenneth W. Regan</a> (<strong>2015</strong>). <em>Measuring Level-K Reasoning, Satisficing, and Human Error in Game-Play Data</em>. <a href="/IEEE">IEEE</a> <a href="http://www.icmla-conference.org/icmla15/">ICMLA 2015</a>, <a href="http://www.cse.buffalo.edu/~regan/papers/pdf/BiRe15_ICMLA2015.pdf">pdf preprint</a></li>
+<li><a href="/Guy_Haworth">Guy Haworth</a>, <a href="/Tamal_T._Biswas">Tamal T. Biswas</a>, <a href="/Kenneth_W._Regan">Kenneth W. Regan</a> (<strong>2015</strong>). <em><a href="http://centaur.reading.ac.uk/39431/">A Comparative Review of Skill Assessment: Performance, Prediction and Profiling</a></em>. <a href="/Advances_in_Computer_Games_14">Advances in Computer Games 14</a></li>
+<li><a href="/Shogo_Takeuchi">Shogo Takeuchi</a>, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a> (<strong>2015</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=7336038">Estimating Ratings of Computer Players by the Evaluation Scores and Principal Variations in Shogi</a></em>. <a href="http://ieeexplore.ieee.org/xpl/mostRecentIssue.jsp?punumber=7335993">ACIT-CSI</a></li>
+<li><a href="/Jean-Marc_Alliot">Jean-Marc Alliot</a> (<strong>2017</strong>). <em>Who is the Master</em>? <a href="/ICGA_Journal">ICGA Journal, Vol. 39, No. 1</a>, <a href="http://www.alliot.fr/CHESS/draft-icga-39-1.pdf">draft as pdf</a> » <a href="/Stockfish">Stockfish</a>, <a href="/Jean-Marc_Alliot">Who is the Master?</a></li>
+<li><a href="/Mathematician">Ilan Adler</a>, <a href="/Mathematician">Yang Cao</a>, <a href="/Richard_Karp">Richard Karp</a>, <a href="/Mathematician">Erol A. Peköz</a>, <a href="/Mathematician">Sheldon M. Ross</a> (<strong>2017</strong>). <em><a href="https://pubsonline.informs.org/doi/10.1287/opre.2017.1657">Random Knockout Tournaments</a></em>. <a href="https://en.wikipedia.org/wiki/Operations_Research_(journal)">Operations Research</a>, Vol. 65, No. 6, <a href="https://arxiv.org/abs/1612.04448">arXiv:1612.04448</a></li>
+<li><a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a> (<strong>2017</strong>). <em>A Practical Introduction to the GSPRT</em>. <a href="http://hardy.uhasselt.be/Toga/GSPRT_approximation.pdf">pdf</a></li>
+<li>Leszek Szczecinski, Aymen Djebbi (<strong>2019</strong>). <em>Understanding and Pushing the Limits of the Elo Rating Algorithm</em>. <a href="https://arxiv.org/abs/1910.06081">arXiv:1910.06081</a> <a href="#fn44" class="footnote-ref" id="fnref44" role="doc-noteref"><sup>44</sup></a></li>
+<li><a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a> (<strong>2019</strong>). <em>The Generalized Maximum Likelihood Ratio for the Expectation Value of a Distribution</em>. <a href="http://hardy.uhasselt.be/Fishtest/support_MLE_multinomial.pdf">pdf</a></li>
+</ul>
+<h2 id="forum--blog-postings">Forum &amp; Blog Postings</h2>
+<h3 id="1996-">1996 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/GkgFc3jOl84/vWn-SG8kVboJ">Theoretical chess rating question...</a> by Cyber Linguist, <a href="/Computer_Chess_Forums">rgcc</a>, April 17, 1996</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/3014e4ea570dbf38">Statistical validity of medium-length match results</a> by <a href="/Bruce_Moreland">Bruce Moreland</a>, <a href="/Computer_Chess_Forums">rgcc</a>, February 15, 1997</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=24669">Small number statistics and small differences</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, August 14, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=24978">Re: Waltzing Matilda (was: statistics, 10 events tell us what ?</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, August 17, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=52542">ELO performance?</a> by <a href="/Stefan_Meyer-Kahlen">Stefan Meyer-Kahlen</a>, <a href="/CCC">CCC</a>, May 22, 1999 » <a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">Pawn Advantage, Win Percentage, and Elo</a>, <a href="/Playing_Strength">Playing Strength</a></li>
+</ul>
+<h3 id="2000--1">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=98901">Some thougths about statistics</a> by Martin Schubert, <a href="/CCC">CCC</a>, February 24, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=174578">Who is better? Some statistics...</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, <a href="/CCC">CCC</a>, June 11, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=178041">Simulating the result of a single game by random numbers</a> by Christoph Fieberg, <a href="/CCC">CCC</a>, July 03, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=179091">Simulating the result of a single game by random numbers - Update!</a> by Christoph Fieberg, <a href="/CCC">CCC</a>, July 10, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=178939">Simulating the result of a single game by random numbers - Update!</a> by Christoph Fieberg, <a href="/CCC">CCC</a>, August 02, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=226275">ELO &amp; statistics question</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, <a href="/CCC">CCC</a>, April 26, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=267056">Statistical significance of a match result</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/CCC">CCC</a>, November 23, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=275347">Value of playing different versions of a program against each other</a> by <a href="/Tom_King">Tom King</a>, <a href="/CCC">CCC</a>, January 06, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=340148">A question about statistics...</a> by Roger Brown, <a href="/CCC">CCC</a>, January 04, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=377487">New tool to estimate the statistical significance of match results</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/CCC">CCC</a>, July 17, 2004</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?t=949">ELOStat algorithm ?</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, December 10, 2004 » EloStat</li>
+</ul>
+<h3 id="2005--1">2005 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=411278">bayeselo: new Elo-rating tool, applied to CCT7</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/CCC">CCC</a>, February 13, 2005 » <a href="/CCT7">CCT7</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=484357">table for detecting significant difference between two engines</a> by Joseph Ciarrochi, <a href="/CCC">CCC</a>, February 03, 2006 <a href="#fn45" class="footnote-ref" id="fnref45" role="doc-noteref"><sup>45</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=14107">Observator bias or...</a> by <a href="/Alessandro_Scotti">Alessandro Scotti</a>, <a href="/CCC">CCC</a>, May 29, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=13800">a beat b,b beat c,c beat a question</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, May 16, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=16545">how to do a proper statistical test</a> by <a href="/Rein_Halbersma">Rein Halbersma</a>, <a href="/CCC">CCC</a>, September 19, 2007</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=24590">Comparing two version of the same engine</a> by <a href="/Fermin_Serrano">Fermin Serrano</a>, <a href="/CCC">CCC</a>, October 26, 2008</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=25461">Debate: testing at fast time controls</a> by <a href="/Fermin_Serrano">Fermin Serrano</a>, <a href="/CCC">CCC</a>, December 15, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=27516">Elo Calcuation</a> by <a href="/Edmund_Moshammer">Edmund Moshammer</a>, <a href="/CCC">CCC</a>, April 19, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=30624">Likelihood of superiority</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, November 15, 2009</li>
+</ul>
+<h3 id="2010--1">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=31699">Engine Testing - Statistics</a> by <a href="/Edmund_Moshammer">Edmund Moshammer</a>, <a href="/CCC">CCC</a>, January 14, 2010</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=31699&amp;start=4">Re: Engine Testing - Statistics</a> by John Major, <a href="/CCC">CCC</a>, January 14, 2010</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=34989">Chess Statistics</a> by <a href="/Edmund_Moshammer">Edmund Moshammer</a>, <a href="/CCC">CCC</a>, June 17, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=36592">Do You really need 1000s of games for testing?</a> by <a href="/Jouni_Uski">Jouni Uski</a>, <a href="/CCC">CCC</a>, November 04, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=36979">GUI idea: Testing until certainty</a> by <a href="/Albert_Silver">Albert Silver</a>, <a href="/CCC">CCC</a>, December 07, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=37056">SPRT and Engine testing</a> by <a href="/Adam_Hair">Adam Hair</a>, <a href="/CCC">CCC</a>, December 13, 2010 » SPRT</li>
+</ul>
+<p><strong>2011</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=38698">Testing very small changes ( &lt;= 5 ELO points of gain)</a> by <a href="/Fermin_Serrano">Fermin Serrano</a>, <a href="/CCC">CCC</a>, April 08, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38772">Pairwise Analysis of Chess Engine Move Selections</a> by <a href="/Adam_Hair">Adam Hair</a>, <a href="/CCC">CCC</a>, April 17, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=39511">Ply vs ELO</a> by Andriy Dzyben, <a href="/CCC">CCC</a>, June 28, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40193">One billion random games</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, August 27, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41341">Increase in Elo ..Question For The Experts</a> by <a href="/Steve_Blincoe">Steve B</a>, <a href="/CCC">CCC</a>, December 05, 2011</li>
+</ul>
+<p><strong>2012</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=42032">Are all test the same?</a> by <a href="/Fermin_Serrano">Fermin Serrano</a>, <a href="/CCC">CCC</a>, January 17, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=42729">Advantage for White; Bayeselo (to Rémi Coulom)</a> by <a href="/Edmund_Moshammer">Edmund Moshammer</a>, <a href="/CCC">CCC</a>, March 03, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=42737">Pairwise Analysis of Chess Engine Move Selections Revisited</a> by <a href="/Adam_Hair">Adam Hair</a>, <a href="/CCC">CCC</a>, March 04, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=44219">Human Elo ratings: averages and standard deviations</a> by Jesús Muñoz, <a href="/CCC">CCC</a>, March 18, 2012 <a href="#fn46" class="footnote-ref" id="fnref46" role="doc-noteref"><sup>46</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=42998">Elo uncertainties calculator</a> by Jesús Muñoz, <a href="/CCC">CCC</a>, March 24, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=43134">Elo versus speed</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, April 02, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=43323">Pawn Advantage, Win Percentage, and Elo</a> by <a href="/Adam_Hair">Adam Hair</a>, <a href="/CCC">CCC</a>, April 15, 2012 » <a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">Pawn Advantage, Win Percentage, and Elo</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=43598">Elo Increase per Doubling</a> by <a href="/Adam_Hair">Adam Hair</a>, <a href="/CCC">CCC</a>, May 07, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=44003">Rybka odds matches and the strength of engines</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, June 09, 2012 » <a href="/Rybka">Rybka</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=44147">A new way to compare chess programs</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, June 21, 2012 » <a href="/Komodo">Komodo</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=44180">EloStat, Bayeselo and Ordo</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, June 24, 2012 » EloStat, Bayeselo, Ordo</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=44657">about error margins?</a> by <a href="/Fermin_Serrano">Fermin Serrano</a>, <a href="/CCC">CCC</a>, August 01, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=44670">normal vs logistic curve for elo model</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, August 02, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=44715">Derivation of bayeselo formula</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/CCC">CCC</a>, August 07, 2012 <a href="#fn47" class="footnote-ref" id="fnref47" role="doc-noteref"><sup>47</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=45158">Yet Another Testing Question</a> by <a href="/Brian_Richardson">Brian Richardson</a>, <a href="/CCC">CCC</a>, September 15, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=45174">margin of error</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, September 16, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=45257">Average number of plies in {1-0, ½-½, 0-1}</a> by Jesús Muñoz, <a href="/CCC">CCC</a>, September 21, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=45287">Another testing question</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, September 23, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=45406">LOS calculation: Does the same result is always the same?</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, October 01, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=45788">LOS (again)</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, October 30, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46370">Elo points gain from doubling time</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, December 10, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46572">A word for casual testers</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, December 25, 2012</li>
+</ul>
+<p><strong>2013</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46759">A poor man's testing environment</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, January 04, 2013 » <a href="/Engine_Testing">Engine Testing</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46786">Noise in ELO estimators: a quantitative approach</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, January 06, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47086">Updated Dendrogram</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, February 02, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47469">Experiment: influence of colours at fixed depth</a> by Jesús Muñoz, <a href="/CCC">CCC</a>, March 10, 2013</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2296">LOS</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, March 31, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47885">Fishtest Distributed Testing Framework</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, May 01, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48649">The influence of the length of openings</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, July 14, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48733">Scaling at 2x nodes (or doubling time control)</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, July 23, 2013 » Doubling TC, <a href="/Depth">Diminishing Returns</a>, <a href="/Playing_Strength">Playing Strength</a>, <a href="/Houdini">Houdini</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48863">Type I error in LOS based early stopping rule</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, August 06, 2013 <a href="#fn48" class="footnote-ref" id="fnref48" role="doc-noteref"><sup>48</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48864">How much elo is pondering worth</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, <a href="/CCC">CCC</a>, August 07, 2013 » <a href="/Pondering">Pondering</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49248">Contempt and the ELO model</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, <a href="/CCC">CCC</a>, September 05, 2013 » <a href="/Contempt_Factor">Contempt Factor</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49393">1 draw=1 win + 1 loss (always!)</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, <a href="/CCC">CCC</a>, September 19, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49584">SPRT and narrowing of (elo1 - elo0) difference</a> by Jesús Muñoz, <a href="/CCC">CCC</a>, October 05, 2013 » SPRT</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49727">sprt and margin of error</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, October 15, 2013 » SPRT</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2477">How (not) to use SPRT ?</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, October 19, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50266">Houdini, much weaker engines, and Arpad Elo</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, November 29, 2013 » <a href="/Houdini">Houdini</a>, <a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">Pawn Advantage, Win Percentage, and Elo</a> <a href="#fn49" class="footnote-ref" id="fnref49" role="doc-noteref"><sup>49</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50332">Testing on time control versus nodes | ply</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, December 04, 2013</li>
+</ul>
+<p><strong>2014</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51003">Calculating the LOS (likelihood of superiority) from results</a> by Robert Tournevisse, <a href="/CCC">CCC</a>, January 22, 2014</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2578">LOS --&gt; Draws are irrelevant</a> by <a href="/Dann_Corbit">User923005</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, January 24, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52746">Empirically 1 win + 1 loss ~ 2 draws</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, June 24, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53645">Ordo 0.9.6</a> by <a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a>, <a href="/CCC">CCC</a>, September 10, 2014 » Ordo</li>
+<li><a href="https://chesscomputer.tumblr.com/post/98632536555/using-the-stockfish-position-evaluation-score-to/embed">Using the Stockfish position evaluation score to predict victory probability</a> by unavoidablegrain, <a href="https://en.wikipedia.org/wiki/Tumblr">Tumblr</a>, September 28, 2014 » <a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">Pawn Advantage, Win Percentage, and Elo</a>, <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53891">Elo estimation using quasi-Monte Carlo integration</a> by Branko Radovanovic, <a href="/CCC">CCC</a>, September 30, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54331">SPRT question</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, November 13, 2014 » SPRT</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54359">Usage sprt / cutechess-cli</a> by <a href="/Michael_Hoffmann">Michael Hoffmann</a>, <a href="/CCC">CCC</a>, November 16, 2014 » <a href="/Cutechess-cli">Cutechess-cli</a>, SPRT</li>
+</ul>
+<h3 id="2015--1">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55130">2-SPRT</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, <a href="/CCC">CCC</a>, January 28, 2015 » SPRT</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55893">Script for computing SPRT probabilities</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, <a href="/CCC">CCC</a>, April 05, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56067">Maximum ELO gain per test game played?</a> by Forrest Hoch, <a href="/CCC">CCC</a>, April 20, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56095">Getting SPRT right</a> by <a href="/Alexandru_Mosoi">Alexandru Mosoi</a>, <a href="/CCC">CCC</a>, April 22, 2015 » SPRT</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56358">SPRT questions</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, May 15, 2015 » SPRT</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56426">Adam Hair's article on Pairwise comparison of engines</a> by <a href="/Charles_Roberson">Charles Roberson</a>, <a href="/CCC">CCC</a>, May 19, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57223">computing elo of multiple chess engines</a> by <a href="/Alexandru_Mosoi">Alexandru Mosoi</a>, <a href="/CCC">CCC</a>, August 09, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57270">Some musings about search</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, August 14, 2015 » <a href="/Automated_Tuning">Automated Tuning</a>, <a href="/Search">Search</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57437">Bullet vs regular time control, say 40/4m CCRL/CEGT</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, August 29, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57465">The SPRT without draw model, elo model or whatever...</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, <a href="/CCC">CCC</a>, September 01, 2015 » SPRT</li>
+</ul>
+<p><a href="http://talkchess.com/forum/viewtopic.php?t=57465&amp;start=19">Re: The SPRT without draw model, elo model or whatever..</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, <a href="/CCC">CCC</a>, August 18, 2016</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57482">Name for elo without draws?</a> by <a href="/Marcel_van_Kervinck">Marcel van Kervinck</a>, <a href="/CCC">CCC</a>, September 02, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57696">The future of chess and elo ratings</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, September 20, 2015 » <a href="/Opening_Book">Opening Book</a></li>
+<li><a href="https://rjlipton.wordpress.com/2015/10/06/depth-of-satisficing/">Depth of Satisficing</a> by <a href="/Kenneth_W._Regan">Ken Regan</a>, <a href="https://rjlipton.wordpress.com/">Gödel's Lost Letter and P=NP</a>, October 06, 2015 » <a href="/Depth">Depth</a>, <a href="/Match_Statistics">Match Statistics</a>, <a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">Pawn Advantage, Win Percentage, and Elo</a>, <a href="/Stockfish">Stockfish</a>, <a href="/Komodo">Komodo</a> <a href="#fn50" class="footnote-ref" id="fnref50" role="doc-noteref"><sup>50</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57969">ELO error margin</a> by <a href="/Fabio_Gobbato">Fabio Gobbato</a>, <a href="/CCC">CCC</a>, October 17, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58067">testing multiple versions &amp; elo calculation</a> by <a href="/Folkert_van_Heusden">Folkert van Heusden</a>, <a href="/CCC">CCC</a>, October 27, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58543">A simple expression</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, December 09, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58600">Counting 1 win + 1 loss as 2 draws</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, December 15, 2015</li>
+</ul>
+<p><strong>2016</strong></p>
+<ul>
+<li><a href="https://rjlipton.wordpress.com/2016/01/21/a-chess-firewall-at-zero/">A Chess Firewall at Zero?</a> by <a href="/Kenneth_W._Regan">Ken Regan</a>, <a href="https://rjlipton.wordpress.com/">Gödel's Lost Letter and P=NP</a>, January 21, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59038">Ordo 1.0.9 (new features for testers)</a> by <a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a>, <a href="/CCC">CCC</a>, January 25, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59333">Why the errorbar is wrong ... simple example!</a> by <a href="/Frank_Quisinsky">Frank Quisinsky</a>, <a href="/CCC">CCC</a>, February 23, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59332">a direct comparison of FIDE and CCRL rating systems</a> by Erik Varend, <a href="/CCC">CCC</a>, February 22, 2016 » <a href="/FIDE">FIDE</a>, <a href="/CCRL">CCRL</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59406">Some properties of the Type I error in p-value stopping rule</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, March 01, 2016</li>
+<li><a href="https://blog.ebemunk.com/a-visual-look-at-2-million-chess-games/">A Visual Look at 2 Million Chess Games - Thinking Through the Party</a> by Buğra Fırat, March 02, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60508">Type I error for p-value stopping: Balanced and Unbalanced</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, June 16, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60791">Empirically Logistic ELO model better suited than Gaussian</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, July 12, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60960">Testing resolution and combining results</a> by <a href="/Daniel_José_Queraltó">Daniel José Queraltó</a>, <a href="/CCC">CCC</a>, July 28, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61105">Error margins via resampling (jackknifing)</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, August 12, 2016 <a href="#fn51" class="footnote-ref" id="fnref51" role="doc-noteref"><sup>51</sup></a> <a href="#fn52" class="footnote-ref" id="fnref52" role="doc-noteref"><sup>52</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61245">Properties of unbalanced openings using Bayeselo model</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, August 27, 2016 » <a href="/Opening_Book">Opening Book</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61444">ELO inflation ha ha ha</a> by Henk van den Belt, <a href="/CCC">CCC</a>, September 16, 2016 » <a href="/Delphil">Delphil</a>, <a href="/Stockfish">Stockfish</a>, <a href="/Playing_Strength">Playing Strength</a>, <a href="/TCEC_Season_9">TCEC Season 9</a> <a href="#fn53" class="footnote-ref" id="fnref53" role="doc-noteref"><sup>53</sup></a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=61444&amp;start=17">About expected scores and draw ratios</a> by Jesús Muñoz, <a href="/CCC">CCC</a>, September 17, 2016</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61506">The scaling with time of opening books</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, September 23, 2016 » <a href="/Opening_Book">Opening Book</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61548">Perfect play</a> by Patrik Karlsson, <a href="/CCC">CCC</a>, September 28, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61601">Stockfish underpromotes much more often than Komodo</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, October 05, 2016 » <a href="/Komodo">Komodo</a>, <a href="/Promotions">Promotions</a>, <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61636">Differences between top engines related to "style"</a> by <a href="/Kai_Laskos">Kai Laskos</a>, October 07, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61781">SPRT when not used for self testing</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, October 21, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61784">Doubling of time control</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, October 21, 2016 » Doubling TC, <a href="/Depth">Diminishing Returns</a>, <a href="/Playing_Strength">Playing Strength</a>, <a href="/Komodo">Komodo</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62146">Stockfish 8 - Double time control vs. 2 threads</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, November 15, 2016 » Doubling TC, <a href="/Depth">Diminishing Returns</a>, <a href="/Playing_Strength">Playing Strength</a>, <a href="/Stockfish">Stockfish</a></li>
+<li><a href="https://rjlipton.wordpress.com/2016/11/30/when-data-serves-turkey/">When Data Serves Turkey</a> by <a href="/Kenneth_W._Regan">Ken Regan</a>, <a href="https://rjlipton.wordpress.com/">Gödel's Lost Letter and P=NP</a>, November 30, 2016</li>
+<li><a href="https://rjlipton.wordpress.com/2016/12/08/magnus-and-the-turkey-grinder/">Magnus and the Turkey Grinder</a> by <a href="/Kenneth_W._Regan">Ken Regan</a>, <a href="https://rjlipton.wordpress.com/">Gödel's Lost Letter and P=NP</a>, December 08, 2016 » <a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">Pawn Advantage, Win Percentage, and Elo</a> <a href="#fn54" class="footnote-ref" id="fnref54" role="doc-noteref"><sup>54</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62435">Regan's conundrum</a> by Carl Lumma, <a href="/CCC">CCC</a>, December 09, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62438">Statistical Interpretation</a> by <a href="/Dennis_Sceviour">Dennis Sceviour</a>, <a href="/CCC">CCC</a>, December 10, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62510">Absolute ELO scale</a> by <a href="/Nicu_Ionita">Nicu Ionita</a>, <a href="/CCC">CCC</a>, December 17, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62598">A question about SPRT</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, December 25, 2016 » SPRT</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62622">Diminishing returns and hyperthreading</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, December 27, 2016 » <a href="/Depth">Diminishing Returns</a>, <a href="/Playing_Strength">Playing Strength</a>, <a href="/Thread">Thread</a></li>
+</ul>
+<p><strong>2017</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62868">Progress in 30 years by four intervals of 7-8 years</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, January 19, 2017 » <a href="/Playing_Strength">Playing Strength</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62922">sprt tourney manager</a> by <a href="/Richard_Delorme">Richard Delorme</a>, <a href="/CCC">CCC</a>, January 24, 2017 » <a href="/Amoeba">Amoeba Tournament Manager</a>, SPRT</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63327">Binomial distribution for chess statistics</a> by <a href="/Lyudmil_Antonov">Lyudmil Antonov</a>, <a href="/CCC">CCC</a>, March 03, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63355">Higher than expected by me efficiency of Ponder ON</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, March 06, 2017 » <a href="/Pondering">Pondering</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63572">What can be said about 1 - 0 score?</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, March 28, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63652">6-men Syzygy from HDD and USB 3.0</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, April 04, 2017 » <a href="/Komodo">Komodo</a>, <a href="/Playing_Strength">Playing Strength</a>, <a href="/Syzygy_Bases">Syzygy Bases</a>, <a href="/Memory">USB 3.0</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63687">Scaling of engines from FGRL rating list</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, April 07, 2017 » <a href="/FGRL">FGRL</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63763">Low impact of opening phase in engine play?</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, April 18, 2017 » <a href="/Opening">Opening</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63813">How to simulate a game outcome given Elo difference?</a> by <a href="/Nicu_Ionita">Nicu Ionita</a>, <a href="/CCC">CCC</a>, April 25, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63875">Wilo rating properties from FGRL rating lists</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, May 01, 2017 » <a href="/FGRL">FGRL</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63888">MATCH sanity</a> by <a href="/Ed_Schroder">Ed Schroder</a>, <a href="/CCC">CCC</a>, May 03, 2017 » <a href="/Portable_Game_Notation">Portable Game Notation</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=63888&amp;start=2">Re: MATCH sanity</a> by <a href="/Salvatore_Giannotti">Salvatore Giannotti</a>, <a href="/CCC">CCC</a>, May 03, 2017</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63903">Symmetric multiprocessing (SMP) scaling - SF8 and K10.4</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, May 05, 2017 » <a href="/Lazy_SMP">Lazy SMP</a>, <a href="/Komodo">Komodo</a>, <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63955">Symmetric multiprocessing (SMP) scaling - K10.4 Contempt=0</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, May 11, 2017 » <a href="/SMP">SMP</a>, <a href="/Komodo">Komodo</a>, <a href="/Contempt_Factor">Contempt Factor</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63967">Symmetric multiprocessing (SMP) scaling - SF8 Contempt=10</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, May 13, 2017 » <a href="/SMP">SMP</a>, <a href="/Stockfish">Stockfish</a>, <a href="/Contempt_Factor">Contempt Factor</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64084">Likelihood Of Success (LOS) in the real world</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, May 26, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64358">Opening testing suites efficiency</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, June 21, 2017 » <a href="/Engine_Testing">Engine Testing</a>, <a href="/Opening">Opening</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64394">Testing A against B by playing a pool of others</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, June 24, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64519">Engine testing &amp; error margin ?</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, July 05, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64683">Invariance with time control of rating schemes</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, July 22, 2017 <a href="#fn55" class="footnote-ref" id="fnref55" role="doc-noteref"><sup>55</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64719">Ways to avoid "Draw Death" in Computer Chess</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, July 25, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64824&amp;start=2">SMP NPS measurements</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, August 06, 2017 » <a href="/Lazy_SMP">Lazy SMP</a>, <a href="/Parallel_Search">Parallel Search</a>, <a href="/Nodes_per_Second">Nodes per Second</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=64824&amp;start=3">ELO measurements</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, August 06, 2017 » <a href="/Playing_Strength">Playing Strength</a></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65061">What is a Match?</a> by Henk van den Belt, <a href="/CCC">CCC</a>, September 01, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65288">Scaling from FGRL results with top 3 engines</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, September 26, 2017 » <a href="/FGRL">FGRL</a>, <a href="/Houdini">Houdini</a>, <a href="/Komodo">Komodo</a>, <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65764">Statistical interpretation of search and eval scores</a> by J. Wesley Cleveland, <a href="/CCC">CCC</a>, November 18, 2017 » <a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">Pawn Advantage, Win Percentage, and Elo</a>, <a href="/Score">Score</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65772">"Intrinsic Chess Ratings" by Regan, Haworth -- seq</a> by Kai Middleton, <a href="/CCC">CCC</a>, November 19, 2017</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=65772&amp;start=2">Re: "Intrinsic Chess Ratings" by Regan, Haworth --</a> by <a href="/Kenneth_W._Regan">Kenneth Regan</a>, <a href="/CCC">CCC</a>, November 20, 2017 » <a href="/Jean-Marc_Alliot">Who is the Master?</a></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66000">ELO progression measured by year</a> by <a href="/Ed_Schroder">Ed Schroder</a>, <a href="/CCC">CCC</a>, December 13, 2017</li>
+</ul>
+<p><strong>2018</strong></p>
+<ul>
+<li><a href="https://groups.google.com/d/msg/fishcooking/nqgLNUfjkok/gfMr7amXCAAJ">Wrong use of SPRT</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, February 09, 2018 » <a href="/Contempt_Factor">Contempt Factor</a>, SPRT</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66775">Feed bayeselo with pure game results without PGN</a> by <a href="/Sergei_Markoff">Sergei S. Markoff</a>, <a href="/CCC">CCC</a>, March 08, 2018</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66793">Elo measurement of contempt in SF in self-play</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, <a href="/CCC">CCC</a>, March 10, 2018 » <a href="/Contempt_Factor">Contempt</a>, <a href="/Playing_Strength">Playing Strength</a>, <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66821">Time control envelope in top engines could be improved?</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, March 13, 2018 » <a href="/Time_Management">Time Management</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66945">LCZero: Progress and Scaling. Relation to CCRL Elo</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, March 28, 2018 » <a href="/Leela_Chess_Zero">Leela Chess Zero</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66969">Elostat Question</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/CCC">CCC</a>, March 30, 2018</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=67485">Issue with self play testing</a> by <a href="/Charles_Roberson">Charles Roberson</a>, <a href="/CCC">CCC</a>, May 18, 2018 » <a href="/Engine_Testing">Engine Testing</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=68072">Why Lc0 eval (in cp) is asymmetric against AB engines?</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, July 25, 2018 » <a href="/Asymmetric_Evaluation">Asymmetric Evaluation</a>, <a href="/Leela_Chess_Zero">Leela Chess Zero</a>, <a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">Pawn Advantage, Win Percentage, and Elo</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69069">Are draws hard to predict?</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, November 27, 2018 » <a href="/Draw">Draw</a>, <a href="/Neural_Networks">Neural Networks</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69284">testing consistency</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, December 16, 2018</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69407">Fixed nodes games and the pentanomial model</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, <a href="/CCC">CCC</a>, December 29, 2018</li>
+</ul>
+<p><strong>2019</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69672">Schizophrenic rating model for Leela</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, January 21, 2019 » <a href="/Leela_Chess_Zero">Leela Chess Zero</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=71419">best way to determine elos of a group</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, July 30, 2019</li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72962">Stockfish Reverts 5 Recent Patches</a> by Deberger, <a href="/CCC">CCC</a>, February 01, 2020 » <a href="/Stockfish">Stockfish</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72962&amp;start=6">Re: Stockfish Reverts 5 Recent Patches</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, <a href="/CCC">CCC</a>, February 02, 2020</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73419">repackaging of Fishtest's SPRT calculation code</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, March 20, 2020 » SPRT</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=74037">Stockfish_dev is probably stronger than Sargon 1978 v1.00</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, May 29, 2020 » <a href="/Stockfish">Stockfish</a>, <a href="/Sargon">Sargon</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74319">Throwing out draws to calculate Elo</a> by <a href="/Dann_Corbit">Dann Corbit</a>, <a href="/CCC">CCC</a>, June 29, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75006">Jackknife estimate of the variance of engine results for Arasan test suite</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, September 05, 2020 » Statistical Analysis</li>
+</ul>
+<p><strong>2021</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76261">What K factor should be used if two players are in different K factor brackets?</a> by <a href="/Tamás_Kuzmics">Tamás Kuzmics</a>, <a href="/CCC">CCC</a>, January 09, 2021 <a href="#fn56" class="footnote-ref" id="fnref56" role="doc-noteref"><sup>56</sup></a> <a href="#fn57" class="footnote-ref" id="fnref57" role="doc-noteref"><sup>57</sup></a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76370">Cutechess-cli and SPRT</a> by <a href="/Tom_King">Tom King</a>, <a href="/CCC">CCC</a>, January 19, 2021 » <a href="/Cutechess-cli">Cutechess-cli</a>, SPRT</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76382">correspondence chess in the age of NNUE</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, January 21, 2021 » <a href="/NNUE">NNUE</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=77544">what is the rating of engines when you do not count draws?</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, June 23, 2021</li>
+</ul>
+<p><strong>2022</strong></p>
+<ul>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79280">How do you know you improved ?</a> by Philippe Chevalier, <a href="/CCC">CCC</a>, February 03, 2022</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<h3 id="rating-systems">Rating Systems</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Chessmetrics">Chessmetrics from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Chess_rating_systems">Chess rating system from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Elo_rating_system">Elo rating system from Wikipedia</a></li>
+<li><a href="http://en.chessbase.com/post/arpad-elo-and-the-elo-rating-system">Arpad Elo and the Elo Rating System</a> by Dan Ross, <a href="/ChessBase">ChessBase News</a>, December 16, 2007</li>
+<li><a href="https://www.kaggle.com/c/chess">Chess ratings - Elo versus the Rest of the World</a> | <a href="https://en.wikipedia.org/wiki/Kaggle">Kaggle</a></li>
+<li><a href="http://wismuth.com/elo/calculator.html">Elo Win Probability Calculator</a> by <a href="/Mathematician">François Labelle</a></li>
+<li><a href="http://www.husvankempen.de/nunn/rating/tablejoseph.htm">LOS Table</a> by Joseph Ciarrochi from <a href="/CEGT">CEGT</a> <a href="#fn58" class="footnote-ref" id="fnref58" role="doc-noteref"><sup>58</sup></a></li>
+<li><a href="http://kirill-kryukov.com/chess/kcec/draw_rate.html">Kirr's Chess Engine Comparison KCEC - Draw rate</a> » <a href="/KCEC">KCEC</a></li>
+<li><a href="http://www.chessanalysis.ee/chessanalysiseng.htm">Chessanalysis homepage</a> by Erik Varend <a href="#fn59" class="footnote-ref" id="fnref59" role="doc-noteref"><sup>59</sup></a></li>
+<li><a href="http://www.alliot.fr/CHESS/ficga.html.en">Who is the Master?</a> by <a href="/Jean-Marc_Alliot">Jean-Marc Alliot</a> » <a href="/Jean-Marc_Alliot">Who is the Master?</a></li>
+<li><a href="https://news.cnrs.fr/articles/how-should-chess-players-be-rated">How Should Chess Players Be Rated?</a> by <a href="https://news.cnrs.fr/authors/martin-koppe">Martin Koppe</a>, <a href="https://news.cnrs.fr/">CNRS News</a>, April 25, 2017</li>
+<li><a href="https://en.chessbase.com/post/ranking-chess-players-according-to-the-quality-of-their-moves">Ranking chess players according to the quality of their moves</a> by <a href="/Frederic_Friedel">Frederic Friedel</a>, <a href="/ChessBase">ChessBase News</a>, April 27, 2017</li>
+<li><a href="http://rebel13.nl/misc/stats.html">Rating List Stats</a> by <a href="/Ed_Schroder">Ed Schroder</a> » <a href="/CCRL">CCRL</a></li>
+</ul>
+<h3 id="tools">Tools</h3>
+<ul>
+<li><a href="http://remi.coulom.free.fr/Bayesian-Elo/">BayesElo</a> by <a href="/Rémi_Coulom">Rémi Coulom</a> builds tournament-statistics from a <a href="/Portable_Game_Notation">pgn-file</a></li>
+<li><a href="http://wbec-ridderkerk.nl/html/download.htm">Elostat</a> by Frank Schubert builds tournament-statistics from a pgn-file</li>
+<li><a href="http://www.dirtychess.com/tools.php">Online Elo-Calculator</a> by <a href="/Pradu_Kannan">Pradu Kannan</a></li>
+<li><a href="https://sites.google.com/site/gaviotachessengine/ordo">Ordo</a> by <a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a></li>
+</ul>
+<h3 id="statistics">Statistics</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Statistics">Statistics from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Statistical_assumptions">Statistical assumption from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Statistical_inference">Statistical inference from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Probability_theory">Probability theory from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Probability">Probability from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Probability_density_function">Probability density function from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Likelihood_function">Likelihood function from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/P-value">p-value from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Misunderstandings_of_p-values">Misunderstandings of p-values from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Probability_distribution">Probability distribution from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Binomial_distribution">Binomial distribution from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Cumulative_distribution_function">Cumulative distribution function from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Multinomial_distribution">Multinomial distribution from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Multivariate_normal_distribution">Multivariate normal distribution from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Normal_distribution">Normal distribution from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Standard_deviation">Standard deviation from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Standard_error_%28statistics%29">Standard error from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Error_bar">Error bar from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Margin_of_error">Margin of error from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Confidence_interval">Confidence interval from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Null_hypothesis">Null hypothesis from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Alternative_hypothesis">Alternative hypothesis from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Two-tailed_test">Two-tailed test from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Type_I_and_type_II_errors">Type I and type II errors from Wikipedia</a></li>
+<li><a href="https://www.khanacademy.org/math/probability/statistics-inferential/hypothesis-testing/v/type-1-errors">Type 1 Errors | Hypothesis testing with one sample</a> | <a href="https://en.wikipedia.org/wiki/Khan_Academy">Khan Academy</a></li>
+</ul>
+<h3 id="hypothesis-testing">Hypothesis Testing</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Statistical_hypothesis_testing">Statistical hypothesis testing from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Likelihood-ratio_test">Likelihood-ratio test from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Score_test">Score test from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Wald_test">Wald test from Wikipedia</a></li>
+</ul>
+<h3 id="sequential-analysis">Sequential Analysis</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Sequential_analysis">Sequential analysis from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Sequential_probability_ratio_test">Sequential probability ratio test from Wikipedia</a></li>
+<li><a href="https://github.com/vdbergh/pentanomial">GitHub - vdbergh/pentanomial: SPRT for pentanomial frequencies and simulation tools</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a></li>
+<li><a href="https://github.com/vdbergh/simul">GitHub - vdbergh/simul: A multi-threaded pentanomial simulator</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a></li>
+</ul>
+<h3 id="data-visualization">Data Visualization</h3>
+<ul>
+<li><a href="https://blog.ebemunk.com/a-visual-look-at-2-million-chess-games/">A Visual Look at 2 Million Chess Games - Thinking Through the Party</a> by Buğra Fırat, March 02, 2016 <a href="#fn60" class="footnote-ref" id="fnref60" role="doc-noteref"><sup>60</sup></a></li>
+<li><a href="https://github.com/ebemunk/chess-dataviz">GitHub - ebemunk/chess-dataviz: chess visualization library written for d3.js</a> by Buğra Fırat » <a href="/JavaScript">JavaScript</a></li>
+<li><a href="https://github.com/ebemunk/pgnstats">GitHub - ebemunk/pgnstats: parses PGN files and extracts statistics for chess games</a> by Buğra Fırat » <a href="/Go_%28Programming_Language%29">Go (Programming Language)</a>, <a href="/Portable_Game_Notation">Portable Game Notation</a></li>
+</ul>
+<h3 id="misc">Misc</h3>
+<ul>
+<li><a href="/Category:Jeff_Beck">Jeff Beck</a>, <a href="/Category:Jan_Hammer">Jan Hammer</a>, <a href="https://en.wikipedia.org/wiki/Fernando_Saunders">Fernando Saunders</a>, <a href="/Category:Simon_Phillips">Simon Phillips</a> - <a href="https://en.wikipedia.org/wiki/Definitely_Maybe_%28disambiguation%29">Definitely Maybe</a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/ARMS_Charity_Concerts">ARMS Charity Concert</a>, <a href="https://en.wikipedia.org/wiki/Madison_Square_Garden">Madison Square Garden</a>, <a href="http://forums.ledzeppelin.com/index.php?/topic/394-arms-benefit-concerts-in-nyc-dec-1983/">December 08, 1983</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/IdVJw-b3HHE" title="YouTube video IdVJw-b3HHE" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=IdVJw-b3HHE">Watch on YouTube</a></p>
+<ul>
+<li><a href="/Category:Björk">Björk</a> - <a href="https://en.wikipedia.org/wiki/Possibly_Maybe">Possibly Maybe</a> (1996), <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/iyqKy5P1Y0Q" title="YouTube video iyqKy5P1Y0Q" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=iyqKy5P1Y0Q">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Engine_Testing">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://kirill-kryukov.com/chess/kcec/draw_rate.html">Kirr's Chess Engine Comparison KCEC - Draw rate</a> » <a href="/KCEC">KCEC</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=61784">Doubling of time control</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, October 21, 2016<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://fastgm.de/K93-Doubling-TC.pdf">K93-Doubling-TC.pdf</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=48733">Scaling at 2x nodes (or doubling time control)</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, July 23, 2013<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=64084&amp;start=5">Re: Likelihood Of Success (LOS) in the real world</a> by <a href="/Álvaro_Begué">Álvaro Begué</a>, <a href="/CCC">CCC</a>, May 26, 2017<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=51003&amp;start=5">Re: Calculating the LOS (likelihood of superiority) from results</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/CCC">CCC</a>, January 23, 2014<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=51003&amp;start=1">Re: Calculating the LOS (likelihood of superiority) from results</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, January 22, 2014<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=303382&amp;t=30624">Re: Likelihood of superiority</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/CCC">CCC</a>, November 15, 2009<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=303405&amp;t=30624">Re: Likelihood of superiority</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/CCC">CCC</a>, November 15, 2009<a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="https://en.wikipedia.org/wiki/Error_function">Error function from Wikipedia</a><a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="http://pubs.opengroup.org/onlinepubs/000095399/functions/erf.html">The Open Group Base Specifications Issue 6IEEE Std 1003.1, 2004 Edition: erf</a><a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="http://stackoverflow.com/questions/631629/erfx-and-math-h">erf(x) and math.h</a> by user76293, <a href="https://en.wikipedia.org/wiki/Stack_Overflow_%28website%29">Stack Overflow</a>, March 10, 2009<a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=51003&amp;start=2">Re: Calculating the LOS (likelihood of superiority) from results</a> by <a href="/Álvaro_Begué">Álvaro Begué</a>, <a href="/CCC">CCC</a>, January 22, 2014<a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=61105">Error margins via resampling (jackknifing)</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, August 12, 2016<a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn15"><p><a href="http://talkchess.com/forum/viewtopic.php?t=61245">Properties of unbalanced openings using Bayeselo model</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, August 27, 2016<a href="#fnref15" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn16"><p><a href="/Mathematician">Abraham Wald</a> (<strong>1945</strong>). <em>Sequential Tests of Statistical Hypotheses</em>. <a href="https://en.wikipedia.org/wiki/Annals_of_Mathematical_Statistics">Annals of Mathematical Statistics</a>, Vol. 16, No. 2, <a href="https://en.wikipedia.org/wiki/Digital_object_identifier">doi</a>: <a href="http://projecteuclid.org/euclid.aoms/1177731118">10.1214/aoms/1177731118</a><a href="#fnref16" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn17"><p><a href="https://en.wikipedia.org/wiki/Sequential_probability_ratio_test">Sequential probability ratio test from Wikipedia</a><a href="#fnref17" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn18"><p><a href="/Arthur_Guez">Arthur Guez</a> (<strong>2015</strong>). <em>Sample-based Search Methods for Bayes-Adaptive Planning</em>. Ph.D. thesis, Gatsby Computational Neuroscience Unit, <a href="https://en.wikipedia.org/wiki/University_College_London">University College London</a>, <a href="http://www.gatsby.ucl.ac.uk/~aguez/files/guez_phdthesis2015.pdf">pdf</a><a href="#fnref18" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn19"><p><a href="/Jack_Good">Jack Good</a> (<strong>1979</strong>). <em><a href="https://www.jstor.org/stable/2335677">Studies in the history of probability and statistics. XXXVII AM Turing’s statistical work in World War II</a></em>. <a href="https://en.wikipedia.org/wiki/Biometrika">Biometrika</a>, Vol. 66, No. 2<a href="#fnref19" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn20"><p><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2477">How (not) to use SPRT ?</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, October 19, 2013<a href="#fnref20" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn21"><p><a href="http://talkchess.com/forum/viewtopic.php?t=57465&amp;start=19">Re: The SPRT without draw model, elo model or whatever..</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, <a href="/CCC">CCC</a>, August 18, 2016<a href="#fnref21" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn22"><p><a href="http://hardy.uhasselt.be/Toga/GSPRT_approximation.pdf">GSPRT approximation</a> (pdf) by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a><a href="#fnref22" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn23"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72962&amp;start=6">Re: Stockfish Reverts 5 Recent Patches</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, <a href="/CCC">CCC</a>, February 02, 2020<a href="#fnref23" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn24"><p><a href="https://github.com/vdbergh/pentanomial">GitHub - vdbergh/pentanomial: SPRT for pentanomial frequencies and simulation tools</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a><a href="#fnref24" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn25"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72962&amp;start=7">Re: Stockfish Reverts 5 Recent Patches</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, <a href="/CCC">CCC</a>, February 02, 2020<a href="#fnref25" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn26"><p><a href="https://github.com/vdbergh/simul">GitHub - vdbergh/simul: A multi-threaded pentanomial simulator</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a><a href="#fnref26" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn27"><p><a href="https://en.wikipedia.org/wiki/Law_of_comparative_judgment">Law of comparative judgment - Wikipedia</a><a href="#fnref27" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn28"><p><a href="http://www.anusha.com/elosbook.htm">Elo's Book: The Rating of Chess Players</a> by <a href="/Sam_Sloan">Sam Sloan</a><a href="#fnref28" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn29"><p><a href="https://en.wikipedia.org/wiki/The_Master_Game">The Master Game from Wikipedia</a><a href="#fnref29" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn30"><p><a href="http://remi.coulom.free.fr/Bayesian-Elo/MMNotes.pdf">Handwritten Notes on the 2004 David R. Hunter Paper 'MM Algorithms for Generalized Bradley-Terry Models'</a> by <a href="/Rémi_Coulom">Rémi Coulom</a><a href="#fnref30" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn31"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=44715">Derivation of bayeselo formula</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/CCC">CCC</a>, August 07, 2012<a href="#fnref31" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn32"><p><a href="https://en.wikipedia.org/wiki/Mm_algorithm">Mm algorithm from Wikipedia</a><a href="#fnref32" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn33"><p><a href="https://en.wikipedia.org/wiki/Pairwise_comparison">Pairwise comparison from Wikipedia</a><a href="#fnref33" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn34"><p><a href="https://en.wikipedia.org/wiki/Bayesian_inference">Bayesian inference from Wikipedia</a><a href="#fnref34" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn35"><p><a href="https://blog.kaggle.com/2010/11/30/how-i-did-it-diogo-ferreira-on-4th-place-in-elo-chess-ratings-competition/">How I did it: Diogo Ferreira on 4th place in Elo chess ratings competition | no free hunch</a><a href="#fnref35" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn36"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=65772">"Intrinsic Chess Ratings" by Regan, Haworth -- seq</a> by Kai Middleton, <a href="/CCC">CCC</a>, November 19, 2017<a href="#fnref36" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn37"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=471004&amp;t=44180">Re: EloStat, Bayeselo and Ordo</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/CCC">CCC</a>, June 25, 2012<a href="#fnref37" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn38"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72087&amp;start=3">Re: Understanding and Pushing the Limits of the Elo Rating Algorithm</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, October 15, 2019<a href="#fnref38" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn39"><p><a href="https://www.hiarcs.net/forums/viewtopic.php?t=10004">Ply versus ELO</a> by Greg, <a href="/Computer_Chess_Forums">HIARCS Forum</a>, May 30, 2020 » <a href="/Diogo_R._Ferreira">Diogo R. Ferreira - Impact of the Search Depth ...</a><a href="#fnref39" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn40"><p><a href="https://sites.google.com/site/gaviotachessengine/ordo">Ordo</a> by <a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a><a href="#fnref40" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn41"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=38772">Pairwise Analysis of Chess Engine Move Selections</a> by <a href="/Adam_Hair">Adam Hair</a>, <a href="/CCC">CCC</a>, April 17, 2011<a href="#fnref41" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn42"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=54571">Questions regarding rating systems of humans and engines</a> by Erik Varend, <a href="/CCC">CCC</a>, December 06, 2014<a href="#fnref42" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn43"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=60721">chess statistics scientific article</a> by Nuno Sousa, <a href="/CCC">CCC</a>, July 06, 2016<a href="#fnref43" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn44"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72087">Understanding and Pushing the Limits of the Elo Rating Algorithm</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, <a href="/CCC">CCC</a>, October 15, 2019<a href="#fnref44" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn45"><p><a href="http://www.husvankempen.de/nunn/rating/tablejoseph.htm">LOS Table</a> by Joseph Ciarrochi from <a href="/CEGT">CEGT</a><a href="#fnref45" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn46"><p><a href="http://en.chessbase.com/post/arpad-elo-and-the-elo-rating-system">Arpad Elo and the Elo Rating System</a> by Dan Ross, <a href="/ChessBase">ChessBase News</a>, December 16, 2007<a href="#fnref46" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn47"><p><a href="/Mathematician">David R. Hunter</a> (<strong>2004</strong>). <em>MM Algorithms for Generalized Bradley-Terry Models</em>. <a href="https://en.wikipedia.org/wiki/Annals_of_Statistics">The Annals of Statistics</a>, Vol. 32, No. 1, 384–406, <a href="http://sites.stat.psu.edu/~dhunter/papers/bt.pdf">pdf</a><a href="#fnref47" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn48"><p><a href="https://en.wikipedia.org/wiki/Type_I_and_type_II_errors">Type I and type II errors from Wikipedia</a><a href="#fnref48" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn49"><p><a href="https://en.wikipedia.org/wiki/Arpad_Elo">Arpad Elo - Wikipedia</a><a href="#fnref49" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn50"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=57890">Regan's latest: Depth of Satisficing</a> by Carl Lumma, <a href="/CCC">CCC</a>, October 09, 2015<a href="#fnref50" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn51"><p><a href="https://en.wikipedia.org/wiki/Resampling_(statistics)">Resampling (statistics) from Wikipedia</a><a href="#fnref51" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn52"><p><a href="https://en.wikipedia.org/wiki/Jackknife_resampling">Jackknife resampling from WIkipedia</a><a href="#fnref52" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn53"><p><a href="http://tcec.chessdom.com/archive.php?se=9&amp;rapid&amp;ga=163">Delphil 3.3b2 (2334) - Stockfish 030916 (3228), TCEC Season 9 - Rapid, Round 11</a>, September 16, 2016<a href="#fnref53" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn54"><p><a href="https://en.wikipedia.org/wiki/World_Chess_Championship_2016">World Chess Championship 2016 from Wikipedia</a><a href="#fnref54" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn55"><p><a href="http://hardy.uhasselt.be/Toga/normalized_elo.pdf">Normalized Elo</a> (pdf) by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a><a href="#fnref55" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn56"><p><a href="https://en.wikipedia.org/wiki/Elo_rating_system#Most_accurate_K-factor">Most accurate K-factor - Elo rating system from Wikipedia</a><a href="#fnref56" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn57"><p><a href="https://ratings.fide.com/calculator_rtd.phtml">FIDE Chess Rating calculators: Chess Rating change calculator</a><a href="#fnref57" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn58"><p><a href="https://www.stmintz.com/ccc/index.php?id=484357">table for detecting significant difference between two engines</a> by Joseph Ciarrochi, <a href="/CCC">CCC</a>, February 03, 2006<a href="#fnref58" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn59"><p><a href="http://www.hiarcs.net/forums/viewtopic.php?t=8526">an interesting study from Erik Varend</a> by scandien, <a href="/Computer_Chess_Forums">Hiarcs Forum</a>, August 13, 2017<a href="#fnref59" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn60"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=65610">A Visual Look at 2 Million Chess Games</a> by Brahim Hamadicharef, <a href="/CCC">CCC</a>, November 02, 2017<a href="#fnref60" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Jeff_Beck">Jeff Beck</a> · <a href="/Category:Jan_Hammer">Jan Hammer</a> · <a href="/Category:Simon_Phillips">Simon Phillips</a> · <a href="/Category:Björk">Björk</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Match_Statistics">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

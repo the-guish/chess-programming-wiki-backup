@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Obstruction Difference - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Obstruction Difference</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * <a href="/Sliding_Piece_Attacks">Sliding Piece Attacks</a> * Obstruction Difference</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="http://www.imj.org.il/en/collections/194569?itemNum=194569" target="_blank" rel="noopener noreferrer"><img src="/assets/ManRayObstruction.jpg" alt="Man Ray - Obstruction, 1947 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Man_Ray">Man Ray</a> - Obstruction, 1947 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://www.imj.org.il/en/collections/194569?itemNum=194569">Man Ray - Obstruction, 1947</a>, <a href="https://en.wikipedia.org/wiki/Israel_Museum">The Israel Museum</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Obstruction Difference</strong>,<br />
+a subtraction approach to determine sliding piece attacks with bitboards, proposed by <a href="/Michael_Hoffmann">Michael Hoffmann</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. The idea is to get disjoint <a href="/On_an_empty_Board">positive</a> and <a href="/On_an_empty_Board">negative ray masks</a> of the <a href="/Occupancy">occupancy</a>, and to subtract the <a href="/General_Setwise_Operations">most significant one bit</a> of the negative ray from the doubled <a href="/General_Setwise_Operations">least significant one bit</a> (LS1B) of the positive ray. The difference is finally intersected with the linemask, excluding the <a href="/Sliding_Pieces">sliding piece</a> itself from the attack set. However, in 2022, Daniel Infuehr found a faster solution to calculate the obstruction difference: subtract the most significant one bit of the negative ray from the the positive ray obstruction, followed by the <a href="/General_Setwise_Operations">symmetric difference</a> to flip all positive ray obstruction bits for the proper result <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#empty-sets">Empty Sets</a></li>
+<li><a href="#isolation">Isolation</a></li>
+<li><a href="#c-code">C Code</a></li>
+<li><a href="#java">Java</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="empty-sets">Empty Sets</h2>
+<p>If there is no obstruction inside the positive ray, we simply subtract from zero, aka borrow from the hidden 2^64 bit, same if doubling results in an empty set. If there is no obstruction inside the negative ray, we need at least to subtract one. With neither blocker available, the difference is the universal set -1 (~0), and we end up with the linemask, excluding the sliding piece, which are all <a href="/On_an_empty_Board">attacks on the otherwise empty board</a>. Therefor, to subtract at least '1', oring '1' is required if the negative ray occupancy is empty. Since setting the least significant bit does not affect any MS1B extraction, it can be done unconditionally on the negative ray.</p>
+<h2 id="isolation">Isolation</h2>
+<p>While <a href="/General_Setwise_Operations">isolation of the LS1B</a> is the intersection of a bitboard with its <a href="/General_Setwise_Operations">two's complement</a>, the <a href="/General_Setwise_Operations">MS1B</a> is not that simple to extract, and requires a fast 64-bit <a href="/BitScan">BitScanReverse</a>, f.i. <a href="/X86-64">x86-64</a> <a href="/X86-64">bsr</a> with throughput in the <a href="/BitScan">one cycle range</a>, as with <a href="/Intel">Intel's</a> <a href="https://en.wikipedia.org/wiki/Intel_Core_2">Core 2</a> or <a href="https://en.wikipedia.org/wiki/Nehalem_%28microarchitecture%29">Nehalem architecture</a>, or <a href="/BitScan">Leading Zero Count</a>, f.i. <a href="/X86-64">x86-64</a> <a href="/X86-64">lzcnt</a> on <a href="/AMD">AMD</a> <a href="https://en.wikipedia.org/wiki/AMD_K10">K10</a> or <a href="/Intel">Intel</a> Nehalem CPUs.</p>
+<h2 id="c-code">C Code</h2>
+<p>The routine works for all lines, <a href="/Ranks">ranks</a>, <a href="/Files">files</a>, <a href="/Diagonals">diagonals</a> and <a href="/Anti-Diagonals">anti-diagonals</a> by applying appropriate line-masks, and could therefor used as a generalized routine with a line-direction parameter, or in <a href="/C">C</a> even passing a pointer to a structure with three (or multiples for several lines in parallel) bitboards per square and line, upper- and lower rays and the union of both.</p>
+<table>
+<tbody>
+<tr>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6" style="--wiki-img-w:220px"><a href="/Square_Mapping_Considerations"><img src="/assets/Cpwmappinghint.JPG" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></a></span></td>
+<td><p><em>Code samples and bitboard diagrams rely on <a href="/Square_Mapping_Considerations">Little endian file and rank mapping</a></em>.</p></td>
+</tr>
+</tbody>
+</table>
+
+<pre><code>/*
+ * @author Michael Hoffmann, Daniel Infuehr
+ * @param  U64 occ occupancy of the board
+ * @param  SMasks* a mask structure by square and line
+ * @return line attacks from that square
+ */
+U64 lineAttacks(U64 occ, const SMasks *pMask) {
+   U64 lower, upper, ms1B, odiff;
+   lower = pMask-&gt;lower &amp; occ;
+   upper = pMask-&gt;upper &amp; occ;
+   ms1B = C64(0x8000000000000000) &gt;&gt; lzcnt(lower | 1); // ms1b of lower (at least bit zero)
+   // ls1b  = upper &amp; -upper;
+   // odiff = 2 * ls1b - ms1B; 
+   odiff = upper ^ (upper - ms1B); // Daniel Infuehr&#39;s improvement
+   return pMask-&gt;lineEx &amp; odiff; // (pMask-&gt;lower | pMask-&gt;upper) &amp; odiff;
+}</code></pre>
+<p>To use it that way:</p>
+<pre><code>struct SMasks
+{
+   U64 lower;
+   U64 upper;
+   U64 lineEx; // lower | upper
+} masks[64][4]; // 6 (4) KByte, needs initialization
+
+U64 rookAttacks(U64 occ, enumSquare sq) {
+   return lineAttacks(occ, masks[sq] + 0) | lineAttacks(occ, masks[sq] + 1);
+}
+U64 bishopAttacks(U64 occ, enumSquare sq) {
+   return lineAttacks(occ, masks[sq] + 2) | lineAttacks(occ, masks[sq] + 3);
+}</code></pre>
+<p>The routine looks competitive for CPUs with fast <a href="/X86-64">lzcnt</a> but has problems on processors with slow bitScan or 32-bit processors. Register usage is moderate and should suffice all x88-64 scratch registers for two lines.</p>
+<h2 id="java">Java</h2>
+<p><a href="/Java">Java</a> programmers may rely on <a href="http://java.sun.com/j2se/1.5.0/docs/api/java/lang/Long.html#numberOfLeadingZeros%28long%29">Long.numberOfLeadingZeros</a>, where the 64-bit <a href="https://en.wikipedia.org/wiki/Java_virtual_machine">JVM</a> may use appropriate machine instructions.</p>
+<pre><code>/*
+ * @author Michael Hoffmann, Daniel Infuehr
+ * @param  long occ occupancy of the board
+ * @param  int sq  0..63
+ * @param  int line  0..3 for rank, file, dia, antidia
+ * @return line attacks from that square
+ */
+long lineAttacks(long occ, int sq, int line) {
+   long lower = longMasks[sq][line][0] &amp; occ;
+   long upper = longMasks[sq][line][1] &amp; occ;
+   long mMs1b = 0x8000000000000000 &gt;&gt;&gt; Long.numberOfLeadingZeros (lower | 1);
+   long odiff = upper ^ (upper - mMs1b);
+   return longMasks[sq][line][2] &amp; odiff;
+}</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/SBAMG">SBAMG</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=29087">DIRECT BITBOARD MOVEGENERATION</a> by <a href="/Michael_Hoffmann">Michael Hoffmann</a>, <a href="/CCC">CCC</a>, July 23, 2009</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79701&amp;start=2">Re: Sliding Piece Algorithm by Abstract Syntax Tree Sifting [RELEASE]</a> by Daniel Infuehr, <a href="/CCC">CCC</a>, April 17, 2022</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79078&amp;start=56">Re: Comparison of all known Sliding lookup algorithms [CUDA]</a> by Daniel Infuehr, <a href="/CCC">CCC</a>, April 24, 2022</li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Sliding_Piece_Attacks">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=29087">DIRECT BITBOARD MOVEGENERATION</a> by <a href="/Michael_Hoffmann">Michael Hoffmann</a>, <a href="/CCC">CCC</a>, July 23, 2009<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79701&amp;start=2">Re: Sliding Piece Algorithm by Abstract Syntax Tree Sifting [RELEASE]</a> by Daniel Infuehr, <a href="/CCC">CCC</a>, April 17, 2022<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Man_Ray">Man Ray</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Obstruction_Difference">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

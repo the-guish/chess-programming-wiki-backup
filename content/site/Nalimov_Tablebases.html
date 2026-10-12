@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nalimov Tablebases - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Nalimov Tablebases</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Knowledge">Knowledge</a> * <a href="/Endgame_Tablebases">Endgame Tablebases</a> * Nalimov Tablebases</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Huffman_tree_2.svg" alt="Huffman tree 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Huffman tree <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1">Huffman tree generated from the exact frequencies of the text "this is an example of a huffman tree". The frequencies and codes of each character are below. Encoding the sentence with this code requires 135 bits, as opposed to 288 bits if 36 characters of 8 bits were used, <a href="https://en.wikipedia.org/wiki/Huffman_coding">Huffman coding from Wikipedia</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Nalimov Tablebases</strong>,<br />
+are <strong>3</strong>-to-<strong>6</strong>-man endgame tablebases developed by <a href="/Eugene_Nalimov">Eugene Nalimov</a>, providing <a href="/Endgame_Tablebases">depth to mate</a> information. First published for up to <strong>5</strong>-man in late 1998, <strong>6</strong>-man files were released subsequently over the years and <strong>6</strong>-man chess was finally solved in 2005 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. Nalimov Tablebases apply a more efficient indexing scheme than previous tablebases, and were further <a href="https://en.wikipedia.org/wiki/Data_compression">compressed</a> into 8 KiB blocks exploiting <a href="https://en.wikipedia.org/wiki/Subsequence#Common_subsequence">common subsequences</a> and <a href="https://en.wikipedia.org/wiki/Huffman_coding">Huffman coding</a> as contributed by <a href="/Andrew_Kadatch">Andrew Kadatch</a>, doing less <a href="https://en.wikipedia.org/wiki/Input/output">file I/O</a> which gets replaced by fast on-the-fly decompression <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>. This allows fast probing not only at the <a href="/Root">root</a>, but during the <a href="/Search">search</a> inside the <a href="/Search_Tree">tree</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>, further utilized by an own <a href="https://en.wikipedia.org/wiki/Cache_algorithms#LRU">LRU cache</a> despite keeping TB files in the <a href="https://en.wikipedia.org/wiki/Page_cache">page cache</a> by the <a href="https://en.wikipedia.org/wiki/Operating_system">operating system</a>. For endgames with pawns of both sides, the TBs consider <a href="/En_passant">en passant</a> with disjoint index ranges <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#file-sizes">File Sizes</a></li>
+<li><a href="#savings">Savings</a></li>
+<li><a href="#license">License</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1998-">1998 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#general">General</a></li>
+<li><a href="#online-lookup">Online Lookup</a></li>
+<li><a href="#download">Download</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="file-sizes">File Sizes</h2>
+<p>5-man Nalimov Tablebases are about two times smaller than Edwards' Tablebases when uncompressed, and about eight times smaller than Edwards' when compressed <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>.</p>
+<table>
+<thead>
+<tr>
+<th><p>Men</p></th>
+<th colspan="2"><p>Sum of File sizes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>3</p></td>
+<td style="text-align:center;"><p>62</p></td>
+<td><p>KiB</p></td>
+</tr>
+<tr>
+<td><p>4</p></td>
+<td style="text-align:center;"><p>30</p></td>
+<td><p>MiB</p></td>
+</tr>
+<tr>
+<td><p>5</p></td>
+<td style="text-align:center;"><p>7.1</p></td>
+<td><p>GiB</p></td>
+</tr>
+<tr>
+<td><p>6</p></td>
+<td style="text-align:center;"><p>1.2</p></td>
+<td><p>TiB</p></td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="savings">Savings</h2>
+<p>In <a href="/CCC">CCC</a>, <a href="/Eugene_Nalimov">Eugene Nalimov</a> gave a brief summary, how to realize the space savings <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> :</p>
+<table>
+<tbody>
+<tr>
+<td><ol>
+<li>For pawnless ending, one can restrict one piece to a1-d1-d4 triangle (that was done in <a href="/Steven_Edwards">SJE's</a> generator). But if that piece happens to be on a1-d4 diagonal, one can restrict other piece to 'large' a1-h1-h8 triangle (exploit one more symmetry).</li>
+<li>When one places a second piece on the board, one square is occupied already, so there are only 63 possible squares, for third - only 62, etc.</li>
+<li>If there are two identical pieces (e.g. as in knnkp), one can order their locations - e.g. force second piece to occupy square with smaller number. Then one has not N*(N-1) total combinations, but N*(N-1)/2</li>
+<li>Pawns occupy ranks 2-7. Even if one wants to handle en passant, there are better ways to do that than to reserve entire rank (or two) for possible en passant target</li>
+<li>Kings never can be near each other, so there are only 3612 ways to place 2 kings on the empty board (not using symmetries), versus 4096 when using SJE's format</li>
+<li>One cannot capture enemy's king, so, if one knows where it's located, there are some forbidden squares for the pieces of the side-to-move.</li>
+</ol></td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="license">License</h2>
+<p>In the late 90s Nalimov Tablebases became defacto standard and were used in many <a href="/Category:Commercial">commercial</a>, <a href="/Category:Private">private</a> and free chess engines and <a href="/GUI">GUI's</a>. A reference implementation by Eugene Nalimov and <a href="/Robert_Hyatt">Robert Hyatt</a> was realized in <a href="/Crafty">Crafty</a>, with Tablebases and probing code previously available from Bob Hyatt's site <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>. Probing could easily incorporated into own chess engines, however the license policy requires explicit permission by Eugene Nalimov <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a>.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Endgame_Bitbases">Bitbases</a></li>
+<li>Edwards' Tablebases</li>
+<li><a href="/Gaviota_Tablebases">Gaviota Tablebases</a></li>
+<li><a href="/Felicity_Tablebases">Felicity Tablebases</a></li>
+<li><a href="/Lomonosov_Tablebases">Lomonosov Tablebases</a></li>
+<li><a href="/Scorpio_Bitbases">Scorpio Bitbases</a></li>
+<li><a href="/Syzygy_Bases">Syzygy Bases</a></li>
+<li>Thompson's Databases</li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Eugene_Nalimov">Eugene Nalimov</a>, <a href="/Guy_Haworth">Guy Haworth</a>, <a href="/Ernst_A._Heinz">Ernst A. Heinz</a> (<strong>2000</strong>). <em><a href="http://centaur.reading.ac.uk/4562/">Space-Efficient Indexing of Chess Endgame Tables</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 23, No. 3</a>, <a href="http://supertech.lcs.mit.edu/%7Eheinz/ps/NHH_ICGA.ps.gz">postscript</a></li>
+<li><a href="/Eugene_Nalimov">Eugene Nalimov</a>, <a href="/Guy_Haworth">Guy Haworth</a>, <a href="/Ernst_A._Heinz">Ernst A. Heinz</a> (<strong>2001</strong>). <em><a href="http://centaur.reading.ac.uk/4563/">Space-efficient Indexing of Endgame Tables for Chess</a></em>. <a href="/Advances_in_Computer_Games_9">Advances in Computer Games 9</a></li>
+<li><a href="/Guy_Haworth">Guy Haworth</a>, <a href="/Peter_Karrer">Peter Karrer</a>, <a href="/John_Tamplin">John Tamplin</a>, <a href="/Christoph_Wirth">Christoph Wirth</a> (<strong>2001</strong>). <em><a href="http://centaur.reading.ac.uk/4581/">3-5-man chess: Maximals and mzugs</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 24, No. 4</a></li>
+<li><a href="/Eugene_Nalimov">Eugène Nalimov</a> (<strong>2002</strong>). <em>Chess Endgame Tablebases</em>. <a href="/Eugene_Nalimov">Invited Lecture</a>, <a href="/7th_Computer_Olympiad">7th Computer Olympiad Workshop</a></li>
+<li><a href="/Guy_Haworth">Guy Haworth</a> (<strong>2005</strong>). <em><a href="http://centaur.reading.ac.uk/4522/">6-Man Chess Solved</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 28, No. 3</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1998-">1998 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=25540">Tablebases</a> by <a href="/Eugene_Nalimov">Eugene Nalimov</a>, <a href="/CCC">CCC</a>, August 28, 1998</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/13dce097a251e2a4#">Program for new TB by Dr. Eugene Nalimov ?</a> by Michael Diosi, <a href="/Computer_Chess_Forums">rgcc</a>, November 6, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=33325">Nalimov's TBs: one question</a> by <a href="/Jouni_Uski">Jouni Uski</a>, <a href="/CCC">CCC</a>, November 18, 1998</li>
+</ul>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=33351">Re: Nalimov's TBs: one question</a> by <a href="/Eugene_Nalimov">Eugene Nalimov</a>, <a href="/CCC">CCC</a>, November 18, 1998</p>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=63581">Q: Nalimov EGTB?</a> by <a href="/Dennis_Breuker">Dennis Breuker</a>, <a href="/CCC">CCC</a>, August 05, 1999</li>
+</ul>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=63619">Re: Q: Nalimov EGTB?</a> by <a href="/Eugene_Nalimov">Eugene Nalimov</a>, <a href="/CCC">CCC</a>, August 05, 1999</p>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=63720">Nalimov TB caching ?</a> by <a href="/Ulrich_Türke">Ulrich Türke</a> from <a href="/CCC">CCC</a>, August 06, 1999</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=67203">EGTBs</a> by <a href="/Frank_Phillips">Frank Phillips</a>, <a href="/CCC">CCC</a>, September 03, 1999</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=81835">difference betrween nalimov and thompson EGTB</a> by Rajen Gupta, <a href="/CCC">CCC</a>, December 10, 1999</li>
+</ul>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=81932">Re: difference betrween nalimov and thompson EGTB</a> by <a href="/Frederic_Friedel">Frederic Friedel</a>, <a href="/CCC">CCC</a>, December 11, 1999</p>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=90672">Nalimov-EGTBs in ANSI-C?</a> by <a href="/Heiner_Marxen">Heiner Marxen</a>, <a href="/CCC">CCC</a>, January 21, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=142991">Usage of egtb.cpp in GPL software (Amy, ExChess, ...)</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, <a href="/CCC">CCC</a>, December 05, 2000 » <a href="/Amy">Amy</a>, <a href="/EXchess">EXchess</a></li>
+</ul>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=143013">Re: Usage of egtb.cpp in GPL software (Amy, ExChess, ...)</a> by <a href="/Eugene_Nalimov">Eugene Nalimov</a>, <a href="/CCC">CCC</a>, December 05, 2000</p>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=155187">Nalimov endgames</a> by <a href="/Jean-Christophe_Weill">Jean-Christophe Weill</a>, <a href="/CCC">CCC</a>, February 20, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=192968">Nalimov's EGTBs (long post with code)</a> by <a href="/Heiner_Marxen">Heiner Marxen</a>, <a href="/CCC">CCC</a>, October 13, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=196952">Nalimov TB question</a> by <a href="/Bas_Hamstra">Bas Hamstra</a>, <a href="/CCC">CCC</a>, November 11, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=270531">Questions about the new Nalimov tablebase files...</a> by <a href="/Dann_Corbit">Dann Corbit</a>, <a href="/CCC">CCC</a>, December 12, 2002</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/dc2f8a69e0deaded#">Compressed Nalimov EGTBs</a> by Leonardo Ljubicic, <a href="/Computer_Chess_Forums">rgcc</a>, November 18, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=364329">Bug/glitch in Nalimov Code (and in Wilhelm)?</a> by <a href="/Dieter_Bürßner">Dieter Bürßner</a>, <a href="/CCC">CCC</a>, May 09, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=369041">To Eugene Nalimov: Copyright of Tablebase files</a> by <a href="/Karl-Heinz_Milaster">Karl-Heinz Milaster</a>, <a href="/CCC">CCC</a>, June 05, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=369294">Are nalimov EGTB's a copyright from chessbase?</a> by <a href="/Vincent_Diepeveen">Vincent Diepeveen</a>, <a href="/CCC">CCC</a>, June 07, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=393219">Enpassant in Nalimov</a> by Henry Hongdoyo, <a href="/CCC">CCC</a>, October 25, 2004</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=407134">Subject: Problem (small bug?) with Nalimov TBs</a> by <a href="/Dieter_Bürßner">Dieter Bürßner</a>, <a href="/CCC">CCC</a>, January 23, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=442822">To sumarize this</a> by <a href="/Thomas_Mayer">Thomas Mayer</a>, <a href="/CCC">CCC</a>, August 17, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=470947">For Eugene Nalimov: EGTB Request</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/CCC">CCC</a>, December 16, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=488972">smp and nalimov egtb, how to make it work?</a> by <a href="/Volker_Böhm">Volker Böhm</a>, <a href="/CCC">CCC</a>, February 23, 2006</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=489022">Chessbase releases 9 dvds on Nalimov 6-piece database 43 gb</a> by Daneil Johnson, <a href="/CCC">CCC</a>, February 23, 2006</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=19">Nalimov access</a> with <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, January 9, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=14841">Nalimov Tablebases</a> by Terry Giles, <a href="/CCC">CCC</a>, July 02, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=24476">Nalimov EGTB</a> by cyberfish, <a href="/CCC">CCC</a>, October 19, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=29745">6-men (64 bit) Nalimov EGTB generator</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, <a href="/CCC">CCC</a>, September 13, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=31112">Nalimov EGTB probes skeleton code</a> by Joshua Shriver, <a href="/CCC">CCC</a>, December 17, 2009</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=32987">Nalimov and memory for indexes (are you aware?)</a> by <a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a>, <a href="/CCC">CCC</a>, March 01, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=33726">Question for Nalimov experts</a> by <a href="/Mincho_Georgiev">Mincho Georgiev</a>, <a href="/CCC">CCC</a>, April 10, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=36886">Gaviota EGTB in Houdini 1.5 + contacting Eugene Nalimov</a> by <a href="/Robert_Houdart">Robert Houdart</a>, <a href="/CCC">CCC</a>, December 01, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46857">Nalimov 6 men ...</a> by Michael Diosi, <a href="/CCC">CCC</a>, January 12, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48084">Nalimov</a> by Sune Larsson, <a href="/CCC">CCC</a>, May 22, 2013</li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59237">Nalimov EGTB problem related to DTM?</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, February 14, 2016 » <a href="/Endgame_Tablebases">DTM</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=59237&amp;start=7">Re: Nalimov EGTB problem related to DTM?</a> by <a href="/Ronald_de_Man">Ronald de Man</a>, <a href="/CCC">CCC</a>, February 14, 2016</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60195">Nalimov egtb probing code</a> by <a href="/Fabio_Gobbato">Fabio Gobbato</a>, <a href="/CCC">CCC</a>, May 16, 2016</li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77091">Nalimov errors</a> by Jonathan Colledge, <a href="/CCC">CCC</a>, April 15, 2021</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<h3 id="general">General</h3>
+<ul>
+<li><a href="https://web.archive.org/web/20141116144151/http://www.ajedrez-de-estilo.com.ar/int/Products/engines/tb/">Tablebases</a> by <a href="/Eugene_Nalimov">Eugene Nalimov</a> (<a href="https://en.wikipedia.org/wiki/Wayback_Machine">Wayback Machine</a>)</li>
+<li><a href="https://web.archive.org/web/20131015101139/http://www.playwitharena.com/?User_Files%2C_Engines:Axon%2C_EloStat%2C_Nalimov:Nalimov_Tablebases">Nalimov Tablebases</a> from <a href="/Arena">Arena Chess GUI</a> (<a href="https://en.wikipedia.org/wiki/Wayback_Machine">Wayback Machine</a>)</li>
+<li><a href="http://archive.today/HFYs">Eugene Nalimov: Winner of the ChessBase Award and Guest of Honor in Maastricht</a> by <a href="/Eric_van_Reem">Eric van Reem</a>, <a href="/ChessBase">ChessBase</a> events, July 9, 2002 (archived)</li>
+<li><a href="https://ulthiel.com/math/other/endgames/">Theoretical statistics for chess endgames with up to five pieces</a> by <a href="/Mathematician">Ulrich Thiel</a></li>
+<li><a href="http://en.chessbase.com/post/engines-and-endgame-tablebases">Engines and endgame tablebases</a> by <a href="/Albert_Silver">Albert Silver</a>, <a href="/ChessBase">ChessBase News</a>, December 12, 2013</li>
+</ul>
+<h3 id="online-lookup">Online Lookup</h3>
+<ul>
+<li><a href="http://chessok.com/?page_id=361">Endgame Nalimov Tablebases Online</a> - <a href="/ChessOK">ChessOK</a></li>
+<li><a href="http://www.gmchess.com/endgames/">Nalimov EGTB</a> from <a href="http://www.gmchess.com/index.html">GMchess.com</a></li>
+<li><a href="http://www.lokasoft.nl/tbweb.htm">Nalimov Tablebase server (DTM)</a> by <a href="/Lokasoft">Lokasoft</a></li>
+<li><a href="http://www.k4it.de/index.php?lang=en&amp;topic=egtb">Web Query for Nalimov Endgame Tablebases</a> from <a href="http://www.k4it.de/index.php?topic=impressum&amp;lang=en">Knowledge4IT</a> by <a href="/Eiko_Bleicher">Eiko Bleicher</a></li>
+</ul>
+<h3 id="download">Download</h3>
+<ul>
+<li><a href="http://kirill-kryukov.com/chess/tablebases-online/">Endgame Tablebases Online - 6-men endgame analysis free for everyone</a> by <a href="/Kirill_Kryukov">Kirill Kryukov</a> (3,4,5,6 pieces - via <a href="https://en.wikipedia.org/wiki/EMule">emule</a>)</li>
+<li><a href="http://tablebase.sesse.net/">tablebase.sesse.net</a> by <a href="/Steinar_H._Gunderson">Sesse</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Endgame_Tablebases">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Guy_Haworth">Guy Haworth</a> (<strong>2005</strong>). <em><a href="http://centaur.reading.ac.uk/4522/">6-Man Chess Solved</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 28, No. 3</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://groups.google.com/d/msg/rec.games.chess.computer/3C-KaeDere0/Bru6UFlOO4QJ">Re: Compressed Nalimov EGTBs</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Computer_Chess_Forums">rgcc</a>, November 18, 2003<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://www.stmintz.com/ccc/index.php?id=63619">Re: Q: Nalimov EGTB?</a> by <a href="/Eugene_Nalimov">Eugene Nalimov</a>, <a href="/CCC">CCC</a>, August 05, 1999<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="/Eugene_Nalimov">Eugene Nalimov</a>, <a href="/Guy_Haworth">Guy Haworth</a>, <a href="/Ernst_A._Heinz">Ernst A. Heinz</a> (<strong>2001</strong>). <em><a href="http://centaur.reading.ac.uk/4563/">Space-efficient Indexing of Endgame Tables for Chess</a></em>. <a href="/Advances_in_Computer_Games_9">Advances in Computer Games 9</a>, chapter 3. Nalimov’s Index Scheme<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="https://www.stmintz.com/ccc/index.php?id=63619">Re: Q: Nalimov EGTB?</a> by <a href="/Eugene_Nalimov">Eugene Nalimov</a>, <a href="/CCC">CCC</a>, August 05, 1999<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="https://www.stmintz.com/ccc/index.php?id=33351">Re: Nalimov's TBs: one question</a> by <a href="/Eugene_Nalimov">Eugene Nalimov</a>, <a href="/CCC">CCC</a>, November 18, 1998<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="https://web.archive.org/web/20131102025806/http://www.cis.uab.edu/hyatt/crafty/TB/">Index of /hyatt/crafty/TB</a> hosted by <a href="/Robert_Hyatt">Robert Hyatt</a> (<a href="https://en.wikipedia.org/wiki/Wayback_Machine">Wayback Machine</a>)<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="https://www.stmintz.com/ccc/index.php?id=442822">To sumarize this</a> by <a href="/Thomas_Mayer">Thomas Mayer</a>, <a href="/CCC">CCC</a>, August 17, 2005<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Nalimov_Tablebases">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, Phhnguyen.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

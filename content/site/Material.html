@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Material - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Material</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Evaluation">Evaluation</a> * Material</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="http://www.elke-rehder.de/Chess_Woodcuts.htm" target="_blank" rel="noopener noreferrer"><img src="/assets/Elke_Rehder_Chess_Schach_Stefan_Zweig_Schachnovelle_Royal_Game_4.jpg" alt="The Royal Game IV 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="https://en.wikipedia.org/wiki/The_Royal_Game">The Royal Game</a> IV <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://www.elke-rehder.de/Chess_Woodcuts.htm">Royal Game, Woodcuts Art</a> by <a href="/Arts">Elke Rehder</a>, <a href="https://en.wikipedia.org/wiki/Stefan_Zweig">Stefan Zweig</a> <a href="https://en.wikipedia.org/wiki/The_Royal_Game">The Royal Game</a> IV<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Material</strong>,<br />
+a term determined by the sum of <a href="/Point_Value">piece values</a> of each side. The material value is the most influential part of the evaluation. Usually it is the sum of a constant value for each piece present, measured in units of a fraction of a pawn, for instance the common <a href="/Centipawns">centipawn scale</a>, which allows positional features of the position, worth less than a single pawn, to be evaluated without requiring fractions but a <a href="/Score">fixed point score</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#basic-piece-values">Basic Piece Values</a></li>
+<li><a href="#other-material-considerations">Other Material Considerations</a></li>
+<li><a href="#insufficient-material">Insufficient Material</a></li>
+<li><a href="#material-balance">Material Balance</a></li>
+<li><a href="#hashing-and-tables">Hashing and Tables</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#related-publications">Related Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="basic-piece-values">Basic Piece Values</h2>
+<p>Piece relative values concerning their relative strength in potential exchanges based on human experience and <a href="/Learning">learning</a></p>
+<ul>
+<li><a href="/Point_Value">Point Value</a></li>
+<li><a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">Pawn Advantage, Win Percentage, and Elo</a></li>
+</ul>
+<h2 id="other-material-considerations">Other Material Considerations</h2>
+<p>In chess, it is known that certain material features provide an advantage, such as the <a href="/Bishop_Pair">bishop pair</a> (which might be worth as much as half a pawn). A program might increase the values of rooks when there are less pawns on the board or prefer knights when there are many pawns. <a href="/Larry_Kaufman">Larry Kaufman</a> performed statistical tests on a variety of different material configurations to approximate their values <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> .</p>
+<p>Other factors that affect material evaluation might be:</p>
+<ul>
+<li>Bonus for the <a href="/Bishop_Pair">bishop pair</a> (bishops complement each other, controlling squares of different <a href="/Color">color</a>)</li>
+<li>Penalty for the rook pair (Larry Kaufman called it "principle of redundancy")</li>
+<li>Penalty for the knight pair (as two knights are less successful against the rook than any other pair of minor pieces)</li>
+<li>decreasing the value of the rook pawns and increasing the value of the central pawns (though this can be done in the <a href="/Piece-Square_Tables">piece-square tables</a> as well)</li>
+<li><span id="Trade"></span>Trade down bonus that encourages the winning side to trade pieces but no pawns <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></li>
+<li>Penalty for having no pawns, as it makes it more difficult to win the endgame</li>
+<li>Bad trade penalty as proposed by <a href="/Robert_Hyatt">Robert Hyatt</a>, that is penalizing the material imbalances that are disadvantageous like having three pawns for a piece or a rook for two minors.</li>
+<li>Elephantiasis effect as suggested by <a href="/Harm_Geert_Muller">Harm Geert Muller</a> (meaning that stronger pieces lose part of their value in presence of weaker pieces)</li>
+</ul>
+<p><span id="InsufficientMaterial"></span></p>
+<h2 id="insufficient-material">Insufficient Material</h2>
+<p>Using values like these blindly can lead to bad play. Most programs uses special code or tables to detect drawn or likely drawn material combinations. For example, KB vs K is a draw, as is KN vs K and KNN vs K. There is also a class of almost-certain draws, not mentioned in the FIDE rules because of the possibility of a checkmate (KN vs KN <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> , KB vs KN, KNN vs KB, KBN vs KB, KBN vs KR etc.) A general rule that, although not perfect, catches many likely draws is that if one side has no pawns left, it needs the equivalent of +4 pawns more material to win. For example, KRN vsv KR is usually a draw, where KRR vs KBN is usually a win for the rook side. For more details see <a href="/Draw_Evaluation">draw evaluation</a> and <a href="/Interior_Node_Recognizer">interior node recognizer</a>. <span id="Balance"></span></p>
+<h2 id="material-balance">Material Balance</h2>
+<p>The Material Balance is finally returned as the almost most dominating evaluation term, usually in <a href="/Negamax">Negamax</a> from <a href="/Side_to_move">side to move's</a> point of view, and in its pure form simply the difference of both sides material, MD:</p>
+<pre><code>md := material[side_2_move] - material[side_2_move ^ 1];</code></pre>
+<p>As mentioned, other material considerations, concerning <a href="/Material">insufficient material</a> and material imbalances (e.g. rook versus two minor pieces, queen versus two rooks or three pieces, three pawns versus piece) should be taken into account - for instance to encourage exchanging pieces but no pawns if ahead, see the <a href="/Material_Hash_Table">hashing approach</a> of <a href="/Chess_%28Program%29">Chess 4.5</a>.</p>
+<h2 id="hashing-and-tables">Hashing and Tables</h2>
+<p>To save speed in the material evaluation, programs using rules often <a href="/Hash_Table">hash</a> the material evaluation scores. With <a href="/Material_Tables">precomputed arrays of material values</a>, this is not needed.</p>
+<ul>
+<li><a href="/Material_Hash_Table">Material Hash Table</a></li>
+<li><a href="/Material_Tables">Material Tables</a></li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Bishop_Pair">Bishop Pair</a></li>
+<li><a href="/Score">Fixed Point Score</a></li>
+<li><a href="/Influence_Quantity_of_Pieces">Influence Quantity of Pieces</a></li>
+<li><a href="/Interior_Node_Recognizer">Interior Node Recognizer</a></li>
+<li><a href="/Material_Hash_Table">Material in Chess 4.5</a></li>
+<li><a href="/SOMA">Material in SOMA</a></li>
+<li>PeSTO's Evaluation Function</li>
+<li><a href="/Piece-Square_Tables">Piece-Square Tables</a></li>
+<li><a href="/Simplified_Evaluation_Function">Simplified Evaluation Function</a></li>
+</ul>
+<h2 id="related-publications">Related Publications</h2>
+<ul>
+<li><a href="/Claude_Shannon">Claude Shannon</a> (<strong>1949</strong>). <em><a href="http://www.pi.infn.it/%7Ecarosi/chess/shannon.txt">Programming a Computer for Playing Chess</a></em>. <a href="http://archive.computerhistory.org/projects/chess/related_materials/text/2-0%20and%202-1.Programming_a_computer_for_playing_chess.shannon/2-0%20and%202-1.Programming_a_computer_for_playing_chess.shannon.062303002.pdf">pdf</a> from <a href="/The_Computer_History_Museum">The Computer History Museum</a></li>
+<li><a href="/Alan_Turing">Alan Turing</a> (<strong>1953</strong>). <em><strong>Chess</strong></em>. part of the collection <em>Digital Computers Applied to Games</em>, in <a href="https://en.wikipedia.org/wiki/B._V._Bowden,_Baron_Bowden">Bertram Vivian Bowden</a> (editor), <a href="http://www.computinghistory.org.uk/cgi-bin/sitewise.pl?act=det&amp;p=10719">Faster Than Thought</a>, a symposium on digital computing machines, reprinted 1988 in <a href="/Computer_Chess_Compendium">Computer Chess Compendium</a>, reprinted 2004 in <em>The Essential Turing</em>, <a href="https://books.google.com/books?id=RSkxnKlv1D4C&amp;lpg=PP882&amp;ots=VOWmiIm_lD&amp;dq=Turochamp%2C%20chess&amp;pg=PP881#v=onepage&amp;q&amp;f=true">google books</a></li>
+<li><a href="/Jack_Good">Jack Good</a> (<strong>1968</strong>). <em>A Five-Year Plan for Automatic Chess - Appendix F. The Value of the Pieces and Squares</em>. <a href="http://www.doc.ic.ac.uk/~shm/MI/mi2.html">Machine Intelligence Vol. 2</a></li>
+<li><a href="/David_Slate">David Slate</a>, <a href="/Larry_Atkin">Larry Atkin</a> (<strong>1977</strong>). <em>CHESS 4.5 - The Northwestern University Chess Program.</em> <a href="/Chess_Skill_in_Man_and_Machine">Chess Skill in Man and Machine</a> (ed. <a href="/Peter_W._Frey">Peter W. Frey</a>), pp. 82-118. Springer-Verlag, New York, N.Y. 2nd ed. 1983. ISBN 0-387-90815-3. Reprinted (<strong>1988</strong>) in <a href="/Computer_Chess_Compendium">Computer Chess Compendium</a></li>
+<li>Gennady Timoshchenko (<strong>1993</strong>). <em>Bishop or Knight</em>? <a href="/ICGA_Journal">ICCA Journal, Vol. 16, No. 4</a></li>
+<li><a href="/Larry_Kaufman">Larry Kaufman</a> (<strong>1994</strong>). <em>The Relative Value of the Pieces</em>. <a href="/Computer_Chess_Reports">Computer Chess Reports</a>, Vol. 4, No. 2, pp. 33</li>
+<li><a href="/Mark_Sturman">Mark Sturman</a> (<strong>1995</strong>). <em>Beware The Bishop Pair</em>. <a href="/Computer_Chess_Reports">Computer Chess Reports</a>, Vol. 5, No. 2, pp.58 <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> » <a href="/Bishop_Pair">Bishop Pair</a></li>
+<li><a href="/Mark_Sturman">Mark Sturman</a> (<strong>1996</strong>). <em>Beware the Bishop Pair</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 19, No. 2</a></li>
+<li><a href="/Don_Beal">Don Beal</a>, <a href="/Martin_C._Smith">Martin C. Smith</a> (<strong>1997</strong>). <em>Learning Piece Values Using Temporal Differences</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 20, No. 3</a></li>
+<li><a href="/Larry_Kaufman">Larry Kaufman</a> (<strong>1999</strong>). <em><a href="https://www.chess.com/article/view/the-evaluation-of-material-imbalances-by-im-larry-kaufman">The Evaluation of Material Imbalances</a></em>. (first published in <a href="https://en.wikipedia.org/wiki/Chess_Life">Chess Life</a> March 1999, online version edited by <a href="/Dan_Heisman">Dan Heisman</a>)</li>
+<li><a href="/Sacha_Droste">Sacha Droste</a>, <a href="/Johannes_Fürnkranz">Johannes Fürnkranz</a> (<strong>2008</strong>). <em>Learning of Piece Values for Chess Variants.</em> Technical Report TUD–KE–2008-07, Knowledge Engineering Group, <a href="/Darmstadt_University_of_Technology">TU Darmstadt</a>, <a href="http://www.ke.tu-darmstadt.de/publications/reports/tud-ke-2008-07.pdf">pdf</a></li>
+<li><a href="/Christian_Hesse">Christian Hesse</a> (<strong>2011</strong>). <em><a href="http://www.newinchess.com/The_Joys_of_Chess-p-953.html">The Joys of Chess - Heroes, Battles &amp; Brilliancies</a></em>. ISBN: 978-90-5691-355-7, <a href="https://en.wikipedia.org/wiki/New_In_Chess">New In Chess</a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=222033">Queen vs two rooks</a> by <a href="/Benny_Antonsson">Benny Antonsson</a>, <a href="/CCC">CCC</a>, April 07, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=286659">Exceptions to (1,3,3,5,9)</a> by <a href="/David_Rasmussen">David Rasmussen</a>, <a href="/CCC">CCC</a>, February 24, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=345860">Bad trade</a> by <a href="/Benny_Antonsson">Benny Antonsson</a>, <a href="/CCC">CCC</a>, January 30, 2004</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=2&amp;t=2112">Quark 2.35 draw claim bug</a> by <a href="/Igor_Korshunov">Igor Korshunov</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, March 28, 2005 » <a href="/Quark">Quark</a>, <a href="/Draw">Draw</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=13166">Material imbalance evaluation</a> by <a href="/Alessandro_Scotti">Alessandro Scotti</a>, <a href="/CCC">CCC</a>, April 16, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=18240">Evaluation of material imbalance (a Rybka secret?)</a> by <a href="/Alessandro_Scotti">Alessandro Scotti</a>, <a href="/CCC">CCC</a>, December 06, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=27387">Relative Piece Values</a> by <a href="/Mark_Lefler">Mark Lefler</a>, <a href="/CCC">CCC</a>, April 09, 2009 » <a href="/Point_Value">Point Value</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=27616">Testing of Kaufman Material Values</a> by <a href="/Mark_Lefler">Mark Lefler</a>, <a href="/CCC">CCC</a>, April 25, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=27842">Rook Pair Penalty, Knight Pair Penalty, Having a Pawn Bonus</a> by <a href="/Mark_Lefler">Mark Lefler</a>, <a href="/CCC">CCC</a>, May 11, 2009</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=33035">Efficiently index material signatures and lookup</a> by <a href="/Mathieu_Pagé">Mathieu Pagé</a>, <a href="/CCC">CCC</a>, March 03, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=34159">Stockfish - material balance/imbalance evaluation</a> by Ralph Stoesser, <a href="/CCC">CCC</a>, May 05, 2010 » <a href="/Stockfish">Stockfish</a></li>
+</ul>
+<p><strong>2011</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=37592">Wrong draw claim by Naum 4.2 ?</a> by <a href="/Matthias_Gemuh">Matthias Gemuh</a>, <a href="/CCC">CCC</a>, January 12, 2011 » <a href="/Draw">Draw</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=37831">Material imbalance/bad trade and borrowing code</a> by <a href="/Evert_Glebbeek">Evert Glebbeek</a>, <a href="/CCC">CCC</a>, January 27, 2011</li>
+</ul>
+<p><strong>2012</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41916">Stockfish Code ( Piece Value's)</a> by Nolan Denson, <a href="/CCC">CCC</a>, January 10, 2012 » <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41905">Lone minor piece penalty - What did Larry mean?</a> by <a href="/Charles_Roberson">Charles Roberson</a>, <a href="/CCC">CCC</a>, January 10, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=45321">Why Knight and (lone) Bishop are so nearly equal in value</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, September 25, 2012</li>
+</ul>
+<p><strong>2013</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47713">An experiment with material imbalances and game-phase</a> by <a href="/Evert_Glebbeek">Evert Glebbeek</a>, <a href="/CCC">CCC</a>, April 06, 2013 » <a href="/Material_Tables">Material Tables</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49808">A balanced approach to imbalances</a> by <a href="/Lyudmil_Tsvetkov">Lyudmil Tsvetkov</a>, <a href="/CCC">CCC</a>, October 23, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50150">handling draw by insufficient material</a> by <a href="/Youri_Matiounine">Youri Matiounine</a>, November 19, 2013 » <a href="/Draw_Evaluation">Draw Evaluation</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50504">Lonely queen</a> by <a href="/Lyudmil_Tsvetkov">Lyudmil Tsvetkov</a>, <a href="/CCC">CCC</a>, December 15, 2013</li>
+<li><a href="http://macechess.blogspot.de/2013/12/queen-vs-3-minors.html">Queen vs 3 minors</a> by <a href="/Thomas_Petzke">Thomas Petzke</a>, <a href="http://macechess.blogspot.de/">mACE Chess</a>, December 18, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50550">Accessing Material Imbalance Information?</a> by <a href="/Steve_Maughan">Steve Maughan</a>, <a href="/CCC">CCC</a>, December 19, 2013 » <a href="/Material_Tables">Material Tables</a></li>
+<li><a href="http://macechess.blogspot.de/2013/12/queen-vs-3-minors-part-2.html">Queen vs 3 Minors part 2</a> by <a href="/Thomas_Petzke">Thomas Petzke</a>, <a href="http://macechess.blogspot.de/">mACE Chess</a>, December 21, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50601">Trading penalty with imbalances</a> by <a href="/Lyudmil_Tsvetkov">Lyudmil Tsvetkov</a>, <a href="/CCC">CCC</a>, December 22, 2013</li>
+</ul>
+<p><strong>2014</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52757">Scaling eval with material on the board</a> by <a href="/Lyudmil_Tsvetkov">Lyudmil Tsvetkov</a>, <a href="/CCC">CCC</a>, June 25, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52775">Obligatory scaling</a> by <a href="/Lyudmil_Tsvetkov">Lyudmil Tsvetkov</a>, <a href="/CCC">CCC</a>, June 27, 2014 » <a href="/Rook_Endgame">Rook Endgame</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56142">Rook vs 2 minor pieces with pawns on the board</a> by <a href="/Shawn_Chidester">Shawn Chidester</a>, <a href="/CCC">CCC</a>, April 27, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56168">Piece weights with regression analysis (in Russian)</a> by <a href="/Vladimir_Medvedev">Vladimir Medvedev</a>, <a href="/CCC">CCC</a>, April 30, 2015 <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> » <a href="/Point_Value">Point Value</a>, <a href="/Automated_Tuning">Automated Tuning</a></li>
+</ul>
+<p><strong>2017</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62687">Another way of evaluating material imbalances</a> by <a href="/Volker_Annuss">Volker Annuss</a>, <a href="/CCC">CCC</a>, January 01, 2017 » <a href="/Arminius">Arminius</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64110">trading pieces and pawns based on material balance</a> by <a href="/Erin_Dame">Erin Dame</a>, <a href="/CCC">CCC</a>, May 28, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64115">insufficient mating material</a> by <a href="/Erin_Dame">Erin Dame</a>, <a href="/CCC">CCC</a>, May 29, 2017 » <a href="/Draw_Evaluation">Draw Evaluation</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64576">list of material combinations requiring specialized eval ?</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, July 11, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65364">Trading Pieces When Ahead In Material</a> by <a href="/Daniel_Anulliero">Daniel Anulliero</a>, <a href="/CCC">CCC</a>, October 03, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65870">Magic end-game material hash?</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, November 30, 2017</li>
+</ul>
+<p><strong>2018</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66966">'ab-initio' piece values</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, March 30, 2018 » <a href="/Piece-Square_Tables">Piece-Square Tables</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=68842">The Xiphos Material Evaluator</a> by <a href="/Dennis_Sceviour">Dennis Sceviour</a>, <a href="/CCC">CCC</a>, November 05, 2018 » <a href="/Xiphos">Xiphos</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72967">Imbalance</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, February 01, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76629">Trading gradient: to trade or not to trade?</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, February 18, 2021</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://www.chess.com/article/view/the-evaluation-of-material-imbalances-by-im-larry-kaufman">The Evaluation of Material Imbalances</a> by <a href="/Larry_Kaufman">Larry Kaufman</a></li>
+<li><a href="http://walkofmind.com/programming/chess/mat_stats.html">Statistics of material imbalances in chess games</a> by <a href="/Alessandro_Scotti">Alessandro Scotti</a> » <a href="/Match_Statistics">Match Statistics</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Chess_piece_relative_value">Chess piece relative value from Wikipedia</a></li>
+<li><a href="http://www.chessvariants.com/d.betza/pieceval/index.html">About the Values of Chess Pieces</a> by Ralph Betza</li>
+<li><a href="http://www.chessbase.com/newsdetail.asp?newsid=7775">The joys of chess – and the value of the pieces</a>, <a href="/ChessBase">ChessBase News</a>, December 21, 2011 <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Evaluation">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=18240">Evaluation of material imbalance (a Rybka secret?)</a> by <a href="/Alessandro_Scotti">Alessandro Scotti</a> from <a href="/CCC">CCC</a>, December 06, 2007<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=64110">trading pieces and pawns based on material balance</a> by <a href="/Erin_Dame">Erin Dame</a>, <a href="/CCC">CCC</a>, May 28, 2017<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=2&amp;t=2112">Quark 2.35 draw claim bug</a> by <a href="/Igor_Korshunov">Igor Korshunov</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, March 28, 2005 » <a href="/Quark">Quark</a>, <a href="/Draw">Draw</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://groups.google.com/d/msg/rec.games.chess/xFCRAQIqvjw/OVFg2ezWYTYJ">Looking for Mark Sturman</a> by <a href="/Mark_Lefler">Mark Lefler</a>, <a href="/Computer_Chess_Forums">rec.games.chess</a>, July 02, 1995<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://www.chessbase.com/newsdetail.asp?newsid=7775">The joys of chess – and the value of the pieces</a>, <a href="/ChessBase">ChessBase News</a>, December 21, 2011<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="http://habrahabr.ru/post/254753/">Определяем веса шахматных фигур регрессионным анализом / Хабрахабр</a> by <a href="/Vladimir_Medvedev">WinPooh</a>, April 27, 2015 (Russian)<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="/Christian_Hesse">Christian Hesse</a> (<strong>2011</strong>). <em><a href="http://www.newinchess.com/The_Joys_of_Chess-p-953.html">The Joys of Chess - Heroes, Battles &amp; Brilliancies</a></em>. ISBN: 978-90-5691-355-7, <a href="https://en.wikipedia.org/wiki/New_In_Chess">New In Chess</a><a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=41556">Interesting article about the value of the pieces</a> by Aloisio Ponti, <a href="/CCC">CCC</a>, December 22, 2011<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Elke_Rehder">Elke Rehder</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Material">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

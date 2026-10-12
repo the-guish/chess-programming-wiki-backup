@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Movei - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Movei</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Engines">Engines</a> * Movei</strong></p>
+<p><strong>Movei</strong>,<br />
+a <a href="/WinBoard">WinBoard</a> and <a href="/UCI">UCI</a> compliant chess engine by <a href="/Uri_Blass">Uri Blass</a>. Movei is written in <a href="/C">C</a> around a <a href="/Move_Generation">legal move generator</a> and initial <a href="/Perft">Perft</a> framework, also gathering <a href="/Attack_and_Defend_Maps">attack</a> and <a href="/Mobility">mobility</a> informations as used in <a href="/Evaluation">evaluation</a>. As mentioned by Uri, the evaluation of Movei is <a href="/Path-Dependency">dependent on the path</a> and not only on the <a href="/Leaf_Node">leaf position</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. The <a href="/Transposition_Table">transposition table</a> was at least initially not used for pruning, but only for <a href="/Move_Ordering">move ordering</a>. According to Uri, <a href="/Principal_Variation_Search">PVS</a> and <a href="/Internal_Iterative_Deepening">IID</a> do not seem to work in his program <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#tournament-play">Tournament Play</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#selected-games">Selected Games</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#wccc-2004">WCCC 2004</a></li>
+<li><a href="#cct7">CCT7</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2002">2002</a></li>
+<li><a href="#2003">2003</a></li>
+<li><a href="#2004">2004</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#chess-engine">Chess Engine</a></li>
+<li><a href="#misc">Misc</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="tournament-play">Tournament Play</h2>
+<p>Movei played the <a href="/WCCC_2004">WCCC 2004</a> in <a href="https://en.wikipedia.org/wiki/Ramat_Gan">Ramat Gan</a>, and on-line the <a href="/CCT5">CCT5</a>, <a href="/CCT6">CCT6</a> and <a href="/CCT7">CCT7</a> tournaments.</p>
+<h2 id="selected-games">Selected Games</h2>
+<h3 id="wccc-2004">WCCC 2004</h3>
+<p><a href="/WCCC_2004">WCCC 2004</a>, round 5, <a href="/Movei">Movei</a> - <a href="/The_Crazy_Bishop">The Crazy Bishop</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></p>
+<pre><code>[Event &quot;WCCC 2004&quot;]
+[Site &quot;Ramat-Gan, Israel&quot;]
+[Date &quot;2004.07.08&quot;]
+[Round &quot;5&quot;]
+[White &quot;Movei&quot;]
+[Black &quot;The Crazy Bishop&quot;]
+[Result &quot;1-0&quot;]
+
+1.d4 Nf6 2.c4 e6 3.Nc3 d5 4.cxd5 exd5 5.Bg5 Be7 6.e3 O-O 7.Bd3 Re8 8.Nge2 Nbd7 9.Qc2 c6 
+10.O-O-O Qa5 11.Kb1 h6 12.Bf4 Nh5 13.Be5 Nxe5 14.dxe5 Bc5 15.Nd4 Bxd4 16.Bh7+ Kh8 17.exd4 
+Qd8 18.Bf5 Nf4 19.g3 Ne6 20.f4 Nc7 21.Bxc8 Rxc8 22.Rhf1 Qd7 23.f5 c5 24.Qd2 Kg8 25.f6 Qg4 
+26.fxg7 cxd4 27.Qxh6 Qxg7 28.Qxg7+ Kxg7 29.Rxd4 Rxe5 30.Rdf4 Re7 31.Rg4+ Kf8 32.Rb4 b6 
+33.Rh4 Kg7 34.Rg4+ Kf8 35.Ra4 Ra8 36.Kc2 Rd7 37.Rh4 Rad8 38.Kd2 Kg7 39.Rg4+ Kf8 40.Ne2 
+Ne6 41.Rh4 Ke7 42.Rh5 d4 43.Nf4 Nc5 44.Re1+ Kf6 45.h4 Kg7 46.Rg5+ Kf8 47.b4 Na4 48.Rf5 Kg7 
+49.Nh5+ Kf8 50.Nf6 Re7 51.Nh7+ Ke8 52.Rfe5 Rxe5 53.Rxe5+ Kd7 54.Nf6+ Kc6 55.h5 Rh8 56.Kd3 
+Nc3 57.g4 a5 58.bxa5 bxa5 59.Rxa5 Kb6 60.Rf5 Kc6 61.Kxd4 Nb5+ 62.Ke5 Nc7 63.Rf1 Ne6 64.Ne4 
+Rh7 65.Rf6 Kc7 66.Nd6 Nd8 67.h6 Kd7 68.g5 Ke7 69.a4 Nc6+ 70.Kd5 Nb4+ 71.Kc4 Nc6 72.Nxf7 
+Nb8 73.Nd6 Nd7 74.Nf5+ Kd8 75.Rd6 1-0 </code></pre>
+<h3 id="cct7">CCT7</h3>
+<p><a href="/CCT7">CCT7</a>, round 3, <a href="/Crafty">Crafty</a> - <a href="/Movei">Movei</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a></p>
+<pre><code>[Event &quot;CCT7&quot;]
+[Site &quot;ICC&quot;]
+[Date &quot;2005.02.12&quot;]
+[Round &quot;3&quot;]
+[White &quot;Crafty&quot;]
+[Black &quot;Movei&quot;]
+[Result &quot;0-1&quot;]
+
+1.d4 Nf6 2.c4 e6 3.Nc3 Bb4 4.f3 d5 5.a3 Bxc3+ 6.bxc3 c5 7.cxd5 Nxd5 8.dxc5 Qa5 9.e4 Ne7 
+10.Be3 O-O 11.Qb3 Qc7 12.a4 Nd7 13.Qa3 f5 14.Nh3 Nf6 15.Nf2 Bd7 16.Be2 Kh8 17.O-O Rad8 
+18.Rfd1 Bc6 19.Qb4 fxe4 20.fxe4 Qe5 21.Bf3 Ng6 22.Kh1 Nh4 23.Bd4 Qc7 24.Bxf6 Rxf6 25.Ng4 
+Rxd1+ 26.Rxd1 Nxf3 27.gxf3 Rxf3 28.Ne5 Rf8 29.Rd6 Qe7 30.Nxc6 Qf6 31.Qb1 Qf3+ 32.Kg1 Qf2+ 
+33.Kh1 bxc6 34.Qd3 h6 35.e5 Qe1+ 36.Kg2 Qxe5 37.Rxc6 Qg5+ 38.Kh3 h5 39.Qe4 Qf6 40.Qe2 Qf5+ 
+41.Kh4 g5+ 42.Kg3 h4+ 43.Kg2 Qd5+ 44.Kg1 Qxc6 45.Qh5+ Kg7 46.Qxg5+ Kf7 47.Qh5+ Ke7 
+{Crafty resigns} 0-1</code></pre>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2002">2002</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=229271">my program movei is released</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, May 12, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=235364">Re: Did Uri write movei? (yes)</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, June 13, 2002</li>
+</ul>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=235379">Re: Did Uri write movei? (yes)</a> by <a href="/Dann_Corbit">Dann Corbit</a>, <a href="/CCC">CCC</a>, June 13, 2002</p>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=244404">Test positions from sjeng-movei games</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, August 07, 2002 » <a href="/Sjeng">Sjeng</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=266941">A case when Movei earn 2 plies from verified null move pruning</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, November 22, 2002 » <a href="/Null_Move_Pruning">Verified Null Move Pruning</a></li>
+</ul>
+<h3 id="2003">2003</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=276537">How to use Movei as an automatic player in ICC</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, January 11, 2003</li>
+</ul>
+<h3 id="2004">2004</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=346480">Movei @ CCT6</a> by Luis Smith, <a href="/CCC">CCC</a>, February 02, 2004 » <a href="/CCT6">CCT6</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=352371">about a possible problem with movei's logfiles(also for other programs)</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, March 02, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=353377">Two more Movei matches</a> by <a href="/Peter_Berger">Peter Berger</a>, <a href="/CCC">CCC</a>, March 07, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=367829">movei book progress report</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, May 28, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=378905">question about fixing the time management of movei</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, July 25, 2004 » <a href="/Time_Management">Time Management</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=398390">Welcome new movei</a> by <a href="/Peter_Berger">Peter Berger</a>, <a href="/CCC">CCC</a>, November 30, 2004</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=412540">Movei report in CCT7:first day</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, February 19, 2005 » <a href="/CCT7">CCT7</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=430487">Re: And a still unsolved test position</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, June 09, 2005 » <a href="/Path-Dependency">Path-Dependency</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=456285">Is it a bug in Movei(what is your opinion?)</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, October 17, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=459424">I need testers for testing movei personalities in test suites</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, November 03, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=467574">Rybka(1 plies)-Movei(3 plies) 10-10 in the nunn match</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, December 06, 2005 » <a href="/Rybka">Rybka</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=476082">Movei-Gerbil in rhe endgame suite 20.5-9.5 and could be 21.5-8.5</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, January 01, 2006 » <a href="/Gerbil">Gerbil</a></li>
+</ul>
+<p><strong>2007</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=13328">movei progress 10 10 10 personality</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, April 23, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=115849&amp;t=13559">Re: Methods to stably evaluate nodes?</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, May 05, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=123834&amp;t=14333">Re: Revisiting Check Extensions</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, June 07, 2007 » <a href="/Check_Extensions">Check Extensions</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=126143&amp;t=14611">Re: Thanks for the mobility info ed</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, June 22, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=15688">movei hash report</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, August 09, 2007 » <a href="/Principal_Variation_Search">Principal Variation Search</a>, <a href="/Internal_Iterative_Deepening">Internal Iterative Deepening</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=16809">movei need testers to find a better personality</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, October 01, 2007</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51063">Movei, The Baron, and TSCP</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, January 23, 2014 » <a href="/The_Baron">The Baron</a>, <a href="/TSCP">TSCP</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<h3 id="chess-engine">Chess Engine</h3>
+<ul>
+<li><a href="https://www.game-ai-forum.org/icga-tournaments/program.php?id=109">Movei's ICGA Tournaments</a></li>
+<li><a href="http://ccrl.chessdom.com/ccrl/4040/cgi/engine_details.cgi?print=Details&amp;each_game=1&amp;eng=Movei%2000.8.438%20%2810%2010%2010%29#Movei_00_8_438_%2810_10_10%29">Movei 00.8.438 (10 10 10)</a> in <a href="/CCRL">CCRL 40/40</a></li>
+<li><a href="http://www.computer-chess.org/doku.php?id=computer_chess:wiki:download:engine_download_list">Engine Download List</a> from <a href="/Ron_Murawski">Ron Murawski's</a> <a href="http://computer-chess.org/doku.php?id=home">Computer-Chess Wiki</a></li>
+</ul>
+<h3 id="misc">Misc</h3>
+<ul>
+<li><a href="https://en.wiktionary.org/wiki/movei">movei - Wiktionary</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Move_%CE%B1">Move α from Wikipedia</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=115849&amp;t=13559">Re: Methods to stably evaluate nodes?</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, May 05, 2007<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=15688">movei hash report</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, August 09, 2007<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://www.game-ai-forum.org/icga-tournaments/round.php?tournament=24&amp;round=5&amp;id=5">Ramat-Gan 2004 - Chess - Round 5 - Game 5 (ICGA Tournaments)</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://www.stmintz.com/ccc/index.php?id=412540">Movei report in CCT7:first day</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, February 19, 2005<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:UCI">UCI</a> · <a href="/Category:WinBoard">WinBoard</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Movei">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

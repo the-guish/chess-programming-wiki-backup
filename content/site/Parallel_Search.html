@@ -1,0 +1,1141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parallel Search - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Parallel Search</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Search">Search</a> * Parallel Search</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="http://www.drdobbs.com/high-performance-computing/206903306" target="_blank" rel="noopener noreferrer"><img src="/assets/DrDobbsParallelScalability.jpg" alt="Parallel scalability 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Parallel scalability <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://www.drdobbs.com/high-performance-computing/206903306">Super Linearity and the Bigger Machine</a> from <a href="http://www.drdobbs.com/index.jhtml">Dr. Dobb's</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Parallel Search</strong>,<br />
+also known as <strong>Multithreaded Search</strong> or <a href="/SMP">SMP</a> Search, is a way to increase <a href="/Search">search</a> speed by using additional <a href="https://en.wikipedia.org/wiki/Central_Processing_Unit">processors</a>. This topic that has been gaining popularity recently with <a href="https://en.wikipedia.org/wiki/Multiprocessing">multiprocessor</a> computers becoming widely available. Utilizing these additional processors is an interesting domain of research, as traversing a search tree is inherently serial. Several approaches have been devised, with the most popular today being <a href="/Young_Brothers_Wait_Concept">Young Brothers Wait Concept</a> and <a href="/Shared_Hash_Table">Shared Hash Table</a> aka <a href="/Lazy_SMP">Lazy SMP</a>.</p>
+<p>This page gives a brief summary of the different types. SMP algorithms are classified by their <a href="https://en.wikipedia.org/wiki/Scalability">scalability</a> (trend in search speed as the number of processors becomes large) and their <a href="https://en.wikipedia.org/wiki/Speedup">speedup</a> (change in time to complete a search). Typically, programmers use <strong>scaling</strong> to mean change in <a href="/Nodes_per_Second">nodes per second</a> (NPS) rates, and speedup to mean change in time to <a href="/Depth">depth</a>. Scaling and scalability are thus two different concepts.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#distributed-search">Distributed Search</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#shared-hash-table">Shared Hash Table</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#lazy-smp">Lazy SMP</a></li>
+<li><a href="#abdada">ABDADA</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#parallel-alpha-beta">Parallel Alpha-Beta</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#principal-variation-splitting-pvs">Principal Variation Splitting (PVS)</a></li>
+<li><a href="#ybwc-and-jamboree">YBWC and Jamboree</a></li>
+<li><a href="#dynamic-tree-splitting-dts">Dynamic Tree Splitting (DTS)</a></li>
+</ol>
+</details></li>
+<li><a href="#other-approaches">Other Approaches</a></li>
+<li><a href="#taxonomy">Taxonomy</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#other-considerations">Other Considerations</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#memory-design">Memory Design</a></li>
+<li><a href="#semaphores">Semaphores</a></li>
+<li><a href="#threads-vs-processes">Threads vs. Processes</a></li>
+</ol>
+</details></li>
+<li><a href="#didactic-programs">Didactic Programs</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#publications">Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1950-">1950 ...</a></li>
+<li><a href="#1970-">1970 ...</a></li>
+<li><a href="#1980-">1980 ...</a></li>
+<li><a href="#1985-">1985 ...</a></li>
+<li><a href="#1990-">1990 ...</a></li>
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1995--1">1995 ...</a></li>
+<li><a href="#2000--1">2000 ...</a></li>
+<li><a href="#2005--1">2005 ...</a></li>
+<li><a href="#2010--1">2010 ...</a></li>
+<li><a href="#2015--1">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#parallel-search">Parallel Search</a></li>
+<li><a href="#parallel-computing">Parallel Computing</a></li>
+<li><a href="#scalability">Scalability</a></li>
+<li><a href="#shared-memory">Shared Memory</a></li>
+<li><a href="#cache">Cache</a></li>
+<li><a href="#concurrency-and-synchronization">Concurrency and Synchronization</a></li>
+<li><a href="#misc">Misc</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="distributed-search">Distributed Search</h2>
+<p>A subtype of <a href="https://en.wikipedia.org/wiki/Parallel_algorithm">parallel algorithms</a>, <a href="https://en.wikipedia.org/wiki/Distributed_algorithms">distributed algorithms</a> are algorithms designed to work in <a href="https://en.wikipedia.org/wiki/Cluster_computing">cluster computing</a> and <a href="https://en.wikipedia.org/wiki/Distributed_computing">distributed computing</a> environments, where additional concerns beyond the scope of "classical" parallel algorithms need to be addressed.</p>
+<h2 id="shared-hash-table">Shared Hash Table</h2>
+<p><em>see Main page: <a href="/Shared_Hash_Table">Shared Hash Table</a></em></p>
+<p>This technique is a very simple approach to <a href="/SMP">SMP</a>. The implementation requires little more than starting additional processors. Processors are simply fed the root position at the beginning of the search, and each searches the same tree with the only communication being the <a href="/Transposition_Table">transposition table</a>. The gains come from the effect of nondeterminism. Each processor will finish the various subtrees in varying amounts of time, and as the search continues, these effects grow making the search trees diverge. The speedup is then based on how many nodes the main processor is able to skip from transposition table entries. Many programs used this if a "quick and dirty" approach to SMP is needed. It had the reputation of little speedup on a mere 2 processors, and to scale quite badly after this. <span id="Lazy"></span></p>
+<h3 id="lazy-smp">Lazy SMP</h3>
+<p><em>see Main page: <a href="/Lazy_SMP">Lazy SMP</a></em></p>
+<p>Recent improvements by <a href="/Daniel_Homan">Daniel Homan</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> , <a href="/Martin_Sedlak">Martin Sedlak</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> and others on <strong>Lazy</strong> SMP indicate that the algorithm scales quite well up to 8 cores and beyond <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> .</p>
+<h3 id="abdada">ABDADA</h3>
+<p><em>see Main page: <a href="/ABDADA">ABDADA</a></em></p>
+<p><a href="/ABDADA">ABDADA</a>, Alpha-Bêta Distribué avec Droit d'Aînesse (Distributed Alpha-Beta Search with Eldest Son Right) is a loosely synchronized, distributed search algorithm by <a href="/Jean-Christophe_Weill">Jean-Christophe Weill</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> . It is based on the <a href="/Shared_Hash_Table">Shared Hash Table</a>, and adds the number of processors searching this node inside the hash-table entry for better utilization - considering the <a href="/Young_Brothers_Wait_Concept">Young Brothers Wait Concept</a>. <span id="ParallelAlphaBeta"></span></p>
+<h2 id="parallel-alpha-beta">Parallel Alpha-Beta</h2>
+<p>These algorithms divide the <a href="/Alpha-Beta">Alpha-Beta</a> tree, giving different subtrees to different processors. Because alpha-beta is a serial algorithm, this approach is much more complex. However, these techniques also provide for the greatest gains from additional processors. <span id="PrincipalVariationSplitting"></span></p>
+<h3 id="principal-variation-splitting-pvs">Principal Variation Splitting (PVS)</h3>
+<p>In Principal Variation Splitting (PVS), each <a href="/Node">node</a> is expressed by a <a href="/Thread">thread</a>. A thread will spawn one child thread for each legal move. But data dependency specified by the algorithm exists among these threads: After getting a tighter bound from the thread corresponding to the PV node, the remaining threads are ready to run. <span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]" style="--wiki-img-w:629px"><img src="/assets/PVSplit.JPG" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span> PV Splitting <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a></p>
+<h3 id="ybwc-and-jamboree">YBWC and Jamboree</h3>
+<p>The idea in <a href="/Rainer_Feldmann">Feldmann's</a> <a href="/Young_Brothers_Wait_Concept">Young Brothers Wait Concept</a> (YBWC) <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> as well in <a href="/Bradley_Kuszmaul">Kuszmaul's</a> <a href="/Jamboree">Jamboree Search</a> <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a> <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a> , is to search the first sibling node first before spawning the remaining siblings in parallel. This is based on the observations that the first move is either going to produce a cutoff (in which case processing sibling nodes is wasted effort) or return much better bounds. If the first move does not produce a cut-off, then the remaining moves are searched in parallel. This process is <a href="/Recursion">recursive</a>.</p>
+<p>Since the number of processors is not infinite the process of "spawning" work normally consists in putting it on some kind of "work to be done stack" where processors are free to grab work in FIFO fashion when there is no work to do. In YBW you would not "spawn" or place work on the stack until the first sibling is searched.</p>
+<p>In their 1983 paper <em>Improved Speedup Bounds for Parallel Alpha-Beta Search</em> <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a> , <a href="/Raphael_Finkel">Raphael Finkel</a> and <a href="/John_Philip_Fishburn">John Philip Fishburn</a> already gave the theoretical confirmation to the common sense wisdom that parallel resources should first be thrown into searching the first child. Assuming the tree is already in an approximation to best-first order, this establishes a good alpha value that can then be used to parallel search the later children. The algorithm in the 1982 Artificial Intelligence paper <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a> , which Fishburn called the "dumb algorithm" in his 1981 thesis presentation <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a> gives p^0.5 speedup with p processors, while the 1983 PAMI algorithm (the "smart algorithm") gives p^0.8 speedup for lookahead trees with the <a href="/Branching_Factor">branching factor</a> of chess.</p>
+<h3 id="dynamic-tree-splitting-dts">Dynamic Tree Splitting (DTS)</h3>
+<p><em>Main page: <a href="/Dynamic_Tree_Splitting">Dynamic Tree Splitting</a></em></p>
+<p>This algorithm, invented by the <a href="/Cray_Blitz">Cray Blitz</a> team (including <a href="/Robert_Hyatt">Robert Hyatt</a> <a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a> ), is the most complex. Though this gives the best known scalability for any SMP algorithm, there are very few programs using it because of its difficulty of implementation.</p>
+<h2 id="other-approaches">Other Approaches</h2>
+<p>Many different approaches have been tried that do not directly split the search tree. These algorithms have not enjoyed popular success due to the fact that they are not scalable. Typical examples include one processor that evaluates positions fed to it by a searching processor, or a tactical search that confirms or refutes a positional search.</p>
+<ul>
+<li><a href="/APHID">APHID</a></li>
+<li><a href="/GridChess">Optimistic Pondering</a></li>
+<li><a href="/Shu_Yokoyama">P-GPP</a></li>
+</ul>
+<h2 id="taxonomy">Taxonomy</h2>
+<p>Overview and taxonomy of parallel algorithms based on <a href="/Alpha-Beta">alpha-beta</a>, given by <a href="/Mark_Brockington">Mark Brockington</a>, <a href="/ICGA_Journal">ICCA Journal, Vol. 19: No. 3</a> in 1996 <a href="#fn15" class="footnote-ref" id="fnref15" role="doc-noteref"><sup>15</sup></a> <a href="#fn16" class="footnote-ref" id="fnref16" role="doc-noteref"><sup>16</sup></a></p>
+<table>
+<thead>
+<tr>
+<th><p>First<br />
+Described</p></th>
+<th><p>Algorithm</p></th>
+<th><p>Author(s)</p></th>
+<th><p>Processor Hierarchy /<br />
+Control Distribution</p></th>
+<th><p>Parallelism Possible<br />
+At These Nodes</p></th>
+<th><p>Synchronisation Done<br />
+At These Nodes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>1978</p></td>
+<td><p>Parallel Aspiration Search</p></td>
+<td><p><a href="/Gérard_M._Baudet">Gérard M. Baudet</a></p></td>
+<td><p>Static/Centralized</p></td>
+<td><p><a href="/Root">Root</a> (<a href="/Window">αβ - Window</a>)</p></td>
+<td><p>Root</p></td>
+</tr>
+<tr>
+<td><p>1979</p></td>
+<td><p>Mandatory Work First</p></td>
+<td><p><a href="/Selim_Akl">Selim Akl</a> et al.</p></td>
+<td><p>Static/Centralized</p></td>
+<td><p><a href="/Node_Types">Type-1</a>+<a href="/Node_Types">3</a>+ Leftmost child of 3</p></td>
+<td><p>Bad <a href="/Node_Types">Type-2</a></p></td>
+</tr>
+<tr>
+<td><p>1980</p></td>
+<td><p>Tree Splitting</p></td>
+<td><p><a href="/Raphael_Finkel">Raphael Finkel</a>,<br />
+<a href="/John_Philip_Fishburn">John Philip Fishburn</a></p></td>
+<td><p>Static/Centralized</p></td>
+<td><p>Top k-ply</p></td>
+<td><p><a href="/Root">Root</a></p></td>
+</tr>
+<tr>
+<td><p>1981</p></td>
+<td><p><a href="/Parallel_Search">PVS</a></p></td>
+<td><p><a href="/Tony_Marsland">Tony Marsland</a>,<br />
+<a href="/Murray_Campbell">Murray Campbell</a></p></td>
+<td><p>Static/Centralized</p></td>
+<td><p><a href="/Node_Types">Type-1</a></p></td>
+<td><p>Type-1</p></td>
+</tr>
+<tr>
+<td><p>1983</p></td>
+<td><p>Key Node</p></td>
+<td><p><a href="/Gary_Lindstrom">Gary Lindstrom</a></p></td>
+<td><p>Static/Centralized</p></td>
+<td><p><a href="/Node_Types">Type-1</a>+<a href="/Node_Types">3</a>+<br />
+Leftmost child of 3</p></td>
+<td><p>Bad <a href="/Node_Types">Type-2</a></p></td>
+</tr>
+<tr>
+<td><p>1986</p></td>
+<td><p>UIDPABS <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p></td>
+<td><p><a href="/Monroe_Newborn">Monroe Newborn</a></p></td>
+<td><p>Static/Centralized</p></td>
+<td><p><a href="/Root">Root</a></p></td>
+<td><p>None</p></td>
+</tr>
+<tr>
+<td rowspan="4"><p>1987</p></td>
+<td><p>DPVS</p></td>
+<td><p><a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a></p></td>
+<td><p>Dynamic/Centralized</p></td>
+<td><p><a href="/Node_Types">Type-1</a>+<a href="/Node_Types">3</a>+<a href="/Node_Types">2</a></p></td>
+<td><p><a href="/Node_Types">Type 1</a>+<a href="/Node_Types">3</a>+Bad <a href="/Node_Types">2</a></p></td>
+</tr>
+<tr>
+<td><p>EPVS</p></td>
+<td><p><a href="/Robert_Hyatt">Robert Hyatt</a>,<br />
+<a href="/Bruce_W._Suter">Bruce W. Suter</a>,<br />
+<a href="/Harry_Nelson">Harry Nelson</a></p></td>
+<td><p>Dynamic/Centralized</p></td>
+<td><p><a href="/Node_Types">Type-1</a>+<a href="/Node_Types">3</a></p></td>
+<td><p><a href="/Node_Types">Type-1</a>+<a href="/Node_Types">3</a></p></td>
+</tr>
+<tr>
+<td><p><a href="/Waycool">Waycool</a></p></td>
+<td><p><a href="/Ed_Felten">Ed Felten</a>,<br />
+<a href="/Steve_Otto">Steve Otto</a></p></td>
+<td><p>Dynamic/Distributed</p></td>
+<td><p>All, except <a href="/Node_Types">Type-2</a><br />
+with no <a href="/Transposition_Table">TT-Entry</a></p></td>
+<td><p>Nodes with TT<br />
+&amp; no <a href="/Beta-Cutoff">cutoff</a></p></td>
+</tr>
+<tr>
+<td><p><a href="/Young_Brothers_Wait_Concept">YBWC</a></p></td>
+<td><p><a href="/Rainer_Feldmann">Rainer Feldmann</a></p></td>
+<td><p>Dynamic/Distributed</p></td>
+<td><p><a href="/Node_Types">Type-1</a>+<a href="/Node_Types">3</a>+Bad <a href="/Node_Types">2</a></p></td>
+<td><p><a href="/Node_Types">Type-1</a>+Bad <a href="/Node_Types">2</a></p></td>
+</tr>
+<tr>
+<td rowspan="2"><p>1988</p></td>
+<td><p><a href="/Dynamic_Tree_Splitting">Dynamic Tree Splitting</a></p></td>
+<td><p><a href="/Robert_Hyatt">Robert Hyatt</a></p></td>
+<td><p>Dynamic/Distributed</p></td>
+<td><p><a href="/Node_Types">Type-1</a>+<a href="/Node_Types">3</a>+Bad <a href="/Node_Types">2</a></p></td>
+<td><p><a href="/Node_Types">Type-1</a>+Bad <a href="/Node_Types">2</a></p></td>
+</tr>
+<tr>
+<td><p>Bound-and-Branch</p></td>
+<td><p>Chris Ferguson,<br />
+<a href="/Richard_Korf">Richard Korf</a></p></td>
+<td><p>Dynamic/Distributed</p></td>
+<td><p><a href="/Node_Types">Type-1</a>+<a href="/Node_Types">3</a>+Bad <a href="/Node_Types">2</a></p></td>
+<td><p><a href="/Node_Types">Type-1</a>+Bad <a href="/Node_Types">2</a></p></td>
+</tr>
+<tr>
+<td><p>1990</p></td>
+<td><p>Delayed Branch<br />
+Tree Expansion</p></td>
+<td><p><a href="/Feng-hsiung_Hsu">Feng-hsiung Hsu</a></p></td>
+<td><p>Static/Centralized</p></td>
+<td><p><a href="/Node_Types">Type-1</a>+<a href="/Node_Types">3</a></p></td>
+<td><p>Bad <a href="/Node_Types">Type-2</a></p></td>
+</tr>
+<tr>
+<td rowspan="2"><p>1993</p></td>
+<td><p>Frontier Splitting</p></td>
+<td><p><a href="/Paul_Lu">Paul Lu</a></p></td>
+<td><p>Dynamic/Distributed</p></td>
+<td><p>All</p></td>
+<td><p><a href="/Root">Root</a></p></td>
+</tr>
+<tr>
+<td><p>αβ*</p></td>
+<td><p><a href="/Vincent_David">Vincent David</a></p></td>
+<td><p>Dynamic/Distributed</p></td>
+<td><p><a href="/Node_Types">Type-1</a>+<a href="/Node_Types">3</a></p></td>
+<td><p><a href="/Node_Types">Type-1</a>+<a href="/Node_Types">3</a>+Bad <a href="/Node_Types">2</a></p></td>
+</tr>
+<tr>
+<td rowspan="2"><p>1994</p></td>
+<td><p>CABP <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></p></td>
+<td><p>Van-Dat Cung</p></td>
+<td><p>Static/Centralized</p></td>
+<td><p><a href="/Node_Types">Type-1</a>+<a href="/Node_Types">3</a></p></td>
+<td><p>Bad <a href="/Node_Types">Type-2</a></p></td>
+</tr>
+<tr>
+<td><p><a href="/Jamboree">Jamboree</a></p></td>
+<td><p><a href="/Bradley_Kuszmaul">Bradley Kuszmaul</a></p></td>
+<td><p>Dynamic/Distributed</p></td>
+<td><p><a href="/Node_Types">Type-1</a>+<a href="/Node_Types">3</a>+Bad <a href="/Node_Types">2</a></p></td>
+<td><p><a href="/Node_Types">Type-1</a>+Bad <a href="/Node_Types">2</a></p></td>
+</tr>
+<tr>
+<td rowspan="2"><p>1995</p></td>
+<td><p><a href="/ABDADA">ABDADA</a></p></td>
+<td><p><a href="/Jean-Christophe_Weill">Jean-Christophe Weill</a></p></td>
+<td><p>Dynamic/Distributed</p></td>
+<td><p><a href="/Node_Types">Type-1</a>+<a href="/Node_Types">3</a>+Bad <a href="/Node_Types">2</a></p></td>
+<td><p><a href="/Node_Types">Type-1</a>+Bad <a href="/Node_Types">2</a></p></td>
+</tr>
+<tr>
+<td><p>Dynamic Multiple PV-Split</p></td>
+<td><p><a href="/Tony_Marsland">Tony Marsland</a>,<br />
+Yaoqing Gao</p></td>
+<td><p>Dynamic/Distributed</p></td>
+<td><p>Nodes within PV set</p></td>
+<td><p>Nodes within PV set</p></td>
+</tr>
+<tr>
+<td><p>1996</p></td>
+<td><p><a href="/APHID">APHID</a></p></td>
+<td><p><a href="/Mark_Brockington">Mark Brockington</a>,<br />
+<a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a></p></td>
+<td><p>Static/Centralized</p></td>
+<td><p>Top k-ply</p></td>
+<td><p>None</p></td>
+</tr>
+</tbody>
+</table>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1">UIDPABS = Unsynchronized Iteratively Deepening Parallel Alpha-Beta Search<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+<li id="fn2">CABP = Concurrent Alpha-Beta Pruning<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<h2 id="other-considerations">Other Considerations</h2>
+<h3 id="memory-design">Memory Design</h3>
+<ul>
+<li><a href="/NUMA">NUMA</a></li>
+<li><a href="/SMP">SMP</a></li>
+</ul>
+<h3 id="semaphores">Semaphores</h3>
+<p>During an parallel search, certain areas of memory must be protected to make sure processors do not write simultaneously and corrupt the data. Some type of <a href="https://en.wikipedia.org/wiki/Semaphore_%28programming%29">semaphore</a> system must be used. Semaphores access a piece of <a href="https://en.wikipedia.org/wiki/Shared_memory">shared memory</a>, typically an integer. When a processor wants to access protected memory, it reads the integer. If it is zero, meaning no other process is accessing the memory, then the processor attempts to make the integer nonzero. This whole process must be done atomically, meaning that the read, compare, and write are all done at the same time. Without this atomicity another processor could read the integer at the same time and both would see that they can freely access the memory.</p>
+<p>In chess programs that use parallel alpha-beta, usually <a href="https://en.wikipedia.org/wiki/Spinlock">spinlocks</a> are used. Because the semaphores are held for such short periods of time, processors want to waste as little time as possible after the semaphore is released before acquiring access. To do this, if the semaphore is held when a processor reaches it, the processor continuously reads the semaphore. This technique can waste a lot of processing time in applications with high contention, meaning that many processes try to access the same semaphore simultaneously. In chess programs, however, we want as much processing power as possible.</p>
+<p>Spinlocks are sometimes implemented in <a href="/Assembly">assembly language</a> because the operating system does not have an <a href="https://en.wikipedia.org/wiki/Application_programming_interface">API</a> for them. <span id="ThreadsVsProcesses"></span></p>
+<h3 id="threads-vs-processes">Threads vs. Processes</h3>
+<p>There are two ways of utilizing the extra processing power of multiple CPUs, <a href="/Thread">threads</a> and <a href="/Process">processes</a>. The difference between them is that threads share all memory in the program, but there are multiple threads of execution. In processes, all memory is local to each processor except memory that is explicitly shared. This means that in a threaded program, functions must pass around an extra argument specifying which thread is active, thus which board structure to use. When using processes, a single global board can be used that will be duplicated for each process.</p>
+<p>Threads are more common, because they are easier to debug as well as implement, provided the program does not already have lots of global variables. Processes are favored by some because the need to explicitly share memory makes subtle bugs easier to avoid. Also, in processes, the extra argument to most functions is not needed.</p>
+<p>Some programs that use threads:</p>
+<ul>
+<li><a href="/Crafty">Crafty</a> <a href="#fn17" class="footnote-ref" id="fnref17" role="doc-noteref"><sup>17</sup></a> <a href="#fn18" class="footnote-ref" id="fnref18" role="doc-noteref"><sup>18</sup></a></li>
+<li><a href="/Zappa">Zappa</a></li>
+<li><a href="/Glaurung">Glaurung</a></li>
+<li>Pretty much every other program...</li>
+</ul>
+<p>Some programs that use processes:</p>
+<ul>
+<li><a href="/Rybka">Rybka</a></li>
+<li><a href="/Diep">Diep</a></li>
+<li><a href="/Deep_Sjeng">Deep Sjeng</a></li>
+<li><a href="/ZCT">ZCT</a></li>
+</ul>
+<h2 id="didactic-programs">Didactic Programs</h2>
+<ul>
+<li><a href="/APIL_chess">APIL chess</a> by <a href="/Ulf_Lorenz">Ulf Lorenz</a></li>
+<li><a href="/Viper">Viper</a> by <a href="/Tord_Romstad">Tord Romstad</a></li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Tord_Romstad">Parallelism and Selectivity in Game Tree Search | Video</a>, Talk by <a href="/Tord_Romstad">Tord Romstad</a></li>
+<li><a href="/Cilk">Cilk</a></li>
+<li><a href="/Depth">Diminishing Returns</a></li>
+<li><a href="/GPU">GPU</a></li>
+<li><a href="/Iterative_Search">Iterative Search</a></li>
+<li><a href="/Parallel_Prefix_Algorithms">Parallel Prefix Algorithms</a></li>
+<li><a href="/SIMD_and_SWAR_Techniques">SIMD and SWAR Techniques</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<h3 id="1950-">1950 ...</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Stanley_Gill">Stanley Gill</a> (<strong>1958</strong>). <em><a href="http://comjnl.oxfordjournals.org/content/1/1/2.abstract">Parallel Programming</a></em>. <a href="http://comjnl.oxfordjournals.org/content/1/1.toc">The Computer Journal, Vol. 1, No. 1</a></li>
+</ul>
+<h3 id="1970-">1970 ...</h3>
+<ul>
+<li><a href="/Gérard_M._Baudet">Gérard M. Baudet</a> (<strong>1978</strong>). <em>The Design and Analysis of Algorithms for Asynchronous Multiprocessors</em>. Ph.D. thesis, <a href="/Carnegie_Mellon_University">Carnegie Mellon University</a>, advisor <a href="/Mathematician">Hsiang-Tsung Kung</a></li>
+</ul>
+<h3 id="1980-">1980 ...</h3>
+<ul>
+<li><a href="/Tony_Marsland">Tony Marsland</a>, <a href="/Murray_Campbell">Murray Campbell</a>, A. L. Rivera (<strong>1980</strong>). <em>Parallel Search of Game Trees.</em> Technical Report TR 80-7, Computing Science Department, <a href="/University_of_Alberta">University of Alberta</a>, <a href="https://webdocs.cs.ualberta.ca/~tony/TechnicalReports/TR80-7.pdf">pdf</a></li>
+<li><a href="/Raphael_Finkel">Raphael Finkel</a>, <a href="/Marvin_Solomon">Marvin Solomon</a> (<strong>1980</strong>). <em>The Arachne Kernel.</em> Version 1.2 Technical Report 380, <a href="https://en.wikipedia.org/wiki/University_of_Wisconsin-Madison">University of Wisconsin-Madison</a>, <a href="http://ftp.cs.wisc.edu/pub/techreports/1980/TR380.pdf">pdf</a></li>
+<li><a href="/Raphael_Finkel">Raphael Finkel</a>, <a href="/John_Philip_Fishburn">John Philip Fishburn</a> (<strong>1980</strong>). <em>Parallel Alpha-Beta Search on Arachne.</em> <a href="/IEEE">IEEE</a> International Conference on Parallel Processing, pp. 235-243.</li>
+<li><a href="/Gérard_M._Baudet">Gérard M. Baudet</a>, <a href="/Mathematician">Richard P. Brent</a>, <a href="/Mathematician">Hsiang-Tsung Kung</a> (<strong>1980</strong>). <em><a href="http://wwwmaths.anu.edu.au/%7Ebrent/pub/pub058.html">Parallel Execution of a Sequence of tasks on a Asynchronous Multiprocessor</a></em>. Australian Computer Journal 12(3): 105-112, <a href="http://wwwmaths.anu.edu.au/%7Ebrent/pd/rpb058i.pdf">pdf</a></li>
+<li><a href="/Selim_Akl">Selim Akl</a>, <a href="http://umanitoba.ca/admin/president/bio.html">David T. Barnard</a>, [<a href="http://research.cs.queensu.ca/TechReports/authorsD.html#Doran,%20R.J">http://research.cs.queensu.ca/TechReports/authorsD.html#Doran,%20R.J</a>. R.J. Doran], (<strong>1980</strong>). <em>Design, analysis and implementation of a parallel alpha-beta algorithm</em>, Department of Computing and Information Science, Queen's University, Kingston, Ontario.</li>
+<li><a href="/Selim_Akl">Selim Akl</a>, <a href="http://umanitoba.ca/admin/president/bio.html">David T. Barnard</a>, [<a href="http://research.cs.queensu.ca/TechReports/authorsD.html#Doran,%20R.J">http://research.cs.queensu.ca/TechReports/authorsD.html#Doran,%20R.J</a>. R.J. Doran] (<strong>1980</strong>). <em>Simulation and Analysis in Deriving Time and Storage Requirements for a Parallel Alpha-Beta Pruning Algorithm</em>. <a href="/IEEE">IEEE</a> International Conference on Parallel Processing, pp. 231-234.</li>
+<li><a href="/Selim_Akl">Selim Akl</a>, <a href="http://umanitoba.ca/admin/president/bio.html">David T. Barnard</a>, [<a href="http://research.cs.queensu.ca/TechReports/authorsD.html#Doran,%20R.J">http://research.cs.queensu.ca/TechReports/authorsD.html#Doran,%20R.J</a>. R.J. Doran] (<strong>1980</strong>). <em>Searching game trees in parallel</em>, Proceedings of the Third Biennial Conference of the Canadian Society for Computational Studies of Intelligence, Victoria, B.C.</li>
+</ul>
+<p><strong>1981</strong></p>
+<ul>
+<li><a href="/John_Philip_Fishburn">John Philip Fishburn</a> (<strong>1981</strong>). <em>Analysis of Speedup in Distributed Algorithms</em>. Ph.D. Thesis, <a href="http://www.cs.wisc.edu/techreports/1981/TR431.pdf">pdf</a></li>
+<li><a href="/Selim_Akl">Selim Akl</a>, [<a href="http://research.cs.queensu.ca/TechReports/authorsD.html#Doran,%20R.J">http://research.cs.queensu.ca/TechReports/authorsD.html#Doran,%20R.J</a>. R.J. Doran] (<strong>1981</strong>). <em>A comparison of parallel implementations of the alpha-beta and Scout tree search algorithms using the game of checkers</em>, Department of Computing and Information Science, Queen's University, Kingston, Ontario.</li>
+<li><a href="/Tony_Marsland">Tony Marsland</a>, <a href="/Murray_Campbell">Murray Campbell</a> (<strong>1981</strong>). <em>Parallel Search of Strongly Ordered Game Trees</em>. Technical Report TR 81-9, Department of Computing Science , <a href="/University_of_Alberta">University of Alberta</a>, <a href="https://webdocs.cs.ualberta.ca/~tony/TechnicalReports/TR81-9.pdf">pdf</a></li>
+</ul>
+<p><strong>1982</strong></p>
+<ul>
+<li><a href="/Tony_Marsland">Tony Marsland</a>, <a href="/Murray_Campbell">Murray Campbell</a> (<strong>1982</strong>). <em>Parallel Search of Strongly Ordered Game Trees.</em> <a href="/ACM">ACM Computing Surveys</a>, Vol. 14, No. 4, pp. 533-551. <a href="http://www.cs.ualberta.ca/%7Etony/OldPapers/strong.pdf">pdf</a></li>
+<li><a href="/Tony_Marsland">Tony Marsland</a>, <a href="/Murray_Campbell">Murray Campbell</a> (<strong>1982</strong>). <em>A Study of Parallel Tree Search Algorithms</em>. Technical Report TR 82-4, Computing Science Department, <a href="/University_of_Alberta">University of Alberta</a>, <a href="https://webdocs.cs.ualberta.ca/~tony/TechnicalReports/TR82-4.pdf">pdf</a></li>
+<li><a href="/Raphael_Finkel">Raphael Finkel</a>, <a href="/John_Philip_Fishburn">John Philip Fishburn</a> (<strong>1982</strong>). <em>Parallelism in Alpha-Beta Search</em>.<a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 19, No. 1</li>
+<li><a href="/Monroe_Newborn">Monroe Newborn</a>, (<strong>1982</strong>). <em>OSTRICH/P - a parallel search chess program, SOCS-82.3,</em> <a href="/McGill_University">McGill University</a>, School of Computer Science, Montreal.</li>
+<li><a href="/Selim_Akl">Selim Akl</a>, <a href="http://umanitoba.ca/admin/president/bio.html">David T. Barnard</a>, [<a href="http://research.cs.queensu.ca/TechReports/authorsD.html#Doran,%20R.J">http://research.cs.queensu.ca/TechReports/authorsD.html#Doran,%20R.J</a>. R.J. Doran] (<strong>1982</strong>). <em>Design, Analysis, and Implementation of a Parallel Tree Search Algorithm</em>. <a href="/IEEE">IEEE Transactions on Pattern Analysis and Machine Intelligence</a>, Vol. 4, No. 2, pp. 192-203. ISSN 0162-8828</li>
+</ul>
+<p><strong>1983</strong></p>
+<ul>
+<li><a href="/Raphael_Finkel">Raphael Finkel</a>, <a href="/John_Philip_Fishburn">John Philip Fishburn</a> (<strong>1983</strong>). <em>Improved Speedup Bounds for Parallel Alpha-Beta Search</em>. <a href="/IEEE">IEEE Transactions on Pattern Analysis and Machine Intelligence</a>, Vol. 5, No. 1, pp. 89 - 92</li>
+<li><a href="/Clyde_Kruskal">Clyde Kruskal</a> (<strong>1983</strong>). <em><a href="https://ieeexplore.ieee.org/document/1676138?arnumber=1676138">Searching, Merging, and Sorting in Parallel Computation</a></em>. <a href="/IEEE">IEEE Transactions on Computers</a>, Vol. C-32, No 10</li>
+<li><a href="/Gary_Lindstrom">Gary Lindstrom</a> (<strong>1983</strong>). <em>The Key Node Method: A Highly-Parallel Alpha-Beta Algorithm</em>. Technical Report UUCCS 83-101, <a href="https://en.wikipedia.org/wiki/University_of_Utah">University of Utah</a>, <a href="http://content.lib.utah.edu/utils/getfile/collection/uspace/id/3706/filename/image">pdf</a></li>
+</ul>
+<p><strong>1984</strong></p>
+<ul>
+<li>Lionel Moser (<strong>1984</strong>). <em>An Experiment in Distributed Game Tree Searching</em>, M.Sc. thesis, <a href="/University_of_Waterloo">University of Waterloo</a> <a href="#fn19" class="footnote-ref" id="fnref19" role="doc-noteref"><sup>19</sup></a> <a href="#fn20" class="footnote-ref" id="fnref20" role="doc-noteref"><sup>20</sup></a></li>
+</ul>
+<h3 id="1985-">1985 ...</h3>
+<ul>
+<li><a href="/Tony_Marsland">Tony Marsland</a>, <a href="/Fred_Popowich">Fred Popowich</a> (<strong>1985</strong>). <em>Parallel Game-Tree Search.</em> <a href="/IEEE">IEEE Transactions on Pattern Analysis and Machine Intelligence</a>, Vol. 7, No. 4,<a href="http://webdocs.cs.ualberta.ca/~tony/OldPapers/parallel.pdf">1984 pdf</a> (Draft)</li>
+<li>Baruch Awerbuch (<strong>1985</strong>). <em><a href="http://www.sciencedirect.com/science/article/pii/0020019085900833">A New Distributed Depth-First Search Algorithm</a></em>. <a href="https://en.wikipedia.org/wiki/Information_Processing_Letters">Information Processing Letters</a>, Vol. 20, No. 3</li>
+<li><a href="/Monroe_Newborn">Monroe Newborn</a> (<strong>1985</strong>). <em>A Parallel Search Chess Program</em>. Proceedings of the ACM Annual Conference, pp. 272-277. Denver, Co.</li>
+<li><a href="/Clyde_Kruskal">Clyde Kruskal</a>, <a href="/Mathematician">Alan Weiss</a> (<strong>1985</strong>). <em>Allocating Independent Subtasks on Parallel Processors</em>. <a href="/IEEE">IEEE Transactions on Software Engineering</a>, Vol. 11, No. 10</li>
+<li><a href="http://www.informatik.uni-trier.de/~ley/pers/hd/l/Leifker:Daniel_B=.html">Daniel B. Leifker</a>, <a href="/Laveen_Kanal">Laveen N. Kanal</a> (<strong>1985</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=1623687">A Hybrid SSS*/Alpha-Beta Algorithm for Parallel Search of Game Trees</a></em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/ijcai/ijcai85.html#LeifkerK85">IJCAI'85</a> » <a href="/SSS%252A_and_Dual%252A">SSS* and Dual*</a></li>
+</ul>
+<p><strong>1986</strong></p>
+<ul>
+<li><a href="/Tony_Marsland">Tony Marsland</a>, <a href="/Marius_Olafsson">Marius Olafsson</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a> (<strong>1986</strong>). <em>Multiprocessor Tree-Search Experiments</em>. <a href="/Advances_in_Computer_Chess_4">Advances in Computer Chess 4</a></li>
+<li><a href="/Henri_Bal">Henri Bal</a>, <a href="/Robbert_van_Renesse">Robbert van Renesse</a> (<strong>1986</strong>). <em>Parallel Alpha-Beta Search</em>. 4th NGI-SION Symposium Stimulerende Informatica. Jaarbeurs Utrecht, The Netherlands</li>
+<li><a href="/Henri_Bal">Henri Bal</a>, <a href="/Robbert_van_Renesse">Robbert van Renesse</a> (<strong>1986</strong>). <em>A Summary of Parallel Alpha-Beta Search Results</em>. <a href="/ICGA_Journal">ICCA Journal, Vol 9, No. 3</a></li>
+<li><a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a> (<strong>1986</strong>). <em>Improved Parallel Alpha-Beta Searching</em>. Proceedings ACM/IEEE Fall Joint Computer Conference, pp. 519-527.</li>
+<li><a href="/Rainer_Feldmann">Rainer Feldmann</a>, <a href="/Peter_Mysliwietz">Peter Mysliwietz</a>, <a href="/Oliver_Vornberger">Oliver Vornberger</a> (<strong>1986</strong>). <em>A Local Area Network Used as a Parallel Architecture</em>. Technical Report 31, <a href="/Paderborn_University">Paderborn University</a></li>
+</ul>
+<p><strong>1987</strong></p>
+<ul>
+<li><a href="http://www.onesource.com/free/Usui-Hiromoto/People/Profile/51361305-8">Hiromoto Usui</a>, <a href="http://www.informatik.uni-trier.de/~ley/pers/hd/y/Yamashita:Masafumi.html">Masafumi Yamashita</a>, <a href="http://www.informatik.uni-trier.de/~ley/pers/hd/i/Imai:Masaharu.html">Masaharu Imai</a>, <a href="/Toshihide_Ibaraki">Toshihide Ibaraki</a> (<strong>1987</strong>). <em>Parallel Searches of Game Tree</em>. Systems and Computer in Japan, Vol. 18, No. 8, pp. 97-109.</li>
+</ul>
+<p><strong>1988</strong></p>
+<ul>
+<li><a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a> (<strong>1988</strong>). <em>Distributed Game-Tree Searching</em>. Journal of Parallel and Distributed Computing, Vol. 6, No. 2, pp. 90-114.</li>
+<li><a href="https://en.wikipedia.org/wiki/Chris_Ferguson">Chris Ferguson</a>, <a href="/Richard_Korf">Richard Korf</a> (<strong>1988</strong>). <em>Distributed Tree Search and its Application to Alpha-Beta Pruning.</em> Proceedings of AAAI-88, Vol. I, pp. 128-132. Saint Paul, MN, <a href="http://www.aaai.org/Papers/AAAI/1988/AAAI88-023.pdf">pdf</a></li>
+<li><a href="/Monroe_Newborn">Monroe Newborn</a> (<strong>1988</strong>). <em>Unsynchronized Iterative Deepening Parallel Alpha-Beta Search</em>. IEEE Transactions on Pattern Analysis and Machine Intelligence, PAMI, Vol. 10, No. 5, pp. 687-694. ISSN 0162-8828.</li>
+<li><a href="/Ed_Felten">Ed Felten</a>, <a href="/Steve_Otto">Steve Otto</a> (<strong>1988</strong>). <em><a href="https://authors.library.caltech.edu/71250/">Chess on a Hypercube</a></em>. The Third Conference on Hypercube Concurrent Computers and Applications, Vol. II-Applications</li>
+<li><a href="/Robert_Hyatt">Robert Hyatt</a> (<strong>1988</strong>). <em>A High-Performance Parallel Algorithm to Search Depth-First Game Trees</em>. Ph.D. Thesis, Department of Computer Science, <a href="/University_of_Alabama_at_Birmingham">University of Alabama at Birmingham</a></li>
+<li><a href="/Maarten_van_der_Meulen">Maarten van der Meulen</a> (<strong>1988</strong>). <em>Parallel Conspiracy-Number Search</em>. M.Sc. thesis, Faculty of Mathematics and Computer Science, <a href="https://en.wikipedia.org/wiki/Vrije_Universiteit">Vrije Universteit, Amsterdam</a></li>
+<li>Matthew Huntbach, F. Warren Burton (<strong>1988</strong>). <em><a href="http://www.sciencedirect.com/science/article/pii/0020025588900540">Alpha-beta search on virtual tree machines</a></em>. <a href="http://www.journals.elsevier.com/information-sciences/">Information Sciences</a>, Vol. 44, No. 1</li>
+</ul>
+<p><strong>1989</strong></p>
+<ul>
+<li>Lynn Sutherland (<strong>1989</strong>). <em>Load Balancing Search Problems on General-Purpose Multi-Computers</em>. <a href="/WCCC_1989">Workshop on New Directions in Game-Tree Search</a></li>
+<li><a href="/Rainer_Feldmann">Rainer Feldmann</a>, <a href="/Burkhard_Monien">Burkhard Monien</a>, <a href="/Peter_Mysliwietz">Peter Mysliwietz</a>, <a href="/Oliver_Vornberger">Oliver Vornberger</a> (<strong>1989</strong>). <em>Distributed Game-Tree Search</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 12, No. 2</a></li>
+<li><a href="/Henri_Bal">Henri Bal</a> (<strong>1989</strong>). <em><a href="http://dare.ubvu.vu.nl/handle/1871/12760?mode=full&amp;submit_simple=Show+full+item+record">The shared data-object model as a paradigm for programming distributed systems</a></em>. Ph.D. thesis, <a href="https://en.wikipedia.org/wiki/Vrije_Universiteit">Vrije Universiteit</a></li>
+<li><a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Bruce_W._Suter">Bruce W. Suter</a>, <a href="/Harry_Nelson">Harry Nelson</a> (<strong>1989</strong>). <em>A Parallel Alpha-Beta Tree Searching Algorithm</em>. Parallel Computing, Vol. 10, No. 3, pp. 299-308. ISSN 0167-8191.</li>
+<li><a href="/Igor_Steinberg">Igor Steinberg</a>, <a href="/Marvin_Solomon">Marvin Solomon</a> (<strong>1989</strong>). <em>Searching Game Trees in Parallel</em>. Technical report 877, <a href="ftp://ftp.cs.wisc.edu/pub/techreports/1989/TR877.pdf">pdf</a></li>
+<li><a href="/Richard_Karp">Richard Karp</a>, <a href="/Yanjun_Zhang">Yanjun Zhang</a> (<strong>1989</strong>). <em><a href="https://www.icsi.berkeley.edu/icsi/node/2253">On parallel evaluation of game trees</a></em>. <a href="https://dblp.uni-trier.de/db/conf/spaa/spaa89.html">SPAA '89</a></li>
+<li><a href="/Yanjun_Zhang">Yanjun Zhang</a> (<strong>1989</strong>). <em><a href="https://www2.eecs.berkeley.edu/Pubs/TechRpts/1989/5909.html">Parallel Algorithms for Combinatorial Search Problems</a></em>. Ph.D. thesis, <a href="/University_of_California,_Berkeley">University of California, Berkeley</a>, advisor <a href="/Richard_Karp">Richard Karp</a></li>
+<li><a href="/Feng-hsiung_Hsu">Feng-hsiung Hsu</a> (<strong>1989</strong>). <em>Large Scale Parallelization of Alpha-beta Search: An Algorithmic and Architectural Study with Computer Chess</em>. Ph.D. thesis, Technical report CMU-CS-90-108, <a href="/Carnegie_Mellon_University">Carnegie Mellon University</a>, advisor <a href="/Mathematician">Hsiang-Tsung Kung</a></li>
+</ul>
+<h3 id="1990-">1990 ...</h3>
+<ul>
+<li><a href="/Rainer_Feldmann">Rainer Feldmann</a>, <a href="/Peter_Mysliwietz">Peter Mysliwietz</a>, <a href="/Burkhard_Monien">Burkhard Monien</a> (<strong>1991</strong>) <em>A Fully Distributed Chess Program</em>. <a href="/Advances_in_Computer_Chess_6">Advances in Computer Chess 6</a>, <a href="http://www.top-5000.nl/ps/A%20fully%20distribuited%20chess%20program.pdf">pdf</a></li>
+<li><a href="/Clyde_Kruskal">Clyde Kruskal</a>, <a href="/Mathematician">Larry Rudolph</a>, <a href="/Mathematician">Marc Snir</a> (<strong>1990</strong>). <em><a href="https://www.sciencedirect.com/science/article/pii/030439759090192K">A Complexity Theory of Efficient Parallel Algorithms</a></em>. <a href="https://en.wikipedia.org/wiki/Theoretical_Computer_Science_%28journal%29">Theoretical Computer Science</a>, Vol. 71</li>
+<li><a href="/Clyde_Kruskal">Clyde Kruskal</a>, <a href="/Mathematician">Larry Rudolph</a>, <a href="/Mathematician">Marc Snir</a> (<strong>1990</strong>). <em><a href="https://link.springer.com/article/10.1007/BF01840376">Efficient Parallel Algorithms for Graph Problems</a></em>. <a href="https://en.wikipedia.org/wiki/Algorithmica">Algorithmica</a>, Vol. 5, No. 1</li>
+</ul>
+<p><strong>1992</strong></p>
+<ul>
+<li><a href="/Jaleh_Rezaie">Jaleh Rezaie</a>, <a href="/Raphael_Finkel">Raphael Finkel</a> (<strong>1992</strong>). <em><a href="https://www.researchgate.net/publication/2813087_A_comparison_of_some_parallel_game-tree_search_algorithms_Revised_version">A comparison of some parallel game-tree search algorithms</a></em>. <a href="https://en.wikipedia.org/wiki/University_of_Kentucky">University of Kentucky</a></li>
+<li><a href="/Rainer_Feldmann">Rainer Feldmann</a>, <a href="/Peter_Mysliwietz">Peter Mysliwietz</a>, <a href="/Burkhard_Monien">Burkhard Monien</a> (<strong>1992</strong>). <em>Experiments with a Fully Distributed Chess Program</em>. <a href="/3rd_Computer_Olympiad">Heuristic Programming in AI 3</a></li>
+<li><a href="/Rainer_Feldmann">Rainer Feldmann</a>, <a href="/Peter_Mysliwietz">Peter Mysliwietz</a>, <a href="/Burkhard_Monien">Burkhard Monien</a> (<strong>1992</strong>). <em>Distributed Game Tree Search on a Massively Parallel System</em>. Data Structures and Efficient Algorithms, B. Monien, Th. Ottmann (eds.), Springer, Lecture Notes in Computer Science, 594, 1992, 270-288</li>
+</ul>
+<p><strong>1993</strong></p>
+<ul>
+<li><a href="/Rainer_Feldmann">Rainer Feldmann</a> (<strong>1993</strong>). <em>Game Tree Search on Massively Parallel Systems</em>. Ph.D. Thesis, <a href="http://www2.cs.uni-paderborn.de/fachbereich/AG/monien/PUBLICATIONS/POSTSCRIPTS/feldmann_phd.pdf">pdf</a></li>
+<li><a href="/Vincent_David">Vincent David</a> (<strong>1993</strong>). <em><a href="http://cat.inist.fr/?aModele=afficheN&amp;cpsidt=161774">Algorithmique parallèle sur les arbres de décision et raisonnement en temps contraint. Etude et application au Minimax</a></em> = Parallel algorithm for heuristic tree searching and real-time reasoning. Study and application to the Minimax, Ph.D. Thesis, <a href="https://en.wikipedia.org/wiki/%C3%89cole_nationale_sup%C3%A9rieure_de_l%27a%C3%A9ronautique_et_de_l%27espace">École nationale supérieure de l'aéronautique et de l'espace</a>, <a href="https://en.wikipedia.org/wiki/Toulouse">Toulouse</a>, <a href="https://en.wikipedia.org/wiki/France">France</a></li>
+<li><a href="/Paul_Lu">Paul Lu</a> (<strong>1993</strong>). <em><a href="http://webdocs.cs.ualberta.ca/~paullu/MScThesis/thesis.html">Parallel Search of Narrow Game Trees</a></em>. M.Sc. Thesis, <a href="/University_of_Alberta">University of Alberta</a></li>
+<li>Van-Dat Cung (<strong>1993</strong>). <em>Parallelizations of Game-Tree Search</em>. <a href="http://dblp.uni-trier.de/db/conf/parco/parco1993.html#Cung93">PARCO 1993</a>, <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.48.6959&amp;rep=rep1&amp;type=pdf">pdf</a> hosted by <a href="https://en.wikipedia.org/wiki/CiteSeer">CiteSeerX</a></li>
+</ul>
+<p><strong>1994</strong></p>
+<ul>
+<li><a href="/Robert_Hyatt">Robert Hyatt</a> (<strong>1994</strong>). <em><a href="http://www.craftychess.com/hyatt/search.html">The DTS high-performance parallel tree search algorithm</a></em>.</li>
+<li><a href="/Bradley_Kuszmaul">Bradley C. Kuszmaul</a> (<strong>1994</strong>). <em>Synchronized MIMD Computing</em>. Ph. D. Thesis, <a href="/Massachusetts_Institute_of_Technology">Massachusetts Institute of Technology</a>, <a href="http://supertech.csail.mit.edu/papers/thesis-kuszmaul.pdf">pdf</a></li>
+<li><a href="/Chris_Joerg">Christopher F. Joerg</a>, <a href="/Bradley_Kuszmaul">Bradley C. Kuszmaul</a> (<strong>1994</strong>). <em>Massively Parallel Chess</em>, <a href="http://supertech.csail.mit.edu/papers/dimacs94.pdf">pdf</a></li>
+<li>Van-Dat Cung (<strong>1994</strong>). <em>Contribution à l'Algorithmique Non Numérique Parallèle : Exploration d'Espaces de Recherche</em>. Ph.D. thesis, <a href="/University_of_Paris">University of Paris VI</a></li>
+<li><a href="/Paolo_Ciancarini">Paolo Ciancarini</a> (<strong>1994</strong>). <em>Distributed Searches: a Basis for Comparison.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 17, No. 4</a>, <a href="ftp://ftp.cs.unibo.it/pub/cianca/iccaj2.ps.gz">zipped postscript</a></li>
+<li><a href="/Mark_Brockington">Mark Brockington</a> (<strong>1994</strong>). <em>An Implementation of the Young Brothers Wait Concept</em>. Internal report, <a href="/University_of_Alberta">University of Alberta</a></li>
+<li><a href="/Mark_Brockington">Mark Brockington</a> (<strong>1994</strong>). <em>Improvements to Parallel Alpha-Beta Algorithms</em>. Technical report, Department of Computing Science, <a href="/University_of_Alberta">University of Alberta</a></li>
+</ul>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li><a href="/Bradley_Kuszmaul">Bradley C. Kuszmaul</a> (<strong>1995</strong>). <em>The StarTech Massively Parallel Chess Program</em>. <a href="http://supertech.csail.mit.edu/papers/startech.pdf">pdf</a></li>
+<li><a href="/Henri_Bal">Henri Bal</a>, <a href="/Victor_Allis">Victor Allis</a> (<strong>1995</strong>). <em>Parallel Retrograde Analysis on a Distributed System</em>. Supercomputing ’95, San Diego, CA.</li>
+<li><a href="/Jean-Christophe_Weill">Jean-Christophe Weill</a> (<strong>1995</strong>). <em>Programmes d'Échecs de Championnat: Architecture Logicielle Synthèse de Fonctions d'Évaluations, Parallélisme de Recherche</em>. Ph.D. Thesis. Université Paris 8, Saint-Denis, <a href="http://www.recherche.enac.fr/%7Eweill/publications/phdJCW.ps.gz">zipped ps</a> (French)</li>
+<li><a href="/Holger_Hopp">Holger Hopp</a>, <a href="/Peter_Sanders">Peter Sanders</a> (<strong>1995</strong>). <em>Parallel Game Tree Search on SIMD Machines</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/irregular/irregular95.html#HoppS95">IRREGULAR 1995</a>, from <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.16.6343">CiteSeerX</a></li>
+<li><a href="/Tony_Marsland">Tony Marsland</a>, Yaoqing Gao (<strong>1995</strong>). <em>Speculative Parallelism Improves Search?</em> Technical Report 95-05, Department of Computing Science, <a href="/University_of_Alberta">University of Alberta</a>, <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.54.2187">CiteSeerX</a></li>
+</ul>
+<p><strong>1996</strong></p>
+<ul>
+<li><a href="/Jean-Christophe_Weill">Jean-Christophe Weill</a> (<strong>1996</strong>). <em>The ABDADA Distributed Minimax Search Agorithm</em>. Proceedings of the 1996 ACM Computer Science Conference, pp. 131-138. ACM, New York, N.Y, reprinted <a href="/ICGA_Journal">ICCA Journal, Vol. 19, No. 1</a>, <a href="http://www.recherche.enac.fr/%7Eweill/publications/acm.ps.gz">zipped postscript</a></li>
+<li><a href="/Ulf_Lorenz">Ulf Lorenz</a>, <a href="/Valentin_Rottmann">Valentin Rottmann</a> (<strong>1996</strong>) <em>Parallel Controlled Conspiracy-Number Search</em> - <a href="/Advances_in_Computer_Chess_8">Advances in Computer Chess 8</a></li>
+<li>Yaoqing Gao, <a href="/Tony_Marsland">Tony Marsland</a> (<strong>1996</strong>). <em>Multithreaded Pruned Tree Search in Distributed Systems</em>. Journal of Computing and Information, 2(1), 482-492, <a href="http://www.cs.ualberta.ca/%7Etony/RecentPapers/icci.pdf">pdf</a></li>
+<li><a href="/Mark_Brockington">Mark Brockington</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a> (<strong>1996</strong>). <em>The APHID Parallel αβ Search Algorithm</em>. Technical Report 96-07, Department of Computing Science, <a href="/University_of_Alberta">University of Alberta</a>, Edmonton, Alberta, Canada. as <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.23.8215&amp;rep=rep1&amp;type=pdf">pdf</a> from <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.23.8215">CiteSeerX</a></li>
+<li><a href="/Mark_Brockington">Mark Brockington</a> (<strong>1996</strong>). <em>A Taxonomy of Parallel Game-Tree Search Algorithms</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 19, No. 3</a></li>
+<li><a href="/Bernhard_Balkenhol">Bernhard Balkenhol</a> (<strong>1996</strong>). <em>Problems in Sequential and Parallel Game Tree Search</em>. <a href="https://en.wikipedia.org/wiki/Bielefeld_University">Bielefeld University</a>, <a href="http://www.mathematik.uni-bielefeld.de/sfb343/preprints/pre97001.ps.gz">zipped ps</a></li>
+<li><a href="http://www.informatik.uni-trier.de/~ley/pers/hd/l/Li:Ming.html">Ming Li</a>, <a href="/John_Tromp">John Tromp</a>, <a href="/Mathematician">Paul M. B. Vitányi</a> (<strong>1996</strong>). <em>How to Share Concurrent Wait-Free Variables</em>. <a href="/ACM">Journal of the ACM</a>, Vol. 43, No. 4</li>
+</ul>
+<p><strong>1997</strong></p>
+<ul>
+<li><a href="/Robert_Hyatt">Robert Hyatt</a> (<strong>1997</strong>). <em><a href="http://www.craftychess.com/hyatt/search.html">The Dynamic Tree-Splitting Parallel Search Algorithm</a></em>, <a href="/ICGA_Journal">ICCA Journal, Vol. 20, No. 1</a></li>
+<li><a href="/Andrew_Tridgell">Andrew Tridgell</a> (<strong>1997</strong>). <em>KnightCap — a parallel chess program on the AP1000+</em>. <a href="ftp://us6.samba.org/pub/tridge/knightcap_pcw97.ps.gz">zipped ps</a> » <a href="/KnightCap">KnightCap</a></li>
+<li><a href="/Mark_Brockington">Mark Brockington</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a> (<strong>1997</strong>). <em>APHID Game-Tree Search</em>. <a href="/Advances_in_Computer_Chess_8">Advances in Computer Chess 8</a></li>
+<li>David Sturgill, <a href="/Alberto_Maria_Segre">Alberto Maria Segre</a> (<strong>1997</strong>). <em><a href="http://www.springerlink.com/content/j11186905500t384/">Nagging: A Distributed, Adversarial Search-Pruning Technique Applied to First-Order Inference</a></em>. <a href="https://en.wikipedia.org/wiki/Journal_of_Automated_Reasoning">Journal of Automated Reasoning</a>, Vol. 19, No. 3 <a href="#fn21" class="footnote-ref" id="fnref21" role="doc-noteref"><sup>21</sup></a></li>
+</ul>
+<p><strong>1998</strong></p>
+<ul>
+<li><a href="/Mark_Brockington">Mark Brockington</a> (<strong>1998</strong>). <em>Asynchronous Parallel Game-Tree Search</em>. Ph.D. Thesis, <a href="/University_of_Alberta">University of Alberta</a>, <a href="http://games.cs.ualberta.ca/articles/mgb_thesis.ps.gz">zipped postscript</a></li>
+<li><a href="/Rainer_Feldmann">Rainer Feldmann</a>, <a href="/Burkhard_Monien">Burkhard Monien</a> (<strong>1998</strong>). <em><a href="http://www2.cs.uni-paderborn.de/fachbereich/AG/monien/PUBLICATIONS/ABSTRACTS/FM_T3E.html">Selective Game Tree Search on a Cray T3E</a></em>. <a href="http://www2.cs.uni-paderborn.de/fachbereich/AG/monien/PUBLICATIONS/POSTSCRIPTS/FM_T3E.ps.Z">ps</a></li>
+<li><a href="/Craig_S._Bruce">Craig S. Bruce</a> (<strong>1998</strong>). <em><a href="http://uwspace.uwaterloo.ca/handle/10012/300">Performance Optimization for Distributed-Shared-Data Systems</a></em>. Ph.D. thesis, <a href="/University_of_Waterloo">University of Waterloo</a></li>
+</ul>
+<p><strong>1999</strong></p>
+<ul>
+<li><a href="/Don_Dailey">Don Dailey</a>, <a href="/Charles_Leiserson">Charles E. Leiserson</a> (<strong>1999</strong>). <em>Using Cilk to Write Multiprocessor Chess Programs</em>, <a href="http://supertech.csail.mit.edu/papers/icca99.pdf">pdf</a></li>
+<li>Kevin Steele (<strong>1999</strong>). <em><a href="https://students.cs.byu.edu/~snell/Classes/CS584/projectsF99/steele/report.html">Parallel Alpha-Beta Pruning of Game Decision Trees: A Chess Implementation</a></em>. CS 584 Fall 1999 Semester Project Report, <a href="https://en.wikipedia.org/wiki/Brigham_Young_University">Brigham Young University</a></li>
+<li><a href="/Mark_Brockington">Mark Brockington</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a> (<strong>1999</strong>). <em>APHID: Asynchronous Parallel Game-Tree Search</em>. Department of Computing Science, <a href="/University_of_Alberta">University of Alberta</a>, Edmonton, Alberta, Canada. as <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.33.9870&amp;rep=rep1&amp;type=pdf">pdf</a> from <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.33.9870">CiteSeerX</a></li>
+<li><a href="/John_Romein">John Romein</a>, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Henri_Bal">Henri Bal</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a> (<strong>1999</strong>). <em>Transposition Table Driven Work Scheduling in Distributed Search</em>. <a href="/AAAI">AAAI-99</a>, <a href="https://www.aaai.org/Papers/AAAI/1999/AAAI99-103.pdf">pdf</a> <a href="#fn22" class="footnote-ref" id="fnref22" role="doc-noteref"><sup>22</sup></a> <a href="#fn23" class="footnote-ref" id="fnref23" role="doc-noteref"><sup>23</sup></a></li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="/John_Romein">John Romein</a>, <a href="/Henri_Bal">Henri Bal</a>, <a href="/Mathematician">Dick Grune</a> (<strong>2000</strong>). <em>The Multigame Reference Manual</em>. <a href="https://en.wikipedia.org/wiki/Vrije_Universiteit">Vrije Universiteit</a>, <a href="http://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=B2397A260C8166B1B31EC4779585EA5F?doi=10.1.1.32.1664&amp;rep=rep1&amp;type=pdf">pdf</a></li>
+</ul>
+<p><strong>2001</strong></p>
+<ul>
+<li><a href="/John_Romein">John Romein</a> (<strong>2001</strong>). <em>Multigame - An Environment for Distributed Game-Tree Search</em>. Ph.D. thesis, <a href="https://en.wikipedia.org/wiki/Vrije_Universiteit">Vrije Universiteit</a>, supervisor <a href="/Henri_Bal">Henri Bal</a>, <a href="http://dare.ubvu.vu.nl/bitstream/1871/11305/1/5429.pdf">pdf</a></li>
+<li><a href="/Valavan_Manohararajah">Valavan Manohararajah</a> (<strong>2001</strong>). <em>Parallel Alpha-Beta Search on Shared Memory Multiprocessors</em>. Masters Thesis, <a href="http://www.top-5000.nl/ps/Parallel%20Alpha-Beta%20Search%20on%20Shared%20Memory%20Multiprocessors.pdf">pdf</a></li>
+<li><a href="http://www.zib.de/schintke/">Florian Schintke</a>, <a href="http://pc2.uni-paderborn.de/people/jens-simon/">Jens Simon</a>, <a href="/Alexander_Reinefeld">Alexander Reinefeld</a> (<strong>2001</strong>). <em>A Cache Simulator for Shared Memory Systems</em>. International Conference on Computational Science ICCS 2001, San Francisco, CA, Springer LNCS 2074, vol. 2, pp. 569-578. <a href="http://www.zib.de/reinefeld/Publications/ldasim-lncs.ps.gz">zipped ps</a></li>
+</ul>
+<p><strong>2002</strong></p>
+<ul>
+<li>Yaron Shoham, Sivan Toledo (<strong>2002</strong>). <em><a href="https://www.sciencedirect.com/science/article/pii/S0004370202001959">Parallel Randomized Best-First Minimax Search</a></em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_(journal)">Artificial Intelligence</a>, Vol. 137, Nos. 1-2</li>
+<li><a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>. (<strong>2002</strong>). <em>Distributed Game-Tree Search Using Transposition Table Driven Work Scheduling</em>, In Proc. of 31st International Conference on Parallel Processing (ICPP'02), pages 323-330, IEEE Computer Society Press. <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.132.8604&amp;rep=rep1&amp;type=pdf">pdf</a> via <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.132.8604">CiteSeerX</a></li>
+<li><a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>. (<strong>2002</strong>). <em>Transposition Table Driven Work Scheduling in Distributed Game-Tree Search</em> (Best Paper Prize), In Proc. of Fifteenth Canadian Conference on Artificial Intelligence (AI'2002), volume 2338 of Lecture Notes in Artificial Intelligence (LNAI), pages 56-68, <a href="http://www.springerlink.com/content/47b3crn04egmmx8l/">Springer</a></li>
+<li><a href="/John_Romein">John Romein</a>, <a href="/Henri_Bal">Henri Bal</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, <a href="/Aske_Plaat">Aske Plaat</a> (<strong>2002</strong>). <em>A Performance Analysis of Transposition-Table-Driven Scheduling in Distributed Search</em>. IEEE Transactions on Parallel and Distributed Systems, Vol. 13, No. 5, pp. 447–459. <a href="http://www.cs.vu.nl/~bal/Papers/tds.pdf">pdf</a> » <a href="/Transposition_Table">Transposition Table</a> <a href="#fn24" class="footnote-ref" id="fnref24" role="doc-noteref"><sup>24</sup></a></li>
+<li><a href="/Alberto_Maria_Segre">Alberto Maria Segre</a>, Sean Forman, Giovanni Resta, Andrew Wildenberg (<strong>2002</strong>). <em><a href="https://www.sciencedirect.com/science/article/pii/S000437020200228X">Nagging: A Scalable Fault-Tolerant Paradigm for Distributed Search</a></em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 140, Nos. 1-2</li>
+</ul>
+<p><strong>2003</strong></p>
+<ul>
+<li>Brian Greskamp (<strong>2003</strong>). <em>Parallelizing a Simple Chess Program</em>. <a href="http://iacoma.cs.uiuc.edu/~greskamp/pdfs/412.pdf">pdf</a></li>
+</ul>
+<p><strong>2004</strong></p>
+<ul>
+<li><a href="/David_Rasmussen">David Rasmussen</a> (<strong>2004</strong>). <em>Parallel Chess Searching and Bitboards</em>. Masters Thesis, <a href="http://www2.imm.dtu.dk/pubdb/views/edoc_download.php/3267/ps/imm3267.ps">postscript</a></li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="/Jan_Renze_Steenhuisen">Jan Renze Steenhuisen</a> (<strong>2005</strong>). <em>Transposition-Driven Scheduling in Parallel Two-Player State-Space Search</em>. Masters Thesis, <a href="http://www.pds.ewi.tudelft.nl/%7Eepema/MSc-theses/MSc-thesis-Steenhuisen.pdf">pdf</a></li>
+</ul>
+<p><strong>2006</strong></p>
+<ul>
+<li><a href="http://ptolemy.berkeley.edu/~eal/">Edward A. Lee</a> (<strong>2006</strong>). <em><a href="http://www.eecs.berkeley.edu/Pubs/TechRpts/2006/EECS-2006-1.html">The Problem with Threads</a></em>. Technical Report No. UCB/EECS-2006-1, <a href="/University_of_California,_Berkeley">University of California, Berkeley</a>, <a href="http://www.eecs.berkeley.edu/Pubs/TechRpts/2006/EECS-2006-1.pdf">pdf</a></li>
+</ul>
+<p><strong>2007</strong></p>
+<ul>
+<li><a href="/Vladan_Vučković">Vladan Vučković</a> (<strong>2007</strong>). <em>The Method of the Chess Search Algorithms - Parallelization using Two-Processor distributed System</em>, <a href="http://facta.junis.ni.ac.rs/mai/mai222/f22-2-175-188.pdf">pdf</a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a>, Nicolas Jouandeau (<strong>2007</strong>). <em>On the Parallelization of UCT</em>. <a href="/CGW_2007">CGW 2007</a>, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/parallelUCT.pdf">pdf</a> » <a href="/UCT">UCT</a></li>
+<li>Keijirou Yanagi, <a href="/Kazutomo_Shibahara">Kazutomo Shibahara</a>, <a href="/Yasuhiro_Tajima">Yasuhiro Tajima</a>, <a href="/Yoshiyuki_Kotani">Yoshiyuki Kotani</a> (<strong>2007</strong>). <em>Multiple Parallel Search in Shogi</em>. <a href="/Conferences">12th Game Programming Workshop</a></li>
+</ul>
+<p><strong>2008</strong></p>
+<ul>
+<li><a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, <a href="/Mark_Winands">Mark Winands</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_6">Parallel Monte-Carlo Tree Search</a></em>. <a href="/CG_2008">CG 2008</a>, <a href="https://dke.maastrichtuniversity.nl/m.winands/documents/multithreadedMCTS2.pdf">pdf</a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a>, Nicolas Jouandeau (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_7">A Parallel Monte-Carlo Tree Search Algorithm</a></em>. <a href="/CG_2008">CG 2008</a>, <a href="http://www.lamsade.dauphine.fr/%7Ecazenave/papers/parallelMCTS.pdf">pdf</a></li>
+<li><a href="/Sylvain_Gelly">Sylvain Gelly</a>, <a href="/Jean-Baptiste_Hoock">Jean-Baptiste Hoock</a>, Arpad Rimmel, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, <a href="http://fr.linkedin.com/pub/yann-kalemkarian/7/7aa/716">Yann Kalemkarian</a> (<strong>2008</strong>). <em>The Parallelization of Monte-Carlo Planning - Parallelization of MC-Planning</em>. ICINCO-ICSO 2008: 244-249, <a href="http://hal.archives-ouvertes.fr/docs/00/28/78/67/PDF/icin08.pdf">pdf</a>, <a href="http://www.lri.fr/~teytaud/UCTpara.pdf">slides as pdf</a></li>
+<li><a href="/Kai_Himstedt">Kai Himstedt</a>, <a href="/Ulf_Lorenz">Ulf Lorenz</a>, <a href="http://www.informatik.uni-hamburg.de/TIS/index.php">Dietmar P. F. Möller</a> (<strong>2008</strong>). <em>A Twofold Distributed Game-Tree Search Approach Using Interconnected Clusters</em>. Euro-Par 2008: 587-598, <a href="http://www.springerlink.com/content/2471845u5w6j1211/">abstract</a> from <a href="http://www.springerlink.com/home/main.mpx">springerlink</a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a>, Nicolas Jouandeau (<strong>2008</strong>). <em>A Parallel Monte-Carlo Tree Search Algorithm</em>. <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/parallelMCTS.pdf">pdf</a></li>
+<li><a href="/James_Swafford">James Swafford</a> (<strong>2008</strong>). <em><a href="https://fr.slideshare.net/JamesSwafford2/jfsmasters1">A Survey of Parallel Search Algorithms over Alpha-Beta Search Trees using Symmetric Multiprocessor Machines</a></em>. Masters Project, <a href="https://en.wikipedia.org/wiki/East_Carolina_University">East Carolina University</a>, advisor <a href="http://www.cs.ecu.edu/rws/">Ronnie Smith</a></li>
+</ul>
+<p><strong>2009</strong></p>
+<ul>
+<li><a href="/Markus_Enzenberger">Markus Enzenberger</a>, <a href="/Martin_Müller">Martin Müller</a> (<strong>2009</strong>). <em>A lock-free multithreaded Monte-Carlo tree search algorithm</em>, <a href="/Advances_in_Computer_Games_12">Advances in Computer Games 12</a>, <a href="http://webdocs.cs.ualberta.ca/~mmueller/ps/enzenberger-mueller-acg12.pdf">pdf</a></li>
+<li><a href="/Alexander_Reinefeld">Alexander Reinefeld</a> (<strong>2009</strong>). <em>Parallel Heuristic Search</em>. In: <a href="http://titan.princeton.edu/">C.A. Floudas</a>, <a href="http://www.ise.ufl.edu/pardalos/">P.M. Pardalos</a> (eds.), <a href="http://www.springer.com/mathematics/book/978-0-387-74758-3">Encyclopedia of Optimization 2nd ed</a>. pp 2908-2912</li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a>, Nicolas Jouandeau (<strong>2009</strong>). <em>Parallel Nested Monte-Carlo Search</em>. NIDISC 2009, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/parallelNested.pdf">pdf</a></li>
+<li>T.M. Balajee, Adithya Udupa, Anil Kumar, D. Namratha (<strong>2009</strong>). <em><a href="http://software.intel.com/en-us/articles/aggrandizement-of-board-games-performance-on-multi-core-systems-taking-gnu-chess-as-a-prototype/">Aggrandizement of Board Games’ Performance on Multi-core Systems: Taking GNU-Chess as a prototype</a></em>. <a href="https://en.wikipedia.org/wiki/B.M.S._College_of_Engineering">BMS College of Engineering</a>, Faculty mentor: Professor <a href="http://de.slideshare.net/ashokkumars75">Ashok Kumar</a>, <a href="http://software.intel.com/en-us">Intel® Developer Zone</a> » <a href="/GNU_Chess">GNU Chess</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li>Amine Bourki, <a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, Matthieu Coulm, Vincent Danjean, Hassen Doghmen, Thomas Hérault, <a href="/Jean-Baptiste_Hoock">Jean-Baptiste Hoock</a>, Arpad Rimmel, <a href="/Fabien_Teytaud">Fabien Teytaud</a>, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, Paul Vayssière, Ziqin Yu (<strong>2010</strong>). <em><a href="http://hal.inria.fr/inria-00512854/en/">Scalability and Parallelization of Monte-Carlo Tree Search</a></em>. <a href="/CG_2010">CG 2010</a>, <a href="http://hal.inria.fr/docs/00/51/28/54/PDF/newcluster.pdf">pdf</a></li>
+<li><a href="/Tsan-sheng_Hsu">Tsan-sheng Hsu</a> (<strong>2010</strong>). <em>Parallel Alpha-Beta Based Game Tree Search</em>, slides as <a href="http://www.iis.sinica.edu.tw/~tshsu/tcg2010/slides/slide13.pdf">pdf</a></li>
+<li>Dan Wu, Pan Chen, Kui Dai, Jinli Rao, Xuecheng Zou (<strong>2010</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/freeabs_all.jsp?arnumber=5571732">Implementation of Parallel Game Tree Search on a SIMD System</a></em>. <a href="https://en.wikipedia.org/wiki/Huazhong_University_of_Science_and_Technology">Huazhong University of Science &amp; Technology</a>, <a href="https://en.wikipedia.org/wiki/Wuhan">Wuhan</a>, <a href="https://en.wikipedia.org/wiki/People%27s_Republic_of_China">China</a>, <a href="http://ieeexplore.ieee.org/xpl/tocresult.jsp?isnumber=5570817">ICIE 2010</a>, Vol. 1</li>
+<li><a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a> (<strong>2010</strong>). <em>Parallel Depth First Proof Number Search</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/aaai/aaai2010.html#Kaneko10">AAAI 2010</a> » <a href="/Proof-Number_Search">Proof-Number Search</a></li>
+</ul>
+<p><strong>2011</strong></p>
+<ul>
+<li><a href="/Jean_Méhat">Jean Méhat</a>, <a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2011</strong>). <em>A Parallel General Game Player</em>. <a href="http://www.kuenstliche-intelligenz.de/">KI Journal</a>, Vol. 25, No. 1, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/rootparallelggp.pdf">pdf</a></li>
+<li>Kazuki Yoshizoe, <a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a>, Haruhiro Yoshimoto, Yutaka Ishikawa (<strong>2011</strong>). <em>Scalable Distributed Monte Carlo Tree Search</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/socs/socs2011.html#YoshizoeKKYI11">SoCS2011</a>, <a href="http://www.is.titech.ac.jp/~kishi/pdf_file/socs2011pmcts.pdf">pdf</a></li>
+<li>Ľubomír Lackovič (<strong>2011</strong>). <em><a href="http://hgpu.org/?p=5772">Parallel Game Tree Search Using GPU</a></em>. Institute of Informatics and Software Engineering, <a href="https://en.wikipedia.org/wiki/Faculty_of_Informatics_and_Information_Technologies">Faculty of Informatics and Information Technologies</a>, <a href="https://en.wikipedia.org/wiki/Slovak_University_of_Technology_in_Bratislava">Slovak University of Technology in Bratislava</a>, <a href="http://acmbulletin.fiit.stuba.sk/vol3num2/lackovic.pdf">pdf</a> » <a href="/GPU">GPU</a></li>
+<li>Khondker Shajadul Hasan (<strong>2011</strong>). <em>A Distributed Chess Playing Software System Model Using Dynamic CPU Availability Prediction</em>. <a href="http://www.world-academy-of-science.org/worldcomp11/ws">SERP 2011</a>, <a href="http://world-comp.org/p2011/SER3956.pdf">pdf</a></li>
+<li><a href="http://www.cs.rice.edu/%7Ejohnmc/">John Mellor-Crummey</a> (<strong>2011</strong>). <em>Shared-memory Parallel Programming with Cilk</em>. <a href="https://en.wikipedia.org/wiki/Rice_University">Rice University</a>, <a href="http://www.clear.rice.edu/comp422/lecture-notes/comp422-2011-Lecture4-Cilk.pdf">slides as pdf</a> » <a href="/Cilk">Cilk</a></li>
+<li>Lars Schaefers, Marco Platzner, <a href="/Ulf_Lorenz">Ulf Lorenz</a> (<strong>2011</strong>). <em>UCT-Treesplit - Parallel MCTS on Distributed Memory</em>. MCTS Workshop, Freiburg, Germany, <a href="http://www.cs.uni-paderborn.de/fileadmin/Informatik/AG-Platzner/People/Schaefers/TreesplitICAPS.pdf">pdf</a> » <a href="/UCT">UCT</a></li>
+<li>Tobias Graf, <a href="/Ulf_Lorenz">Ulf Lorenz</a>, Marco Platzner, Lars Schaefers (<strong>2011</strong>). <em>Parallel Monte-Carlo Tree Search for HPC Systems</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/europar/europar2011-2.html">Euro-Par 2011</a>, <a href="http://www.cs.uni-paderborn.de/fileadmin/Informatik/AG-Platzner/People/Schaefers/uctTreesplit.pdf">pdf</a></li>
+<li>Damjan Strnad, Nikola Guid (<strong>2011</strong>). <em><a href="http://cit.fer.hr/index.php/CIT/article/view/2029">Parallel Alpha-Beta Algorithm on the GPU</a></em>. <a href="http://cit.fer.hr/index.php/CIT">CIT. Journal of Computing and Information Technology</a>, Vol. 19, No. 4 » <a href="/GPU">GPU</a>, <a href="/Othello">Reversi</a></li>
+</ul>
+<p><strong>2012</strong></p>
+<ul>
+<li><a href="/Chih-Hung_Chen">Chih-Hung Chen</a>, <a href="/Shun-Shii_Lin">Shun-Shii Lin</a>, Min-Huei Huang (<strong>2012</strong>). <em>Volunteer Computing System Applied to Computer Games</em>. TCGA 2012 Workshop, <a href="http://www.tcga.tw/tcgapaper/2012/P2.pdf">pdf</a></li>
+<li>Liang Li, Hong Liu, Peiyu Liu, Taoying Liu, Wei Li, Hao Wang (<strong>2012</strong>). <em><a href="http://ieeexplore.ieee.org/document/6337852/">A Node-based Parallel Game Tree Algorithm Using GPUs</a></em>. CLUSTER 2012, <a href="https://pdfs.semanticscholar.org/be21/d7b9b91957b700aab4ce002e6753b826ff54.pdf">pdf</a> » <a href="/GPU">GPU</a></li>
+</ul>
+<p><strong>2013</strong></p>
+<ul>
+<li><a href="/Kunihito_Hoki">Kunihito Hoki</a>, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a>, <a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Takeshi_Ito">Takeshi Ito</a> (<strong>2013</strong>). <em>Parallel Dovetailing and its Application to Depth-First Proof-Number Search</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 36, No. 1</a> » <a href="/Proof-Number_Search">Proof-Number Search</a> <a href="#fn25" class="footnote-ref" id="fnref25" role="doc-noteref"><sup>25</sup></a></li>
+<li><a href="/Jakub_Pawlewicz">Jakub Pawlewicz</a>, <a href="/Ryan_Hayward">Ryan Hayward</a> (<strong>2013</strong>). <em>Scalable Parallel DFPN Search</em>. <a href="/CG_2013">CG 2013</a></li>
+<li><a href="https://www.rrze.fau.de/wir-ueber-uns/organigramm/mitarbeiter/index.shtml/georg-hager.shtml">Georg Hager</a> <a href="#fn26" class="footnote-ref" id="fnref26" role="doc-noteref"><sup>26</sup></a>, <a href="http://dblp.uni-trier.de/pers/hd/t/Treibig:Jan">Jan Treibig</a>, <a href="http://dblp.uni-trier.de/pers/hd/w/Wellein:Gerhard">Gerhard Wellein</a> (<strong>2013</strong>). <em>The Practitioner's Cookbook for Good Parallel Performance on Multi- and Many-Core Systems</em>. <a href="https://de.wikipedia.org/wiki/Regionales_Rechenzentrum_Erlangen">RRZE</a>, <a href="http://sc13.supercomputing.org/">SC13</a>, <a href="https://blogs.fau.de/hager/files/2013/11/sc13_tutorial_134.pdf">slides as pdf</a></li>
+</ul>
+<p><strong>2014</strong></p>
+<ul>
+<li><a href="https://plus.google.com/113202287320302059445/about">Paul E. McKenney</a> (<strong>2014</strong>). <em><a href="https://www.kernel.org/pub/linux/kernel/people/paulmck/perfbook/perfbook.html">Is Parallel Programming Hard, And, If So, What Can You Do About It?</a></em>. <a href="https://www.kernel.org/pub/linux/kernel/people/paulmck/perfbook/perfbook-e1p.pdf">pdf</a></li>
+<li>Lars Schaefers (<strong>2014</strong>). <em>Parallel Monte-Carlo Tree Search for HPC Systems and its Application to Computer Go</em>. Ph.D. thesis, <a href="/Paderborn_University">Paderborn University</a>, advisors Marco Platzner, <a href="/Ulf_Lorenz">Ulf Lorenz</a>, <a href="http://www.althofer.de/phd-thesis-schaefers.pdf">pdf</a>, <a href="https://www.dropbox.com/s/x0lh7ky5lvj6c1y/PhdThesisSchaefers.pdf">pdf</a></li>
+<li><a href="/S._Ali_Mirsoleimani">S. Ali Mirsoleimani</a>, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Vermaseren">Jos Vermaseren</a> (<strong>2014</strong>). <em>Performance analysis of a 240 thread tournament level MCTS Go program on the Intel Xeon Phi</em>. <a href="http://arxiv.org/abs/1409.4297">CoRR abs/1409.4297</a> » <a href="/Go">Go</a>, <a href="/Monte-Carlo_Tree_Search">MCTS</a>, <a href="/X86-64">x86-64</a></li>
+<li><a href="/Ting-Fu_Liao">Ting-Fu Liao</a>, <a href="/I-Chen_Wu">I-Chen Wu</a>, <a href="/Guan-Wun_Chen">Guan-Wun Chen</a>, Chung-Chin Shih, Po-Ya Kang, <a href="/Bing-Tsung_Chiang">Bing-Tsung Chiang</a>, Ting-Chu Ho, <a href="/Ti-Rong_Wu">Ti-Rong Wu</a> (<strong>2014</strong>). <em>A Study of Software Framework for Parallel Monte Carlo Tree Search</em>. <a href="/Conferences">GPW-2014</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="/Jakub_Pawlewicz">Jakub Pawlewicz</a>, <a href="/Ryan_Hayward">Ryan Hayward</a> (<strong>2015</strong>). <em>Feature Strength and Parallelization of Sibling Conspiracy Number Search</em>. <a href="/Advances_in_Computer_Games_14">Advances in Computer Games 14</a></li>
+<li><a href="/Shu_Yokoyama">Shu Yokoyama</a>, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a>, <a href="/Tetsuro_Tanaka">Tetsuro Tanaka</a> (<strong>2015</strong>). <em>Parameter-Free Tree Style Pipeline in Asynchronous Parallel Game-Tree Search</em>. <a href="/Advances_in_Computer_Games_14">Advances in Computer Games 14</a></li>
+<li><a href="/S._Ali_Mirsoleimani">S. Ali Mirsoleimani</a>, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Vermaseren">Jos Vermaseren</a> (<strong>2015</strong>). <em>Scaling Monte Carlo Tree Search on Intel Xeon Phi</em>. <a href="http://arxiv.org/abs/1507.04383">CoRR abs/1507.04383</a> » <a href="/Hex">Hex</a>, <a href="/Monte-Carlo_Tree_Search">MCTS</a>, <a href="/X86-64">x86-64</a></li>
+<li><a href="/S._Ali_Mirsoleimani">S. Ali Mirsoleimani</a>, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Vermaseren">Jos Vermaseren</a> (<strong>2015</strong>). <em>Parallel Monte Carlo Tree Search from Multi-core to Many-core Processors</em>. <a href="https://whova.com/portal/ieeet_201508/">TrustCom/BigDataSE/ISPA 2015</a>, <a href="https://askeplaat.files.wordpress.com/2013/01/ispa2015.pdf">pdf</a></li>
+<li><a href="/Ting-Han_Wei">Ting-Han Wei</a>, <a href="/Chao-Chin_Liang">Chao-Chin Liang</a>, <a href="/I-Chen_Wu">I-Chen Wu</a>, Lung-Pin Chen (<strong>2015</strong>). <em>Software Development Framework for Job-Level Algorithms</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 38, No. 3</a></li>
+<li><a href="/Akira_Ura">Akira Ura</a>, <a href="/Yoshimasa_Tsuruoka">Yoshimasa Tsuruoka</a>, <a href="/Takashi_Chikayama">Takashi Chikayama</a> (<strong>2015</strong>). <em><a href="https://www.jstage.jst.go.jp/article/ipsjjip/23/1/23_9/_article">Dynamic Prediction of Minimal Trees in Large-Scale Parallel Game Tree Search</a></em>. <a href="https://www.jstage.jst.go.jp/browse/ipsjjip/">Journal of Information Processing</a>, Vol. 23, No. 1</li>
+<li>Liang Li, Hong Liu, Hao Wang, Taoying Liu, Wei Li (<strong>2015</strong>). <em><a href="http://ieeexplore.ieee.org/document/6868996/">A Parallel Algorithm for Game Tree Search Using GPGPU</a></em>. <a href="/IEEE">IEEE Transactions on Parallel and Distributed Systems</a>, Vol. 26, No. 8 » <a href="/GPU">GPU</a></li>
+<li><a href="/Jr-Chang_Chen">Jr-Chang Chen</a>, <a href="/I-Chen_Wu">I-Chen Wu</a>, <a href="/Wen-Jie_Tseng">Wen-Jie Tseng</a>, Bo-Han Lin, <a href="/Chia-Hui_Chang">Chia-Hui Chang</a> (<strong>2015</strong>). <em><a href="https://ir.nctu.edu.tw/handle/11536/124541">Job-Level Alpha-Beta Search</a></em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 7, No. 1</li>
+<li>Lars Schaefers, Marco Platzner (<strong>2015</strong>). <em><a href="http://ieeexplore.ieee.org/document/6876158/">Distributed Monte Carlo Tree Search: A Novel Technique and its Application to Computer Go</a></em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 7, No. 4 <a href="#fn27" class="footnote-ref" id="fnref27" role="doc-noteref"><sup>27</sup></a></li>
+</ul>
+<p><strong>2016</strong></p>
+<ul>
+<li><a href="/S._Ali_Mirsoleimani">S. Ali Mirsoleimani</a>, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Vermaseren">Jos Vermaseren</a> (<strong>2016</strong>). <em>A New Method for Parallel Monte Carlo Tree Search</em>. <a href="https://arxiv.org/abs/1605.04447">arXiv:1605.04447</a> » <a href="/Monte-Carlo_Tree_Search">MCTS</a></li>
+<li><a href="/S._Ali_Mirsoleimani">S. Ali Mirsoleimani</a>, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Vermaseren">Jos Vermaseren</a> (<strong>2016</strong>). <em>An Efficient Computation Pattern for Parallel MCTS</em>. <a href="http://www.ictopen.nl/content/Previous+editions">ICT.OPEN 2016</a>, <a href="http://liacs.leidenuniv.nl/~plaata1/papers/ictopen2016.pdf">pdf</a></li>
+</ul>
+<p><strong>2017</strong></p>
+<ul>
+<li><a href="/S._Ali_Mirsoleimani">S. Ali Mirsoleimani</a>, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Vermaseren">Jos Vermaseren</a> (<strong>2017</strong>). <em>Structured Parallel Programming for Monte Carlo Tree Search</em>. <a href="https://arxiv.org/abs/1704.00325">arXiv:1704.00325</a></li>
+<li><a href="/S._Ali_Mirsoleimani">S. Ali Mirsoleimani</a>, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Vermaseren">Jos Vermaseren</a> (<strong>2017</strong>). <em>An Analysis of Virtual Loss in Parallel MCTS</em>. <a href="https://dblp.uni-trier.de/db/conf/icaart/icaart2017-2.html">ICAART 2017</a>, Vol. 2, <a href="http://liacs.leidenuniv.nl/~plaata1/papers/paper_ICAART17.pdf">pdf</a></li>
+</ul>
+<p><strong>2018</strong></p>
+<ul>
+<li><a href="/S._Ali_Mirsoleimani">S. Ali Mirsoleimani</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jos_Vermaseren">Jos Vermaseren</a> (<strong>2018</strong>). <em>Pipeline Pattern for Parallel MCTS</em>. <a href="https://dblp.uni-trier.de/db/conf/icaart/icaart2018-2.html">ICAART 2018</a>, <a href="http://liacs.leidenuniv.nl/~plaata1/papers/paper_ICAART18_pos.pdf">pdf</a></li>
+<li><a href="/S._Ali_Mirsoleimani">S. Ali Mirsoleimani</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jos_Vermaseren">Jos Vermaseren</a> (<strong>2018</strong>). <em>A Lock-free Algorithm for Parallel MCTS</em>. <a href="https://dblp.uni-trier.de/db/conf/icaart/icaart2018-2.html">ICAART 2018</a>, <a href="http://liacs.leidenuniv.nl/~plaata1/papers/paper_ICAART18.pdf">pdf</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1995--1">1995 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/OUBw5LIIkoc/5VBOqmfdIrsJ">A parallel processing chess program for the 'Wintel' platform</a> by <a href="/Ian_Kennedy">Ian Kennedy</a>, <a href="/Computer_Chess_Forums">rgcc</a>, March 9, 1997 » <a href="/Psycho">Psycho</a></li>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/Wl7A-v-gWYQ/QLuvAp0l4_gJ">Parallel searching</a> by <a href="/Andrew_Tridgell">Andrew Tridgell</a>, <a href="/Computer_Chess_Forums">rgcc</a>, March 22, 1997 » <a href="/KnightCap">KnightCap</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=15912">Parallel Crafty</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, March 19, 1998 » <a href="/Crafty">Crafty</a></li>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/C6z6Nnh2Nbs/G3LOexi_PMUJ">Current Crafty strength on SMP?</a> by Charlton Harrison, <a href="/Computer_Chess_Forums">rgcc</a>, April 29, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=58505">DIEP parallel in Paderborn - technical and detailed story</a> by <a href="/Vincent_Diepeveen">Vincent Diepeveen</a>, <a href="/CCC">CCC</a>, June 28, 1999 » <a href="/Diep">Diep</a>, <a href="/WCCC_1999">WCCC 1999</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=63751">Parallel search</a> by Brian McKinley, <a href="/CCC">CCC</a>, August 06, 1999</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=65490">Parallel search development on a single processor machine ?</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/CCC">CCC</a>, August 21, 1999</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=77013">Dann's multiple cpu program</a> by Pete Galati, <a href="/CCC">CCC</a>, November 09, 1999 » <a href="/Dann_Corbit">Dann Corbit</a></li>
+</ul>
+<h3 id="2000--1">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=112849">tip for "simulating" an MP computer &amp; performance of ABDADA</a> by <a href="/Tom_Kerrigan">Tom Kerrigan</a>, <a href="/CCC">CCC</a>, May 28, 2000</li>
+<li><a href="https://groups.google.com/group/comp.lang.asm.x86/browse_frm/thread/ab55c5d57a3a1fd1">Re: Atomic write of 64 bits</a> by <a href="/Frans_Morsch">Frans Morsch</a>, <a href="https://groups.google.com/group/comp.lang.asm.x86/topics">comp.lang.asm.x86</a>, September 25, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=163888">Parallel algorithms in chess programming</a> by <a href="/Dieter_Bürßner">Dieter Bürßner</a>, <a href="/CCC">CCC</a>, April 16, 2001 » <a href="/ABDADA">ABDADA</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=186273">Parallel search algorithms</a> by <a href="/Scott_Gasch">Scott Gasch</a>, <a href="/CCC">CCC</a>, August 29, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=189126">Chess over LAN revisited - APHID</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, <a href="/CCC">CCC</a>, September 17, 2001 » <a href="/APHID">APHID</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=249157">what's this "SMP time-to-ply measurement" ? (NT)</a> by <a href="/Jouni_Uski">Jouni Uski</a>, <a href="/CCC">CCC</a>, September 02, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=251522">Re: Couple of chess programming questions - MDT and parallel</a> by <a href="/Scott_Farrell">Scott Farrell</a>, <a href="/CCC">CCC</a>, September 10, 2002 » <a href="/MTD%28f%29">MTD(f)</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=351419">The Tobacco fields of my youth -- Parallel algorithms</a> by <a href="/Charles_Roberson">Charles Roberson</a>, <a href="/CCC">CCC</a>, February 26, 2004</li>
+</ul>
+<h3 id="2005--1">2005 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=14832">Iterative DTS</a> by <a href="/Fritz_Reul">Fritz Reul</a>, <a href="/CCC">CCC</a>, July 02, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=15662">multithreading questions</a> by <a href="/Martin_Fierz">Martin Fierz</a>, <a href="/CCC">CCC</a>, August 08, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=15809">re-inventing the SMP wheel</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, August 15, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=16122">SMP thread goes here</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, August 29, 2007</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=6767">A Few General Questions on Parallel Search</a> by <a href="/Pradu_Kannan">Pradu Kannan</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, August 31, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=18611">interested in making single processor program multi</a> by Mike Adams, <a href="/CCC">CCC</a>, December 28, 2007</li>
+</ul>
+<p><strong>2008</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=19446">If making an SMP engine, do NOT use processes</a> by <a href="/Zach_Wegner">Zach Wegner</a>, <a href="/CCC">CCC</a>, February 07, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=20451">Questions about getting ready for multicore programming</a> by <a href="/Carey_Bloodworth">Carey</a>, <a href="/CCC">CCC</a>, April 01, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=21233">Minimizing Sharing of Data between Physical Processors</a> by <a href="/Pradu_Kannan">Pradu Kannan</a>, <a href="/CCC">CCC</a>, May 19, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=22398">threads vs processes</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, July 16, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=22799">threads vs processes again</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, August 05, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=24327">Authors of WinBoard SMP engines, take note!</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, October 11, 2008 » <a href="/Chess_Engine_Communication_Protocol">Chess Engine Communication Protocol</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=24807">Cluster Rybka</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, November 10, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=24866">UCI protocol and SMP</a> by <a href="/Aart_Bik">Aart Bik</a>, <a href="/CCC">CCC</a>, November 13, 2008 » <a href="/UCI">UCI</a></li>
+</ul>
+<p><strong>2009</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=25955">SMP rating influence</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, January 12, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=26057">SMP and helpfull master concept</a> by hcyrano, <a href="/CCC">CCC</a>, January 16, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=26208">SMP hashing problem</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, January 24, 2009 » <a href="/Shared_Hash_Table">Lockless Hashing</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=26211">SMP search stability</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, January 24, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=26805">nps scaling</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, March 01, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=26945">Clustering etc. thread</a> by <a href="/Vasik_Rajlich">Vasik Rajlich</a>, <a href="/CCC">CCC</a> March 7, 2009</li>
+</ul>
+<p><a href="http://talkchess.com/forum/viewtopic.php?p=254434">Results from UCT parallelization</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, <a href="/CCC">CCC</a>, March 11, 2009</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=29434">Questions on volatile keyword and memory barriers</a> by <a href="/Pradu_Kannan">Pradu Kannan</a>, <a href="/CCC">CCC</a>, August 16, 2009</li>
+</ul>
+<h3 id="2010--1">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=33652">asynchronous search</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, April 6, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=33700">SMP basics</a> by <a href="/Richard_Allbert">Richard Allbert</a>, <a href="/CCC">CCC</a>, April 09, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=34561">DTS Structure</a> by <a href="/Edmund_Moshammer">Edmund Moshammer</a>, <a href="/CCC">CCC</a>, May 28, 2010 » <a href="/Dynamic_Tree_Splitting">Dynamic Tree Splitting</a>, <a href="/Iterative_Search">Iterative Search</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=34633">DTS-ification of YBWC</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, June 01, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=36082">SMP speed up</a> by <a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a>, <a href="/CCC">CCC</a>, September 14, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=36121">SMP questions</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, September 19, 2010</li>
+</ul>
+<p><strong>2011</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38411">On parallelization</a> by <a href="/Onno_Garms">Onno Garms</a>, <a href="/CCC">CCC</a>, March 13, 2011 » <a href="/Onno">Onno</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38655">AMD Phenom Hex core (SMP performance problem)</a> by <a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a>, <a href="/CCC">CCC</a>, April 04, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38753">SMP for Android UCI engines</a> by <a href="/Aart_Bik">Aart Bik</a>, <a href="/CCC">CCC</a>, April 14, 2011 » <a href="/Android">Android</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38808">Questions on SMP search</a> by <a href="/Ben-Hur_Carlos_Vieira_Langoni_Junior">Ben-Hur Carlos Vieira Langoni Junior</a>, <a href="/CCC">CCC</a>, April 21, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=39247">Some spinlock code, just for you</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, June 01, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=39256">Spinlocks galore</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, June 02, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40493">LIFO stack based parallel processing?</a> by <a href="/Srdja_Matovic">Srdja Matovic</a>, <a href="/CCC">CCC</a>, September 22, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41036">Some questions on split points</a> by Edward Yu, <a href="/CCC">CCC</a>, November 09, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41620">Question on parallel search</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, <a href="/CCC">CCC</a>, December 27, 2011</li>
+</ul>
+<p><strong>2012</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=42986">Parallelization questions, ABDADA or DTS?</a> by Benjamin Rosseaux, <a href="/CCC">CCC</a>, March 23, 2012 » <a href="/ABDADA">ABDADA</a>, <a href="/Dynamic_Tree_Splitting">Dynamic Tree Splitting</a></li>
+<li><a href="http://cs.stackexchange.com/questions/998/distributed-alpha-beta-pruning">algorithms - distributed alpha beta pruning</a> by wirate, <a href="http://cs.stackexchange.com/">Computer Science Stack Exchange</a>, April 2, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=43243">YBWC: Active Reparenting</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, April 10, 2012 » <a href="/Young_Brothers_Wait_Concept">Young Brothers Wait Concept</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=44813">Virtualization and multi-processor engines</a> by <a href="/Russell_Reagan">Russell Reagan</a>, <a href="/CCC">CCC</a>, August 16, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=44876">How to measure Parallel Search Speedup?</a> by Marcel Fournier, <a href="/CCC">CCC</a>, August 23, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46124">SMP and questions</a> by <a href="/Edsel_Apostol">Edsel Apostol</a>, <a href="/CCC">CCC</a>, November 23, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46597">Lazy SMP</a> by <a href="/Julien_Marcel">Julien Marcel</a>, <a href="/CCC">CCC</a>, December 27, 2012 » <a href="/Lazy_SMP">Lazy SMP</a></li>
+</ul>
+<p><strong>2013</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46858">Lazy SMP, part 2</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, January 12, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47171">Parallel search: System-level programming details</a> by <a href="/Álvaro_Begué">Álvaro Begué</a>, <a href="/CCC">CCC</a>, February 09, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47298">SMP search in Viper and idea about search in cluster system</a> by <a href="/Chao_Ma">Chao Ma</a>, <a href="/CCC">CCC</a>, February 22, 2013 » <a href="/Viper">Viper</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47430">Message passing parallel search on SMP system</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, March 07, 2013 <a href="#fn28" class="footnote-ref" id="fnref28" role="doc-noteref"><sup>28</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47700">Transposition driven scheduling</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, April 04, 2013 <a href="#fn29" class="footnote-ref" id="fnref29" role="doc-noteref"><sup>29</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47762">Parallel search slowdown?</a> by <a href="/Evert_Glebbeek">Evert Glebbeek</a>, <a href="/CCC">CCC</a>, April 12, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47820">Implementation of multithreaded search in Jazz</a> by <a href="/Evert_Glebbeek">Evert Glebbeek</a>, <a href="/CCC">CCC</a>, April 20, 2013 » <a href="/Jazz">Jazz</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47930">parallel search speedup/overhead</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, May 06, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48339">Peculiarity of Komodo 5.1MP</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, June 19, 2013 » <a href="/Komodo">Komodo</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48503">back to the Komodo SMP issue</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, July 01, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48524">Measure of SMP scalability</a> by <a href="/Edsel_Apostol">Edsel Apostol</a>, <a href="/CCC">CCC</a>, July 03, 2013 » <a href="/Hannibal">Hannibal</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=48591">Measure of SMP scalability (sub-thread)</a> by Ernest Bonnem, <a href="/CCC">CCC</a>, July 08, 2013</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48536">Lazy SMP and Work Sharing</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, July 03, 2013 » <a href="/EXchess">Lazy SMP</a> in <a href="/EXchess">EXchess</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48612">use sleeping threads</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, July 10, 2013 » <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48752">Recursive DTS-like search algorithm</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, July 24, 2013 » <a href="/Texel">Texel</a>, <a href="/Recursion">Recursion</a></li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2378">DTS-like SMP</a> by <a href="/ThinkingALot">ThinkingALot</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, July 25, 2013 » <a href="/Gull">Gull</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48780">Time to depth measuring tool</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, July 28, 2013 » <a href="/Depth">Depth</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49450">interesting SMP bug</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, September 24, 2013 » <a href="/Crafty">Crafty</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49540">SMP and Thread Pool Design pattern</a> by <a href="/Edsel_Apostol">Edsel Apostol</a>, <a href="/CCC">CCC</a>, October 02, 2013</li>
+</ul>
+<p><strong>2014</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51198">SMP and pondering</a> by <a href="/John_Merlino">John Merlino</a>, <a href="/CCC">CCC</a>, February 08, 2014 » <a href="/Pondering">Pondering</a>, <a href="/Myrddin">Myrddin</a></li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2618">C++11 threads seem to get shafted for cycles</a> by <a href="/Dann_Corbit">User923005</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, March 18, 2014 » <a href="/Senpai">Senpai</a>, <a href="/Thread">Thread</a>, <a href="/Cpp">C++</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51655">Threads-Test</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, March 18, 2014 » <a href="/Thread">Thread</a>, <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51755">Parallel Search with Transposition Table</a> by <a href="/Daylen_Yang">Daylen Yang</a>, <a href="/CCC">CCC</a>, March 27, 2014 » <a href="/Shared_Hash_Table">Shared Hash Table</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51824">c++11 std::atomic and memory_order_relaxed</a> by Kevin Hearn, <a href="/CCC">CCC</a>, April 01, 2014 » <a href="/Memory">Memory</a>, <a href="/Cpp">C++</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52219">Threads-Test - SF, Zappa, Komodo - 1 vs. 2, 4, 8, 16 Threads</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, May 04, 2014 » <a href="/Stockfish">Stockfish</a>, <a href="/Zappa">Zappa</a>, <a href="/Komodo">Komodo</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52226">transposition and multithreading question</a> by <a href="/Marco_Belli">Marco Belli</a>, <a href="/CCC">CCC</a>, May 04, 2014 » <a href="/Transposition_Table">Transposition Table</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?p=570955">Threads factor: Komodo, Houdini, Stockfish and Zappa</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, May 17, 2014 » <a href="/Komodo">Komodo</a>, <a href="/Houdini">Houdini</a>, <a href="/Stockfish">Stockfish</a>, <a href="/Zappa">Zappa</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52503">Smp concepts</a> by <a href="/Michael_Hoffmann">Michael Hoffmann</a>, <a href="/CCC">CCC</a>, June 01, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52983">Real Speedup due to core doubling etc</a> by Carl Bicknell, <a href="/CCC">CCC</a>, July 15, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53537">Implementing parallel search</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, September 02, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53739">Elo difference for 4-8-16-24-32 cores</a> by Bertil Eklund, <a href="/CCC">CCC</a>, September 17, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53995">Threads test incl. Stockfish 5 and Komodo 8</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, October 09, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54009">Threads test - Stockfish 5 against Komodo 8</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, October 10, 2014 » <a href="/Thread">Thread</a>, <a href="/Parallel_Search">Parallel Search</a>, <a href="/Stockfish">Stockfish</a>, <a href="/Komodo">Komodo</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54059">Threads test incl. Crafty 24.1</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, October 15, 2014 » <a href="/Crafty">Crafty</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54133">Current data - threads-nps efficiency up to 32 threads</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, October 24, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54386">Data structures for parallel search?</a> by <a href="/Vladimir_Medvedev">Vladimir Medvedev</a>, <a href="/CCC">CCC</a>, November 19, 2014</li>
+</ul>
+<h3 id="2015--1">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55047">SMP: on same branch instead splitting?</a> by Frank Ludwig, <a href="/CCC">CCC</a>, January 23, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55188">Lazy SMP in Cheng</a> by <a href="/Martin_Sedlak">Martin Sedlak</a>, <a href="/CCC">CCC</a>, February 02, 2015 » <a href="/Cheng">Cheng</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55224">Some SMP measurements with Rookie v3</a> by <a href="/Marcel_van_Kervinck">Marcel van Kervinck</a>, <a href="/CCC">CCC</a>, February 05, 2015 » <a href="/Rookie">Rookie</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55352">Stockfish with 16 threads - big news?</a> by <a href="/Louis_Zulli">Louis Zulli</a>, <a href="/CCC">CCC</a>, February 15, 2015 » <a href="/Thread">Thread</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=55368">Explanation for non-expert?</a> by <a href="/Louis_Zulli">Louis Zulli</a>, <a href="/CCC">CCC</a>, February 16, 2015 » <a href="/Stockfish">Stockfish</a></p>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=55536">Best Stockfish NPS scaling yet</a> by <a href="/Louis_Zulli">Louis Zulli</a>, <a href="/CCC">CCC</a>, March 02, 2015</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55563">Parallel iterative search function</a> by <a href="/Fabio_Gobbato">Fabio Gobbato</a>, <a href="/CCC">CCC</a>, March 05, 2015 » <a href="/Iterative_Search">Iterative Search</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55896">An MPI perft program</a> by <a href="/Chao_Ma">Chao Ma</a>, <a href="/CCC">CCC</a>, April 05, 2015 » <a href="/Perft">Perft</a> <a href="#fn30" class="footnote-ref" id="fnref30" role="doc-noteref"><sup>30</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55930">Crude parallel search</a> by Carl Bicknell, <a href="/CCC">CCC</a>, April 07, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55970">Trying to improve lazy smp</a> by <a href="/Daniel_José_Queraltó">Daniel José Queraltó</a>, <a href="/CCC">CCC</a>, April 11, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56019">Empirical results with Lazy SMP, YBWC, DTS</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, April 16, 2015</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2830">DTS-Algorithm Split Block</a> by JacobusOpperman, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, May 19, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56543">The effective speedup from 1 to 8 cpus for SF and Komodo</a> by <a href="/Adam_Hair">Adam Hair</a>, <a href="/CCC">CCC</a>, May 31, 2015 » <a href="/Stockfish">Stockfish</a>, <a href="/Komodo">Komodo</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56595">parallel speedup and assorted trivia</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, June 05, 2015 » <a href="/Crafty">Crafty</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56764">There are compilers and there are compilers</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, June 24, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56779">Parallel search once more</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, June 25, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56877">SMP speedup discussion</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, July 05, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56936">Possible improvement to ABDADA -- checking for cutoffs</a> by <a href="/Tom_Kerrigan">Tom Kerrigan</a>, <a href="/CCC">CCC</a>, July 10, 2015 » <a href="/ABDADA">ABDADA</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56937">Actual speedups from YBWC and ABDADA on 8+ core machines?</a> by <a href="/Tom_Kerrigan">Tom Kerrigan</a>, <a href="/CCC">CCC</a>, July 10, 2015 » <a href="/ABDADA">ABDADA</a>, <a href="/Young_Brothers_Wait_Concept">Young Brothers Wait Concept</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57036">New SMP stuff (particularly Kai)</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, July 20, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57039">SMP (new style)</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, July 20, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57343">scorpio can run on 8192 cores</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, August 22, 2015 » <a href="/Scorpio">Scorpio</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57572">lazy smp questions</a> by Lucas Braesch, <a href="/CCC">CCC</a>, September 09, 2015 » <a href="/Lazy_SMP">Lazy SMP</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58031">Lazy SMP Better than YBWC?</a> by <a href="/Steve_Maughan">Steve Maughan</a>, <a href="/CCC">CCC</a>, October 23, 2015 » <a href="/Young_Brothers_Wait_Concept">Young Brothers Wait Concept</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58056">New Stockfish with Lazy_SMP, but what about the TC bug ?</a> by Ernest Bonnem, <a href="/CCC">CCC</a>, October 26, 2015 » <a href="/Stockfish">Stockfish</a>, <a href="/TCEC_Season_8">TCEC Season 8</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58160">An interesting parallel search non-bug</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, November 05, 2015 » <a href="/Crafty">Crafty</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58645">lazy smp questions</a> by <a href="/Marco_Belli">Marco Belli</a>, <a href="/CCC">CCC</a>, December 21, 2015 » <a href="/Lazy_SMP">Lazy SMP</a></li>
+</ul>
+<p><strong>2016</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58830">NUMA 101</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, January 07, 2016 » <a href="/NUMA">NUMA</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58882">Using more than 1 thread in C beginner question</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, January 11, 2016 » <a href="/C">C</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58887">Threads test incl. Stockfish 7</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, January 11, 2016 » <a href="/Thread">Thread</a>, <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58946">Parallel Search to Fixed Depth</a> by <a href="/Brian_Richardson">Brian Richardson</a>, <a href="/CCC">CCC</a>, January 17, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58950">Threads test incl. Komodo 9.3</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, January 17, 2016 » <a href="/Komodo">Komodo</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59389">Lazy SMP - how it works</a> by Kalyankumar Ramaseshan, <a href="/CCC">CCC</a>, February 29, 2016 » <a href="/Lazy_SMP">Lazy SMP</a></li>
+<li><a href="http://talkchess.com/forum/viewtopic.php?t=59745">Crafty SMP measurement</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, April 04, 2016 » <a href="/Crafty">Crafty</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60271">parallel search speed measurement</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, May 24, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60537">Crazy SMP</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, June 19, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60875">NUMA in a YBWC implementation</a> by <a href="/Edsel_Apostol">Edsel Apostol</a>, <a href="/CCC">CCC</a>, July 20, 2016 » <a href="/Young_Brothers_Wait_Concept">Young Brothers Wait Concept</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60979">lazy smp using ms vs2015 c++11 std::async</a> by Edward Yu, <a href="/CCC">CCC</a>, July 29, 2016 » <a href="/Lazy_SMP">Lazy SMP</a>, <a href="/Thread">Thread</a> <a href="#fn31" class="footnote-ref" id="fnref31" role="doc-noteref"><sup>31</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61131">Time to depth concerns</a> by Carl Bicknell, <a href="/CCC">CCC</a>, August 15, 2016</li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/ezt6MrAuXqs/qIR2HEciEgAJ">lets get the ball moving down the field on numa awareness</a> by Mohammed Li, <a href="/Computer_Chess_Forums">FishCooking</a>, August 30, 2016 » <a href="/NUMA">NUMA</a>, <a href="/Stockfish">Stockfish</a>, <a href="/AsmFish">asmFish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61349">Baffling multithreading scaling behavior</a> by <a href="/Tom_Kerrigan">Tom Kerrigan</a>, <a href="/CCC">CCC</a>, September 06, 2016</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=61349&amp;start=16">Re: Baffling multithreading scaling behavior</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, September 07, 2016</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61472">What do you do with NUMA?</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, September 19, 2016 » <a href="/NUMA">NUMA</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61639">Scaling of Asmfish with large thread count</a> by <a href="/Dann_Corbit">Dann Corbit</a>, <a href="/CCC">CCC</a>, October 07, 2016 » <a href="/AsmFish">asmFish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62146">Stockfish 8 - Double time control vs. 2 threads</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, November 15, 2016 » <a href="/Match_Statistics">Doubling TC</a>, <a href="/Depth">Diminishing Returns</a>, <a href="/Playing_Strength">Playing Strength</a>, <a href="/Stockfish">Stockfish</a></li>
+</ul>
+<p><strong>2017</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63454">How to find SMP bugs ?</a> by Lucas Braesch, <a href="/CCC">CCC</a>, March 15, 2017 » <a href="/Debugging">Debugging</a>, <a href="/Lazy_SMP">Lazy SMP</a></li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=3097">Ideas to improve SMP scaling</a> by lucasart, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, April 03, 2017 » <a href="/Lazy_SMP">Lazy SMP</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63903">Symmetric multiprocessing (SMP) scaling - SF8 and K10.4</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, May 05, 2017 » <a href="/Komodo">Komodo</a>, <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64238">When should I consider parallel search ?</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, June 10, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64824">Lazy SMP and "lazy cluster" experiments</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, August 06, 2017 » <a href="/Lazy_SMP">Lazy SMP - Lazy Cluster</a>, <a href="/Texel">Texel</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=64824&amp;start=43">Approximate ABDADA</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, August 23, 2017 » <a href="/ABDADA">ABDADA</a></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65011">"How To" guide to parallel-izing an engine</a> by <a href="/Tom_Kerrigan">Tom Kerrigan</a>, <a href="/CCC">CCC</a>, August 27, 2017 <a href="#fn32" class="footnote-ref" id="fnref32" role="doc-noteref"><sup>32</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65134">Question about parallel search and race conditions</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/CCC">CCC</a>, September 11, 2017 » <a href="/Shared_Hash_Table">Shared Hash Table</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66044">Parallel search/LazySMP question</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, December 17, 2017 » <a href="/Lazy_SMP">Lazy SMP</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66099">Time Managment translating to SMP</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, December 23, 2017 » <a href="/Time_Management">Time Management</a></li>
+</ul>
+<p><strong>2018</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=68154">Lazy SMP and 44 cores</a> by Sander Maassen vd Brink, <a href="/CCC">CCC</a>, August 07, 2018 » <a href="/Lazy_SMP">Lazy SMP</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=68278">Lazy SMP ideas</a> by <a href="/Edsel_Apostol">Edsel Apostol</a>, <a href="/CCC">CCC</a>, August 22, 2018</li>
+</ul>
+<p><strong>2019</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69481">Simplest way to implement quick and dirty lazy smp</a> by <a href="/Tom_King">Tom King</a>, <a href="/CCC">CCC</a>, January 04, 2019</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=71115">OpenMP for chess programming</a> by BeyondCritics, <a href="/CCC">CCC</a>, June 27, 2019</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=71739">Multithreaded noob question</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/CCC">CCC</a>, September 06, 2019</li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75695">assembler for locking at AMD magny cours</a> by <a href="/Vincent_Diepeveen">Vincent Diepeveen</a>, <a href="/CCC">CCC</a>, November 06, 2020</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=78631">Research paper comparing various parallel search algorithms</a> by koedem, <a href="/CCC">CCC</a>, November 10, 2021</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<h3 id="parallel-search">Parallel Search</h3>
+<ul>
+<li><a href="http://www.tckerrigan.com/Chess/Parallel_Search/">Parallel Search</a> by <a href="/Tom_Kerrigan">Tom Kerrigan</a> <a href="#fn33" class="footnote-ref" id="fnref33" role="doc-noteref"><sup>33</sup></a></li>
+<li><a href="http://www.netlib.org/utk/lsi/pcwLSI/text/node350.html">Parallel Alpha-Beta Pruning</a> from <a href="http://www.netlib.org/utk/lsi/pcwLSI/text/BOOK.html">Parallel Computing Works</a></li>
+<li><a href="http://webdocs.cs.ualberta.ca/~games/aphid/index.html">APHID Parallel Game-Tree Search Library</a></li>
+<li><a href="http://www2.cs.uni-paderborn.de/cs/ag-monien/PERSONAL/FLULO/gametree.html">AG-Monien - Research - Game Trees</a>, <a href="/Burkhard_Monien">AG-Monien</a>, <a href="/Paderborn_University">Paderborn University</a></li>
+<li><a href="http://www.cs.cmu.edu/afs/cs/project/jair/pub/volume9/cook98a-html/eureka.html">Adaptive Parallel Iterative Deepening Search</a> by <a href="http://portal.acm.org/author_page.cfm?id=81100111814&amp;coll=GUIDE&amp;dl=GUIDE&amp;trk=0&amp;CFID=85545608&amp;CFTOKEN=17034339">Diane J. Cook</a>, <a href="http://portal.acm.org/author_page.cfm?id=81100529798&amp;coll=GUIDE&amp;dl=GUIDE&amp;trk=0&amp;CFID=85545608&amp;CFTOKEN=17034339">R. Craig Varnell</a></li>
+</ul>
+<h3 id="parallel-computing">Parallel Computing</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Parallel_computing">Parallel computing from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Parallel_algorithm">Parallel algorithm from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Parallel_slowdown">Parallel slowdown from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Concurrent_computing">Concurrent computing from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Process_%28computing%29">Process from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Thread_%28computer_science%29">Thread from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Fiber_%28computer_science%29">Fiber (computer science) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Coroutine">Coroutine from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Multiprocessing">Multiprocessing from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Computer_multitasking">Multitasking from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Multithreading_%28computer_architecture%29">Multithreading from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Speculative_multithreading">Speculative multithreading from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Scheduling_%28computing%29">Scheduling from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Preemption_%28computing%29">Preemption from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Context_switch">Context switch from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Cilk">Cilk from Wikipedia</a> » <a href="/Cilk">Cilk</a>, <a href="/CilkChess">CilkChess</a></li>
+<li><a href="http://supertech.csail.mit.edu/cilk/">The Cilk Project</a> from <a href="/Massachusetts_Institute_of_Technology">MIT</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Intel_Cilk_Plus">Intel Cilk Plus from Wikipedia</a> » <a href="/Intel">Intel</a></li>
+<li><a href="https://en.wikipedia.org/wiki/XMTC">XMTC from Wikipedia</a></li>
+</ul>
+<h3 id="scalability">Scalability</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Scalability">Scalability from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Scalable_locality">Scalable locality from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Scalable_parallelism">Scalable parallelism from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Speedup">Speedup from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Amdahl%27s_law">Amdahl's law from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Gustafson%27s_law">Gustafson's law from Wikipedia</a></li>
+</ul>
+<h3 id="shared-memory">Shared Memory</h3>
+<p><a href="/Template:Shared_Memory">Shared Memory</a>:</p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Shared_memory">Shared memory from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Memory_model_%28computing%29">Memory model from Wikipedia</a></li>
+<li><a href="http://scottmeyers.blogspot.co.uk/2012/04/information-on-c11-memory-model.html">Information on the C++11 Memory Model</a> by <a href="https://en.wikipedia.org/wiki/Scott_Meyers">Scott Meyers</a>, April 24, 2012</li>
+<li><a href="https://en.wikipedia.org/wiki/Volatile_variable">Volatile variable from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Memory_ordering">Memory ordering from Wikipedia</a></li>
+<li><a href="http://www.linuxjournal.com/article/8211">Memory Ordering in Modern Microprocessors, Part I</a> by <a href="https://plus.google.com/113202287320302059445/about">Paul E. McKenney</a>, <a href="https://en.wikipedia.org/wiki/Linux_Journal">Linux Journal</a>, June 30, 2005</li>
+<li><a href="https://en.wikipedia.org/wiki/Memory_barrier">Memory barrier from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Parallel_Random_Access_Machine">Parallel Random Access Machine from Wikipedia</a></li>
+<li><a href="http://www.inf.pucrs.br/%7Epinho/shared_memory_library.htm">The Shared Memory Library (SharedMemoryLib) FAQ</a> by <a href="http://www.inf.pucrs.br/%7Epinho/">Márcio Serolli Pinho</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Transactional_memory">Transactional memory from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Software_transactional_memory">Software transactional memory from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Cache_coherence">Cache coherence from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/False_sharing">False sharing from Wikipedia</a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Distributed_shared_memory">Distributed shared memory from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Memory-mapped_file">Memory-mapped file from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Memory_disambiguation">Memory disambiguation from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Memory_dependence_prediction">Memory dependence prediction from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/OpenMP">OpenMP from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/POSIX">POSIX from Wikipedia</a></li>
+<li><a href="http://pubs.opengroup.org/onlinepubs/007908799/xsh/shm_open.html">shm_open</a>, <a href="https://en.wikipedia.org/wiki/Single_UNIX_Specification#1997:_Single_UNIX_Specification_version_2">The Single UNIX Specification version 2</a>, Copyright © 1997 <a href="https://en.wikipedia.org/wiki/The_Open_Group">The Open Group</a></li>
+<li><a href="http://linux.die.net/man/2/shmget">shmget(2): allocates shared memory segment - Linux man page</a> » <a href="/Linux">Linux</a></li>
+<li><a href="http://www.pkill.info/linux/man/3-mm/">mm(3): Shared Memory Allocation - Linux man page</a></li>
+<li><a href="http://msdn.microsoft.com/en-us/library/aa374778.aspx">CreateSharedMemory</a>, <a href="https://en.wikipedia.org/wiki/Microsoft_Developer_Network">MSDN</a> » <a href="/Windows">Windows</a></li>
+<li><a href="http://www.boost.org/doc/libs/1_36_0/doc/html/interprocess.html">Chapter 9. Boost.Interprocess - Boost 1.36.0</a> by Ion Gaztañaga</li>
+<li><a href="http://hboehm.info/c++mm/">Threads and memory model for C++</a> by <a href="http://www.hpl.hp.com/personal/Hans_Boehm/">Hans J. Boehm</a></li>
+<li><a href="http://www.cs.cf.ac.uk/Dave/C/node27.html">IPC:Shared Memory</a> by <a href="http://www.cs.cf.ac.uk/Dave/">Dave Marshall</a>, 1999</li>
+<li><a href="https://en.wikipedia.org/wiki/Symmetric_multiprocessing">Symmetric Multi-Processing (SMP) from Wikipedia</a> » <a href="/SMP">SMP</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Asymmetric_multiprocessing">Asymmetric multiprocessing from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Uniform_Memory_Access">Uniform Memory Access from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Non-Uniform_Memory_Access">Non-Uniform Memory Access (NUMA) from Wikipedia</a> » <a href="/NUMA">NUMA</a></li>
+<li><a href="http://software.intel.com/en-us/articles/optimizing-applications-for-numa">Optimizing Applications for NUMA | Intel® Developer Zone</a></li>
+<li><a href="https://doc.xdevs.com/doc/AMD/_Performance/Performance%20Guidelines%20for%20AMD%20Athlon%2064%20and%20AMD%20Opteron%20ccNUMA%20Multiprocessor%20Systems.%20rev.3.00%5D.%5B2006-06%5D.pdf">Performance Guidelines for AMD Athlon™ 64 and AMD Opteron™ ccNUMA Multiprocessor Systems</a> (pdf)</li>
+</ul>
+<h3 id="cache">Cache</h3>
+<p><a href="/Template:Cache">Cache</a>:</p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Cache">Cache from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Cache_(computing)">Cache (computing) from Wikipedia</a></li>
+<li><a href="http://alasir.com/articles/cache_principles/">Functional Principles of Cache Memory</a> by <a href="http://alasir.com/articles/">Paul V. Bolotoff</a>, April 2007</li>
+<li><a href="https://en.wikipedia.org/wiki/CPU_cache">CPU cache from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Cache-only_memory_architecture">Cache-only memory architecture (COMA) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Cache_coherence">Cache coherence from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/MSI_protocol">MSI protocol from Wikipedia</a></p>
+<p><a href="https://en.wikipedia.org/wiki/MESI_protocol">MESI protocol from Wikipedia</a></p>
+<p><a href="https://en.wikipedia.org/wiki/MOESI_protocol">MOESI protocol from Wikipedia</a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/False_sharing">False sharing from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Cache_coloring">Cache coloring from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Cache_hierarchy">Cache hierarchy from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Cache-oblivious_algorithm">Cache-oblivious algorithm from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Cache_pollution">Cache pollution from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Cache_prefetching">Cache prefetching from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Prefetching">Prefetching from Wikipedia</a></li>
+</ul>
+<p><a href="http://stackoverflow.com/questions/3122915/the-prefetch-instruction">assembly - The prefetch instruction - Stack Overflow</a></p>
+<p><a href="http://gcc.gnu.org/projects/prefetch.html">Data Prefetch Support - GNU Project - Free Software Foundation (FSF)</a></p>
+<p><a href="http://lwn.net/Articles/444344/">Software prefetching considered harmful</a> by <a href="https://en.wikipedia.org/wiki/Linus_Torvalds">Linus Torvalds</a>, <a href="https://en.wikipedia.org/wiki/LWN.net">LWN.net</a>, May 19, 2011</p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Cache_replacement_policies">Cache replacement policies from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Page_cache">Page cache from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Acumem_SlowSpotter">Acumem SlowSpotter from Wikipedia</a></li>
+<li><a href="http://ixbtlabs.com/articles2/cpu/rmmt-l2-cache.html">Analyzing Efficiency of Shared and Dedicated L2 Cache in Modern Dual-Core Processors</a> from <a href="http://ixbtlabs.com/">iXBT Labs - Computer Hardware In Detail</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Scratchpad_memory">Scratchpad memory from Wikipedia</a></li>
+</ul>
+<h3 id="concurrency-and-synchronization">Concurrency and Synchronization</h3>
+<p><a href="/Template:Synchronization">Synchronization</a>:</p>
+<ul>
+<li><a href="/Mathematician">Edsger W. Dijkstra</a> <a href="http://www.cs.utexas.edu/users/EWD/">Archive</a>:</li>
+</ul>
+<p><a href="http://www.cs.utexas.edu/users/EWD/transcriptions/EWD01xx/EWD123.html">Cooperating sequential processes (EWD 123)</a></p>
+<p><a href="http://www.cs.utexas.edu/users/EWD/transcriptions/EWD04xx/EWD497.html">A challenge to memory designers? (EWD 497)</a></p>
+<ul>
+<li><a href="http://vanemden.wordpress.com/2008/05/06/i-remember-edsger-dijkstra-1930-2002/">I remember Edsger Dijkstra (1930 – 2002) « A Programmers Place</a> by <a href="/Maarten_van_Emden">Maarten van Emden</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Concurrency_%28computer_science%29">Concurrency from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Category:Concurrency">Category:Concurrency from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Concurrency_control">Concurrency control from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Optimistic_concurrency_control">Optimistic concurrency control from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29">Synchronization from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Inter-process_communication">Inter-process communication from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Non-blocking_algorithm">Non-blocking algorithm from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Linearizability">Linearizability from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Monitor_%28synchronization%29">Monitor (synchronization)</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Lock_%28computer_science%29">Lock from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Busy_waiting">Busy waiting from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Seqlock">Seqlock from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Spinlock">Spinlock from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Double-checked_locking">Double-checked locking from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Compare-and-swap">Compare-and-swap from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Test-and-set">Test-and-set from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Test_and_Test-and-set">Test and Test-and-set from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Fetch-and-add">Fetch-and-add from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Barrier_%28computer_science%29">Barrier from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Memory_barrier">Memory barrier from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Critical_section">Critical section from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Mutual_exclusion">Mutual exclusion from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Semaphore_%28programming%29">Semaphore from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Transactional_Synchronization_Extensions">Transactional Synchronization Extensions from Wikipedia</a> (<a href="https://en.wikipedia.org/wiki/Haswell_%28microarchitecture%29">Haswell</a>)</li>
+<li><a href="https://en.wikipedia.org/wiki/Readers-writers_problem">Readers-writers problem from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Readers-writer_lock">Readers-writer lock from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Read-copy-update">Read-copy-update from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Producers-consumers_problem">Producer-consumer problem from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Dining_philosophers_problem">Dining philosophers problem from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Cigarette_smokers_problem">Cigarette smokers problem from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Sleeping_barber_problem">Sleeping barber problem from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Resource_starvation">Resource starvation from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Deadlock">Deadlock from Wikipedia</a></li>
+<li><a href="http://www.ibm.com/developerworks/linux/library/l-linux-synchronization.html">Anatomy of Linux synchronization methods</a> by <a href="http://www.mtjones.com/">M. Tim Jones</a>, <a href="http://www.ibm.com/developerworks/">IBM developerWorks</a>, October 31, 2007</li>
+<li><a href="http://greenteapress.com/semaphores/">The Little Book of Semaphores</a> by <a href="http://allendowney.com/">Allen B. Downey</a></li>
+</ul>
+<h3 id="misc">Misc</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Message_Passing_Interface">Message Passing Interface from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Channel_%28programming%29">Channel (programming) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Multiple-agent_system">Multiple-agent system from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Deterministic_algorithm">Deterministic algorithm from Wikipedia</a></li>
+<li><a href="http://software.intel.com/en-us/videos/intel-parallel-inspector-thread-checker/">Intel® Parallel Inspector Thread Checker</a></li>
+<li><a href="http://software.intel.com/en-us/articles/intel-parallel-universe-magazine/">Intel Parallel Universe Magazine - Intel® Software Network</a></li>
+<li><a href="http://research.microsoft.com/en-us/projects/chess/">CHESS - Microsoft Research</a> a tool for finding and reproducing <a href="https://en.wikipedia.org/wiki/Unusual_software_bug">Heisenbugs</a> in concurrent programs.</li>
+<li><a href="/Category:Led_Zeppelin">Led Zeppelin</a> - <a href="https://en.wikipedia.org/wiki/Communication_Breakdown">Communication Breakdown</a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video, Lost Performances (1/5)</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/-fG4JCerIuE" title="YouTube video -fG4JCerIuE" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=-fG4JCerIuE">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Search">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=46858">Lazy SMP, part 2</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, January 12, 2013<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=55188">Lazy SMP in Cheng</a> by <a href="/Martin_Sedlak">Martin Sedlak</a>, <a href="/CCC">CCC</a>, February 02, 2015<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=55170&amp;start=11">Re: A new chess engine : m8 (comming not so soon)</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, February 01, 2015<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="/Jean-Christophe_Weill">Jean-Christophe Weill</a> (<strong>1996</strong>). <em>The ABDADA Distributed Minimax Search Agorithm</em>. Proceedings of the 1996 ACM Computer Science Conference, pp. 131-138. ACM, New York, N.Y, reprinted <a href="/ICGA_Journal">ICCA Journal, Vol. 19, No. 1</a>, <a href="http://www.recherche.enac.fr/%7Eweill/publications/acm.ps.gz">zipped postscript</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p>Yaoqing Gao, <a href="/Tony_Marsland">Tony Marsland</a> (<strong>1996</strong>). <em>Multithreaded Pruned Tree Search in Distributed Systems</em>. Journal of Computing and Information, 2(1), 482-492, <a href="http://www.cs.ualberta.ca/%7Etony/RecentPapers/icci.pdf">pdf</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="/Rainer_Feldmann">Rainer Feldmann</a>, <a href="/Peter_Mysliwietz">Peter Mysliwietz</a>, <a href="/Burkhard_Monien">Burkhard Monien</a> (<strong>1991</strong>). <em>A Fully Distributed Chess Program</em>. <a href="/Advances_in_Computer_Chess_6">Advances in Computer Chess 6</a>, <a href="http://www.top-5000.nl/ps/A%20fully%20distribuited%20chess%20program.pdf">pdf</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="/Rainer_Feldmann">Rainer Feldmann</a> (<strong>1993</strong>). <em>Game Tree Search on Massively Parallel Systems</em>. Ph.D. Thesis, <a href="http://www2.cs.uni-paderborn.de/fachbereich/AG/monien/PUBLICATIONS/POSTSCRIPTS/feldmann_phd.pdf">pdf</a><a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="/Chris_Joerg">Christopher F. Joerg</a>, <a href="/Bradley_Kuszmaul">Bradley C. Kuszmaul</a> (<strong>1994</strong>). <em>Massively Parallel Chess</em>, <a href="http://supertech.csail.mit.edu/papers/dimacs94.pdf">pdf</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="/Bradley_Kuszmaul">Bradley C. Kuszmaul</a> (<strong>1994</strong>). <em>Synchronized MIMD Computing</em>. Ph. D. Thesis, <a href="/Massachusetts_Institute_of_Technology">Massachusetts Institute of Technology</a>, <a href="http://supertech.csail.mit.edu/papers/thesis-kuszmaul.pdf">pdf</a><a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="/Bradley_Kuszmaul">Bradley C. Kuszmaul</a> (<strong>1995</strong>). <em>The StarTech Massively Parallel Chess Program</em>. <a href="http://supertech.csail.mit.edu/papers/startech.pdf">pdf</a><a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="/Raphael_Finkel">Raphael Finkel</a>, <a href="/John_Philip_Fishburn">John Philip Fishburn</a> (<strong>1983</strong>). <em>Improved Speedup Bounds for Parallel Alpha-Beta Search</em>. <a href="/IEEE">IEEE Transactions on Pattern Analysis and Machine Intelligence</a>, Vol. 5, No. 1, pp. 89 - 92<a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="/Raphael_Finkel">Raphael Finkel</a>, <a href="/John_Philip_Fishburn">John Philip Fishburn</a> (<strong>1982</strong>). <em>Parallelism in Alpha-Beta Search</em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 19, No. 1<a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="/John_Philip_Fishburn">John Philip Fishburn</a> (<strong>1981</strong>). <em>Analysis of Speedup in Distributed Algorithms</em>. Ph.D. Thesis, <a href="http://www.cs.wisc.edu/techreports/1981/TR431.pdf">pdf</a><a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p><a href="/Robert_Hyatt">Robert Hyatt</a> (<strong>1994</strong>). <em><a href="http://www.craftychess.com/hyatt/search.html">The DTS high-performance parallel tree search algorithm</a></em><a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn15"><p><a href="/Mark_Brockington">Mark Brockington</a> (<strong>1996</strong>). <em>A Taxonomy of Parallel Game-Tree Search Algorithms</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 19: No. 3</a><a href="#fnref15" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn16"><p><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=78631">Research paper comparing various parallel search algorithms</a> by koedem, <a href="/CCC">CCC</a>, November 10, 2021<a href="#fnref16" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn17"><p>It should also be noted that <a href="/Crafty">Crafty</a> uses threads on <a href="/Windows">Windows</a>, and used processes on <a href="/Unix">Unix</a><a href="#fnref17" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn18"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=22799">threads vs processes again</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, February 27, 2006<a href="#fnref18" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn19"><p><a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a> (<strong>1985</strong>). <em>Lionel Moser: An Experiment in Distributed Game Tree Searching.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 8, No. 2</a> (Review)<a href="#fnref19" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn20"><p><a href="https://cs.uwaterloo.ca/~alopez-o/divulge/chimp.html">An Introduction to Computer Chess</a> by Alejandro López-Ortiz, 1993<a href="#fnref20" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn21"><p><a href="https://en.wikipedia.org/wiki/Nagging">Nagging from Wikipedia</a><a href="#fnref21" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn22"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=57343&amp;start=5">Re: scorpio can run on 8192 cores</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, August 29, 2015<a href="#fnref22" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn23"><p><a href="https://en.wikipedia.org/wiki/Transposition-driven_scheduling">Transposition-driven scheduling - Wikipedia</a><a href="#fnref23" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn24"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=47700">Transposition driven scheduling</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, April 04, 2013<a href="#fnref24" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn25"><p><a href="https://en.wikipedia.org/wiki/Dovetailing_%28computer_science%29">Dovetailing (computer science) from Wikipedia</a><a href="#fnref25" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn26"><p><a href="https://blogs.fau.de/hager/">Georg Hager's Blog | Random thoughts on High Performance Computing</a><a href="#fnref26" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn27"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=66125&amp;start=18">Re: Minmax backup operator for MCTS</a> by Brahim Hamadicharef, <a href="/CCC">CCC</a>, December 30, 2017<a href="#fnref27" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn28"><p><a href="https://en.wikipedia.org/wiki/Message_Passing_Interface">Message Passing Interface from Wikipedia</a><a href="#fnref28" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn29"><p><a href="/John_Romein">John Romein</a>, <a href="/Henri_Bal">Henri Bal</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, <a href="/Aske_Plaat">Aske Plaat</a> (<strong>2002</strong>). <em>A Performance Analysis of Transposition-Table-Driven Scheduling in Distributed Search</em>. IEEE Transactions on Parallel and Distributed Systems, Vol. 13, No. 5, pp. 447–459. <a href="http://www.cs.vu.nl/~bal/Papers/tds.pdf">pdf</a><a href="#fnref29" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn30"><p><a href="https://en.wikipedia.org/wiki/Message_Passing_Interface">Message Passing Interface from Wikipedia</a><a href="#fnref30" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn31"><p><a href="http://en.cppreference.com/w/cpp/thread/async">std::async - cppreference.com</a><a href="#fnref31" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn32"><p><a href="http://www.tckerrigan.com/Chess/Parallel_Search/">Parallel Search</a> by [[Tom Kerrigan]<a href="#fnref32" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn33"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=65011">"How To" guide to parallel-izing an engine</a> by <a href="/Tom_Kerrigan">Tom Kerrigan</a>, <a href="/CCC">CCC</a>, August 27, 2017<a href="#fnref33" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Led_Zeppelin">Led Zeppelin</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Parallel_Search">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

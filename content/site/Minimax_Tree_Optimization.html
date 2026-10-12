@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minimax Tree Optimization - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Minimax Tree Optimization</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Automated_Tuning">Automated Tuning</a> * Minimax Tree Optimization</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:240px"><img src="https://upload.wikimedia.org/wikipedia/commons/7/7c/Bonanza_full_cast_1962_larger.jpg" alt="Bonanza full cast, 1962 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="https://en.wikipedia.org/wiki/Bonanza">Bonanza</a> full cast, 1962 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://commons.wikimedia.org/wiki/File:Bonanza_full_cast_1962_larger.jpg">Photo</a> of the full cast of the television program <a href="https://en.wikipedia.org/wiki/Bonanza">Bonanza</a> on the porch of the <a href="https://en.wikipedia.org/wiki/Ponderosa_Ranch">Ponderosa</a> from 1962. From top: <a href="https://en.wikipedia.org/wiki/Lorne_Greene">Lorne Greene</a>, <a href="https://en.wikipedia.org/wiki/Dan_Blocker">Dan Blocker</a>, <a href="https://en.wikipedia.org/wiki/Michael_Landon">Michael Landon</a>, <a href="https://en.wikipedia.org/wiki/Pernell_Roberts">Pernell Roberts</a>. This episode, "Miracle Maker", aired in <a href="https://en.wikipedia.org/wiki/List_of_Bonanza_episodes">May 1962</a>, Author: Pat MacDermott Company, Directional Public Relations, for <a href="https://en.wikipedia.org/wiki/Chevrolet">Chevrolet</a>, the sponsor of the program. During the 1950s and 1960s, publicity information was often distributed through ad or public relations agencies by the network, studio, or program's sponsor. In this case, the PR agency was making this available for Chevrolet--the little "plug" about their vehicles is seen in the release. <a href="https://commons.wikimedia.org/wiki/Category:Bonanza_(TV_series)">Category:Bonanza (TV series) - Wikimedia Commons</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Minimax Tree Optimization</strong> (MMTO),<br />
+a <a href="/Supervised_Learning">supervised</a> <a href="/Automated_Tuning">tuning method</a> based on <a href="/Automated_Tuning">move adaptation</a>, devised and introduced by <a href="/Kunihito_Hoki">Kunihito Hoki</a> and <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. A MMTO predecessor, the initial <strong>Bonanza-Method</strong> was used in Hoki's <a href="/Shogi">Shogi</a> engine <a href="/Bonanza">Bonanza</a> in 2006, winning the WCSC16 <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>. The further improved MMTO version of Bonanaza won the WCSC23 in 2013 <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#move-adaptation">Move Adaptation</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#mmto">MMTO</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#objective-function">Objective Function</a></li>
+<li><a href="#optimization">Optimization</a></li>
+<li><a href="#grid-adjacent-update">Grid-Adjacent Update</a></li>
+<li><a href="#partial-derivative-approximation">Partial Derivative Approximation</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="move-adaptation">Move Adaptation</h2>
+<p>A chess program has an <a href="/Evaluation">linear evaluation function</a> <strong>e(p,ω)</strong>, where <strong>p</strong> is the <a href="/Chess_Position">game position</a> and <strong>ω</strong> the feature weight vector to be adjusted for optimal play. The optimization procedure iterates over a set of selected positions from games assuming played by an <a href="/Oracle">oracle</a> with a desired move given. All possible <a href="/Moves">moves</a> from this position are <a href="/Make_Move">made</a> and the resulting position <a href="/Evaluation">evaluated</a>. Each move obtaining a higher score than the desired move adds a penalty to the <a href="https://en.wikipedia.org/wiki/Loss_function">objective function</a> to be minimized, for instance <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>:</p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="/assets/MmtoObjectiveFunction1.jpg" alt="" class="block w-full h-auto" /></span> Here, <strong>p.m</strong> is the position after move <strong>m</strong> in <strong>p</strong>, <strong>d<sub>p</sub></strong> is the desired move in <strong>p</strong>, ℳ′<sub>p</sub> is the set of all legal moves in <strong>p</strong> excluding <strong>d<sub>p</sub></strong>, and <strong>H(x)</strong> is the <a href="https://en.wikipedia.org/wiki/Heaviside_step_function">Heaviside step function</a>. The numerical procedures to minimize such an objective function are complicated, and the adjustment of a large-scale vector ω seemed to present practical difficulties considering <a href="https://en.wikipedia.org/wiki/Partial_derivative">partial derivation</a> and local versus global <a href="https://en.wikipedia.org/wiki/Maxima_and_minima">minima</a>.</p>
+<h2 id="mmto">MMTO</h2>
+<p>MMTO improved by performing a <a href="/Minimax">minimax search</a> (One or two <a href="/Ply">ply</a> plus <a href="/Quiescence_Search">quiescence</a>), by grid-adjacent update, and using <a href="https://en.wikipedia.org/wiki/Constraint_(mathematics)">equality constraint</a> and <a href="https://en.wikipedia.org/wiki/Regularization_(mathematics)">L1 regularization</a> to achieve <a href="https://en.wikipedia.org/wiki/Scalability">scalability</a> and <a href="https://en.wikipedia.org/wiki/Stability">stability</a>.</p>
+<h3 id="objective-function">Objective Function</h3>
+<p>MMTO's <a href="https://en.wikipedia.org/wiki/Loss_function">objective function</a> consists of the sum of three terms, where the first term <strong>J(P,ω)</strong> on the right side is the main part. <span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="/assets/MmtoObjectiveFunction2.jpg" alt="" class="block w-full h-auto" /></span> The other terms <strong>J<sub>C</sub></strong> and <strong>J<sub>R</sub></strong> are constraint and regularization terms. <strong>J<sub>C</sub>(P,ω) = λ<sub>0</sub>g(ω')</strong>, where **ω'**is subset of <strong>ω</strong>, <strong>g(ω')=0</strong> is an <a href="https://en.wikipedia.org/wiki/Constraint_(mathematics)">equality constraint</a>, and <strong>λ<sub>0</sub></strong> is a <a href="https://en.wikipedia.org/wiki/Lagrange_multiplier">Lagrange multiplier</a>. <strong>J<sub>R</sub>(P,ω) = λ<sub>1</sub>|ω''|</strong> is the <a href="https://en.wikipedia.org/wiki/Regularization_(mathematics)">L1 regularization</a>. where <strong>λ<sub>1</sub></strong> is a constant &gt; 0 and <strong>ω''</strong> is subset of <strong>ω</strong>. The main part of objective function is similar to the H-formula of the Move Adaptation chapter:</p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="/assets/MmtoObjectiveFunction3.jpg" alt="" class="block w-full h-auto" /></span> where <strong>s(p,ω)</strong> is the value identified by the <a href="/Minimax">minimax</a> search for position <strong>p</strong>. <strong>T(x) = 1/(1 + exp(ax))</strong>, a <a href="https://en.wikipedia.org/wiki/Sigmoid_function">sigmoid function</a> with slope controlled by <strong>a</strong>, to even become the <a href="https://en.wikipedia.org/wiki/Heaviside_step_function">Heaviside step function</a>.</p>
+<h3 id="optimization">Optimization</h3>
+<p>The iterative optimization process has three steps:</p>
+<ol type="1">
+<li>Perform a <a href="/Minimax">minimax</a> <a href="/Search">search</a> to identify <a href="/Principal_Variation">PV</a> <a href="/Leaf_Node">leaves</a> <strong>π<sub>ω(t)</sub><sup>p.m</sup></strong> for all child positions <strong>p.m</strong> of position <strong>p</strong> in training set <strong>P</strong>, where <strong>ω(t)</strong> is the weight vector at the t-th iteration and <strong>ω(0)</strong> is the initial guess</li>
+<li>Calculate a partial-derivative approximation of the objective function using both <strong>π<sub>ω(t)</sub><sup>p.m</sup></strong> and <strong>ω(t)</strong>. The objective function employs a differentiable approximation of <strong>T(x)</strong>, as well as a constraint and regularization term</li>
+<li>Obtain a new weight vector <strong>ω(t+1)</strong> from <strong>ω(t)</strong> by using a grid-adjacent update guided by the partial derivatives computed in step 2. Go back to step 1, or terminate the optimization when the objective function value converges</li>
+</ol>
+<p>Because step 1 is the most time-consuming part, it is worth considering omitting it by assuming the PV does not change between iterations. In their experiments, Hoki and Kaneko used steps 2 and 3 32 times without running step 1.</p>
+<h3 id="grid-adjacent-update">Grid-Adjacent Update</h3>
+<p>MMTO uses grid-adjacent update to get <strong>ω(t+1)</strong> from <strong>ω(t)</strong> using a small integer <strong>h</strong> along with the <a href="https://en.wikipedia.org/wiki/Sign_function">sgn function</a> of the partial derivative approximation. <span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="/assets/MmtoGridAdjacentUpdate.jpg" alt="" class="block w-full h-auto" /></span></p>
+<h3 id="partial-derivative-approximation">Partial Derivative Approximation</h3>
+<p>In each iteration, feature weights are updated on the basis of the <a href="https://en.wikipedia.org/wiki/Partial_derivative">partial derivatives</a> of the objective function. <span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="/assets/MmtoPartialDifferentation1.jpg" alt="" class="block w-full h-auto" /></span> The <strong>J<sub>R</sub></strong> derivative is treated in an intuitive manner <a href="https://en.wikipedia.org/wiki/Sign_function">sgn</a><strong>(ω<sub>i</sub>)λ<sub>1</sub></strong> for <strong>ω<sub>i</sub> ∈ ω''</strong>, and <strong>0</strong> otherwise.</p>
+<p>The partial derivative of the <a href="https://en.wikipedia.org/wiki/Constraint_(mathematics)">constraint</a> term <strong>J<sub>C</sub></strong> is 0 for <strong>ω<sub>i</sub> ∉ ω'</strong>. Otherwise, the <a href="https://en.wikipedia.org/wiki/Lagrange_multiplier">Lagrange multiplier</a> <strong>λ<sub>0</sub></strong> is set to the <a href="https://en.wikipedia.org/wiki/M-estimator#Median">median</a> of the partial derivatives in order to maintain the constraint <strong>g(ω) = 0</strong> in each iteration. As a result, <strong>∆ω′<sub>i</sub></strong> is <strong>h</strong> for <strong>n</strong> feature weights, <strong>−h</strong> for <strong>n</strong> feature weights, and 0 in one feature weight, where the number of feature weights in ω' is 2n + 1.</p>
+<p>Since the objective function with the minimax values <strong>s(p, ω)</strong> is not always <a href="https://en.wikipedia.org/wiki/Differentiable_function">differentiable</a>, an approximation is used by using the evaluation of the <a href="/Principal_Variation">PV</a> <a href="/Leaf_Node">leaf</a>: <span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="/assets/MmtoPartialDifferentation.jpg" alt="" class="block w-full h-auto" /></span> where <strong>T'(x) = d/dx T(x)</strong>.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Eval_Tuning_in_Deep_Thought">Eval Tuning in Deep Thought</a></li>
+<li><a href="/NNUE">NNUE</a></li>
+<li>Texel's Tuning Method</li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Kunihito_Hoki">Kunihito Hoki</a> (<strong>2006</strong>). <em>Optimal control of minimax search result to learn positional evaluation</em>. <a href="/Conferences">11th Game Programming Workshop</a> (Japanese)</li>
+<li><a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a>, <a href="/Kunihito_Hoki">Kunihito Hoki</a> (<strong>2011</strong>). <em>Analysis of Evaluation-Function Learning by Comparison of Sibling Nodes</em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a></li>
+<li><a href="/Kunihito_Hoki">Kunihito Hoki</a>, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a> (<strong>2011</strong>). <em>The Global Landscape of Objective Functions for the Optimization of Shogi Piece Values with a Game-Tree Search</em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a></li>
+<li><a href="/Kunihito_Hoki">Kunihito Hoki</a>, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a> (<strong>2014</strong>). <em><a href="https://www.jair.org/papers/paper4217.html">Large-Scale Optimization for Evaluation Functions with Minimax Search</a></em>. <a href="https://www.jair.org/vol/vol49.html">JAIR Vol. 49</a>, <a href="https://pdfs.semanticscholar.org/eb9c/173576577acbb8800bf96aba452d77f1dc19.pdf">pdf</a></li>
+<li><a href="/Takenobu_Takizawa">Takenobu Takizawa</a>, <a href="/Takeshi_Ito">Takeshi Ito</a>, <a href="/Takuya_Hiraoka">Takuya Hiraoka</a>, <a href="/Kunihito_Hoki">Kunihito Hoki</a> (<strong>2015</strong>). <em><a href="https://link.springer.com/referenceworkentry/10.1007/978-3-319-08234-9_22-1">Contemporary Computer Shogi</a></em>. <a href="https://link.springer.com/referencework/10.1007/978-3-319-08234-9">Encyclopedia of Computer Graphics and Games</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55084">MMTO for evaluation learning</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, January 25, 2015</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=64189&amp;start=21">Re: Texel tuning method question</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, June 07, 2017</li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Automated_Tuning">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Kunihito_Hoki">Kunihito Hoki</a>, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a> (<strong>2014</strong>). <em><a href="https://www.jair.org/papers/paper4217.html">Large-Scale Optimization for Evaluation Functions with Minimax Search</a></em>. <a href="https://www.jair.org/vol/vol49.html">JAIR Vol. 49</a>, <a href="https://pdfs.semanticscholar.org/eb9c/173576577acbb8800bf96aba452d77f1dc19.pdf">pdf</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Kunihito_Hoki">Kunihito Hoki</a> (<strong>2006</strong>). <em>Optimal control of minimax search result to learn positional evaluation</em>. <a href="/Conferences">11th Game Programming Workshop</a> (Japanese)<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="/Takenobu_Takizawa">Takenobu Takizawa</a>, <a href="/Takeshi_Ito">Takeshi Ito</a>, <a href="/Takuya_Hiraoka">Takuya Hiraoka</a>, <a href="/Kunihito_Hoki">Kunihito Hoki</a> (<strong>2015</strong>). <em><a href="https://link.springer.com/referenceworkentry/10.1007/978-3-319-08234-9_22-1">Contemporary Computer Shogi</a></em>. <a href="https://link.springer.com/referencework/10.1007/978-3-319-08234-9">Encyclopedia of Computer Graphics and Games</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p>Description and Formulas based on <a href="/Kunihito_Hoki">Kunihito Hoki</a>, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a> (<strong>2014</strong>). <em><a href="https://www.jair.org/papers/paper4217.html">Large-Scale Optimization for Evaluation Functions with Minimax Search</a></em>. <a href="https://www.jair.org/vol/vol49.html">JAIR Vol. 49</a>, <a href="https://pdfs.semanticscholar.org/eb9c/173576577acbb8800bf96aba452d77f1dc19.pdf">pdf</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Minimax_Tree_Optimization">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

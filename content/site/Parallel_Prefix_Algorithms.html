@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parallel Prefix Algorithms - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Parallel Prefix Algorithms</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Programming">Programming</a> * <a href="/Algorithms">Algorithms</a> * Parallel Prefix Algorithms</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="http://www.toves.org/books/distalg/" target="_blank" rel="noopener noreferrer"><img src="/assets/Parallelprefixsum.png" alt="Parallel Prefix Sum 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Parallel Prefix Sum <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="/Mathematician">Carl Burch</a> (<strong>2009</strong>). <em><a href="http://www.toves.org/books/distalg/">Introduction to parallel &amp; distributed algorithms</a></em>. On-line Book<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Parallel prefix algorithms</strong> compute all <a href="https://en.wikipedia.org/wiki/Prefix_sum">prefixes</a> of a input sequence in <a href="https://en.wikipedia.org/wiki/Time_complexity#Logarithmic_time">logarithmic time</a>, and are topic of various <a href="/SIMD_and_SWAR_Techniques">SIMD and SWAR techniques</a> applied to <a href="/Bitboards">bitboards</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> . This page provides some basics on simple parallel prefix problems, like parity words and <a href="https://en.wikipedia.org/wiki/Gray_code">Gray code</a> with some interesting properties, followed by some theoretical background on more complex parallel prefix problems, like <a href="/Kogge-Stone_Algorithm">Kogge-Stone</a> by <a href="/Steffan_Westcott">Steffan Westcott</a>, and a comparison of three similar Kogge-Stone routines for different purpose. <span id="ParityWords"></span></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#parity-words">Parity Words</a></li>
+<li><a href="#gray-code">Gray Code</a></li>
+<li><a href="#fill-stuff">Fill Stuff</a></li>
+<li><a href="#elaborations-on-kogge-stone">Elaborations on Kogge-Stone</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#addsub-versus-attacks">Add/Sub versus Attacks</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#add">Add</a></li>
+<li><a href="#sub">Sub</a></li>
+<li><a href="#east-attacks">East Attacks</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="parity-words">Parity Words</h2>
+<p><a href="https://en.wikipedia.org/wiki/Parity_bit#Parity">Parity</a> is often related to <a href="https://en.wikipedia.org/wiki/Error_detection_and_correction">error detection and correction</a>. The modulo 2 sum aka <a href="/General_Setwise_Operations">exclusive or</a> (xor) of any number of inputs is sufficient to determine even or odd parity. On a bitboard for each bit 0..63 we like to know, whether the number of ones including all trailing bits is odd or even, xi is the bit in x with bit-index i:</p>
+<pre><code>p0  = x0;
+p1  = x0 ^ x1;
+p2  = x0 ^ x1 ^ x2;
+...
+p63 = x0 ^ x1 ^ x2 ^ .... ^ x63;</code></pre>
+<p>Or <a href="/Recursion">recursively</a></p>
+<pre><code>p[i] = p[i-1] ^ x[i];</code></pre>
+<p>p63 indicates whether the whole cardinality is odd or even. The parallel prefix solution looks that way:</p>
+<pre><code>x ^= x &lt;&lt;  1;
+x ^= x &lt;&lt;  2;
+x ^= x &lt;&lt;  4;
+x ^= x &lt;&lt;  8;
+x ^= x &lt;&lt; 16;
+x ^= x &lt;&lt; 32;</code></pre>
+<p>and only need <code>log2(64) == 6</code> steps to perform all the xor instructions.</p>
+<p>Surprisingly, thanks to xor, we can restore the initial value by a final:</p>
+<pre><code>x ^= x &lt;&lt; 1;</code></pre>
+<p><span id="GrayCode"></span></p>
+<h2 id="gray-code">Gray Code</h2>
+<p>The reflected binary code, or <a href="https://en.wikipedia.org/wiki/Gray_code">Gray code</a> has some similar properties <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>. The Gray code is defined by the modulo 2 sum or <a href="/General_Setwise_Operations">exclusive or</a> of a word with its value shifted right by one.</p>
+<pre><code>gray = x ^ (x &gt;&gt; 1);</code></pre>
+<p>This ensures that consecutive Gray codes have only one bit changed, that is a <a href="/Population_Count">Hamming distance</a> of one. For instance for a 4-bit or <a href="/Nibble">nibble</a> Gray code:</p>
+<table>
+<thead>
+<tr>
+<th>x decimal</th>
+<th>x binary</th>
+<th>x&gt;&gt;1</th>
+<th>Gray bin</th>
+<th>decimal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>0000</td>
+<td>0000</td>
+<td>0000</td>
+<td>0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0001</td>
+<td>0000</td>
+<td>0001</td>
+<td>1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>0010</td>
+<td>0001</td>
+<td>0011</td>
+<td>3</td>
+</tr>
+<tr>
+<td>3</td>
+<td>0011</td>
+<td>0001</td>
+<td>0010</td>
+<td>2</td>
+</tr>
+<tr>
+<td>4</td>
+<td>0100</td>
+<td>0010</td>
+<td>0110</td>
+<td>6</td>
+</tr>
+<tr>
+<td>5</td>
+<td>0101</td>
+<td>0010</td>
+<td>0111</td>
+<td>7</td>
+</tr>
+<tr>
+<td>6</td>
+<td>0110</td>
+<td>0011</td>
+<td>0101</td>
+<td>5</td>
+</tr>
+<tr>
+<td>7</td>
+<td>0111</td>
+<td>0011</td>
+<td>0100</td>
+<td>4</td>
+</tr>
+<tr>
+<td>8</td>
+<td>1000</td>
+<td>0100</td>
+<td>1100</td>
+<td>12</td>
+</tr>
+<tr>
+<td>9</td>
+<td>1001</td>
+<td>0100</td>
+<td>1101</td>
+<td>13</td>
+</tr>
+<tr>
+<td>10</td>
+<td>1010</td>
+<td>0101</td>
+<td>1111</td>
+<td>15</td>
+</tr>
+<tr>
+<td>11</td>
+<td>1011</td>
+<td>0101</td>
+<td>1110</td>
+<td>14</td>
+</tr>
+<tr>
+<td>12</td>
+<td>1100</td>
+<td>0110</td>
+<td>1010</td>
+<td>10</td>
+</tr>
+<tr>
+<td>13</td>
+<td>1101</td>
+<td>0110</td>
+<td>1011</td>
+<td>11</td>
+</tr>
+<tr>
+<td>14</td>
+<td>1110</td>
+<td>0111</td>
+<td>1001</td>
+<td>9</td>
+</tr>
+<tr>
+<td>15</td>
+<td>1111</td>
+<td>0111</td>
+<td>1000</td>
+<td>8</td>
+</tr>
+<tr>
+<td>0</td>
+<td>0000</td>
+<td>0000</td>
+<td>0000</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>Decoding Gray code is a parallel prefix problem similar to the ring-wise operations of the Parity words. For a nibble Gray code:</p>
+<pre><code>x  = gray;
+x ^= x &gt;&gt;  2;
+x ^= x &gt;&gt;  1;</code></pre>
+<p>Or for 64-bit Gray-Codes:</p>
+<pre><code>x  = gray;
+x ^= x &gt;&gt; 32;
+x ^= x &gt;&gt; 16;
+x ^= x &gt;&gt;  8;
+x ^= x &gt;&gt;  4;
+x ^= x &gt;&gt;  2;
+x ^= x &gt;&gt;  1;</code></pre>
+<h2 id="fill-stuff">Fill Stuff</h2>
+<p>Parallel prefix <a href="/Pawn_Fills">front and rear-fills</a>, for instance to determine <a href="/Pawn_Spans">pawn spans</a> in <a href="/Bitboards">bitboards</a>, are quite simple to understand.</p>
+<pre><code>U64 nortFill(U64 gen) {
+   gen |= (gen &lt;&lt;  8);
+   gen |= (gen &lt;&lt; 16);
+   gen |= (gen &lt;&lt; 32);
+   return gen;
+}
+
+U64 soutFill(U64 gen) {
+   gen |= (gen &gt;&gt;  8);
+   gen |= (gen &gt;&gt; 16);
+   gen |= (gen &gt;&gt; 32);
+   return gen;
+}</code></pre>
+<p>This is actually a simplified <a href="/Kogge-Stone_Algorithm">Kogge-Stone algorithm</a>, whose general form even considers a second bitboard to occlude the flood accordantly.</p>
+<p><span id="FurtherElaborationsOnKoggeStone"></span></p>
+<h2 id="elaborations-on-kogge-stone">Elaborations on Kogge-Stone</h2>
+<p>Elaborations on <a href="/Kogge-Stone_Algorithm">Kogge-Stone</a> parallel prefix algorithm by <a href="/Steffan_Westcott">Steffan Westcott</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> :</p>
+<p>A <strong>parallel prefix</strong> problem is of the sort:</p>
+<pre><code>   Given the terms x1, x2, x3, ... , xN and an associative operator #
+   find the values q1 = x1
+                   q2 = x1 # x2
+                   q3 = x1 # x2 # x3
+                   .
+                   .
+                   .
+                   qN = x1 # x2 # x3 # ... # xN</code></pre>
+<p>Associative expressions can be bracketed any way you like, the result is the same. To see why this is interesting for chess programming, let's define x1, x2, ... and # to be</p>
+<pre><code>    xI = &lt; gI, pI &gt;     (a two element tuple)
+         where gI = square aI has a rook on it
+         and   pI = square aI is empty
+         for all I = 1, 2, 3, ... , 8
+
+and xI # xJ = &lt; gI, pI &gt;  #  &lt; gJ, pJ &gt;
+            = &lt; ((gI &amp;&amp; pJ) || gJ),  (pI &amp;&amp; pJ) &gt;</code></pre>
+<p>All this algebra looks very scary at first, so here's an example:</p>
+<pre><code>  q2 = x1 # x2 = &lt; rook_on_a1, a1_is_empty &gt; # &lt; rook_on_a2, a2_is_empty &gt;
+               = &lt; ((rook_on_a1 &amp;&amp; a2_is_empty) || rook_on_a2),
+                   (a1_is_empty &amp;&amp; a2_is_empty) &gt;</code></pre>
+<ul>
+<li>The first tuple of q2 tells us if a rook is on a2 or can move up to a2 along empty squares.</li>
+<li>The second tuple of q2 tells us if a rook could move up freely through a1-a2 ie. a1-a2 are empty.</li>
+</ul>
+<p>In general,</p>
+<pre><code>  xI # x(I+1) # ... # xJ =
+    &lt; a_rook_somewhere_on_aI_to_aJ_is_either_on_aJ_or_can_move_up_to_aJ,
+      all_squares_aI_to_aJ_are_empty &gt;</code></pre>
+<p>and so</p>
+<pre><code>  qJ = &lt; a_rook_somewhere_in_file_a_is_either_on_aJ_or_can_move_up_to_aJ,
+         all_squares_a1_to_aJ_are_empty &gt;</code></pre>
+<p>The tuples g and p are known as the "generator" and "propagator" terms in the literature of fast carry propagation circuits. But we are not dealing with carry bits in a carry propagate adder! Here, we are generating and propagating upward rook attacks along a file of a chessboard.</p>
+<p>Why all this theory? Well, prefix computation is a heavily researched area, researched by many folk smarter than me :) Its of interest because it has many applications, such as VLSI design, pattern matching, and others. There are many different ways of going about it, with different implementation characteristics.</p>
+<pre><code>U64 FillUpOccluded(U64 g, U64 p) {
+           g |= p &amp; (g &lt;&lt;  8);
+           p &amp;=     (p &lt;&lt;  8);
+           g |= p &amp; (g &lt;&lt; 16);
+           p &amp;=     (p &lt;&lt; 16);
+    return g |= p &amp; (g &lt;&lt; 32);
+}
+
+U64 RookAttacksUp(U64 rooks, U64 empty_squares) {
+    return ShiftUp(FillUpOccluded(rooks, empty_squares));
+}</code></pre>
+<p>The method chosen in FillUpOccluded() is based on a Kogge-Stone parallel prefix network, because it can be implemented very easily in software. The diagram below (trust me, it really _is_ supposed to look like that) is an illustration of how it works. The corresponding lines of program code are shown on the right. The inputs are fed into the network at the top, pass along the connecting lines, are combined by the # operator at various points, and the outputs appear at the bottom.</p>
+<pre><code>x1 x2 x3 x4 x5 x6 x7 x8         Input : g, p
+  |  |  |  |  |  |
+V  V  V  V  V  V  V  V
+  |  |  |  |  |  |
+  |  |  |  |  |  |
+\ |\ |\ |\ |\ |\ |\ |
+ \| \| \| \| \| \| \|
+  #  #  #  #  #  #  #          g |= p &amp; (g &lt;&lt;  8);
+  |  |  |  |  |  |          p &amp;=     (p &lt;&lt;  8);
+\ |\ |\ |\ |\ |\ |  |
+ \: \: \: \: \: \:  |
+  \  \  \  \  \  \  |
+  :\ :\ :\ :\ :\ :\ |
+ \| \| \| \| \| \|
+  #  #  #  #  #  #          g |= p &amp; (g &lt;&lt; 16);
+  |  |  |  |  |  |          p &amp;=     (p &lt;&lt; 16);
+\ |\ |\ |\ |  |  |  |
+ \: \: \: \:  |  |  |
+  \  \  \  \  |  |  |
+  :\ :\ :\ :\ |  |  |
+ \: \: \: \:  |  |
+  \  \  \  \  |  |
+  :\ :\ :\ :\ |  |
+  | \: \: \: \:  |
+  |  \  \  \  \  |
+  |  ;\ ;\ :\ :\ |
+  |  | \| \| \| \|
+  |  |  #  #  #  #          g |= p &amp; (g &lt;&lt; 32);
+  |  |  |  |  |  |
+  |  |  |  |  |  |
+V  V  V  V  V  V  V  V
+q1 q2 q3 q4 q5 q6 q7 q8         Output : g</code></pre>
+<p>To convince yourself this works, select any output qI and trace upwards from the bottom of the diagram. You'll see it leads back to x1, x2, ... , xI, so qI is formed by some computation of x1 # x2 # ... # xI.</p>
+<p>[Implementor's note : The 2 program lines that assign to variable p are not strictly correct. By the end of the routine, p1 and p2 have been trashed (reset). However, they are trashed after they can affect the correctness of the routine result.]</p>
+<p><span id="KoggeStoneAdder"></span></p>
+<h2 id="addsub-versus-attacks">Add/Sub versus Attacks</h2>
+<p>As a comparison three Kogge-Stone routines. A "classical" byte-wise <a href="/SIMD_and_SWAR_Techniques">SWAR</a> adder, byte-wise subtraction, and byte-wise rook-attacks in east direction. Note that the inner parallel prefix instructions are the same in all three routines:</p>
+<pre><code>   gen |= pro &amp; (gen &lt;&lt; 1);
+   pro &amp;=       (pro &lt;&lt; 1);
+   gen |= pro &amp; (gen &lt;&lt; 2);
+   pro &amp;=       (pro &lt;&lt; 2);
+   gen |= pro &amp; (gen &lt;&lt; 4);</code></pre>
+<p>The difference are the assignments of generator and propagator, and the final result.</p>
+<h3 id="add">Add</h3>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/1/1c/4_bit_Kogge_Stone_Adder_Example_new.png" alt="4-bit Kogge-Stone adder" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span> The software approach of a <a href="https://en.wikipedia.org/wiki/Kogge-Stone_adder">Kogge-Stone</a> <a href="/Combinatorial_Logic">hardware adder</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> , requires the initial carry bits as generator, thus the <a href="/General_Setwise_Operations">intersection</a> of both summands, while the propagator is the modulo 2 sum, the <a href="/General_Setwise_Operations">exclusive or</a> of both summands. To avoid inter byte overflows, the propagator has the least significant bits of each byte cleared. However the final carries need one further masked shift and the modulo two sum with the initial propagator.</p>
+<pre><code>// SIMD bytewise add a + b
+U64 koggeStoneByteAdd(U64 a, U64 b) {
+   const U64 aFile = C64(0x0101010101010101);
+   U64 gen, pro;
+   gen  = a &amp; b;
+   pro  = a ^ b;
+   pro &amp;= ~aFile;
+   gen |= pro   &amp; (gen &lt;&lt; 1);
+   pro &amp;=         (pro &lt;&lt; 1);
+   gen |= pro   &amp; (gen &lt;&lt; 2);
+   pro &amp;=         (pro &lt;&lt; 2);
+   gen |= pro   &amp; (gen &lt;&lt; 4);
+   gen  =~aFile &amp; (gen &lt;&lt; 1);
+   return gen ^ a ^ b;
+}</code></pre>
+<h3 id="sub">Sub</h3>
+<p>Subtraction is based on the <a href="/General_Setwise_Operations">two's complement</a> which is <a href="/General_Setwise_Operations">ones' complement</a> plus one aka the A-File assuming <a href="/Square_Mapping_Considerations">little-endian rank-file mapping</a>. Thus, it is actually the sum of {a, ~b, one}, which is considered in calculating propagator and generator, which is the <a href="/General_Setwise_Operations">majority</a> of all three inputs. Note that</p>
+<pre><code>   gen  =~aFile &amp; (gen &lt;&lt; 1);
+   return gen ^ a ^ ~b ^ aFile;</code></pre>
+<p>can be re-written like in following routine:</p>
+<pre><code>// SIMD bytewise sub a - b
+U64 koggeStoneByteSub(U64 a, U64 b) {
+   const U64 aFile  = C64(0x0101010101010101);
+   U64 gen, pro;
+   gen  = a &amp; ~b;      // based on -b = ~b + 1
+   pro  = a ^ ~b;
+   gen |= aFile &amp; pro; // majority
+   gen |= pro   &amp; (gen &lt;&lt; 1);
+   pro &amp;=         (pro &lt;&lt; 1);
+   gen |= pro   &amp; (gen &lt;&lt; 2);
+   pro &amp;=         (pro &lt;&lt; 2);
+   gen |= pro   &amp; (gen &lt;&lt; 4);
+   gen  = aFile | (gen &lt;&lt; 1);
+   return gen ^ a ^ ~b;
+}</code></pre>
+<h3 id="east-attacks">East Attacks</h3>
+<p>Here the Kogge-Stone algorithm generates the sliding piece attacks along the empty squares. Generator are the rooks or queens, propagator the empty squares without the A-file to avoid wraps.</p>
+<pre><code>U64 eastAttacks(U64 occ, U64 rooks) {
+   const U64 aFile = C64(0x0101010101010101);
+   U64 gen, pro;
+   pro  = ~occ  &amp; ~aFile;
+   gen  = rooks;
+   gen |= pro   &amp; (gen &lt;&lt; 1);
+   pro &amp;=         (pro &lt;&lt; 1);
+   gen |= pro   &amp; (gen &lt;&lt; 2);
+   pro &amp;=         (pro &lt;&lt; 2);
+   gen |= pro   &amp; (gen &lt;&lt; 4);
+   gen  =~aFile &amp; (gen &lt;&lt; 1);
+   return gen;
+}</code></pre>
+<p>The mentioned routines also demonstrate, that this east attacking direction may cheaper implemented with <a href="/Fill_by_Subtraction">Fill by Subtraction</a> based on <a href="/SIMD_and_SWAR_Techniques">SWAR-wise techniques</a> and <a href="/Subtracting_a_Rook_from_a_Blocking_Piece">subtracting a rook from a blocking piece</a>:</p>
+<pre><code>U64 byteAdd(U64 a, U64 b) {return ((a &amp; ~hFile) + (b &amp; ~hFile)) ^ ((a ^  b) &amp; hFile);}
+U64 byteSub(U64 a, U64 b) {return ((a |  hFile) - (b &amp; ~hFile)) ^ ((a ^ ~b) &amp; hFile);}</code></pre>
+<p>However, due to various left and right shifts, Kogge-Stone can deal with all other seven sliding directions as well.</p>
+<p><span id="Seealso"></span></p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/General_Setwise_Operations">Parallel prefix MSB</a></li>
+<li><a href="/Population_Count">SWAR population count</a> of <a href="/Population_Count">the too slow loop approach</a></li>
+<li><a href="/Flipping_Mirroring_and_Rotating">Flipping and Mirroring</a></li>
+<li><a href="/Pawn_Fills">Pawn Fills</a></li>
+<li><a href="/Occupancy_of_any_Line">Occupancy of any Line</a></li>
+<li><a href="/Kogge-Stone_Algorithm">Kogge-Stone Algorithm</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Mathematician">Peter M. Kogge</a>, <a href="/Mathematician">Harold S. Stone</a> (<strong>1972</strong>). <em><a href="https://ntrl.ntis.gov/NTRL/dashboard/searchResults/titleDetail/PB212080.xhtml">A Parallel Algorithm for the Efficient Solution of a General Class of Recurrence Equations</a></em>. Technical Report 25, <a href="/Stanford_University">Stanford University</a></li>
+<li><a href="/Mathematician">Peter M. Kogge</a> (<strong>1973</strong>). <em>Parallel Solution of Recurrence Problems</em>. Ph.D. thesis, <a href="/Stanford_University">Stanford University</a>, advisor <a href="/Mathematician">Harold S. Stone</a>, <a href="https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.84.2724&amp;rep=rep1&amp;type=pdf">pdf</a></li>
+<li><a href="/Mathematician">Peter M. Kogge</a>, <a href="/Mathematician">Harold S. Stone</a> (<strong>1973</strong>). <em><a href="https://ieeexplore.ieee.org/document/5009159">A Parallel Algorithm for the Efficient Solution of a General Class of Recurrence Equations</a></em>. <a href="/IEEE">IEEE Transactions on Computers</a>, Vol. C-22, No. 8</li>
+<li><a href="/Mathematician">Richard E. Ladner</a>, <a href="/Mathematician">Michael J. Fischer</a> (<strong>1980</strong>). <em><a href="https://dl.acm.org/doi/abs/10.1145/322217.322232?download=true">Parallel Prefix Computation</a></em>. <a href="/ACM">Journal of the ACM</a>, Vol. 27, No. 4</li>
+<li><a href="/Clyde_Kruskal">Clyde Kruskal</a>, <a href="/Mathematician">Larry Rudolph</a>, <a href="/Mathematician">Marc Snir</a> (<strong>1985</strong>). <em><a href="https://www.computer.org/csdl/journal/tc/1985/10/06312202/13rRUy0HYQl">The power of parallel prefix</a></em>. <a href="/IEEE">IEEE Transactions on Computers</a>, Vol. C-34, No. 10</li>
+<li><a href="/Peter_Sanders">Peter Sanders</a>, <a href="http://www.traff-industries.de/">Jesper Larsson Träff</a> (<strong>2006</strong>). <em>Parallel Prefix (Scan) Algorithms for MPI</em>. in EuroPVM/MPI 2006, LNCS, <a href="http://algo2.iti.uni-karlsruhe.de/sanders/papers/scan.pdf">pdf</a></li>
+<li><a href="/Mathematician">Carl Burch</a> (<strong>2009</strong>). <em><a href="http://www.toves.org/books/distalg/">Introduction to parallel &amp; distributed algorithms</a></em>. On-line Book</li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=252289">flood fill attack bitboards</a> by <a href="/Steffan_Westcott">Steffan Westcott</a> from <a href="/Computer_Chess_Forums">CCC</a>, September 15, 2002</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?start=0&amp;t=25979&amp;start=10">Re: Hyperbola Quiesscene: hardly any improvement</a> by <a href="/Karlo_Balla">Karlo Bala Jr.</a>, <a href="/CCC">CCC</a>, January 14, 2009 » <a href="/Hyperbola_Quintessence">Hyperbola Quintessence</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="http://www.aoki.ecei.tohoku.ac.jp/arith/mg/algorithm.html#fsa_pfx">Hardware algorithms for arithmetic modules</a> from the ARITH research group, Aoki lab., <a href="https://en.wikipedia.org/wiki/Tohoku_University">Tohoku University</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Prefix_sum">Prefix sum from Wikipedia</a></li>
+<li><a href="http://www.itl.nist.gov/div897/sqg/dads/HTML/parallelPrefix.html">parallel prefix computation</a> from <a href="http://www.nist.gov/index.html">National Institute of Standards and Technology</a></li>
+<li><a href="http://everything2.com/title/parallel+prefix+algorithm">parallel prefix algorithm</a> from <a href="http://everything2.com/">Everything2.com</a></li>
+<li><a href="http://charm.cs.uiuc.edu/tutorial/ParallelPrefix.htm">Charm++ Tutorial - Parallel Prefix Program</a></li>
+<li><a href="/Category:Joe_Zawinul">Joe Zawinul</a>, <a href="/Category:Trilok_Gurtu">Trilok Gurtu</a> - Orient Express Part1, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/922LumI2ilo" title="YouTube video 922LumI2ilo" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=922LumI2ilo">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Algorithms">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p>See also<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://aggregate.org/MAGIC/#Gray%20Code%20Conversion">Gray Code Conversion</a> from <a href="http://aggregate.org/MAGIC">The Aggregate Magic Algorithms</a> by <a href="/Hank_Dietz">Hank Dietz</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://www.stmintz.com/ccc/index.php?id=252289">flood fill attack bitboards</a> by <a href="/Steffan_Westcott">Steffan Westcott</a> from <a href="/Computer_Chess_Forums">CCC</a>, September 15, 2002<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.aoki.ecei.tohoku.ac.jp/arith/mg/algorithm.html#fsa_pfx">Hardware algorithms for arithmetic modules</a> from the ARITH research group, Aoki lab., <a href="https://en.wikipedia.org/wiki/Tohoku_University">Tohoku University</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Trilok_Gurtu">Trilok Gurtu</a> · <a href="/Category:Joe_Zawinul">Joe Zawinul</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Parallel_Prefix_Algorithms">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

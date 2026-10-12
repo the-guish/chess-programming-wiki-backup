@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monte-Carlo Tree Search - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Monte-Carlo Tree Search</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Search">Search</a> * Monte-Carlo Tree Search</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/1/1f/Edvard_Munch_-_At_the_Roulette_Table_in_Monte_Carlo_-_Google_Art_Project.jpg" alt="Edvard Munch - At the Roulette Table in Monte Carlo 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Edvard_Munch">Edvard Munch</a> - At the Roulette Table in Monte Carlo <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="/Category:Edvard_Munch">Edvard Munch</a>, <a href="https://en.wikipedia.org/wiki/File:Edvard_Munch_-_At_the_Roulette_Table_in_Monte_Carlo_-_Google_Art_Project.jpg">At the Roulette Table in Monte Carlo, 1893</a>, <a href="https://en.wikipedia.org/wiki/Edvard_Munch">Edvard Munch from Wikipedia</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Monte Carlo Tree Search</strong>, (Monte-Carlo Tree Search, MCTS)<br />
+is a <a href="/Best-First">Best-First search</a> algorithm, historically based on <a href="https://en.wikipedia.org/wiki/Randomness">random</a> playouts. In conjunction with <a href="/UCT">UCT</a> (<strong>U</strong>pper <strong>C</strong>onfidence bounds applied to <strong>T</strong>rees) Monte-Carlo Tree Search has yielded in a breakthrough in <a href="/Go">Computer Go</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>, and is also successful in <a href="/Amazons">Amazons</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>, <a href="/Lines_of_Action">Lines of Action</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>, <a href="/Havannah">Havannah</a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>, <a href="/Hex">Hex</a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>, <a href="/Checkers">Checkers</a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> and other <a href="/Games">Games</a> with some difficulties in position evaluation, but until December 2017, when a Google DeepMind team reported on <a href="/AlphaZero">AlphaZero</a> <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a>, not for <a href="/Chess">Chess</a> <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a> <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a>. MCTS is based on randomized explorations of the <a href="/Search_Space">search space</a>. Using the results of previous explorations, the algorithm gradually grows a <a href="/Search_Tree">game tree</a> in <a href="/Memory">memory</a>, and successively becomes better at accurately estimating the values of the most promising moves <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#four-phases">Four Phases</a></li>
+<li><a href="#pure-monte-carlo-search">Pure Monte-Carlo search</a></li>
+<li><a href="#uct">UCT</a></li>
+<li><a href="#playouts-by-nn">Playouts by NN</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#publications">Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1987">1987</a></li>
+<li><a href="#1990-">1990 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2010--1">2010 ...</a></li>
+<li><a href="#2015--1">2015 ...</a></li>
+<li><a href="#2020--1">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#monte-carlo-tree-search">Monte Carlo Tree Search</a></li>
+<li><a href="#monte-carlo-misc">Monte Carlo Misc</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="four-phases">Four Phases</h2>
+<p>MCTS consists of four strategic phases, repeated as long as there is time left <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a> :</p>
+<ol type="1">
+<li>In the <strong>Selection</strong> phase the tree is traversed from the <a href="/Root">root node</a> until it selects a <a href="/Leaf_Node">leaf node</a> that is not added to the tree yet</li>
+<li>The <strong>Expansion</strong> strategy adds the leaf node to the tree</li>
+<li>The <strong>Simulation</strong> strategy plays moves in self-play until the end of the game. The result is either 1, 0 ,-1</li>
+<li>The <strong>Backpropagation</strong> strategy propagates the results through the tree</li>
+</ol>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b3/MCTS_%28English%29.svg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span> Steps of Monte Carlo Tree Search <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a></p>
+<p><span id="PureMCS"></span></p>
+<h2 id="pure-monte-carlo-search">Pure Monte-Carlo search</h2>
+<p><strong>Pure Monte-Carlo search</strong> with parameter T means that for each feasible move T random games are generated. The move with the best average score is played. A game is called “Monte Carlo perfect” when this procedure converges to perfect play for each position, when T goes to infinity. However, with limited time per move, increasing T does not guarantee to find a better move <a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a>.</p>
+<h2 id="uct">UCT</h2>
+<p><a href="/UCT">UCT</a> (<strong>U</strong>pper <strong>C</strong>onfidence bounds applied to <strong>T</strong>rees) deals with the flaw of Monte-Carlo Tree Search, when a program may favor a losing move with only one or a few forced refutations, but due to the vast majority of other moves provides a better random playout score than other, better moves <a href="#fn15" class="footnote-ref" id="fnref15" role="doc-noteref"><sup>15</sup></a>. In UCT, upper <a href="https://en.wikipedia.org/wiki/Confidence_interval">confidence bounds</a> guide the selection of a node, treating selection as a {<a href="https://en.wikipedia.org/wiki/Multi-armed_bandit">https://en.wikipedia.org/wiki/Multi-armed_bandit</a> multi-armed bandit] problem. <a href="/Christopher_D._Rosin">PUCT</a> modifies the original policy by approximately predicting good arms at the start of a sequence of multi-armed bandit trials <a href="#fn16" class="footnote-ref" id="fnref16" role="doc-noteref"><sup>16</sup></a>.</p>
+<h2 id="playouts-by-nn">Playouts by NN</h2>
+<p>Historically, at the root of MCTS were random and noisy playouts. Many such playouts were necessary to accurately evaluate a state. Since AlphaGo and <a href="/AlphaZero">AlphaZero</a> it is not the case anymore. Strong policies and evaluations are now provided by <a href="/Neural_Networks">neural networks</a> that are trained with <a href="/Reinforcement_Learning">Reinforcement Learning</a>. In AlphaGo and its descendants the policy is used as a prior in the <a href="/Christopher_D._Rosin">PUCT</a> bandit to explore first the most promising moves advised by the neural network policy and the evaluations replace the playouts <a href="#fn17" class="footnote-ref" id="fnref17" role="doc-noteref"><sup>17</sup></a>.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Category:MCTS">:Category:MCTS</a></li>
+<li><a href="/Deep_Learning">Deep Learning</a></li>
+<li><a href="/MCαβ">MCαβ</a></li>
+<li><a href="/Jakob_Erdmann">MC and UCT poster</a> by <a href="/Jakob_Erdmann">Jakob Erdmann</a></li>
+<li><a href="/Bojun_Huang">Rollout Paradigm</a></li>
+<li><a href="/Raghuram_Ramanujan">Sampling-Based Planning</a></li>
+<li><a href="/Simulated_Annealing">Simulated Annealing</a></li>
+<li><a href="/UCT">UCT</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<h3 id="1987">1987</h3>
+<ul>
+<li><a href="/Bruce_Abramson">Bruce Abramson</a>, <a href="/Richard_Korf">Richard Korf</a> (<strong>1987</strong>). <em>A Model of Two-Player Evaluation Functions.</em> <a href="/Conferences">AAAI-87</a>, <a href="http://www.aaai.org/Papers/AAAI/1987/AAAI87-016.pdf">pdf</a></li>
+</ul>
+<h3 id="1990-">1990 ...</h3>
+<ul>
+<li><a href="/Bruce_Abramson">Bruce Abramson</a> (<strong>1990</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/freeabs_all.jsp?arnumber=44404">Expected-Outcome: A General Model of Static Evaluation</a></em>. <a href="/IEEE">IEEE Transactions on Pattern Analysis and Machine Intelligence</a>, Vol. 12, No. 2</li>
+<li><a href="/Bruce_Abramson">Bruce Abramson</a> (<strong>1990</strong>). <em>An Analysis of Expected-Outcome.</em> <a href="https://en.wikipedia.org/wiki/Journal_of_Experimental_and_Theoretical_Artificial_Intelligence">Journal of Experimental and Theoretical Artificial Intelligence</a>, Vol. 2</li>
+<li><a href="/Bruce_Abramson">Bruce Abramson</a> (<strong>1991</strong>). <em>The Expected-Outcome Model of Two-Player Games.</em> Part of the series, Research Notes in Artificial Intelligence, Morgan Kaufmann</li>
+<li><a href="/Bernd_Brügmann">Bernd Brügmann</a> (<strong>1993</strong>). <em>Monte Carlo Go</em>. <a href="http://www.ideanest.com/vegos/MonteCarloGo.pdf">pdf</a></li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="/Bruno_Bouzy">Bruno Bouzy</a>, <a href="/Bernard_Helmstetter">Bernard Helmstetter</a> (<strong>2003</strong>). <em>Monte Carlo Go Developments</em>. <a href="/Advances_in_Computer_Games_10">Advances in Computer Games 10</a>, <a href="http://www.ai.univ-paris8.fr/~bh/articles/acg10-mcgo.pdf">pdf</a></li>
+<li><a href="/Bruno_Bouzy">Bruno Bouzy</a> (<strong>2004</strong>). <em><a href="http://link.springer.com/chapter/10.1007/11674399_5">Associating Shallow and Selective Global Tree Search with Monte Carlo for 9 × 9 Go</a></em>. <a href="/CG_2004">CG 2004</a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2004</strong>). <em>Monte Carlo Real Time Strategy</em>. <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/poster-mcrts.pdf">pdf</a></li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a>, <a href="/Bernard_Helmstetter">Bernard Helmstetter</a> (<strong>2005</strong>). <em>Combining tactical search and Monte-Carlo in the game of Go</em>. IEEE <a href="http://www.informatik.uni-trier.de/~ley/db/conf/cig/cig2005.html#CazenaveH05">CIG 2005</a>, <a href="http://www.ai.univ-paris8.fr/~bh/articles/searchmcgo.pdf">pdf</a>, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/searchmcgo.pdf">pdf</a></li>
+<li><a href="/Bruno_Bouzy">Bruno Bouzy</a> (<strong>2005</strong>). <em><a href="http://link.springer.com/chapter/10.1007/11922155_8">Move-Pruning Techniques for Monte-Carlo Go</a></em>. <a href="/Advances_in_Computer_Games_11">Advances in Computer Games 11</a></li>
+<li><a href="/Bruno_Bouzy">Bruno Bouzy</a> (<strong>2005</strong>). <em>Associating domain-dependent knowledge and Monte Carlo approaches within a go program</em>. Information Sciences, Heuristic Search and Computer Game Playing IV</li>
+</ul>
+<p><strong>2006</strong></p>
+<ul>
+<li><a href="/Levente_Kocsis">Levente Kocsis</a>, <a href="/Csaba_Szepesvári">Csaba Szepesvári</a> (<strong>2006</strong>). <em><a href="http://www.computer-go.info/resources/bandit.html">Bandit based Monte-Carlo Planning</a></em> ECML-06, LNCS/LNAI 4212, pp. 282-293. introducing <a href="/UCT">UCT</a>, <a href="http://www.sztaki.hu/%7Eszcsaba/papers/ecml06.pdf">pdf</a></li>
+<li><a href="/Sylvain_Gelly">Sylvain Gelly</a>, <a href="/Yizao_Wang">Yizao Wang</a> (<strong>2006</strong>). <em>Exploration exploitation in Go: UCT for Monte-Carlo Go</em>. <a href="http://www.lri.fr/%7Egelly/paper/nips_exploration_exploitation_mogo.pdf">pdf</a></li>
+<li><a href="/Sylvain_Gelly">Sylvain Gelly</a>, <a href="/Yizao_Wang">Yizao Wang</a>, <a href="/Rémi_Munos">Rémi Munos</a>, <a href="/Olivier_Teytaud">Olivier Teytaud</a> (<strong>2006</strong>). <em>Modiﬁcation of UCT with Patterns in Monte-Carlo Go</em>. <a href="http://hal.inria.fr/inria-00117266">INRIA</a></li>
+<li><a href="/Levente_Kocsis">Levente Kocsis</a>, <a href="/Csaba_Szepesvári">Csaba Szepesvári</a>, Jan Willemson (<strong>2006</strong>). <em>Improved Monte-Carlo Search</em>. <a href="http://www.sztaki.hu/~szcsaba/papers/cg06-ext.pdf">pdf</a></li>
+<li><a href="/Jahn-Takeshi_Saito">Jahn-Takeshi Saito</a>, <a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2006</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-75538-8_5">Monte-Carlo Proof-Number Search for Computer Go</a></em>. <a href="/CG_2006">CG 2006</a></li>
+<li><a href="/Rémi_Coulom">Rémi Coulom</a> (<strong>2006</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-75538-8_7">Efficient Selectivity and Backup Operators in Monte-Carlo Tree Search</a></em>. <a href="/CG_2006">CG 2006</a></li>
+<li><a href="/Bruno_Bouzy">Bruno Bouzy</a> (<strong>2006</strong>). <em>History and Territory Heuristics for Monte-Carlo Go</em>. New Mathematics and Natural Computation</li>
+<li>Haruhiro Yoshimoto, Kazuki Yoshizoe, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a>, <a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, Kenjiro Taura (<strong>2006</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=1597359">Monte Carlo Go Has a Way to Go</a></em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/aaai/aaai2006.html#YoshimotoYKKT06">AAAI 2006</a>, <a href="http://www.aaai.org/Papers/AAAI/2006/AAAI06-168.pdf">pdf</a></li>
+</ul>
+<p><strong>2007</strong></p>
+<ul>
+<li><a href="/Rémi_Coulom">Rémi Coulom</a> (<strong>2007</strong>). <em><a href="http://remi.coulom.free.fr/Hakone2007/">Monte-Carlo Tree Search in Crazy Stone</a></em>. <a href="http://remi.coulom.free.fr/Hakone2007/Hakone.pdf">slides as pdf</a></li>
+<li><a href="/Yizao_Wang">Yizao Wang</a>, <a href="/Sylvain_Gelly">Sylvain Gelly</a> (<strong>2007</strong>). <em>Modifications of UCT and Sequence-Like Simulations for Monte-Carlo Go</em>. IEEE Symposium on Computational Intelligence and Games, Honolulu, USA, 2007, <a href="http://www.stat.lsa.umich.edu/%7Eyizwang/publications/wang07modifications.pdf">pdf</a></li>
+<li>Shugo Nakamura, <a href="/Makoto_Miwa">Makoto Miwa</a>, <a href="/Takashi_Chikayama">Takashi Chikayama</a> (<strong>2007</strong>). <em>Improvement of UCT using evaluation function</em>. <a href="http://www.computer-shogi.org/gpw/gpw12_e.html">12th Game Programming Workshop 2007</a></li>
+<li><a href="/Keh-Hsun_Chen">Ken Chen</a>, Peigang Zhang (<strong>2007</strong>). <em>Monte-Carlo Go with Knowledge-Guided Simulations</em>. <a href="/CGW_2007">CGW 2007</a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2007</strong>). <em>Reflexive Monte-Carlo Search</em>. <a href="/CGW_2007">CGW 2007</a>, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/reflexmc.pdf">pdf</a> <a href="#fn18" class="footnote-ref" id="fnref18" role="doc-noteref"><sup>18</sup></a></li>
+<li>François van Lishout, <a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a> (<strong>2007</strong>). <em><a href="https://www.researchgate.net/publication/228378473_Monte-Carlo_tree_search_in_backgammon">Monte-Carlo Tree Search in Backgammon</a></em>. <a href="/CGW_2007">CGW 2007</a></li>
+<li>Julien Kloetzer, <a href="/Hiroyuki_Iida">Hiroyuki Iida</a>, <a href="/Bruno_Bouzy">Bruno Bouzy</a> (<strong>2007</strong>). <em>The Monte-Carlo approach in Amazons</em>. <a href="/CGW_2007">CGW 2007</a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a>, Nicolas Jouandeau (<strong>2007</strong>). <em>On the Parallelization of UCT</em>. <a href="/CGW_2007">CGW 2007</a>, <a href="http://www.lamsade.dauphine.fr/%7Ecazenave/papers/parallelUCT.pdf">pdf</a></li>
+<li><a href="/Jahn-Takeshi_Saito">Jahn-Takeshi Saito</a>, <a href="/Mark_Winands">Mark Winands</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2007</strong>). <em>Grouping Nodes for Monte-Carlo Tree Search</em>. <a href="/CGW_2007">CGW 2007</a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2007</strong>). <em>Evolving Monte-Carlo Tree Search Algorithms</em>. <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/evolveMC.pdf">pdf</a></li>
+<li>Pim Nijssen (<strong>2007</strong>). <em>Playing Othello Using Monte Carlo</em>. Bachelor's Thesis, <a href="/Maastricht_University">Maastricht University</a>, <a href="http://www.personeel.unimaas.nl/pim.nijssen/pub/bsc.pdf">pdf</a></li>
+</ul>
+<p><strong>2008</strong></p>
+<ul>
+<li><a href="/Keh-Hsun_Chen">Ken Chen</a>, Peigang Zhang (<strong>2008</strong>). <em>Monte-Carlo Go with Knowledge-Guided Simulations</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 31, No. 2</a></li>
+<li><a href="/Sylvain_Gelly">Sylvain Gelly</a>, <a href="/Jean-Baptiste_Hoock">Jean-Baptiste Hoock</a>, Arpad Rimmel, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, <a href="http://fr.linkedin.com/pub/yann-kalemkarian/7/7aa/716">Yann Kalemkarian</a> (<strong>2008</strong>). <em>The Parallelization of Monte-Carlo Planning - Parallelization of MC-Planning</em>. ICINCO-ICSO 2008: 244-249, <a href="http://hal.archives-ouvertes.fr/docs/00/28/78/67/PDF/icin08.pdf">pdf</a>, <a href="http://www.lri.fr/%7Eteytaud/UCTpara.pdf">slides as pdf</a></li>
+<li><a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, Louis Chatriot, Christophe Fiter, <a href="/Sylvain_Gelly">Sylvain Gelly</a>, <a href="/Jean-Baptiste_Hoock">Jean-Baptiste Hoock</a>, Julien Pérez, Arpad Rimmel, <a href="/Olivier_Teytaud">Olivier Teytaud</a> (<strong>2008</strong>). <em>Combining expert, offline, transient and online knowledge in Monte-Carlo exploration</em>. <a href="http://www.lri.fr/%7Eteytaud/eg.pdf">pdf</a></li>
+<li><a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, <a href="/Mark_Winands">Mark Winands</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Bruno_Bouzy">Bruno Bouzy</a> (<strong>2008</strong>). <em>Progressive Strategies for Monte-Carlo Tree Search</em>. <a href="http://www.worldscinet.com/nmnc/nmnc.shtml">New Mathematics and Natural Computation</a>, Vol. 4, No. 3, <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.106.3015&amp;rep=rep1&amp;type=pdf">pdf</a> <a href="#fn19" class="footnote-ref" id="fnref19" role="doc-noteref"><sup>19</sup></a></li>
+<li><a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, Sander Bakkes, <a href="/István_Szita">István Szita</a>, <a href="/Pieter_Spronck">Pieter Spronck</a> (<strong>2008</strong>). <em>Monte-Carlo Tree Search: A New Framework for Game AI</em>. <a href="http://sander.landofsand.com/publications/AIIDE08_Chaslot.pdf">pdf</a></li>
+<li><a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, <a href="/Mark_Winands">Mark Winands</a>, <a href="/István_Szita">István Szita</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>. (<strong>2008</strong>). <em>Cross-entropy for Monte-Carlo Tree Search</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 31, No. 3</a>, <a href="http://www.personeel.unimaas.nl/m-winands/documents/crossmc.pdf">pdf</a></li>
+<li>Maarten Schadd, <a href="/Mark_Winands">Mark Winands</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, Huib Aldewereld (<strong>2008</strong>). <em>Addressing NP-Complete Puzzles with Monte-Carlo Methods</em>. In Volume 9: Proceedings of the AISB 2008 Symposium on Logic and the Simulation of Interaction and Reasoning, pages 55-61, Brighton, UK, 2008. The Society for the study of Artificial Intelligence and Simulation of Behaviour. <a href="http://www.personeel.unimaas.nl/Maarten-Schadd/Papers/2008SameGameAISB.pdf">pdf</a></li>
+<li>Maarten Schadd, <a href="/Mark_Winands">Mark Winands</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a> (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_1">Single-Player Monte-Carlo Tree Search</a></em>. <a href="/CG_2008">CG 2008</a>, <a href="http://www.personeel.unimaas.nl/Maarten-Schadd/Papers/2008SameGameCG.pdf">pdf</a></li>
+<li><a href="/Richard_J._Lorentz">Richard J. Lorentz</a> (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_2">Amazons Discover Monte-Carlo</a></em>. <a href="/CG_2008">CG 2008</a></li>
+<li><a href="/Mark_Winands">Mark Winands</a>, <a href="/Yngvi_Björnsson">Yngvi Björnsson</a>, <a href="/Jahn-Takeshi_Saito">Jahn-Takeshi Saito</a> (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_3">Monte-Carlo Tree Search Solver</a></em>. <a href="/CG_2008">CG 2008</a>, <a href="http://www.ru.is/faculty/yngvi/pdf/WinandsBS08.pdf">pdf</a></li>
+<li><a href="/Nathan_Sturtevant">Nathan Sturtevant</a> (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_4">An Analysis of UCT in Multi-player Games</a></em>. <a href="/CG_2008">CG 2008</a></li>
+<li><a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, <a href="/Mark_Winands">Mark Winands</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_6">Parallel Monte-Carlo Tree Search</a></em>. <a href="/CG_2008">CG 2008</a>, <a href="https://dke.maastrichtuniversity.nl/m.winands/documents/multithreadedMCTS2.pdf">pdf</a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a>, Nicolas Jouandeau (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_7">A Parallel Monte-Carlo Tree Search Algorithm</a></em>. <a href="/CG_2008">CG 2008</a>, <a href="http://www.lamsade.dauphine.fr/%7Ecazenave/papers/parallelMCTS.pdf">pdf</a></li>
+<li><a href="/Keh-Hsun_Chen">Ken Chen</a>, Dawei Du, Peigang Zhang (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_9">A Fast Indexing Method for Monte-Carlo Go</a></em>. <a href="/CG_2008">CG 2008</a></li>
+<li><a href="/Yizao_Wang">Yizao Wang</a>, <a href="/Jean-Yves_Audibert">Jean-Yves Audibert</a>, <a href="/Rémi_Munos">Rémi Munos</a> (<strong>2008</strong>). <em>Algorithms for Infinitely Many-Armed Bandits</em>. Advances in Neural Information Processing Systems, <a href="http://www.stat.lsa.umich.edu/%7Eyizwang/publications/wang08algorithms.pdf">pdf</a>, Supplemental material - <a href="http://www.stat.lsa.umich.edu/%7Eyizwang/publications/wang08algorithmsSupp.pdf">pdf</a></li>
+<li><a href="http://en.scientificcommons.org/james_h_brodeur">James H. Brodeur</a>, <a href="http://en.scientificcommons.org/benjamin_e_childs">Benjamin E. Childs</a>, <a href="/Levente_Kocsis">Levente Kocsis</a> (<strong>2008</strong>). <em>Transpositions and Move Groups in Monte Carlo Tree Search.</em> <a href="http://eprints.pascal-network.org/archive/00004571/01/8057.pdf">pdf</a></li>
+<li>Hilmar Finnsson, <a href="/Yngvi_Björnsson">Yngvi Björnsson</a>. (<strong>2008</strong>). <em>Simulation-Based Approach to General Game Playing.</em> In The Twenty-Third AAAI Conference on Artificial Intelligence, <a href="/AAAI">AAAI</a> Press, 2008. Accepted. <a href="http://www.ru.is/faculty/yngvi/pdf/FinnssonB08a.pdf">pdf</a>, <a href="http://www.aaai.org/Papers/AAAI/2008/AAAI08-041.pdf">pdf</a> » <a href="/General_Game_Playing">General Game Playing</a></li>
+<li><a href="/Jean_Méhat">Jean Méhat</a>, <a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2008</strong>). <em>Monte-Carlo Tree Search for General Game Playing</em>. <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/ggp2008.pdf">pdf</a> » <a href="/General_Game_Playing">General Game Playing</a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a>, Nicolas Jouandeau (<strong>2008</strong>). <em>A Parallel Monte-Carlo Tree Search Algorithm</em>. <a href="http://www.lamsade.dauphine.fr/%7Ecazenave/papers/parallelMCTS.pdf">pdf</a></li>
+<li><a href="/Ingo_Althöfer">Ingo Althöfer</a> (<strong>2008</strong>). <em>On the Laziness of Monte-Carlo Game Tree Search in Non-tight Situations</em>. Technical Report, <a href="http://www.althofer.de/mc-laziness.pdf">pdf</a></li>
+<li><a href="/Kazutomo_Shibahara">Kazutomo Shibahara</a>, <a href="/Yoshiyuki_Kotani">Yoshiyuki Kotani</a> (<strong>2008</strong>). <em>Combining Final Score with Winning Percentage using Sigmoid Function in Monte-Carlo Algorithm</em>. <a href="/Conferences">13th Game Programming Workshop</a>, <a href="http://www.csse.uwa.edu.au/cig08/Proceedings/papers/8016.pdf">pdf</a></li>
+<li><a href="/Shogo_Takeuchi">Shogo Takeuchi</a>, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a>, <a href="/Kazunori_Yamaguchi">Kazunori Yamaguchi</a> (<strong>2008</strong>). <em>Evaluation of Monte Carlo tree search and the application to Go</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/cig/cig2008.html">CIG 2008</a></li>
+</ul>
+<p><strong>2009</strong></p>
+<ul>
+<li><a href="/Jean-Yves_Audibert">Jean-Yves Audibert</a>, <a href="/Rémi_Munos">Rémi Munos</a>, <a href="/Csaba_Szepesvári">Csaba Szepesvári</a> (<strong>2009</strong>). <em>Exploration-exploitation trade-off using variance estimates in multi-armed bandits</em>. Theoretical Computer Science, 410:1876-1902, 2009, <a href="http://www.ualberta.ca/%7Eszepesva/papers/ucbtuned-journal.pdf">pdf</a></li>
+<li><a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, Christophe Fiter, <a href="/Jean-Baptiste_Hoock">Jean-Baptiste Hoock</a>, Arpad Rimmel, <a href="/Olivier_Teytaud">Olivier Teytaud</a> (<strong>2009</strong>). <em>Adding Expert Knowledge and Exploration in Monte-Carlo Tree Search</em>. <a href="/Advances_in_Computer_Games_12">Advances in Computer Games 12</a>, <a href="http://www.personeel.unimaas.nl/g-chaslot/papers/acg09.pdf">pdf</a>, <a href="http://www.lri.fr/%7Erimmel/publi/EK_explo.pdf">pdf</a></li>
+<li><a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, <a href="/Jean-Baptiste_Hoock">Jean-Baptiste Hoock</a>, Julien Pérez, Arpad Rimmel, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, <a href="/Mark_Winands">Mark Winands</a> (<strong>2009</strong>). <em>Meta Monte-Carlo Tree Search for Automatic Opening Book Generation</em>. <a href="http://www.personeel.unimaas.nl/m-winands/documents/ouvertures9x9.pdf">pdf</a></li>
+<li><a href="/Markus_Enzenberger">Markus Enzenberger</a>, <a href="/Martin_Müller">Martin Müller</a> (<strong>2009</strong>). <em>A lock-free multithreaded Monte-Carlo tree search algorithm</em>, <a href="/Advances_in_Computer_Games_12">Advances in Computer Games 12</a>, <a href="http://webdocs.cs.ualberta.ca/%7Emmueller/ps/enzenberger-mueller-acg12.pdf">pdf</a></li>
+<li><a href="/Rémi_Coulom">Rémi Coulom</a> (<strong>2009</strong>). <em>The Monte-Carlo Revolution in Go</em>. JFFoS'2008: Japanese-French Frontiers of Science Symposium, <a href="http://remi.coulom.free.fr/JFFoS/JFFoS.pdf">slides as pdf</a></li>
+<li><a href="/Mark_Winands">Mark Winands</a>, <a href="/Yngvi_Björnsson">Yngvi Björnsson</a> (<strong>2009</strong>). <em>Evaluation Function Based Monte-Carlo LOA</em>. <a href="http://www.ru.is/faculty/yngvi/pdf/WinandsB09.pdf">pdf</a> <a href="#fn20" class="footnote-ref" id="fnref20" role="doc-noteref"><sup>20</sup></a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2009</strong>). <em>Nested Monte-Carlo Search</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/ijcai/ijcai2009.html#Cazenave09">IJCAI 2009</a>, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/nested.pdf">pdf</a></li>
+<li><a href="/Paolo_Ciancarini">Paolo Ciancarini</a>, Gian Piero Favini (<strong>2009</strong>). <em>Monte Carlo Tree Search Techniques in the Game of Kriegspiel</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/ijcai/ijcai2009.html">IJCAI 2009</a>, <a href="http://ijcai.org/papers09/Papers/IJCAI09-086.pdf">pdf</a> » <a href="/KriegSpiel">KriegSpiel</a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2009</strong>). <em>Monte-Carlo Kakuro</em>. <a href="/Advances_in_Computer_Games_12">Advances in Computer Games 12</a>, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/kakuro.pdf">pdf</a></li>
+<li><a href="/István_Szita">István Szita</a>, <a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, <a href="/Pieter_Spronck">Pieter Spronck</a> (<strong>2009</strong>). <em>Monte-Carlo Tree Search in Settlers of Catan</em>. <a href="/Advances_in_Computer_Games_12">Advances in Computer Games 12</a>, <a href="http://ticc.uvt.nl/~pspronck/pubs/ACG12Szita.pdf">pdf</a> <a href="#fn21" class="footnote-ref" id="fnref21" role="doc-noteref"><sup>21</sup></a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a>, Nicolas Jouandeau (<strong>2009</strong>). <em>Parallel Nested Monte-Carlo Search</em>. NIDISC 2009, <a href="http://www.lamsade.dauphine.fr/%7Ecazenave/papers/parallelNested.pdf">pdf</a></li>
+<li>Tomas Kozelek (<strong>2009</strong>). <em>Methods of MCTS and the game Arimaa</em>. Master's thesis, <a href="http://arimaa.com/arimaa/papers/TomasKozelekThesis/mt.pdf">pdf</a> » <a href="/Arimaa">Arimaa</a></li>
+<li>Kenta Sasaki, <a href="/Yoshiyuki_Kotani">Yoshiyuki Kotani</a> (<strong>2009</strong>). <em>Monte-Carlo Tree Search in the Game of Blokus-Duo</em>. <a href="/Conferences">14th Game Programming Workshop</a> <a href="#fn22" class="footnote-ref" id="fnref22" role="doc-noteref"><sup>22</sup></a></li>
+<li><a href="/David_Silver">David Silver</a>, <a href="/Gerald_Tesauro">Gerald Tesauro</a> (<strong>2009</strong>). <em>Monte-Carlo Simulation Balancing</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/icml/icml2009.html#SilverT09">ICML 2009</a>, <a href="http://www.machinelearning.org/archive/icml2009/papers/500.pdf">pdf</a></li>
+<li><a href="/Keh-Hsun_Chen">Ken Chen</a>, Dawei Du, Peigang Zhang (<strong>2009</strong>). <em>Monte-Carlo Tree Search and Computer Go</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/series/sci/sci251.html#ChenDZ09">Advances in Information and Intelligent Systems 2009</a></li>
+<li><a href="/David_Silver">David Silver</a> (<strong>2009</strong>). <em>Reinforcement Learning and Simulation-Based Search</em>. Ph.D. thesis, <a href="/University_of_Alberta">University of Alberta</a>, <a href="http://www0.cs.ucl.ac.uk/staff/D.Silver/web/Applications_files/thesis.pdf">pdf</a></li>
+<li>Seth Pellegrino, Andrew Hubbard, Jason Galbraith, Peter D. Drake, Yung-Pin Chen (<strong>2009</strong>). <em>Localizing Search in Monte-Carlo Go using Statistical Covariance.</em> <a href="/ICGA_Journal">ICGA Journal, Vol. 32, No. 3</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li>Julien Kloetzer (<strong>2010</strong>). <em><a href="https://dspace.jaist.ac.jp/dspace/handle/10119/8867?locale=en">Monte-Carlo Techniques: Applications to the Game of the Amazons</a></em>. Ph.D. thesis, <a href="/JAIST">JAIST</a></li>
+<li><a href="/Yoshikuni_Sato">Yoshikuni Sato</a>, <a href="/Daisuke_Takahashi">Daisuke Takahashi</a>, <a href="/Reijer_Grimbergen">Reijer Grimbergen</a> (<strong>2010</strong>). <em>A Shogi Program based on Monte-Carlo Tree Search</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 33, No. 2</a></li>
+<li><a href="/Richard_J._Lorentz">Richard J. Lorentz</a> (<strong>2010</strong>). <em><a href="http://www.springerlink.com/content/p4x16832317r1214/">Improving Monte-Carlo Tree Search in Havannah</a></em>. <a href="/CG_2010">CG 2010</a></li>
+<li>Amine Bourki, <a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, Matthieu Coulm, Vincent Danjean, Hassen Doghmen, Thomas Hérault, <a href="/Jean-Baptiste_Hoock">Jean-Baptiste Hoock</a>, Arpad Rimmel, <a href="/Fabien_Teytaud">Fabien Teytaud</a>, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, Paul Vayssière, Ziqin Yu (<strong>2010</strong>). <em><a href="http://hal.inria.fr/inria-00512854/en/">Scalability and Parallelization of Monte-Carlo Tree Search</a></em>. <a href="/CG_2010">CG 2010</a>, <a href="http://hal.inria.fr/docs/00/51/28/54/PDF/newcluster.pdf">pdf</a></li>
+<li>Julien Kloetzer (<strong>2010</strong>). <em>Monte-Carlo Opening Books for Amazons</em>. <a href="/CG_2010">CG 2010</a></li>
+<li>Arpad Rimmel, <a href="/Fabien_Teytaud">Fabien Teytaud</a>, <a href="/Olivier_Teytaud">Olivier Teytaud</a> (<strong>2010</strong>). <em><a href="http://hal.inria.fr/inria-00485555/en/">Biasing Monte-Carlo Simulations through RAVE Values</a></em>. <a href="/CG_2010">CG 2010</a>, <a href="http://hal.inria.fr/docs/00/48/55/55/PDF/poolrave.pdf">pdf</a></li>
+<li><a href="/Jean-Yves_Audibert">Jean-Yves Audibert</a> (<strong>2010</strong>). <em>PAC-Bayesian aggregation and multi-armed bandits</em>. Habilitation thesis, <a href="https://fr.wikipedia.org/wiki/Universit%C3%A9_Paris-Est">Université Paris Est</a>, <a href="http://certis.enpc.fr/%7Eaudibert/Mes%20articles/hdr.pdf">pdf</a>, <a href="http://certis.enpc.fr/%7Eaudibert/Mes%20articles/hdrSlides.pdf">slides as pdf</a></li>
+<li><a href="/Shih-Chieh_Huang">Shih-Chieh Huang</a>, <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/Shun-Shii_Lin">Shun-Shii Lin</a> (<strong>2010</strong>). <em><a href="http://remi.coulom.free.fr/CG2010-Simulation-Balancing/">Monte-Carlo Simulation Balancing in Practice</a></em>. <a href="/CG_2010">CG 2010</a>, <a href="http://remi.coulom.free.fr/CG2010-Simulation-Balancing/SimulationBalancing.pdf">pdf</a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a>, <a href="/Abdallah_Saffidine">Abdallah Saffidine</a> (<strong>2010</strong>). <em>Score Bounded Monte-Carlo Tree Search</em>. <a href="/CG_2010">CG 2010</a>, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/mcsolver.pdf">pdf</a></li>
+<li>Pim Nijssen, <a href="/Mark_Winands">Mark Winands</a> (<strong>2010</strong>). <em>Enhancements for Multi-Player Monte-Carlo Tree Search</em>. <a href="/CG_2010">CG 2010</a>, <a href="http://www.personeel.unimaas.nl/pim.nijssen/pub/cg10.pdf">pdf</a></li>
+<li><a href="/Raghuram_Ramanujan">Raghuram Ramanujan</a>, <a href="/Ashish_Sabharwal">Ashish Sabharwal</a>, <a href="/Bart_Selman">Bart Selman</a> (<strong>2010</strong>). <em><a href="http://www.aaai.org/ocs/index.php/ICAPS/ICAPS10/paper/view/1458">On Adversarial Search Spaces and Sampling-Based Planning</a></em>. <a href="http://www.aaai.org/Press/Proceedings/icaps10.php">ICAPS 2010</a> <a href="#fn23" class="footnote-ref" id="fnref23" role="doc-noteref"><sup>23</sup></a></li>
+<li><a href="/Shih-Chieh_Huang">Shih-Chieh Huang</a>, <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/Shun-Shii_Lin">Shun-Shii Lin</a> (<strong>2010</strong>). <em>Monte-Carlo Simulation Balancing applied to 9x9 Go</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 33, No. 4</a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a>, <a href="/Abdallah_Saffidine">Abdallah Saffidine</a> (<strong>2010</strong>). <em>Monte-Carlo Hex</em>. <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/hex.pdf">pdf</a></li>
+<li><a href="/Jean_Méhat">Jean Méhat</a>, <a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2010</strong>). <em>Combining UCT and Nested Monte-Carlo Search for Single-Player General Game Playing</em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 2, No. 4, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/ggp2009.pdf">pdf 2009</a> » <a href="/General_Game_Playing">General Game Playing</a></li>
+<li>Broderick Arneson, <a href="/Ryan_Hayward">Ryan Hayward</a>, Philip Henderson (<strong>2010</strong>). <em>Monte Carlo Tree Search in Hex</em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 2, No. 4, <a href="http://webdocs.cs.ualberta.ca/~hayward/papers/mcts-hex.pdf">pdf</a></li>
+<li><a href="/Mark_Winands">Mark Winands</a>, <a href="/Yngvi_Björnsson">Yngvi Björnsson</a>, <a href="/Jahn-Takeshi_Saito">Jahn-Takeshi Saito</a> (<strong>2010</strong>). <em><a href="https://ieeexplore.ieee.org/document/5523941">Monte Carlo Tree Search in Lines of Action</a></em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 2, No. 4, <a href="http://www.ru.is/~yngvi/pdf/WinandsB10a.pdf">pdf</a></li>
+<li><a href="/Hendrik_Baier">Hendrik Baier</a>, Peter D. Drake (<strong>2010</strong>). <em>The power of forgetting: Improving the last-good-reply policy in Monte Carlo Go</em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 2, No. 4</li>
+<li><a href="/Ingo_Althöfer">Ingo Althöfer</a> (<strong>2010</strong>). <em>Game Self-Play with Pure Monte-Carlo: The Basin Structure</em>. <a href="http://www.althofer.de/monte-carlo-basins-althoefer.pdf">pdf</a></li>
+<li><a href="/Fabien_Teytaud">Fabien Teytaud</a>, <a href="/Olivier_Teytaud">Olivier Teytaud</a> (<strong>2010</strong>). <em><a href="http://hal.inria.fr/inria-00495078/en/">On the Huge Benefit of Decisive Moves in Monte-Carlo Tree Search Algorithms</a></em>. <a href="http://hal.inria.fr/docs/00/49/50/78/PDF/cig2010.pdf">pdf</a></li>
+<li><a href="/Guillaume_Chaslot">Guillaume Chaslot</a> (<strong>2010</strong>). <em>Monte-Carlo Tree Search</em>. Ph.D. Thesis, <a href="/Maastricht_University">Maastricht University</a>, <a href="http://www.unimaas.nl/games/files/phd/Chaslot_thesis.pdf">pdf</a></li>
+<li><a href="/Jahn-Takeshi_Saito">Jahn-Takeshi Saito</a> (<strong>2010</strong>). <em>Solving Difficult Game Positions</em>. Ph.D. Thesis, <a href="/Maastricht_University">Maastricht University</a>, <a href="http://www.unimaas.nl/games/files/phd/Saito_thesis.pdf">pdf</a></li>
+<li>Romaric Gaudel, <a href="/Michèle_Sebag">Michèle Sebag</a> (<strong>2010</strong>). <em>Feature Selection as a one-player game</em>. <a href="http://www.icml2010.org/">ICML 2010</a>, <a href="http://www.icml2010.org/papers/247.pdf">pdf</a></li>
+<li><a href="/Hendrik_Baier">Hendrik Baier</a> (<strong>2010</strong>). <em>Adaptive Playout Policies for Monte-Carlo Go</em>. Master's thesis, <a href="https://en.wikipedia.org/wiki/University_of_Osnabr%C3%BCck">University of Osnabrück</a>, <a href="http://www.ke.tu-darmstadt.de/lehre/arbeiten/master/2010/Baier_Hendrik.pdf">pdf</a></li>
+<li>Thomas J. Walsh, Sergiu Goschin, <a href="/Michael_L._Littman">Michael L. Littman</a> (<strong>2010</strong>). <em>Integrating sample-based planning and model-based reinforcement learning.</em> <a href="/AAAI">AAAI</a>, <a href="https://pdfs.semanticscholar.org/bdc9/bfb6ecc6fb5afb684df03d7220c46ebdbf4e.pdf">pdf</a> » <a href="/UCT">UCT</a>, <a href="/Reinforcement_Learning">Reinforcement Learning</a></li>
+</ul>
+<p><strong>2011</strong></p>
+<ul>
+<li><a href="/Markus_Enzenberger">Markus Enzenberger</a>, <a href="/Martin_Müller">Martin Müller</a>, Broderick Arneson, Richard Segal (<strong>2011</strong>). <em>Fuego - An Open-source Framework for Board Games and Go Engine Based on Monte-Carlo Tree Search</em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 2, No. 4, <a href="https://webdocs.cs.ualberta.ca/~mmueller/ps/fuego-TCIAIG.pdf">pdf</a></li>
+<li><a href="/Christopher_D._Rosin">Christopher D. Rosin</a> (<strong>2011</strong>). <em><a href="https://link.springer.com/article/10.1007/s10472-011-9258-6">Multi-armed bandits with episode context</a></em>. Annals of Mathematics and Artificial Intelligence, Vol. 61, No. 3, <a href="http://gauss.ececs.uc.edu/Workshops/isaim2010/papers/rosin.pdf">ISAIM 2010 pdf</a></li>
+<li><a href="/Shih-Chieh_Huang">Shih-Chieh Huang</a>, <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/Shun-Shii_Lin">Shun-Shii Lin</a> (<strong>2011</strong>). <em>Time Management for Monte-Carlo Tree Search Applied to the Game of Go</em>. TAAI 2010, <a href="http://remi.coulom.free.fr/Publications/TimeManagement.pdf">pdf</a></li>
+<li>Arpad Rimmel, <a href="/Fabien_Teytaud">Fabien Teytaud</a>, <a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2011</strong>). <em>Optimization of the Nested Monte-Carlo Algorithm on the Traveling Salesman Problem with Time Windows</em>. Evostar 2011, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/tsptw.pdf">pdf</a></li>
+<li><a href="/Cameron_Browne">Cameron Browne</a> (<strong>2011</strong>). <em>The Dangers of Random Playouts</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 34, No. 1</a></li>
+<li><a href="/Jean_Méhat">Jean Méhat</a>, <a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2011</strong>). <em>A Parallel General Game Player</em>. <a href="http://www.kuenstliche-intelligenz.de/">KI Journal</a>, Vol. 25, No. 1, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/rootparallelggp.pdf">pdf</a></li>
+<li><a href="/Shih-Chieh_Huang">Shih-Chieh Huang</a> (<strong>2011</strong>). <em>New Heuristics for Monte Carlo Tree Search Applied to the Game of Go</em>. Ph.D. thesis, <a href="http://www.usgo.org/resources/downloads/Supercomputer%20Go%20Appendix%20Two.pdf">pdf</a></li>
+<li>Petr Baudiš (<strong>2011</strong>). <em>Information Sharing in MCTS</em>. Master thesis, Faculty of Mathematics and Physics, <a href="https://en.wikipedia.org/wiki/Charles_University_in_Prague">Charles University in Prague</a>, <a href="http://pasky.or.cz/go/prace.pdf">pdf</a></li>
+<li>Petr Baudiš (<strong>2011</strong>). <em>Balancing MCTS by Dynamically Adjusting the Komi Value</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 34, No. 3</a></li>
+<li><a href="/Richard_J._Lorentz">Richard J. Lorentz</a> (<strong>2011</strong>). <em>Experiments with Monte-Carlo Tree Search in the Game of Havannah</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 34, No. 3</a></li>
+<li>Kazuki Yoshizoe, <a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a>, Haruhiro Yoshimoto, Yutaka Ishikawa (<strong>2011</strong>). <em>Scalable Distributed Monte Carlo Tree Search</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/socs/socs2011.html#YoshizoeKKYI11">SoCS2011</a>, <a href="http://www.is.titech.ac.jp/~kishi/pdf_file/socs2011pmcts.pdf">pdf</a></li>
+<li><a href="/Cheng-Wei_Chou">Cheng-Wei Chou</a>, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a> (<strong>2011</strong>). <em>Revisiting Monte-Carlo Tree Search on a Normal Form Game: NoGo</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/evoW/evoappl2011-1.html#ChouTY11">EvoApplications 2011</a> <a href="#fn24" class="footnote-ref" id="fnref24" role="doc-noteref"><sup>24</sup></a></li>
+<li><a href="/Shi-Jim_Yen">Shi-Jim Yen</a>, <a href="/Jung-Kuei_Yang">Jung-Kuei Yang</a> (<strong>2011</strong>). <em>Two-Stage Monte Carlo Tree Search for Connect6</em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 3</li>
+<li>Nozomu Ikehata, <a href="/Takeshi_Ito">Takeshi Ito</a> (<strong>2011</strong>). <em>Monte-Carlo Tree Search In Ms. Pac-Man</em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 3 <a href="#fn25" class="footnote-ref" id="fnref25" role="doc-noteref"><sup>25</sup></a></li>
+<li><a href="/Junichi_Hashimoto">Junichi Hashimoto</a>, <a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, Kazuki Yoshizoe, <a href="/Kokolo_Ikeda">Kokolo Ikeda</a> (<strong>2011</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-642-31866-5_1">Accelerated UCT and Its Application to Two-Player Games</a></em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a></li>
+<li>Jan Stankiewicz, <a href="/Mark_Winands">Mark Winands</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a> (<strong>2011</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-642-31866-5_6">Monte-Carlo Tree Search Enhancements for Havannah</a></em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a></li>
+<li>Gabriel Van Eyck, <a href="/Martin_Müller">Martin Müller</a> (<strong>2011</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-642-31866-5_2">Revisiting Move Groups in Monte-Carlo Tree Search</a></em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a></li>
+<li><a href="/Hendrik_Baier">Hendrik Baier</a>, <a href="/Mark_Winands">Mark Winands</a> (<strong>2011</strong>). <em>Active Opening Book Application for Monte-Carlo Tree Search in 19x19 Go</em>. <a href="http://allserv.kahosl.be/bnaic2011/">BNAIC 2011</a>, <a href="https://dke.maastrichtuniversity.nl/m.winands/documents/bnaic2011Baier.pdf">pdf</a></li>
+<li><a href="/Hendrik_Baier">Hendrik Baier</a>, <a href="/Mark_Winands">Mark Winands</a> (<strong>2011</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-642-31866-5_4">Time Management for Monte-Carlo Tree Search in Go</a></em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a></li>
+<li><a href="/Richard_J._Lorentz">Richard J. Lorentz</a> (<strong>2011</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-642-31866-5_5">An MCTS Program to Play EinStein Würfelt Nicht!</a></em> <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a></li>
+<li><a href="/Cheng-Wei_Chou">Cheng-Wei Chou</a>, Ping-Chiang Chou, Hassen Doghmen, <a href="/Chang-Shing_Lee">Chang-Shing Lee</a>, Tsan-Cheng Su, <a href="/Fabien_Teytaud">Fabien Teytaud</a>, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, Hui-Ming Wang, <a href="/Mei-Hui_Wang">Mei-Hui Wang</a>, Li-Wen Wu, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a> (<strong>2011</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-642-31866-5_8">Towards a Solution of 7x7 Go with Meta-MCTS</a></em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a></li>
+<li><a href="/Bruno_Bouzy">Bruno Bouzy</a>, Marc Métivier, Damien Pellier (<strong>2011</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-642-31866-5_9">MCTS Experiments on the Voronoi Game</a></em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a></li>
+<li>Pim Nijssen, <a href="/Mark_Winands">Mark Winands</a> (<strong>2011</strong>). <em>Playout Search for Monte-Carlo Tree Search in Multi-Player Games</em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a></li>
+<li><a href="/Jiao_Wang">Jiao Wang</a>, Shiyuan Li, Jitong Chen, Xin Wei, Huizhan Lv, <a href="/Xinhe_Xu">Xinhe Xu</a> (<strong>2011</strong>). <em><a href="http://link.springer.com/chapter/10.1007%2F978-3-642-31866-5_10?LI=true#page-1">4*4-Pattern and Bayesian Learning in Monte-Carlo Go</a></em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a></li>
+<li><a href="/Jeff_Rollason">Jeff Rollason</a> (<strong>2011</strong>). <em><a href="http://www.aifactory.co.uk/newsletter/2011_02_mcts_static.htm">Mixing MCTS with Conventional Static Evaluation: Experiments and shortcuts en-route to full UCT</a></em>. <a href="/AI_Factory">AI Factory</a>, Winter 2011 » <a href="/UCT">UCT</a>, <a href="/Evaluation">Evaluation</a></li>
+<li><a href="/Sylvain_Gelly">Sylvain Gelly</a>, <a href="/David_Silver">David Silver</a> (<strong>2011</strong>). <em>Monte-Carlo tree search and rapid action value estimation in computer Go</em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 175, No. 11</li>
+<li>Lars Schaefers, Marco Platzner, <a href="/Ulf_Lorenz">Ulf Lorenz</a> (<strong>2011</strong>). <em>UCT-Treesplit - Parallel MCTS on Distributed Memory</em>. MCTS Workshop, Freiburg, Germany, <a href="http://www.cs.uni-paderborn.de/fileadmin/Informatik/AG-Platzner/People/Schaefers/TreesplitICAPS.pdf">pdf</a></li>
+<li>Tobias Graf, <a href="/Ulf_Lorenz">Ulf Lorenz</a>, Marco Platzner, Lars Schaefers (<strong>2011</strong>). <em>Parallel Monte-Carlo Tree Search for HPC Systems</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/europar/europar2011-2.html">Euro-Par 2011</a>, <a href="http://www.cs.uni-paderborn.de/fileadmin/Informatik/AG-Platzner/People/Schaefers/uctTreesplit.pdf">pdf</a></li>
+<li><a href="/Joel_Veness">Joel Veness</a>, <a href="/Marc_Lanctot">Marc Lanctot</a>, <a href="/Michael_Bowling">Michael Bowling</a> (<strong>2011</strong>). <em>Variance Reduction in Monte-Carlo Tree Search</em>. <a href="http://papers.nips.cc/book/advances-in-neural-information-processing-systems-24-2011">NIPS</a>, <a href="http://papers.nips.cc/paper/4288-variance-reduction-in-monte-carlo-tree-search.pdf">pdf</a></li>
+<li><a href="/Joel_Veness">Joel Veness</a>, Kee Siong Ng, <a href="/Marcus_Hutter">Marcus Hutter</a>, <a href="/William_Uther">William Uther</a> , <a href="/David_Silver">David Silver</a> (<strong>2011</strong>). <em>A Monte-Carlo AIXI Approximation</em>. <a href="https://en.wikipedia.org/wiki/Journal_of_Artificial_Intelligence_Research">JAIR</a>, Vol. 40, <a href="http://www.aaai.org/Papers/JAIR/Vol40/JAIR-4004.pdf">pdf</a></li>
+<li><a href="/Christopher_D._Rosin">Christopher D. Rosin</a> (<strong>2011</strong>). <em>Nested Rollout Policy Adaptation for Monte Carlo Tree Search</em>. <a href="/Conferences">IJCAI 2011</a>, <a href="http://www.chrisrosin.com/rosin-ijcai11.pdf">pdf</a></li>
+<li>David Tolpin, <a href="/Solomon_Eyal_Shimony">Solomon Eyal Shimony</a> (<strong>2011</strong>). <em>Doing Better Than UCT: Rational Monte Carlo Sampling in Trees</em>. <a href="https://arxiv.org/abs/1108.3711">arXiv:1108.3711</a> » <a href="/UCT">UCT</a></li>
+</ul>
+<p><strong>2012</strong></p>
+<ul>
+<li><a href="/Michael_L._Littman">Michael L. Littman</a> (<strong>2012</strong>). <em>Technical Perspective: A New Way to Search Game Trees</em>. <a href="/ACM">Communications of the ACM</a>, Vol. 55, No. 3</li>
+<li><a href="/Sylvain_Gelly">Sylvain Gelly</a>, <a href="/Marc_Schoenauer">Marc Schoenauer</a>, <a href="/Michèle_Sebag">Michèle Sebag</a>, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, <a href="/Levente_Kocsis">Levente Kocsis</a>, <a href="/David_Silver">David Silver</a>, <a href="/Csaba_Szepesvári">Csaba Szepesvári</a> (<strong>2012</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=2093548.2093574">The Grand Challenge of Computer Go: Monte Carlo Tree Search and Extensions</a></em>. <a href="/ACM">Communications of the ACM</a>, Vol. 55, No. 3, <a href="http://www0.cs.ucl.ac.uk/staff/D.Silver/web/Applications_files/grand-challenge.pdf">pdf preprint</a></li>
+<li>Oleg Arenz (<strong>2012</strong>). <em>Monte Carlo Chess</em>. B.Sc. thesis, <a href="/Darmstadt_University_of_Technology">Darmstadt University of Technology</a>, advisor <a href="/Johannes_Fürnkranz">Johannes Fürnkranz</a>, <a href="http://www.ke.tu-darmstadt.de/lehre/arbeiten/bachelor/2012/Arenz_Oleg.pdf">pdf</a> » <a href="/Stockfish">Stockfish</a></li>
+<li><a href="/Jeff_Rollason">Jeff Rollason</a> (<strong>2012</strong>). <em><a href="http://www.aifactory.co.uk/newsletter/2012_01_tuning_spades.htm">Tuning Spades</a></em>. <a href="/AI_Factory">AI Factory</a>, Summer 2012 » <a href="/UCT">UCT</a></li>
+<li>David Tolpin, <a href="/Solomon_Eyal_Shimony">Solomon Eyal Shimony</a> (<strong>2012</strong>). <em>MCTS Based on Simple Regret</em>. <a href="/Conferences">AAAI-2012</a>, <a href="https://arxiv.org/abs/1207.5536">arXiv:1207.5536</a></li>
+<li>David Tolpin, <a href="/Solomon_Eyal_Shimony">Solomon Eyal Shimony</a> (<strong>2012</strong>). <em>VOI-aware MCTS</em>. <a href="https://dblp.uni-trier.de/db/conf/ecai/ecai2012.html">ECAI 2012</a>, <a href="https://arxiv.org/abs/1207.5589">arXiv:1207.5589</a> <a href="#fn26" class="footnote-ref" id="fnref26" role="doc-noteref"><sup>26</sup></a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a>, <a href="/Fabien_Teytaud">Fabien Teytaud</a> (<strong>2012</strong>). <em>Beam Nested Rollout Policy Adaptation</em>. ECAI CGW 2012</li>
+<li>André Fabbri, Frédéric Armetta, Eric Duchêne, Salima Hassas (<strong>2012</strong>). <em>A new self-acquired knowledge process for Monte Carlo Tree Search</em>. ECAI CGW 2012</li>
+<li><a href="/Marc_Lanctot">Marc Lanctot</a>, <a href="/Abdallah_Saffidine">Abdallah Saffidine</a>, <a href="/Joel_Veness">Joel Veness</a>, Christopher Archibald (<strong>2012</strong>). <em>Sparse Sampling for Adversarial Games</em>. ECAI CGW 2012</li>
+<li>Niek Den Teuling, <a href="/Mark_Winands">Mark Winands</a> (<strong>2012</strong>). <em>Monte-Carlo Tree Search for the Simultaneous Move Game Tron</em>. ECAI CGW 2012, <a href="https://dke.maastrichtuniversity.nl/m.winands/documents/Tronpaper.pdf">pdf</a></li>
+<li><a href="/Arthur_Guez">Arthur Guez</a>, <a href="/David_Silver">David Silver</a>, <a href="/Peter_Dayan">Peter Dayan</a> (<strong>2012</strong>). <em>Efficient Bayes-Adaptive Reinforcement Learning using Sample-Based Search</em>. <a href="https://arxiv.org/abs/1205.3109">arXiv:1205.3109</a></li>
+<li><a href="/Truong-Huy_Dinh_Nguyen">Truong-Huy Dinh Nguyen</a>, <a href="/Wee_Sun_Lee">Wee Sun Lee</a>, Tze-Yun Leong (<strong>2012</strong>). <em>Bootstrapping Monte Carlo Tree Search with an Imperfect Heuristic</em>. <a href="https://arxiv.org/abs/1206.5940">arXiv:1206.5940</a></li>
+<li>Jan Kuipers, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jos_Vermaseren">Jos Vermaseren</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2012</strong>). <em>Improving multivariate Horner schemes with Monte Carlo tree search</em>. <a href="http://arxiv.org/abs/1207.7079">CoRR abs/1207.7079</a></li>
+<li><a href="/Cameron_Browne">Cameron Browne</a>, Edward Powley, Daniel Whitehouse, <a href="/Simon_Lucas">Simon Lucas</a>, Peter Cowling, Philipp Rohlfshagen, Stephen Tavener, Diego Perez, Spyridon Samothrakis, Simon Colton (<strong>2012</strong>). <em><a href="https://ieeexplore.ieee.org/document/6145622">A Survey of Monte Carlo Tree Search Methods</a></em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 4, No. 1, <a href="http://ccg.doc.gold.ac.uk/ccg_old/papers/browne_tciaig12_1.pdf">pdf</a></li>
+<li>Pim Nijssen, <a href="/Mark_Winands">Mark Winands</a> (<strong>2012</strong>). <em><a href="http://ieeexplore.ieee.org/document/6266709/">Monte-Carlo Tree Search for the Hide-and-Seek Game Scotland Yard</a></em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 4, No. 4 <a href="#fn27" class="footnote-ref" id="fnref27" role="doc-noteref"><sup>27</sup></a></li>
+<li><a href="/Hendrik_Baier">Hendrik Baier</a>, <a href="/Mark_Winands">Mark Winands</a> (<strong>2012</strong>). <em>Nested Monte-Carlo Tree Search for Online Planning in Large MDPs</em>. <a href="http://www2.lirmm.fr/ecai2012/">ECAI 2012</a>, <a href="https://dke.maastrichtuniversity.nl/m.winands/documents/ecai2012.pdf">pdf</a></li>
+<li><a href="/Hendrik_Baier">Hendrik Baier</a>, <a href="/Mark_Winands">Mark Winands</a> (<strong>2012</strong>). <em>Beam Monte-Carlo Tree Search</em>. <a href="/IEEE">IEEE CIG 2012</a>, <a href="https://dke.maastrichtuniversity.nl/m.winands/documents/CIG2012_paper_32.pdf">pdf</a></li>
+<li><a href="/Thomas_Philip_Runarsson">Thomas Philip Runarsson</a>, <a href="/Marc_Schoenauer">Marc Schoenauer</a>, <a href="/Michèle_Sebag">Michèle Sebag</a> (<strong>2012</strong>). <em>Pilot, Rollout and Monte Carlo Tree Search Methods for Job Shop Scheduling</em>. <a href="https://arxiv.org/abs/1210.0374">arXiv:1210.0374</a></li>
+<li>Adrien Couetoux, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, Hassen Doghmen (<strong>2012</strong>). <em>Learning a Move-Generator for Upper Confidence Trees</em>. <a href="http://ics2012.ndhu.edu.tw/">ICS 2012</a>, <a href="https://en.wikipedia.org/wiki/Hualien_City">Hualien</a></li>
+<li>Haruhiko Akiyama, Kanako Komiya, <a href="/Yoshiyuki_Kotani">Yoshiyuki Kotani</a> (<strong>2012</strong>). <em><a href="https://www.sciencedirect.com/science/article/abs/pii/S0950705111002516">Nested Monte-Carlo Search with simulation reduction</a></em>. <a href="https://en.wikipedia.org/wiki/Knowledge-Based_Systems_(journal)">Knowledge-Based Systems</a>, Vol. 34 <a href="#fn28" class="footnote-ref" id="fnref28" role="doc-noteref"><sup>28</sup></a> <a href="#fn29" class="footnote-ref" id="fnref29" role="doc-noteref"><sup>29</sup></a></li>
+</ul>
+<p><strong>2013</strong></p>
+<ul>
+<li><a href="/Cheng-Wei_Chou">Cheng-Wei Chou</a>, Ping-Chiang Chou, <a href="/Chang-Shing_Lee">Chang-Shing Lee</a>, David L. Saint-Pierre, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, <a href="/Mei-Hui_Wang">Mei-Hui Wang</a>, Li-Wen Wu, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a> (<strong>2013</strong>). <em>Strategic Choices: Small Budgets and Simple Regret</em>. TAAI 2012, <a href="http://www.csie.ndhu.edu.tw/csieweb/en/node/685">Excellent Paper Award</a>, <a href="https://hal.inria.fr/hal-00753145v2/document">pdf</a></li>
+<li><a href="/Daniel_Shawul">Daniel S. Abdi</a> (<strong>2013</strong>). <em>Monte carlo methods for estimating game tree size</em>. <a href="https://dl.dropboxusercontent.com/u/55295461/perft/perft.pdf">pdf</a> <a href="#fn30" class="footnote-ref" id="fnref30" role="doc-noteref"><sup>30</sup></a> » <a href="/Perft">Perft</a></li>
+<li><a href="/Marc_Lanctot">Marc Lanctot</a> (<strong>2013</strong>). <em>Monte Carlo Sampling and Regret Minimization for Equilibrium Computation and Decision-Making in Large Extensive Form Games</em>. Ph.D. thesis, <a href="/University_of_Alberta">University of Alberta</a>, advisor <a href="/Michael_Bowling">Michael Bowling</a></li>
+<li><a href="/Aviezri_Fraenkel">Aviezri Fraenkel</a> (<strong>2013</strong>). <em>Reflection</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 36, No. 1</a> » <a href="/Stanislaw_Ulam">Stanislaw Ulam</a></li>
+<li><a href="/Jeff_Rollason">Jeff Rollason</a> (<strong>2013</strong>). <em><a href="http://www.aifactory.co.uk/newsletter/2013_01_reduce_burden.htm">Reducing the burden of knowledge: Simulation-based methods in imperfect information games</a></em>. <a href="/AI_Factory">AI Factory</a>, Summer 2013</li>
+<li><a href="/Abdallah_Saffidine">Abdallah Saffidine</a> (<strong>2013</strong>). <em>Solving Games and All That</em>. Ph.D. thesis, 2.5 Monte Carlo Tree Search</li>
+<li><a href="/Shih-Chieh_Huang">Shih-Chieh Huang</a>, <a href="/Martin_Müller">Martin Müller</a> (<strong>2013</strong>). <em>Investigating the Limits of Monte Carlo Tree Search Methods in Computer Go</em>. <a href="/CG_2013">CG 2013</a></li>
+<li><a href="/Shih-Chieh_Huang">Shih-Chieh Huang</a>, Broderick Arneson, <a href="/Ryan_Hayward">Ryan Hayward</a>, <a href="/Martin_Müller">Martin Müller</a>, <a href="/Jakub_Pawlewicz">Jakub Pawlewicz</a> (<strong>2013</strong>). <em>MoHex 2.0: a pattern-based MCTS Hex player</em>. <a href="/CG_2013">CG 2013</a>, <a href="https://webdocs.cs.ualberta.ca/~hayward/papers/m2.pdf">pdf</a></li>
+<li>Tobias Graf, Lars Schaefers, Marco Platzner (<strong>2013</strong>). <em>On Semeai Detection in Monte-Carlo Go</em>. <a href="/CG_2013">CG 2013</a>, <a href="http://www.cs.uni-paderborn.de/fileadmin/Informatik/AG-Platzner/publications/graf13_cg/graf13_cg.pdf">pdf</a></li>
+<li><a href="/Richard_J._Lorentz">Richard J. Lorentz</a>, Therese Horey (<strong>2013</strong>). <em>Programming Breakthrough</em>. <a href="/CG_2013">CG 2013</a> » <a href="/Breakthrough_%28Game%29">Breakthrough (Game)</a></li>
+<li><a href="/Ingo_Althöfer">Ingo Althöfer</a>, Wesley Turner (<strong>2013</strong>). <em>Anomalies of Pure Monte Carlo Search in Monte Carlo Perfect Games</em>. <a href="/CG_2013">CG 2013</a></li>
+<li><a href="/Simon_Viennot">Simon Viennot</a>, <a href="/Kokolo_Ikeda">Kokolo Ikeda</a> (<strong>2013</strong>). <em><a href="http://link.springer.com/chapter/10.1007%2F978-3-319-09165-5_3">Efficiency of Static Knowledge Bias in Monte-Carlo Tree Search</a></em>. <a href="/CG_2013">CG 2013</a></li>
+<li>Sumudo Fernando, <a href="/Martin_Müller">Martin Müller</a> (<strong>2013</strong>). <em>Analyzing Simulations in Monte-Carlo Tree Search for the Game of Go</em>. <a href="/CG_2013">CG 2013</a></li>
+<li><a href="/Ingo_Althöfer">Ingo Althöfer</a> (<strong>2013</strong>). <em>The wild Years are gone: Monte Carlo in Smoother Waters</em>. Conference Report <a href="/CG_2013">CG 2013</a>, <a href="/ICGA_Journal">ICGA Journal, Vol. 36, No. 3</a></li>
+<li><a href="/Marc_Lanctot">Marc Lanctot</a>, <a href="/Abdallah_Saffidine">Abdallah Saffidine</a>, <a href="/Joel_Veness">Joel Veness</a>, Christopher Archibald, <a href="/Mark_Winands">Mark Winands</a> (<strong>2013</strong>). <em>Monte Carlo *-Minimax Search</em>. <a href="/Conferences">IJCAI 2013</a></li>
+<li>Pim Nijssen (<strong>2013</strong>). <em>Monte-Carlo Tree Search for Multi-Player Games</em>. Ph.D. thesis, <a href="/Maastricht_University">Maastricht University</a>, <a href="https://project.dke.maastrichtuniversity.nl/games/files/phd/Nijssen_thesis.pdf">pdf</a></li>
+<li><a href="/Jeff_Rollason">Jeff Rollason</a> (<strong>2013</strong>). <em><a href="http://www.aifactory.co.uk/newsletter/2013_02_unknown_mcts.htm">Searching the Unknown with MCTS</a></em>. <a href="/AI_Factory">AI Factory</a>, Winter 2013</li>
+<li><a href="/David_Silver">David Silver</a>, <a href="/Richard_Sutton">Richard Sutton</a>, <a href="/Martin_Müller">Martin Mueller</a> (<strong>2013</strong>). <em>Temporal-Difference Search in Computer Go</em>. <a href="http://icaps13.icaps-conference.org/technical-program/workshop-program/planning-and-learning/">ICAPS-13</a>, <a href="http://webdocs.cs.ualberta.ca/~sutton/papers/SSM-ICAPS-13.pdf">pdf</a></li>
+<li><a href="/Hendrik_Baier">Hendrik Baier</a>, <a href="/Mark_Winands">Mark Winands</a> (<strong>2013</strong>). <em>Monte-Carlo Tree Search and minimax hybrids</em>. <a href="http://dblp.uni-trier.de/db/conf/cig/cig2013.html#BaierW13">CIG 2013</a>, <a href="https://dke.maastrichtuniversity.nl/m.winands/documents/paper%2049.pdf">pdf</a></li>
+<li>Timothy Furtak, <a href="/Michael_Buro">Michael Buro</a> (<strong>2013</strong>). <em>Recursive Monte Carlo search for imperfect information games</em>. <a href="/IEEE">CIG 2013</a>, <a href="https://skatgame.net/mburo/ps/recmc13.pdf">pdf</a></li>
+<li>Ben Ruijl, <a href="/Jos_Vermaseren">Jos Vermaseren</a>, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2013</strong>). <em>Combining Simulated Annealing and Monte Carlo Tree Search for Expression Simplification</em>. <a href="http://arxiv.org/abs/1312.0841">CoRR abs/1312.0841</a></li>
+<li><a href="/Arthur_Guez">Arthur Guez</a>, <a href="/David_Silver">David Silver</a>, <a href="/Peter_Dayan">Peter Dayan</a> (<strong>2013</strong>). <em><a href="https://www.jair.org/index.php/jair/article/view/10853">Scalable and Efficient Bayes-Adaptive Reinforcement Learning Based on Monte-Carlo Tree Search</a></em>. <a href="https://en.wikipedia.org/wiki/Journal_of_Artificial_Intelligence_Research">Journal of Artificial Intelligence Research</a>, Vol. 48</li>
+<li><a href="/Ari_Weinstein">Ari Weinstein</a>, <a href="/Michael_L._Littman">Michael L. Littman</a>, Sergiu Goschin (<strong>2013</strong>). <em><a href="http://proceedings.mlr.press/v24/weinstein12a.html">Rollout-based Game-tree Search Outprunes Traditional Alpha-beta</a></em>. <a href="http://proceedings.mlr.press/">PMLR</a>, Vol. 24 » <a href="/UCT">UCT</a></li>
+<li><a href="/Kuo-Yuan_Kao">Kuo-Yuan Kao</a>, <a href="/I-Chen_Wu">I-Chen Wu</a>, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a>, <a href="/Yi-Chang_Shan">Yi-Chang Shan</a> (<strong>2013</strong>). <em><a href="https://ieeexplore.ieee.org/document/6468079">Incentive Learning in Monte Carlo Tree Search</a></em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 5, No. 4</li>
+</ul>
+<p><strong>2014</strong></p>
+<ul>
+<li>Ben Ruijl, <a href="/Jos_Vermaseren">Jos Vermaseren</a>, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2014</strong>). <em>HEPGAME and the Simplification of Expressions</em>. <a href="http://arxiv.org/abs/1405.6369">CoRR abs/1405.6369</a></li>
+<li><a href="/Marc_Lanctot">Marc Lanctot</a>, <a href="/Mark_Winands">Mark Winands</a>, Tom Pepels, <a href="/Nathan_Sturtevant">Nathan Sturtevant</a> (<strong>2014</strong>). <em>Monte Carlo Tree Search with Heuristic Evaluations using Implicit Minimax Backups</em>. <a href="https://dblp.uni-trier.de/db/conf/cig/cig2014.html#LanctotWPS14">CIG 2014</a>, <a href="https://arxiv.org/abs/1406.0486">arXiv:1406.0486</a></li>
+<li><a href="/S._Ali_Mirsoleimani">S. Ali Mirsoleimani</a>, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Vermaseren">Jos Vermaseren</a> (<strong>2014</strong>). <em>Performance analysis of a 240 thread tournament level MCTS Go program on the Intel Xeon Phi</em>. <a href="http://arxiv.org/abs/1409.4297">CoRR abs/1409.4297</a> » <a href="/Go">Go</a>, <a href="/Parallel_Search">Parallel Search</a>, <a href="/X86-64">x86-64</a></li>
+<li>Ben Ruijl, <a href="/Jos_Vermaseren">Jos Vermaseren</a>, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2014</strong>). <em>Why Local Search Excels in Expression Simplification</em>. <a href="http://arxiv.org/abs/1409.5223">CoRR abs/1409.5223</a></li>
+<li>Lars Schaefers (<strong>2014</strong>). <em>Parallel Monte-Carlo Tree Search for HPC Systems and its Application to Computer Go</em>. Ph.D. thesis, <a href="/Paderborn_University">Paderborn University</a>, advisors Marco Platzner, <a href="/Ulf_Lorenz">Ulf Lorenz</a>, <a href="http://www.althofer.de/phd-thesis-schaefers.pdf">pdf</a>, <a href="https://www.dropbox.com/s/x0lh7ky5lvj6c1y/PhdThesisSchaefers.pdf">pdf</a></li>
+<li><a href="/Rémi_Munos">Rémi Munos</a> (<strong>2014</strong>). <em>From Bandits to Monte-Carlo Tree Search: The Optimistic Principle Applied to Optimization and Planning</em>. <a href="http://dblp.uni-trier.de/db/journals/ftml/ftml7.html#Munos14">Foundations and Trends in Machine Learning, Vol. 7, No 1</a>, <a href="https://hal.archives-ouvertes.fr/hal-00747575">hal-00747575v5</a>, <a href="http://chercheurs.lille.inria.fr/~munos/papers/files/AAAI2013_slides.pdf">slides as pdf</a></li>
+<li>David W. King (<strong>2014</strong>). <em>Complexity, Heuristic, and Search Analysis for the Games of Crossings and Epaminondas</em>. Masters thesis, <a href="https://en.wikipedia.org/wiki/Air_Force_Institute_of_Technology">Air Force Institute of Technology</a>, <a href="http://www.afit.edu/docs/AFIT-ENG-14-M-44_King.pdf">pdf</a> <a href="#fn31" class="footnote-ref" id="fnref31" role="doc-noteref"><sup>31</sup></a></li>
+<li>David W. King, Gilbert L. Peterson (<strong>2014</strong>). <em>Epaminondas: Exploring Combat Tactics</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 37, No. 3</a> <a href="#fn32" class="footnote-ref" id="fnref32" role="doc-noteref"><sup>32</sup></a></li>
+<li><a href="/Ting-Fu_Liao">Ting-Fu Liao</a>, <a href="/I-Chen_Wu">I-Chen Wu</a>, <a href="/Guan-Wun_Chen">Guan-Wun Chen</a>, Chung-Chin Shih, Po-Ya Kang, <a href="/Bing-Tsung_Chiang">Bing-Tsung Chiang</a>, Ting-Chu Ho, <a href="/Ti-Rong_Wu">Ti-Rong Wu</a> (<strong>2014</strong>). <em>A Study of Software Framework for Parallel Monte Carlo Tree Search</em>. <a href="/Conferences">GPW-2014</a></li>
+<li><a href="/Hendrik_Baier">Hendrik Baier</a>, <a href="/Mark_Winands">Mark Winands</a> (<strong>2014</strong>). <em>Monte-Carlo Tree Search and Minimax Hybrids with Heuristic Evaluation Functions</em>. ECAI CGW 2014</li>
+<li>Nicolas Jouandeau, <a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2014</strong>). <em>Small and Large MCTS Playouts applied to Chinese Dark Chess Stochastic Game</em>. ECAI CGW 2014</li>
+<li>Tom Pepels, <a href="/Tristan_Cazenave">Tristan Cazenave</a>, <a href="/Mark_Winands">Mark Winands</a>, <a href="/Marc_Lanctot">Marc Lanctot</a> (<strong>2014</strong>). <em>Minimizing Simple and Cumulative Regret in Monte-Carlo Tree Search</em>. ECAI CGW 2014</li>
+<li>Denis Robilliard, Cyril Fonlupt, <a href="/Fabien_Teytaud">Fabien Teytaud</a> (<strong>2014</strong>). <em>Monte-Carlo Tree Search for the Game of “7 Wonders”</em>. ECAI CGW 2014 <a href="#fn33" class="footnote-ref" id="fnref33" role="doc-noteref"><sup>33</sup></a></li>
+<li><a href="/Nobuo_Araki">Nobuo Araki</a>, <a href="/Masakazu_Muramatsu">Masakazu Muramatsu</a>, <a href="/Kunihito_Hoki">Kunihito Hoki</a>, <a href="/Satoshi_Takahashi">Satoshi Takahashi</a> (<strong>2014</strong>). <em><a href="https://www.aaai.org/ocs/index.php/AAAI/AAAI14/paper/view/8263">Monte-Carlo Simulation Adjusting</a></em>. <a href="/Conferences">AAAI-2014</a></li>
+<li>Johannes Heinrich, <a href="/David_Silver">David Silver</a> (<strong>2014</strong>). <em><a href="https://www.aaai.org/ocs/index.php/WS/AAAIW14/paper/view/8811">Self-Play Monte-Carlo Tree Search in Computer Poker</a></em>. <a href="/Conferences">AAAI-2014</a></li>
+<li><a href="/Simon_Lucas">Simon Lucas</a>, Spyridon Samothrakis, Diego Perez (<strong>2014</strong>). <em><a href="https://link.springer.com/chapter/10.1007/978-3-662-45523-4_29">Fast Evolutionary Adaptation for Monte Carlo Tree Search</a></em>. <a href="https://dblp.uni-trier.de/db/conf/evoW/evoappl2014.html">EvoApplications 2014</a>, <a href="http://www.diego-perez.net/papers/FastEvoMCTS.pdf">pdf</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="/Richard_J._Lorentz">Richard J. Lorentz</a> (<strong>2015</strong>). <em>Early Playout Termination in MCTS</em>. <a href="/Advances_in_Computer_Games_14">Advances in Computer Games 14</a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2015</strong>). <em>Playout Policy Adaptation for Games</em>. <a href="/Advances_in_Computer_Games_14">Advances in Computer Games 14</a></li>
+<li>Tobias Graf, Marco Platzner (<strong>2015</strong>). <em>Adaptive Playouts in Monte Carlo Tree Search with Policy Gradient Reinforcement Learning</em>. <a href="/Advances_in_Computer_Games_14">Advances in Computer Games 14</a></li>
+<li><a href="/Chu-Hsuan_Hsueh">Chu-Hsuan Hsueh</a>, <a href="/I-Chen_Wu">I-Chen Wu</a>, <a href="/Wen-Jie_Tseng">Wen-Jie Tseng</a>, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a>, <a href="/Jr-Chang_Chen">Jr-Chang Chen</a> (<strong>2015</strong>). <em>Strength Improvement and Analysis for an MCTS-Based Chinese Dark Chess Program</em>. <a href="/Advances_in_Computer_Games_14">Advances in Computer Games 14</a></li>
+<li>Yusaku Mandai, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a> (<strong>2015</strong>). <em>LinUCB Applied to Monte Carlo Tree Search</em>. <a href="/Advances_in_Computer_Games_14">Advances in Computer Games 14</a></li>
+<li>Yun-Ching Liu, <a href="/Yoshimasa_Tsuruoka">Yoshimasa Tsuruoka</a> (<strong>2015</strong>). <em>Adapting Improved Upper Confidence Bounds for Monte-Carlo Tree Search</em>. <a href="/Advances_in_Computer_Games_14">Advances in Computer Games 14</a></li>
+<li><a href="/Jiao_Wang">Jiao Wang</a>, Tan Zhu, Hongye Li, <a href="/Chu-Hsuan_Hsueh">Chu-Hsuan Hsueh</a>, <a href="/I-Chen_Wu">I-Chen Wu</a> (<strong>2015</strong>). <em>Belief-state Monte-Carlo tree search for Phantom games</em>. <a href="/IEEE">IEEE CIG 2015</a></li>
+<li><a href="/Hung-Jui_Chang">Hung-Jui Chang</a>, <a href="/Chih-Wen_Hsueh">Chih-Wen Hsueh</a>, <a href="/Tsan-sheng_Hsu">Tsan-sheng Hsu</a> (<strong>2015</strong>). <em>Convergence and correctness analysis of Monte-Carlo tree search algorithms: A case study of 2 by 4 Chinese dark chess</em>. <a href="/IEEE">IEEE CIG 2015</a></li>
+<li><a href="/Fabien_Teytaud">Fabien Teytaud</a>, Julien Dehos (<strong>2015</strong>). <em>On the Tactical and Strategic Behaviour of MCTS when Biasing Random Simulations</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 38, No. 2</a></li>
+<li><a href="/Jeff_Rollason">Jeff Rollason</a> (<strong>2015</strong>). <em><a href="http://www.aifactory.co.uk/newsletter/2015_02_mixing_immiscible.htm">Mixing the Immiscible - MCTS and evaluation</a></em>. <a href="/AI_Factory">AI Factory</a>, October 2015 <a href="#fn34" class="footnote-ref" id="fnref34" role="doc-noteref"><sup>34</sup></a></li>
+<li><a href="/S._Ali_Mirsoleimani">S. Ali Mirsoleimani</a>, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Vermaseren">Jos Vermaseren</a> (<strong>2015</strong>). <em>Scaling Monte Carlo Tree Search on Intel Xeon Phi</em>. <a href="http://arxiv.org/abs/1507.04383">CoRR abs/1507.04383</a> » <a href="/Hex">Hex</a>, <a href="/Parallel_Search">Parallel Search</a>, <a href="/X86-64">x86-64</a></li>
+<li><a href="/S._Ali_Mirsoleimani">S. Ali Mirsoleimani</a>, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Vermaseren">Jos Vermaseren</a> (<strong>2015</strong>). <em>Parallel Monte Carlo Tree Search from Multi-core to Many-core Processors</em>. <a href="https://whova.com/portal/ieeet_201508/">TrustCom/BigDataSE/ISPA 2015</a>, <a href="https://askeplaat.files.wordpress.com/2013/01/ispa2015.pdf">pdf</a></li>
+<li>Peter H. Jin, Kurt Keutzer (<strong>2015</strong>). <em>Convolutional Monte Carlo Rollouts in Go</em>. <a href="http://arxiv.org/abs/1512.03375">arXiv:1512.03375</a></li>
+<li><a href="/Naoki_Mizukami">Naoki Mizukami</a>, <a href="/Yoshimasa_Tsuruoka">Yoshimasa Tsuruoka</a> (<strong>2015</strong>). <em>Building a Computer Mahjong Player Based on Monte Carlo Simulation and Opponent Models</em>. <a href="/IEEE">IEEE CIG 2015</a>, <a href="http://www.logos.ic.i.u-tokyo.ac.jp/~mizukami/paper/cig_2015.pdf">pdf</a></li>
+<li><a href="/Hendrik_Baier">Hendrik Baier</a> (<strong>2015</strong>). <em>Monte-Carlo Tree Search Enhancements for One-Player and Two-Player Domains</em>. Ph.D. thesis, <a href="/Maastricht_University">Maastricht University</a>, <a href="https://project.dke.maastrichtuniversity.nl/games/files/phd/Baier_thesis.pdf">pdf</a> <a href="#fn35" class="footnote-ref" id="fnref35" role="doc-noteref"><sup>35</sup></a></li>
+<li>Lars Schaefers, Marco Platzner (<strong>2015</strong>). <em><a href="http://ieeexplore.ieee.org/document/6876158/">Distributed Monte Carlo Tree Search: A Novel Technique and its Application to Computer Go</a></em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 7, No. 4 <a href="#fn36" class="footnote-ref" id="fnref36" role="doc-noteref"><sup>36</sup></a></li>
+<li><a href="/Bojun_Huang">Bojun Huang</a> (<strong>2015</strong>). <em><a href="https://www.semanticscholar.org/paper/Pruning-Game-Tree-by-Rollouts-Huang/a38b358745067f71a9c780db117ae2471e693d63">Pruning Game Tree by Rollouts</a></em>. <a href="/AAAI">AAAI</a> » <a href="/SSS%252A_and_Dual%252A">MT-SSS*</a> <a href="#fn37" class="footnote-ref" id="fnref37" role="doc-noteref"><sup>37</sup></a></li>
+</ul>
+<p><strong>2016</strong></p>
+<ul>
+<li><a href="/David_Silver">David Silver</a>, <a href="/Shih-Chieh_Huang">Aja Huang</a>, <a href="/Chris_J._Maddison">Chris J. Maddison</a>, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Laurent_Sifre">Laurent Sifre</a>, George van den Driessche, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, Veda Panneershelvam, <a href="/Marc_Lanctot">Marc Lanctot</a>, Sander Dieleman, Dominik Grewe, John Nham, Nal Kalchbrenner, <a href="/Ilya_Sutskever">Ilya Sutskever</a>, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, Madeleine Leach, <a href="/Koray_Kavukcuoglu">Koray Kavukcuoglu</a>, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Demis_Hassabis">Demis Hassabis</a> (<strong>2016</strong>). <em><a href="http://www.nature.com/nature/journal/v529/n7587/full/nature16961.html">Mastering the game of Go with deep neural networks and tree search</a></em>. <a href="https://en.wikipedia.org/wiki/Nature_%28journal%29">Nature</a>, Vol. 529 » AlphaGo</li>
+<li>Tobias Graf, Marco Platzner (<strong>2016</strong>). <em>Using Deep Convolutional Neural Networks in Monte Carlo Tree Search</em>. <a href="/CG_2016">CG 2016</a></li>
+<li>Takahisa Imagawa, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a> (<strong>2016</strong>). <em>Monte Carlo Tree Search with Robust Exploration</em>. <a href="/CG_2016">CG 2016</a></li>
+<li>Joris Duguépéroux, Ahmad Mazyad, <a href="/Fabien_Teytaud">Fabien Teytaud</a>, Julien Dehos (<strong>2016</strong>). <em>Pruning playouts in Monte-Carlo Tree Search for the game of Havannah</em>. <a href="/CG_2016">CG 2016</a></li>
+<li>Peter H. Jin, Kurt Keutzer (<strong>2016</strong>). <em>Convolutional Monte Carlo Rollouts for Computer Go</em>. <a href="/CG_2016">CG 2016</a></li>
+<li><a href="/Hendrik_Baier">Hendrik Baier</a>, <a href="/Mark_Winands">Mark Winands</a> (<strong>2016</strong>). <em>Time Management for Monte Carlo Tree Search</em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 8, No. 3</li>
+<li><a href="/Katsuki_Ohto">Katsuki Ohto</a>, <a href="/Tetsuro_Tanaka">Tetsuro Tanaka</a> (<strong>2016</strong>). <em>Application of Monte Carlo Tree Search to Curling AI</em>. <a href="/Conferences">21st Game Programming Workshop</a></li>
+<li>Maciej Świechowski, <a href="/Jacek_Mańdziuk">Jacek Mańdziuk</a> (<strong>2016</strong>). <em>A Hybrid Approach to Parallelization of Monte Carlo Tree Search in General Game Playing</em>. <a href="https://www.springer.com/de/book/9783319301648">Challenging Problems and Solutions in Intelligent Systems</a>, <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a></li>
+<li><a href="/S._Ali_Mirsoleimani">S. Ali Mirsoleimani</a>, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Vermaseren">Jos Vermaseren</a> (<strong>2016</strong>). <em>A New Method for Parallel Monte Carlo Tree Search</em>. <a href="https://arxiv.org/abs/1605.04447">arXiv:1605.04447</a> » <a href="/Parallel_Search">Parallel Search</a></li>
+<li><a href="/S._Ali_Mirsoleimani">S. Ali Mirsoleimani</a>, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Vermaseren">Jos Vermaseren</a> (<strong>2016</strong>). <em>An Efficient Computation Pattern for Parallel MCTS</em>. <a href="http://www.ictopen.nl/content/Previous+editions">ICT.OPEN 2016</a>, <a href="http://liacs.leidenuniv.nl/~plaata1/papers/ictopen2016.pdf">pdf</a></li>
+<li>David L. St-Pierre, <a href="/Jean-Baptiste_Hoock">Jean-Baptiste Hoock</a>, Jialin Liu, <a href="/Fabien_Teytaud">Fabien Teytaud</a>, <a href="/Olivier_Teytaud">Olivier Teytaud</a> (<strong>2016</strong>). <em>Automatically Reinforcing a Game AI</em>. <a href="https://arxiv.org/abs/1607.08100">arXiv:1607.0810</a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a>, <a href="/Abdallah_Saffidine">Abdallah Saffidine</a>, Michael Schofield, <a href="/Michael_Thielscher">Michael Thielscher</a> (<strong>2016</strong>). <em>Nested Monte Carlo Search for Two-Player Games</em>. <a href="/Conferences">AAAI 2016</a>, <a href="https://www.aaai.org/ocs/index.php/AAAI/AAAI16/paper/view/12134/11652">pdf</a></li>
+</ul>
+<p><strong>2017</strong></p>
+<ul>
+<li><a href="/Dap_Hartmann">Dap Hartmann</a> (<strong>2017</strong>). <em>Let's Catch the Train to Monte-Carlo</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 39, No. 1</a>, Review on <a href="/Hendrik_Baier">Hendrik Baier's Ph.D. thesis</a></li>
+<li><a href="/S._Ali_Mirsoleimani">S. Ali Mirsoleimani</a>, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Vermaseren">Jos Vermaseren</a> (<strong>2017</strong>). <em>Structured Parallel Programming for Monte Carlo Tree Search</em>. <a href="https://arxiv.org/abs/1704.00325">arXiv:1704.00325</a></li>
+<li><a href="/S._Ali_Mirsoleimani">S. Ali Mirsoleimani</a>, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Vermaseren">Jos Vermaseren</a> (<strong>2017</strong>). <em>An Analysis of Virtual Loss in Parallel MCTS</em>. <a href="https://dblp.uni-trier.de/db/conf/icaart/icaart2017-2.html">ICAART 2017</a>, Vol. 2, <a href="http://liacs.leidenuniv.nl/~plaata1/papers/paper_ICAART17.pdf">pdf</a></li>
+<li><a href="/Katsuki_Ohto">Katsuki Ohto</a>, <a href="/Tetsuro_Tanaka">Tetsuro Tanaka</a> (<strong>2017</strong>). <em>A Curling Agent Based on the Monte-Carlo Tree Search Considering the Similarity of the Best Action among Similar States</em>. <a href="/Advances_in_Computer_Games_15">Advances in Computer Games 15</a></li>
+<li><a href="/Naoki_Mizukami">Naoki Mizukami</a>, Jun Suzuki, Hirotaka Kameko, <a href="/Yoshimasa_Tsuruoka">Yoshimasa Tsuruoka</a> (<strong>2017</strong>). <em>Exploration Bonuses Based on Upper Confidence Bounds for Sparse Reward Games</em>. <a href="/Advances_in_Computer_Games_15">Advances in Computer Games 15</a></li>
+<li><a href="/David_Silver">David Silver</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Marc_Lanctot">Marc Lanctot</a>, <a href="/Laurent_Sifre">Laurent Sifre</a>, <a href="/Dharshan_Kumaran">Dharshan Kumaran</a>, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, <a href="/Karen_Simonyan">Karen Simonyan</a>, <a href="/Demis_Hassabis">Demis Hassabis</a> (<strong>2017</strong>). <em>Mastering Chess and Shogi by Self-Play with a General Reinforcement Learning Algorithm</em>. <a href="https://arxiv.org/abs/1712.01815">arXiv:1712.01815</a> » <a href="/AlphaZero">AlphaZero</a></li>
+<li>Shantanu Thakoor, Surag Nair, Megha Jhunjhunwala (<strong>2017</strong>). <em>Learning to Play Othello Without Human Knowledge</em>. <a href="/Stanford_University">Stanford University</a>, <a href="https://github.com/suragnair/alpha-zero-general/blob/master/pretrained_models/writeup.pdf">pdf</a> » <a href="/AlphaZero">AlphaZero</a>, <a href="/Othello">Othello</a>, <a href="/Deep_Learning">Deep Learning</a> <a href="#fn38" class="footnote-ref" id="fnref38" role="doc-noteref"><sup>38</sup></a></li>
+<li><a href="/Hendrik_Baier">Hendrik Baier</a> (<strong>2017</strong>). <em><a href="https://link.springer.com/chapter/10.1007/978-3-319-57969-6_5">A Rollout-Based Search Algorithm Unifying MCTS and Alpha-Beta</a></em>. <a href="https://link.springer.com/book/10.1007%2F978-3-319-57969-6">Computer Games</a> » <a href="/Bojun_Huang">Rollout Paradigm</a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2017</strong>). <em><a href="https://link.springer.com/chapter/10.1007/978-3-319-57969-6_4">Nested Rollout Policy Adaptation with Selective Policies</a></em>. <a href="https://link.springer.com/book/10.1007%2F978-3-319-57969-6">Computer Games</a></li>
+<li><a href="/Nobuo_Araki">Nobuo Araki</a>, <a href="/Kunihito_Hoki">Kunihito Hoki</a>, <a href="/Satoshi_Takahashi">Satoshi Takahashi</a>, <a href="/Masakazu_Muramatsu">Masakazu Muramatsu</a> (<strong>2017</strong>). <em><a href="https://content.iospress.com/articles/icga-journal/icg036">Improved simulation adjusting</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 39, Nos. 3-4</a></li>
+</ul>
+<p><strong>2018</strong></p>
+<ul>
+<li><a href="/Arthur_Guez">Arthur Guez</a>, Théophane Weber, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, <a href="/Karen_Simonyan">Karen Simonyan</a>, Oriol Vinyals, Daan Wierstra, <a href="/Rémi_Munos">Rémi Munos</a>, <a href="/David_Silver">David Silver</a> (<strong>2018</strong>). <em>Learning to Search with MCTSnets</em>. <a href="https://arxiv.org/abs/1802.04697">arXiv:1802.04697</a></li>
+<li><a href="/Hui_Wang">Hui Wang</a>, Michael Emmerich, <a href="/Aske_Plaat">Aske Plaat</a> (<strong>2018</strong>). <em>Monte Carlo Q-learning for General Game Playing</em>. <a href="https://arxiv.org/abs/1802.05944">arXiv:1802.05944</a> » <a href="/Reinforcement_Learning">Reinforcement Learning</a>, <a href="/General_Game_Playing">General Game Playing</a></li>
+<li><a href="/Mark_Winands">Mark Winands</a> (<strong>2018</strong>). <em><a href="http://www.aifactory.co.uk/newsletter/2017_02_magic_montecarlo.htm">The Magic of Monte-Carlo Tree Search</a></em>. <a href="/AI_Factory">AI Factory</a>, January 2018</li>
+<li><a href="/Jacek_Mańdziuk">Jacek Mańdziuk</a> (<strong>2018</strong>). <em>MCTS/UCT in Solving Real-Life Problems</em>. <a href="https://www.springer.com/us/book/9783319679457">Advances in Data Analysis with Computational Intelligence Methods</a>, <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a></li>
+<li>Karol Walędzik, <a href="/Jacek_Mańdziuk">Jacek Mańdziuk</a> (<strong>2018</strong>). <em>Applying Hybrid Monte Carlo Tree Search Methods to Risk-Aware Project Scheduling Problem</em>. <a href="https://en.wikipedia.org/wiki/Information_Sciences_(journal)">Information Sciences</a>, Vol. 460</li>
+<li>Chenjun Xiao, Jincheng Mei, <a href="/Martin_Müller">Martin Müller</a> (<strong>2018</strong>). <em>Memory-Augmented Monte Carlo Tree Search</em>. <a href="/Conferences">AAAI 2018</a></li>
+<li>Chao Gao, <a href="/Martin_Müller">Martin Müller</a>, <a href="/Ryan_Hayward">Ryan Hayward</a> (<strong>2018</strong>). <em>Three-Head Neural Network Architecture for Monte Carlo Tree Search</em>. <a href="/Conferences">IJCAI 2018</a></li>
+<li><a href="/Tobias_Joppen">Tobias Joppen</a>, Christian Wirth, <a href="/Johannes_Fürnkranz">Johannes Fürnkranz</a> (<strong>2018</strong>). <em>Preference-Based Monte Carlo Tree Search</em>. <a href="https://arxiv.org/abs/1807.06286">arXiv:1807.06286</a></li>
+<li><a href="https://dblp.org/pers/hd/b/Ba:Seydou">Seydou Ba</a>, <a href="/Takuya_Hiraoka">Takuya Hiraoka</a>, <a href="https://dblp.org/pers/hd/o/Onishi:Takashi">Takashi Onishi</a>, <a href="https://dblp.org/pers/hd/n/Nakata:Toru">Toru Nakata</a>, <a href="https://dblp.org/pers/hd/t/Tsuruoka:Yoshimasa">Yoshimasa Tsuruoka</a> (<strong>2018</strong>). <em>Monte Carlo Tree Search with Scalable Simulation Periods for Continuously Running Tasks</em>. <a href="https://arxiv.org/abs/1809.02378">arXiv:1809.02378</a></li>
+<li><a href="/S._Ali_Mirsoleimani">S. Ali Mirsoleimani</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jos_Vermaseren">Jos Vermaseren</a> (<strong>2018</strong>). <em>Pipeline Pattern for Parallel MCTS</em>. <a href="https://dblp.uni-trier.de/db/conf/icaart/icaart2018-2.html">ICAART 2018</a>, <a href="http://liacs.leidenuniv.nl/~plaata1/papers/paper_ICAART18_pos.pdf">pdf</a></li>
+<li><a href="/S._Ali_Mirsoleimani">S. Ali Mirsoleimani</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jos_Vermaseren">Jos Vermaseren</a> (<strong>2018</strong>). <em>A Lock-free Algorithm for Parallel MCTS</em>. <a href="https://dblp.uni-trier.de/db/conf/icaart/icaart2018-2.html">ICAART 2018</a>, <a href="http://liacs.leidenuniv.nl/~plaata1/papers/paper_ICAART18.pdf">pdf</a></li>
+<li>Ching-Nung Lin, <a href="/Jr-Chang_Chen">Jr-Chang Chen</a>, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a>, Chan-San Chen (<strong>2018</strong>). <em>Design of a Block Go program using deep learning and Monte Carlo tree search</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 40, No. 3</a></li>
+<li>Kiminori Matsuzaki, Naoki Kitamura (<strong>2018</strong>). <em>Do evaluation functions really improve Monte-Carlo tree search?</em> <a href="/CG_2018">CG 2018</a>, <a href="/ICGA_Journal">ICGA Journal, Vol. 40, No. 3</a></li>
+<li><a href="/Shun-Shii_Lin">Shun-Shii Lin</a>, <a href="/Chih-Hung_Chen">Chih-Hung Chen</a>, <a href="/Yu-Heng_Chen">Yu-Heng Chen</a>, Wei-Lin Wu (<strong>2018</strong>). <em>Some improvements in Monte Carlo tree search algorithms for sudden death games</em>. <a href="/CG_2018">CG 2018</a>, <a href="/ICGA_Journal">ICGA Journal, Vol. 40, No. 4</a></li>
+<li>Nai-Yuan Chang, <a href="/Chih-Hung_Chen">Chih-Hung Chen</a>, <a href="/Shun-Shii_Lin">Shun-Shii Lin</a>, Surag Nair (<strong>2018</strong>). <em><a href="https://dl.acm.org/citation.cfm?id=3278325">The Big Win Strategy on Multi-Value Network: An Improvement over AlphaZero Approach for 6x6 Othello</a></em>. <a href="https://dl.acm.org/citation.cfm?id=3278312">MLMI2018</a></li>
+<li><a href="/Yen-Chi_Chen">Yen-Chi Chen</a>, <a href="/Chih-Hung_Chen">Chih-Hung Chen</a>, <a href="/Shun-Shii_Lin">Shun-Shii Lin</a> (<strong>2018</strong>). <em><a href="https://dl.acm.org/citation.cfm?id=3293486">Exact-Win Strategy for Overcoming AlphaZero</a></em>. <a href="https://dl.acm.org/citation.cfm?id=3293475">CIIS 2018</a> <a href="#fn39" class="footnote-ref" id="fnref39" role="doc-noteref"><sup>39</sup></a></li>
+</ul>
+<p><strong>2019</strong></p>
+<ul>
+<li><a href="/Tobias_Joppen">Tobias Joppen</a>, <a href="/Johannes_Fürnkranz">Johannes Fürnkranz</a> (<strong>2019</strong>). <em><a href="https://www.groundai.com/project/ordinal-monte-carlo-tree-search/">Ordinal Monte Carlo Tree Search</a></em>. <a href="/Darmstadt_University_of_Technology">TU Darmstadt</a>, <a href="https://arxiv.org/abs/1901.04274">arXiv:1901.04274</a></li>
+<li>Herilalaina Rakotoarison, <a href="/Marc_Schoenauer">Marc Schoenauer</a>, <a href="/Michèle_Sebag">Michèle Sebag</a> (<strong>2019</strong>). <em>Automated Machine Learning with Monte-Carlo Tree Search</em>. <a href="https://arxiv.org/abs/1906.00170">arXiv:1906.00170</a></li>
+<li>Aline Hufschmitt, Jean-Noël Vittaut, Nicolas Jouandeau (<strong>2019</strong>). <em>Exploiting Game Decompositions in Monte Carlo Tree Search</em>. <a href="/Advances_in_Computer_Games_16">Advances in Computer Games 16</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="/Johannes_Czech">Johannes Czech</a>, <a href="/Patrick_Korus">Patrick Korus</a>, <a href="/Kristian_Kersting">Kristian Kersting</a> (<strong>2020</strong>). <em>Monte-Carlo Graph Search for AlphaZero</em>. <a href="https://arxiv.org/abs/2012.11045">arXiv:2012.11045</a> » <a href="/AlphaZero">AlphaZero</a>, <a href="/CrazyAra">CrazyAra</a></li>
+<li>Quentin Cohen-Solal, <a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2020</strong>). <em>Minimax Strikes Back</em>. <a href="https://arxiv.org/abs/2012.10700">arXiv:2012.10700</a></li>
+<li><a href="/Johannes_Czech">Johannes Czech</a>, <a href="/Patrick_Korus">Patrick Korus</a>, <a href="/Kristian_Kersting">Kristian Kersting</a> (<strong>2021</strong>). <em><a href="https://ojs.aaai.org/index.php/ICAPS/article/view/15952">Improving AlphaZero Using Monte-Carlo Graph Search</a></em>. <a href="https://ojs.aaai.org/index.php/ICAPS/issue/view/380">Proceedings of the Thirty-First International Conference on Automated Planning and Scheduling</a>, Vol. 31, <a href="https://www.ml.informatik.tu-darmstadt.de/papers/czech2021icaps_mcgs.pdf">pdf</a></li>
+<li><a href="/Maximilian_Langer">Maximilian Langer</a> (<strong>2021</strong>). <em>Evaluation of Monte-Carlo Tree Search for Xiangqi</em>. B.Sc. thesis, <a href="/Darmstadt_University_of_Technology">TU Darmstadt</a>, <a href="https://ml-research.github.io/papers/langer2021xiangqi.pdf">pdf</a> » <a href="/Chinese_Chess">Xiangqi</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2010--1">2010 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/d/msg/computer-go-archive/JrrSovvgTV0/UbPOufyTApQJ">[Computer-go] learning patterns for mc go</a> by <a href="/Hendrik_Baier">Hendrik Baier</a>, <a href="https://groups.google.com/forum/#!forum/computer-go-archive">Computer Go Archive</a>, April 26, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38554">UCT surprise for checkers !</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, March 25, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41730">MCTS without random playout?</a> by <a href="/Antonio_Torrecillas">Antonio Torrecillas</a>, <a href="/CCC">CCC</a>, January 01, 2012 » <a href="/B%252A">B*</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47740&amp;topic_view=flat&amp;start=11">Re: MC methods</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, April 13, 2013 » <a href="/Perft">Perft</a></li>
+</ul>
+<h3 id="2015--1">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59118">monte carlo tree search question</a> by <a href="/Marco_Belli">Marco Belli</a>, <a href="/CCC">CCC</a>, January 31, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61801">The scaling of Deep Learning MCTS Go engines</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, October 23, 2016 » <a href="/Deep_Learning">Deep Learning</a>, <a href="/Go">Go</a></li>
+</ul>
+<p><strong>2017</strong></p>
+<ul>
+<li><a href="https://groups.google.com/forum/#!topic/fishcooking/AE4EgWQ20dY">A branch to test the Monte Carlo algorithm in Stockfish</a> by <a href="/Stephane_Nicolet">Stephane Nicolet</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, December 06, 2017 » <a href="/Stockfish">Stockfish</a>, <a href="/AlphaZero">AlphaZero</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65964">Nebiyu-MCTS vs TSCP 1-0</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, December 10, 2017 » <a href="/Nebiyu">Nebiyu</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66013">An AlphaZero inspired project</a> by Truls Edvard Stokke, <a href="/CCC">CCC</a>, December 14, 2017 » <a href="/AlphaZero">AlphaZero</a></li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/rMCfc8zMerc/F01WuNtDCgAJ">MCTS wrapper for StockFish</a> by <a href="/Jonathan_Baxter">Jonathan Baxter</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, December 19, 2017 » <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66125">Search traps in MCTS and chess</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, December 25, 2017 » <a href="/Raghuram_Ramanujan">Sampling-Based Planning</a></li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=32429">MCTS weakness wrt AB (via Daniel Shawul)</a> by <a href="/Chris_Whittington">Chris Whittington</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, December 25, 2017</li>
+</ul>
+<p><strong>2018</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66414">Alpha-Beta as a rollouts algorithm</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, January 25, 2018 » <a href="/Alpha-Beta">Alpha-Beta</a>, <a href="/MCαβ">MCαβ</a>, <a href="/Scorpio">Scorpio</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66886">comparing minimax and averaging MCTS with alphabeta rollouts</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, March 20, 2018 » <a href="/Scorpio">Scorpio</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=67235">MCTS beginner questions</a> by <a href="/Martin_Fierz">Martin Fierz</a>, <a href="/CCC">CCC</a>, April 25, 2018</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=67302">MCTS with minmax backup operator?</a> by <a href="/Martin_Fierz">Martin Fierz</a>, <a href="/CCC">CCC</a>, May 01, 2018</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=67441">Komodo 12 and MCTS</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, May 14, 2018 » <a href="/Komodo">Komodo</a></li>
+</ul>
+<p><strong>2019</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69612">MCTS: How to deal with extreme imbalances</a> by <a href="/Alexandru_Mosoi">Alexandru Mosoi</a>, <a href="/CCC">CCC</a>, January 16, 2019 » <a href="/Zurichess">Zurichess</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69993">MCTS implementation question</a> by mobmat, <a href="/CCC">CCC</a>, February 22, 2019 <a href="#fn40" class="footnote-ref" id="fnref40" role="doc-noteref"><sup>40</sup></a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70069">Training the trainer: how is it done for Stockfish?</a> by <a href="/Marc-Philippe_Huget">Marc-Philippe Huget</a>, <a href="/CCC">CCC</a>, March 01, 2019 » <a href="/Stockfish">Stockfish</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70069&amp;start=10">Re: Training the trainer: how is it done for Stockfish?</a> by Graham Jones, <a href="/CCC">CCC</a>, March 03, 2019 » <a href="/Leela_Chess_Zero">Leela Chess Zero</a></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70596">Training using 1 playout instead of 800</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, April 26, 2019</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70578&amp;start=14">Re: On-line engine blitz tourney April</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/CCC">CCC</a>, April 27, 2019</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70605">Question to Remi about CrazyZero</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, April 28, 2019 » CrazyZero</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70611">SL vs RL</a> by <a href="/Chris_Whittington">Chris Whittington</a>, <a href="/CCC">CCC</a>, April 28, 2019</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=70788">How to get the "usual" Multi PV with MCTS engines?</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, May 21, 2019 » <a href="/Principal_Variation">MultiPV</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=71301">A question to MCTS + NN experts</a> by <a href="/Maksim_Korzh">Maksim Korzh</a>, <a href="/CCC">CCC</a>, July 17, 2019 » <a href="/Deep_Learning">Deep Learning</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=71301&amp;start=3">Re: A question to MCTS + NN experts</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, July 17, 2019</p>
+<h3 id="2020--1">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75658">MCTS evaluation question</a> by <a href="/Maksim_Korzh">Maksim Korzh</a>, <a href="/CCC">CCC</a>, November 02, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=77670&amp;start=1">Re: Has CrazyAra really improved because of MTGS ?</a> by <a href="/Johannes_Czech">Johannes Czech</a>, <a href="/CCC">CCC</a>, July 08, 2021 » <a href="/CrazyAra">CrazyAra</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<h3 id="monte-carlo-tree-search">Monte Carlo Tree Search</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Monte_Carlo_tree_search">Monte Carlo tree search from Wikipedia</a></li>
+<li><a href="https://github.com/TomaszJaworski777/cpu-mcts-tutorial">CPU MCTS Tutorial - GitHub - TomaszJaworski777/cpu-mcts-tutorial</a></li>
+<li><a href="https://int8.io/monte-carlo-tree-search-beginners-guide/">Monte Carlo Tree Search - beginners guide int8.io</a> <a href="#fn41" class="footnote-ref" id="fnref41" role="doc-noteref"><sup>41</sup></a></li>
+<li><a href="https://senseis.xmp.net/?MonteCarlo">Sensei's Library: Monte Carlo Tree Search</a></li>
+<li><a href="https://senseis.xmp.net/?UCT">Sensei's Library: UCT</a></li>
+<li><a href="https://althofer.de/lange-nacht-jena.html">Lange Nacht der Wissenschaften - Long Night of Sciences Jena - 2007</a> by <a href="/Ingo_Althöfer">Ingo Althöfer</a>, <a href="/Jakob_Erdmann">MC and UCT poster</a> by <a href="/Jakob_Erdmann">Jakob Erdmann</a></li>
+<li><a href="http://web.stanford.edu/~surag/posts/alphazero.html">A Simple Alpha(Go) Zero Tutorial</a> by Surag Nair, <a href="/Stanford_University">Stanford University</a>, December 29, 2017 » <a href="/AlphaZero">AlphaZero</a>, <a href="/Deep_Learning">Deep Learning</a></li>
+</ul>
+<p><a href="https://github.com/suragnair/alpha-zero-general">GitHub - suragnair/alpha-zero-general: A clean and simple implementation of a self-play learning algorithm based on AlphaGo Zero (any game, any framework!)</a></p>
+<ul>
+<li>Monte Carlo Tree Search by John Levine, <a href="https://en.wikipedia.org/wiki/University_of_Strathclyde">University of Strathclyde</a>, March 05, 2017, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/UXW2yZndl7U" title="YouTube video UXW2yZndl7U" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=UXW2yZndl7U">Watch on YouTube</a></p>
+<ul>
+<li><a href="https://en.chessbase.com/post/monte-carlo-instead-of-alpha-beta">Monte Carlo instead of Alpha-Beta?</a> by Stephan Oliver Platz, <a href="/ChessBase">ChessBase News</a>, January 30, 2019 » <a href="/Komodo">Komodo MCTS</a></li>
+</ul>
+<h3 id="monte-carlo-misc">Monte Carlo Misc</h3>
+<ul>
+<li><a href="http://www.chessbase.com/newsdetail.asp?newsid=5075">Rybka's Monte Carlo analysis</a> by Steve Lopez, <a href="/ChessBase">ChessBase News</a>, February 03, 2009 » <a href="/Rybka">Rybka</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Monte_Carlo_%28disambiguation%29">Monte Carlo (disambiguation) from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/Monte_Carlo_algorithm">Monte Carlo algorithm</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Monte_Carlo_method">Monte Carlo method</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Monte_Carlo">Monte Carlo</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Monte_Carlo_Casino">Monte Carlo Casino</a></p>
+<ul>
+<li><a href="http://www.crapsdicecontrol.com/monte_carlo.htm">A History of Monte Carlo</a></li>
+<li><a href="http://www.dartmouth.edu/%7Erc/classes/soft_dev/C_simple_ex.html">Software Development in the UNIX Environment - Example C Program to Compute PI Using A Monte Carlo Method</a></li>
+<li><a href="http://www.eveandersson.com/pi/monte-carlo-circle">Calculation of Pi Using the Monte Carlo Method</a> by <a href="http://www.eveandersson.com/">Eve Astrid Andersson</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Slot_machine">Slot machine from Wikipedia</a></li>
+<li><a href="http://videolectures.net/icml09_silver_mcsb/">Monte-Carlo Simulation Balancing - videolectures.net</a> by <a href="/David_Silver">David Silver</a> <a href="#fn42" class="footnote-ref" id="fnref42" role="doc-noteref"><sup>42</sup></a></li>
+<li><a href="/Category:Marcus_Miller">Marcus Miller</a> - <a href="https://en.wikipedia.org/wiki/State_of_Mind_(Raul_Mid%C3%B3n_album)">State of Mind</a> (<a href="https://en.wikipedia.org/wiki/Ra%C3%BAl_Mid%C3%B3n">Raúl Midón</a>), <a href="https://fr.wikipedia.org/wiki/A_Night_in_Monte-Carlo">A Night In Monte-Carlo</a> (2010), <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p>feat. <a href="https://en.wikipedia.org/wiki/Ra%C3%BAl_Mid%C3%B3n">Raúl Midón</a>, <a href="/Category:Roy_Hargrove">Roy Hargrove</a> and the <a href="https://en.wikipedia.org/wiki/Monte-Carlo_Philharmonic_Orchestra">Monte-Carlo Philharmonic Orchestra</a>, November 29, 2008, <a href="http://maboum.com/news-monte-carlo-jazz-festival-2008">Monte-Carlo Jazz Festival</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/Gbc72rfyq94" title="YouTube video Gbc72rfyq94" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=Gbc72rfyq94">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Search">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Rémi_Coulom">Rémi Coulom</a> (<strong>2009</strong>). <em>The Monte-Carlo Revolution in Go</em>. JFFoS'2008: Japanese-French Frontiers of Science Symposium, <a href="http://remi.coulom.free.fr/JFFoS/JFFoS.pdf">slides as pdf</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>Julien Kloetzer, <a href="/Hiroyuki_Iida">Hiroyuki Iida</a>, <a href="/Bruno_Bouzy">Bruno Bouzy</a> (<strong>2007</strong>). <em>The Monte-Carlo approach in Amazons</em>. <a href="/CGW_2007">CGW 2007</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="/Richard_J._Lorentz">Richard J. Lorentz</a> (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_2">Amazons Discover Monte-Carlo</a></em>. <a href="/CG_2008">CG 2008</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="/Mark_Winands">Mark Winands</a>, <a href="/Yngvi_Björnsson">Yngvi Björnsson</a> (<strong>2009</strong>). <em>Evaluation Function Based Monte-Carlo LOA</em>. <a href="http://www.ru.is/faculty/yngvi/pdf/WinandsB09.pdf">pdf</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="/Richard_J._Lorentz">Richard J. Lorentz</a> (<strong>2010</strong>). <em><a href="http://www.springerlink.com/content/p4x16832317r1214/">Improving Monte-Carlo Tree Search in Havannah</a></em>. <a href="/CG_2010">CG 2010</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p>Broderick Arneson, <a href="/Ryan_Hayward">Ryan Hayward</a>, Philip Henderson (<strong>2010</strong>). <em>Monte Carlo Tree Search in Hex</em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 2, No. 4, <a href="http://webdocs.cs.ualberta.ca/~hayward/papers/mcts-hex.pdf">pdf</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=38554">UCT surprise for checkers !</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, March 25, 2011<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="/David_Silver">David Silver</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Marc_Lanctot">Marc Lanctot</a>, <a href="/Laurent_Sifre">Laurent Sifre</a>, <a href="/Dharshan_Kumaran">Dharshan Kumaran</a>, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, <a href="/Karen_Simonyan">Karen Simonyan</a>, <a href="/Demis_Hassabis">Demis Hassabis</a> (<strong>2017</strong>). <em>Mastering Chess and Shogi by Self-Play with a General Reinforcement Learning Algorithm</em>. <a href="https://arxiv.org/abs/1712.01815">arXiv:1712.01815</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="/Raghuram_Ramanujan">Raghuram Ramanujan</a>, <a href="/Ashish_Sabharwal">Ashish Sabharwal</a>, <a href="/Bart_Selman">Bart Selman</a> (<strong>2010</strong>). <em><a href="http://www.aaai.org/ocs/index.php/ICAPS/ICAPS10/paper/view/1458">On Adversarial Search Spaces and Sampling-Based Planning</a></em>. <a href="http://www.aaai.org/Press/Proceedings/icaps10.php">ICAPS 2010</a><a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p>Oleg Arenz (<strong>2012</strong>). <em><a href="http://www.ke.tu-darmstadt.de/bibtex/publications/show/2321">Monte Carlo Chess</a></em>. B.Sc. thesis, <a href="/Darmstadt_University_of_Technology">Darmstadt University of Technology</a>, advisor <a href="/Johannes_Fürnkranz">Johannes Fürnkranz</a>, <a href="http://www.ke.tu-darmstadt.de/lehre/arbeiten/bachelor/2012/Arenz_Oleg.pdf">pdf</a><a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, <a href="/Mark_Winands">Mark Winands</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_6">Parallel Monte-Carlo Tree Search</a></em>. <a href="/CG_2008">CG 2008</a>, <a href="https://dke.maastrichtuniversity.nl/m.winands/documents/multithreadedMCTS2.pdf">pdf</a><a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, <a href="/Mark_Winands">Mark Winands</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_6">Parallel Monte-Carlo Tree Search</a></em>. <a href="/CG_2008">CG 2008</a>, <a href="https://dke.maastrichtuniversity.nl/m.winands/documents/multithreadedMCTS2.pdf">pdf</a><a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="https://commons.wikimedia.org/wiki/File:MCTS_%28English%29.svg">Steps of Monte-Carlo Tree Search</a> by Mciura, March 31, 2013, <a href="https://en.wikipedia.org/wiki/Wikimedia_Commons">Wikimedia Commons</a>, <a href="https://en.wikipedia.org/wiki/Monte_Carlo_tree_search">Monte Carlo tree search from Wikipedia</a><a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p><a href="/Ingo_Althöfer">Ingo Althöfer</a> (<strong>2011</strong>). <em><a href="http://link.springer.com/chapter/10.1007%2F978-3-642-31866-5_22">On Board-Filling Games with Random-Turn Order and Monte Carlo Perfectness</a></em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a><a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn15"><p><a href="/Levente_Kocsis">Levente Kocsis</a>, <a href="/Csaba_Szepesvári">Csaba Szepesvári</a> (<strong>2006</strong>). <em><a href="http://www.computer-go.info/resources/bandit.html">Bandit based Monte-Carlo Planning</a></em> ECML-06, LNCS/LNAI 4212, pp. 282-293. introducing <a href="/UCT">UCT</a>, <a href="http://www.sztaki.hu/%7Eszcsaba/papers/ecml06.pdf">pdf</a><a href="#fnref15" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn16"><p><a href="/Christopher_D._Rosin">Christopher D. Rosin</a> (<strong>2011</strong>). <em><a href="https://link.springer.com/article/10.1007/s10472-011-9258-6">Multi-armed bandits with episode context</a></em>. Annals of Mathematics and Artificial Intelligence, Vol. 61, No. 3, <a href="http://gauss.ececs.uc.edu/Workshops/isaim2010/papers/rosin.pdf">ISAIM 2010 pdf</a><a href="#fnref16" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn17"><p>Quentin Cohen-Solal, <a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2020</strong>). <em>Minimax Strikes Back</em>. <a href="https://arxiv.org/abs/2012.10700">arXiv:2012.10700</a><a href="#fnref17" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn18"><p><a href="https://en.wikipedia.org/wiki/Join_Five">Morpion solitaire from Wikipedia</a><a href="#fnref18" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn19"><p><a href="/Jeff_Rollason">Jeff Rollason</a> (<strong>2015</strong>). <em><a href="http://www.aifactory.co.uk/newsletter/2015_02_mixing_immiscible.htm">Mixing the Immiscible - MCTS and evaluation</a></em>. <a href="/AI_Factory">AI Factory</a>, October 2015<a href="#fnref19" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn20"><p><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=886">Monte Carlo in LOA</a> by <a href="/Mark_Watkins">Mark Watkins</a>, <a href="/Computer_Chess_Forums">Open Chess Forum</a>, December 30, 2010<a href="#fnref20" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn21"><p><a href="https://en.wikipedia.org/wiki/The_Settlers_of_Catan">The Settlers of Catan from Wikipedia</a><a href="#fnref21" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn22"><p><a href="https://en.wikipedia.org/wiki/Blokus#Blokus_Duo.2FTravel_Blokus">Blokus Duo from Wikipedia</a><a href="#fnref22" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn23"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=66125">Search traps in MCTS and chess</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, December 25, 2017<a href="#fnref23" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn24"><p><a href="http://www.grappa.univ-lille3.fr/icga/game.php?id=47">NoGo (ICGA Tournaments)</a><a href="#fnref24" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn25"><p><a href="https://en.wikipedia.org/wiki/Ms._Pac-Man">Ms. Pac-Man from Wikipedia</a><a href="#fnref25" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn26"><p><a href="https://en.wikipedia.org/wiki/Value_of_information">Value of information (VOI) from Wikipedia</a><a href="#fnref26" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn27"><p><a href="https://en.wikipedia.org/wiki/Scotland_Yard_%28board_game%29">Scotland Yard (board game) from Wikipedia</a><a href="#fnref27" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn28"><p><a href="https://en.wikipedia.org/wiki/Join_Five">Morpion solitaire from Wikipedia</a><a href="#fnref28" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn29"><p><a href="http://www.morpionsolitaire.com/English/RecordsGrids5T.htm">Morpion Solitaire - Record Grids (5T game)</a><a href="#fnref29" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn30"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=47740&amp;topic_view=flat&amp;start=11">Re: MC methods</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, April 13, 2013<a href="#fnref30" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn31"><p><a href="https://en.wikipedia.org/wiki/Crossings_%28game%29">Crossings from Wikipedia</a><a href="#fnref31" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn32"><p><a href="https://en.wikipedia.org/wiki/Epaminondas_%28game%29">Epaminondas from Wikipedia</a><a href="#fnref32" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn33"><p><a href="https://en.wikipedia.org/wiki/7_Wonders_%28board_game%29">7 Wonders (board game) from WIkipedia</a><a href="#fnref33" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn34"><p><a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, <a href="/Mark_Winands">Mark Winands</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Bruno_Bouzy">Bruno Bouzy</a> (<strong>2008</strong>). <em>Progressive Strategies for Monte-Carlo Tree Search</em>. <a href="http://www.worldscinet.com/nmnc/nmnc.shtml">New Mathematics and Natural Computation</a>, Vol. 4, No. 3, <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.106.3015&amp;rep=rep1&amp;type=pdf">pdf</a><a href="#fnref34" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn35"><p><a href="/Dap_Hartmann">Dap Hartmann</a> (<strong>2017</strong>). <em>Let's Catch the Train to Monte-Carlo</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 39, No. 1</a><a href="#fnref35" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn36"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=66125&amp;start=18">Re: Minmax backup operator for MCTS</a> by Brahim Hamadicharef, <a href="/CCC">CCC</a>, December 30, 2017<a href="#fnref36" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn37"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=66280&amp;start=67">Re: Announcing lczero</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, January 21, 2018 » <a href="/Leela_Chess_Zero">Leela Chess Zero</a><a href="#fnref37" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn38"><p><a href="https://github.com/suragnair/alpha-zero-general">GitHub - suragnair/alpha-zero-general: A clean and simple implementation of a self-play learning algorithm based on AlphaGo Zero (any game, any framework!)</a><a href="#fnref38" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn39"><p><a href="https://github.com/LeelaChessZero/lc0/issues/799">"Exact-Win Strategy for Overcoming AlphaZero" · Issue #799 · LeelaChessZero/lc0 · GitHub</a><a href="#fnref39" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn40"><p><a href="https://github.com/dkappe/leela_lite">GitHub - dkappe/leela_lite: A toolkit for experimenting with UCT and Leela Chess nets in Python</a> by <a href="/Dietrich_Kappe">Dietrich Kappe</a><a href="#fnref40" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn41"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75658&amp;start=4">Re: MCTS evaluation question</a> by Joerg Oster, <a href="/CCC">CCC</a>, November 03, 2020<a href="#fnref41" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn42"><p><a href="/David_Silver">David Silver</a>, <a href="/Gerald_Tesauro">Gerald Tesauro</a> (<strong>2009</strong>). <em>Monte-Carlo Simulation Balancing</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/icml/icml2009.html#SilverT09">ICML 2009</a>, <a href="http://www.machinelearning.org/archive/icml2009/papers/500.pdf">pdf</a><a href="#fnref42" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Edvard_Munch">Edvard Munch</a> · <a href="/Category:Videos">Videos</a> · <a href="/Category:Roy_Hargrove">Roy Hargrove</a> · <a href="/Category:Marcus_Miller">Marcus Miller</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Monte-Carlo_Tree_Search">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, ShawnXu.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

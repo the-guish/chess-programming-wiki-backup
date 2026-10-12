@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mate Distance Pruning - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Mate Distance Pruning</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Search">Search</a> * <a href="/Selectivity">Selectivity</a> * <a href="/Pruning">Pruning</a> * Mate Distance Pruning</strong></p>
+<p>If a forced <a href="/Checkmate">mate</a> has been found, <strong>Mate Distance Pruning</strong> (MDP) will cut trees and adjust <a href="/Bound">bounds</a> of lines where no shorter mate is possible. Mate Distance Pruning is a safe type of pruning, as it only cuts irrelevant nodes. It will not add much to a programs <a href="/Playing_Strength">playing strength</a> as this pruning only comes into effect when a position is already decided, still it helps with analysis and solving "Mate in n" problems.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#mating-value">Mating Value</a></li>
+<li><a href="#upper-bound">Upper Bound</a></li>
+<li><a href="#lower-bound">Lower Bound</a></li>
+<li><a href="#in-practice">In Practice</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="mating-value">Mating Value</h2>
+<p>The prerequisite for Mate Distance Pruning is that decided positions are properly <a href="/Score">scored</a>. So a position where the opponent is mated is scored SCORE_MATE (a very high value), a position where the victory is one move away is worth less SCORE_MATE - 1, Mate in 2 plies is scored SCORE_MATE - 2 and so on. On the other side, a position where the side to move is mated in n plies is evaluated -SCORE_MATE + n. The difference between the actual value and SCORE_MATE is always the number of plies the mate is away from the root position.</p>
+<h2 id="upper-bound">Upper Bound</h2>
+<p>Assume we are in a winning position. Through another line we have already found a forced mate in n plies. Thus our alpha is SCORE_MATE - n. From this information we can take that should we be searching a line that already is equal to or longer than n, we can impossibly increase alpha even if another mate was found. This means we could safely prune that tree.</p>
+<p>Furthermore we can lower the upper bound. If we are n plies away from the root, the opponent can impossibly be evaluated &gt; SCORE_MATE - n. Thus beta can be set to this value should it be higher.</p>
+<pre><code>mating_value = SCORE_MATE - RootDistance;
+
+if (mating_value &lt; beta) {
+   beta = mating_value;
+   if (alpha &gt;= mating_value) return mating_value;
+}</code></pre>
+<h2 id="lower-bound">Lower Bound</h2>
+<p>Contrary to the pruning if we are in a winning position, scores can also be adjusted and trees pruned if we are in a loosing position.</p>
+<pre><code>mating_value = -SCORE_MATE + RootDistance;
+
+if (mating_value &gt; alpha) {
+   alpha = mating_value;
+   if (beta &lt;= mating_value) return mating_value;
+}</code></pre>
+<h2 id="in-practice">In Practice</h2>
+<p>Using the Chess Engine <a href="/Glass">Glass</a> 1.0 the treesize of a search without Mate Distance Pruning is compared to one with this feature enabled. <div class="chess-fen" data-fen="8/7K/8/8/8/8/R7/7k"><code>8/7K/8/8/8/8/R7/7k</code></div> 8/7K/8/8/8/8/R7/7k w - - 0 1</p>
+<table>
+<thead>
+<tr>
+<th>Depth</th>
+<th>MDP Disabled (Score / Nodes) <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></th>
+<th>MDP Enabled (Score / Nodes)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>1041 / 3</td>
+<td>1041 / 3</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1041 / 23</td>
+<td>1041 / 23</td>
+</tr>
+<tr>
+<td>3</td>
+<td>1051 / 103</td>
+<td>1051 / 103</td>
+</tr>
+<tr>
+<td>4</td>
+<td>1051 / 551</td>
+<td>1051 / 551</td>
+</tr>
+<tr>
+<td>5</td>
+<td>1055 / 2151</td>
+<td>1055 / 2151</td>
+</tr>
+<tr>
+<td>6</td>
+<td>1051 / 7638</td>
+<td>1051 / 7638</td>
+</tr>
+<tr>
+<td>7</td>
+<td>1055 / 24353</td>
+<td>1055 / 24353</td>
+</tr>
+<tr>
+<td>8</td>
+<td>1065 / 62692</td>
+<td>1065 / 62692</td>
+</tr>
+<tr>
+<td>9</td>
+<td>1065 / 139241</td>
+<td>1065 / 139241</td>
+</tr>
+<tr>
+<td>10</td>
+<td>1085 / 253338</td>
+<td>1085 / 253338</td>
+</tr>
+<tr>
+<td>11</td>
+<td>1085 / 409101</td>
+<td>1085 / 409101</td>
+</tr>
+<tr>
+<td>12</td>
+<td>1105 / 610285</td>
+<td>1105 / 610285</td>
+</tr>
+<tr>
+<td>13</td>
+<td>1105 / 873959</td>
+<td>1105 / 873959</td>
+</tr>
+<tr>
+<td>14</td>
+<td>1105 / 1417047</td>
+<td>1105 / 1417047</td>
+</tr>
+<tr>
+<td>15</td>
+<td>1105 / 1907578</td>
+<td>1105 / 1907578</td>
+</tr>
+<tr>
+<td>16</td>
+<td>M8 / 2846864</td>
+<td>M8 / 2547293</td>
+</tr>
+<tr>
+<td>17</td>
+<td>M8 / 3715208</td>
+<td>M8 / 2819164</td>
+</tr>
+<tr>
+<td>18</td>
+<td>M8 / 4842666</td>
+<td>M8 / 3092833</td>
+</tr>
+<tr>
+<td>19</td>
+<td>M8 / 6181827</td>
+<td>M8 / 3368068</td>
+</tr>
+<tr>
+<td>20</td>
+<td>M8 / 7774698</td>
+<td>M8 / 3643489</td>
+</tr>
+</tbody>
+</table>
+<p>From this table one can see that the treesize is equal for the first 15 plies, but then the Version with Mate Distance Pruning enabled found the exact mating line about 10% smaller. Furthermore the risk of treesize explosion for further iterations is greatly decreased. In this example the treesize of the Version with this type of Pruning enabled is less than half as big.</p>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=6665">Search questions</a> by <a href="/Sven_Schüle">Sven Schüle</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, July 17, 2007» <a href="/Fail-Soft">Fail-Soft</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=26995">Discussion about Mate Distance Pruning</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, March 14, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41337">mate distance pruning problems and static null move pruning</a> by Pierre Bokma, <a href="/CCC">CCC</a>, December 04, 2011 » <a href="/Reverse_Futility_Pruning">Reverse Futility Pruning</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references/>
+
+<p><strong><a href="/Pruning">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Nodes until <a href="/Principal_Variation">PV</a> is found<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Mate_Distance_Pruning">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

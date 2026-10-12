@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overloading - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Overloading</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Chess">Chess</a> * <a href="/Tactics">Tactics</a> * Overloading</strong></p>
+<p><strong>Overloading</strong> is a chess tactic where a piece has more than one exclusive defending obligation. For instance, if the defending piece is member of two or more balanced <a href="/Attack_and_Defend_Maps">defend and attack sets</a> (equal number of attacks and defends) of their respective critical squares, the piece is likely overloaded, except for defending <a href="/Sliding_Pieces">sliding pieces</a> with both squares connected by a single move. Critical squares, attacked by the opponent, are either occupied by pieces from the defenders side, and/or otherwise <a href="/Checkmate">mate</a> threatening squares around the king or the backrank.</p>
+<p>Despite tactics is the domain of <a href="/Search">search</a>, and static <a href="/Evaluation">evaluation</a> of overloading pieces seems complicated considering tactical interactions and issues like pieces <a href="/En_prise">en prise</a> or <a href="/Hanging_Piece">hanging</a>, <a href="/Discovered_Attack">discovered attacks</a>, <a href="/Check">checks</a>, <a href="/Pin">pins</a>, <a href="/Zwischenzug">Zwischenzug</a> and counter attacks, some programs statically determine overloading pieces and other tactical motives for counting all kinds of obligations to consider their balance in nonlinear evaluation terms and/or controlling the <a href="/Search">search</a>, <a href="/Quiescence_Search">quiescence search</a> and their <a href="/Selectivity">selectivity</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#sample">Sample</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="sample">Sample</h2>
+<table>
+<tbody>
+<tr>
+<td><div class="chess-fen" data-fen="8/1b1r1pkp/6p1/8/8/3n2NP/4BPP1/1R4K1"><code>8/1b1r1pkp/6p1/8/8/3n2NP/4BPP1/1R4K1</code></div></td>
+<td></td>
+<td><div class="chess-fen" data-fen="8/1b1r1pkp/6p1/8/8/3n1N1P/4BPP1/1R4K1"><code>8/1b1r1pkp/6p1/8/8/3n1N1P/4BPP1/1R4K1</code></div></td>
+</tr>
+<tr>
+<td>8/1b1r1pkp/6p1/8/8/3n2NP/4BPP1/1R4K1 w - -</td>
+<td></td>
+<td>8/1b1r1pkp/6p1/8/8/3n1N1P/4BPP1/1R4K1 w - -</td>
+</tr>
+</tbody>
+</table>
+<p>Here, in the left diagram, White to move wins a piece with 1.Bxd3, since the black d7 rook is overloaded defending d3 and b7. However, in the right position it does not work as intended <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>, since Black has the <a href="/Zwischenzug">Zwischenzug</a> 1... Bxf3, which also demonstrates the difficulty to evaluate chess tactics statically. White can exchange rook versus two minors with 1.Rxb7, but that seems not that simple winning either.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Attack_and_Defend_Maps">Attack and Defend Maps</a></li>
+<li>Deflection</li>
+<li><a href="/SEE_-_The_Swap_Algorithm">SEE - The Swap Algorithm</a></li>
+<li><a href="/Square_Attacked_By">Square Attacked By</a></li>
+<li><a href="/Static_Exchange_Evaluation">Static Exchange Evaluation</a></li>
+<li><a href="/Undermining">Undermining</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Overloading_%28chess%29">Overloading (chess) from Wikipedia</a></li>
+<li><a href="http://www.chesscorner.com/tutorial/tactics/overloading/overload.htm">Chess Corner - Chess Tutorial - Overloading</a></li>
+<li><a href="http://www.chessguru.net/tactic/overloading/">Chess overloading</a> from <a href="http://www.chessguru.net/">chessguru.net</a></li>
+<li><a href="/Category:Passport">Passport</a> - <a href="https://en.wikipedia.org/wiki/Passport_%28band%29#Discography">Cross-Collateral (1975)</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p>lineup: <a href="/Category:Klaus_Doldinger">Klaus Doldinger</a>, <a href="/Category:Curt_Cress">Curt Cress</a>, <a href="/Category:Wolfgang_Schmid">Wolfgang Schmid</a>, <a href="https://en.wikipedia.org/wiki/Kristian_Schultze">Kristian Schultze</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/4pLbselkeSw" title="YouTube video 4pLbselkeSw" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=4pLbselkeSw">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Tactics">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.chesscorner.com/tutorial/tactics/overloading/overload.htm">Chess Corner - Chess Tutorial - Overloading</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://en.wikipedia.org/wiki/Cross-collateralization">Cross-collateralization from Wikipedia</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Passport">Passport</a> · <a href="/Category:Curt_Cress">Curt Cress</a> · <a href="/Category:Klaus_Doldinger">Klaus Doldinger</a> · <a href="/Category:Wolfgang_Schmid">Wolfgang Schmid</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Overloading">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

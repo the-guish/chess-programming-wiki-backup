@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Node Types - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Node Types</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Search">Search</a> * <a href="/Node">Node</a> * Node Types</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:440px"><a href="http://www.netlib.org/utk/lsi/pcwLSI/text/node351.html" target="_blank" rel="noopener noreferrer"><img src="/assets/Img2725NodeTypes.gif" alt="Node Types 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Node Types <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://www.netlib.org/utk/lsi/pcwLSI/text/node351.html">Analysis of Alpha-Beta Pruning</a> from the <a href="http://www.netlib.org/utk/lsi/pcwLSI/text/BOOK.html">Parallel Computing Works</a> ebook<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Node Types</strong> are classifications of <a href="/Node">nodes</a> as expected inside a <a href="/Search_Tree">minimal alpha-beta tree</a>, or as determined by the search. These types were first formulated by <a href="/Donald_Knuth">Donald Knuth</a> and Ronald Moore when describing the <a href="/Alpha-Beta">alpha-beta algorithm</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> and further analyzed by <a href="/Judea_Pearl">Judea Pearl</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>. While Knuth used the terms Type 1, 2, and 3, <a href="/Tony_Marsland">Tony Marsland</a> and <a href="/Fred_Popowich">Fred Popowich</a> introduced the more descriptive terms <strong>PV-</strong>, <strong>Cut-</strong> and <strong>All-nodes</strong> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>.</p>
+<p>Node types as established by the search are stored inside the <a href="/Transposition_Table">transposition table</a>, indicating whether the <a href="/Score">score</a> is either <a href="/Exact_Score">exact</a>, <a href="/Lower_Bound">lower</a> or <a href="/Upper_Bound">upper bounded</a>. Expected node types, as determined by tree topology, probing the transposition table, or comparing scores of a <a href="/Evaluation">static evaluation</a> considering threats, or even a reduced search or <a href="/Quiescence_Search">quiescence search</a>, with the <a href="/Bound">bounds</a>, may be considered by various (<a href="/Parallel_Search">parallel</a>) search algorithms and in decisions concerning <a href="/Selectivity">selectivity</a>.</p>
+<p><span id="PV"></span></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#pv-nodes">PV-Nodes</a></li>
+<li><a href="#cut-nodes">Cut-Nodes</a></li>
+<li><a href="#all-nodes">All-Nodes</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#node-types-in-pvs">Node Types in PVS</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#onno">Onno</a></li>
+<li><a href="#summary">Summary</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#number-of-leaf-nodes">Number of Leaf Nodes</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#formulas">Formulas</a></li>
+<li><a href="#table">Table</a></li>
+</ol>
+</details></li>
+<li><a href="#quotes">Quotes</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#selected-publications">Selected Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="pv-nodes">PV-Nodes</h2>
+<p>PV-nodes (Knuth's <strong>Type 1</strong>) are nodes that have a score that ends up being inside the <a href="/Window">window</a>. So if the bounds passed are <span style="background-color: rgb(229, 229, 229)">[a,b]</span>, with the score returned <span style="background-color: rgb(229, 229, 229)">s, a&lt;s&lt;b</span>. These nodes have all moves searched, and the value returned is <a href="/Exact_Score">exact</a> (i.e., not a <a href="/Bound">bound</a>), which propagates up to the <a href="/Root">root</a> along with a <a href="/Principal_Variation">principal variation</a>.</p>
+<ul>
+<li><a href="/Root">Root Node</a> and the <a href="/Leftmost_Node">Leftmost Nodes</a> are always PV-nodes</li>
+<li>In <a href="/Principal_Variation_Search">Principal Variation Search</a>, PV-nodes usually satisfy <span style="background-color: rgb(229, 229, 229)">beta-alpha&gt;1</span>, unless alpha is raised to that specific value</li>
+<li>All <a href="/Sibling_Node">Siblings</a> of a PV-node are expected Cut-nodes</li>
+</ul>
+<p><span id="CUT"></span></p>
+<h2 id="cut-nodes">Cut-Nodes</h2>
+<p>Cut-nodes (Knuth's <strong>Type 2</strong>), otherwise known as <a href="/Fail-High">fail-high</a> nodes, are nodes in which a <a href="/Beta-Cutoff">beta-cutoff</a> was performed. So with <a href="/Bound">bounds</a> <span style="background-color: rgb(229, 229, 229)">[a,b], s&gt;=b</span>. A minimum of one move at a Cut-node needs to be searched. The score returned is a <a href="/Lower_Bound">lower bound</a> (might be greater) on the <a href="/Exact_Score">exact score</a> of the node</p>
+<ul>
+<li>In <a href="/Principal_Variation_Search">Principal Variation Search</a> Cut-nodes are searched with <a href="/Null_Window">null windows</a></li>
+<li>The child of a Cut-node is an All-node</li>
+<li>The parent of a Cut-node is either a PV- or All-node</li>
+<li>The <a href="/Ply">ply</a> distance of a Cut-node to its PV-ancestor is odd</li>
+</ul>
+<p><span id="ALL"></span></p>
+<h2 id="all-nodes">All-Nodes</h2>
+<p>All-nodes (Knuth's <strong>Type 3</strong>), otherwise known as <a href="/Fail-Low">fail-low</a> nodes, are nodes in which no move's score exceeded alpha. With <a href="/Bound">bounds</a> <span style="background-color: rgb(229, 229, 229)">[a,b], s&lt;=a</span>. Every move at an All-node is searched, and the score returned is an <a href="/Upper_Bound">upper bound</a>, the <a href="/Exact_Score">exact score</a> might be less.</p>
+<ul>
+<li>In <a href="/Principal_Variation_Search">Principal Variation Search</a> All-nodes are searched with <a href="/Null_Window">null windows</a></li>
+<li>The children of an All-node are Cut-nodes</li>
+<li>The parent of an All-node is a Cut-node</li>
+<li>The <a href="/Ply">ply</a> distance of an All-node to its PV-ancestor is even</li>
+</ul>
+<h2 id="node-types-in-pvs">Node Types in PVS</h2>
+<h3 id="onno">Onno</h3>
+<p><a href="/Onno">Onno</a> by <a href="/Onno_Garms">Onno Garms</a> determines expected node types, beside other things, to perform <a href="/Internal_Iterative_Deepening">IID</a> not only at PV-nodes but also at expected Cut-nodes. Onno Garms gave the following rules <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a></p>
+<ul>
+<li>The root node is a PV-node</li>
+<li>The first child of a PV-node is a PV-node</li>
+<li>The further children are searched by a <a href="/Scout">scout search</a> as CUT-nodes</li>
+<li><a href="/Principal_Variation_Search">PVS</a> re-search is done as PV-node</li>
+<li>The first node of <a href="/Onno">bad pruning</a> is a CUT-node</li>
+<li>The node after a <a href="/Null_Move">null move</a> is a CUT-node</li>
+<li>The first node of <a href="/Null_Move_Pruning">null move verification</a> is a CUT-node</li>
+<li><a href="/Internal_Iterative_Deepening">Internal iterative deepening</a> does not change the node type</li>
+<li>The first child of a CUT-node is an ALL-node</li>
+<li>Further children of a CUT-node are CUT-nodes</li>
+<li>Children of ALL-nodes are CUT-nodes</li>
+</ul>
+<h3 id="summary">Summary</h3>
+<p>Following summary was given by <a href="/Pradu_Kannan">Pradu Kannan</a> similar to Onno's definition as an attempt to predict the node type before searching the node by assuming reasonably good <a href="/Move_Ordering">move ordering</a> on PV-nodes and Cut-nodes <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>:</p>
+<ul>
+<li>The root node is a PV-node</li>
+<li>The first child of a PV-node is a PV-node</li>
+<li>Children of PV-nodes that are searched with a zero-window <a href="/Scout">scout search</a> are Cut-nodes</li>
+<li>Children of PV-nodes that have to be re-searched because the scout search failed high, are PV-nodes</li>
+<li>The first child of a Cut-node, and other candidate cutoff moves (nullmove, killers, captures, checks, ...) is an All-node</li>
+<li>A Cut-node becomes an All-node once the first and all candidate cutoff moves are searched</li>
+<li>Children of All-nodes are Cut-nodes</li>
+</ul>
+<p><span id="LeafNodes"></span></p>
+<h2 id="number-of-leaf-nodes">Number of Leaf Nodes</h2>
+<h3 id="formulas">Formulas</h3>
+<p>As emphasized by <a href="/Daniel_Shawul">Daniel Shawul</a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>, the formulas for the number of <a href="/Leaf_Node">leaf nodes</a> of a certain Node type with uniform <a href="/Depth">depth</a> <strong>n</strong> and <a href="/Branching_Factor">branching factor</a> <strong>b</strong>, using <a href="https://en.wikipedia.org/wiki/Floor_and_ceiling_functions">floor and ceiling</a> of n/2 (cut the ceiling, all the floor) ...</p>
+<p><code>PV  = 1</code><br />
+<code>CUT = b</code><span style="vertical-align: super;"><code>⌈n/2⌉</code></span><code> - 1</code><br />
+<code>ALL = b</code><span style="vertical-align: super;"><code>⌊n/2⌋</code></span><code> - 1</code></p>
+<p>... are already the subexpressions ...</p>
+<p><code>L = PV + CUT + ALL </code></p>
+<p>... in <a href="/Michael_Levin">Levin's</a> famous formula demonstrating the <a href="/Odd-Even_Effect">odd-even effect</a> of <a href="/Alpha-Beta">alpha-beta</a></p>
+<p><code>L = b</code><span style="vertical-align: super;"><code>⌈n/2⌉</code></span><code> + b</code><span style="vertical-align: super;"><code>⌊n/2⌋</code></span><code> - 1</code></p>
+<p><span id="Table"></span></p>
+<h3 id="table">Table</h3>
+<p>Assuming a constant <a href="/Branching_Factor">branching factor</a> of 40, this results in following number of leaves:</p>
+<table>
+<thead>
+<tr>
+<th>depth</th>
+<th>worst case</th>
+<th>best case</th>
+<th>PV</th>
+<th>CUT</th>
+<th>ALL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>n</td>
+<td>b<span style="vertical-align: super;">n</span></td>
+<td>b<span style="vertical-align: super;">⌈n/2⌉</span> + b<span style="vertical-align: super;">⌊n/2⌋</span> - 1</td>
+<td>1</td>
+<td>b<span style="vertical-align: super;">⌈n/2⌉</span> - 1</td>
+<td>b<span style="vertical-align: super;">⌊n/2⌋</span> - 1</td>
+</tr>
+<tr>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>40</td>
+<td>40</td>
+<td>1</td>
+<td>39</td>
+<td>0</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1,600</td>
+<td>79</td>
+<td>1</td>
+<td>39</td>
+<td>39</td>
+</tr>
+<tr>
+<td>3</td>
+<td>64,000</td>
+<td>1,639</td>
+<td>1</td>
+<td>1,599</td>
+<td>39</td>
+</tr>
+<tr>
+<td>4</td>
+<td>2,560,000</td>
+<td>3,199</td>
+<td>1</td>
+<td>1,599</td>
+<td>1,599</td>
+</tr>
+<tr>
+<td>5</td>
+<td>102,400,000</td>
+<td>65,569</td>
+<td>1</td>
+<td>63,999</td>
+<td>1,599</td>
+</tr>
+<tr>
+<td>6</td>
+<td>4,096,000,000</td>
+<td>127,999</td>
+<td>1</td>
+<td>63,999</td>
+<td>63,999</td>
+</tr>
+<tr>
+<td>7</td>
+<td>163,840,000,000</td>
+<td>2,623,999</td>
+<td>1</td>
+<td>2,559,999</td>
+<td>63,999</td>
+</tr>
+<tr>
+<td>8</td>
+<td>6,553,600,000,000</td>
+<td>5,119,999</td>
+<td>1</td>
+<td>2,559,999</td>
+<td>2,559,999</td>
+</tr>
+</tbody>
+</table>
+<p><a href="/Template:Number_of_Leaves">number of leaves with depth n and b = 40</a></p>
+<h2 id="quotes">Quotes</h2>
+<p><a href="/Robert_Hyatt">Robert Hyatt</a> on the distinction between <a href="/Node_Types">ALL-</a> and <a href="/Node_Types">CUT-nodes</a> <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a>:</p>
+<p><code>In </code><a href="/Cray_Blitz"><code>CB</code></a><code>, I used this extensively, because you never want to split at a CUT node, and want to prefer an ALL node. </code><a href="/Young_Brothers_Wait_Concept"><code>YBW</code></a><code> tries to recognize an ALL node by requiring that at least one move be searched before splitting, since &gt; 90% of CUT nodes are discovered on the first move searched. But waiting on that first move introduces some wait time, and if you knew it was an ALL node from the get-go, you could split before the first move is completed. That was the basic premise behind the iterated search and </code><a href="/Dynamic_Tree_Splitting"><code>DTS algorithm</code></a><code> in Cray Blitz ... </code></p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Alpha-Beta">Alpha-Beta</a></li>
+<li><a href="/Stephen_F._Wheeler">Alpha-Beta Benchmark</a> by <a href="/Stephen_F._Wheeler">Stephen F. Wheeler</a></li>
+<li><a href="/Enhanced_Forward_Pruning">Enhanced Forward Pruning</a></li>
+<li><a href="/Internal_Iterative_Deepening">Internal Iterative Deepening</a></li>
+<li><a href="/Move_Ordering">Move Ordering</a></li>
+<li><a href="/Odd-Even_Effect">Odd-Even Effect</a></li>
+<li><a href="/Principal_Variation_Search">Principal Variation Search</a></li>
+<li><a href="/Young_Brothers_Wait_Concept">Young Brothers Wait Concept</a></li>
+</ul>
+<h2 id="selected-publications">Selected Publications</h2>
+<ul>
+<li><a href="/Donald_Knuth">Donald Knuth</a>, <a href="http://www.informatik.uni-trier.de/~ley/pers/hd/m/Moore:Ronald_W=">Ronald W. Moore</a> (<strong>1975</strong>). <em><a href="http://www.scribd.com/doc/28194932/An-Analysis-of-Alpha-Beta-Pruning">An analysis of alpha-beta pruning</a>.</em> <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 6, No. 4, pp 293–326. Reprinted in <a href="/Donald_Knuth">Donald Knuth</a> (<strong>2000</strong>). <em><a href="http://www-cs-faculty.stanford.edu/~uno/aa.html">Selected Papers on Analysis of Algorithms</a></em>. <a href="http://web.stanford.edu/group/cslipublications/cslipublications/site/CSIN.shtml">CSLI lecture notes series</a> 102, ISBN 1-57586-212-3</li>
+<li><a href="/Igor_Roizen">Igor Roizen</a> (<strong>1981</strong>). <em>On the Average Number of Terminal Nodes examined by Alpha-Beta</em>. Technical Report UCLA-ENG-CSL-8108, <a href="https://en.wikipedia.org/wiki/University_of_California,_Los_Angeles">University of California at Los Angeles</a>, Cognitive Systems Laboratory</li>
+<li><a href="/Judea_Pearl">Judea Pearl</a> (<strong>1982</strong>). <em>The Solution for the Branching Factor of the Alpha-Beta Pruning Algorithm and its Optimality</em>. <a href="/ACM">Communications of the ACM</a>, Vol. 25, No. 8, pp. 559-564</li>
+<li><a href="/Tony_Marsland">Tony Marsland</a>, <a href="/Fred_Popowich">Fred Popowich</a> (<strong>1985</strong>). <em>Parallel Game-Tree Search.</em> <a href="/IEEE">IEEE Transactions on Pattern Analysis and Machine Intelligence</a>, Vol. 7, No. 4, pp. 442-452. <a href="http://webdocs.cs.ualberta.ca/~tony/OldPapers/parallel.pdf">1984 pdf</a> (Draft)</li>
+<li><a href="/Mark_Winands">Mark Winands</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Erik_van_der_Werf">Erik van der Werf</a> (<strong>2003</strong>). <em>Enhanced forward pruning.</em> <a href="http://www.personeel.unimaas.nl/m-winands/documents/Enhanced%20forward%20pruning.pdf">pdf</a> » <a href="/Enhanced_Forward_Pruning">Enhanced Forward Pruning</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=285939">ALL node definition</a> by <a href="/Alvaro_Cardoso">Alvaro Cardoso</a>, <a href="/CCC">CCC</a>, February 21, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=354012">Fruit - Question for Fabien</a> by <a href="/Dan_Honeycutt">Dan Honeycutt</a>, <a href="/CCC">CCC</a>, March 11, 2004 » <a href="/Fruit">Fruit</a>, <a href="/Transposition_Table">Transposition Table</a>, <a href="/Principal_Variation">Principal Variation</a>, <a href="/Principal_Variation_Search">Principal Variation Search</a></li>
+</ul>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=354016">Re: Fruit - Question for Fabien</a> by <a href="/Fabien_Letouzey">Fabien Letouzey</a>, <a href="/CCC">CCC</a>, March 11, 2004</p>
+<ul>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=171&amp;start=143">Re: Attack table</a> by <a href="/Zach_Wegner">Zach Wegner</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, October 22, 2004 » <a href="/Attack_and_Defend_Maps">Attack and Defend Maps</a></li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?t=4384">Move ordering at different (Knuth) node types</a> by <a href="/Tom_Likens">Tom Likens</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, February 21, 2006 » <a href="/Move_Ordering">Move Ordering</a></li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=4710">PV based decisions</a> by <a href="/Mark_Lefler">Mark Lefler</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, April 27, 2006</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=6392">NMP on ALL nodes</a> by <a href="/Onno_Garms">Onno Garms</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, April 15, 2007 » <a href="/Null_Move_Pruning">Null Move Pruning</a></li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=6558">Slight enhancement to PVS</a> by <a href="/Pradu_Kannan">Pradu Kannan</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, June 10, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=24198">Nodes type clarification</a> by <a href="/Mathieu_Pagé">Mathieu Pagé</a>, <a href="/CCC">CCC</a>, October 05, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=27122">Different handling of ALL / CUT nodes</a> by <a href="/Gregory_Strong">Gregory Strong</a>, <a href="/CCC">CCC</a>, March 22, 2009</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38317">CUT" vs "ALL" nodes</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, March 7, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38408">On internal iterative deepening</a> by <a href="/Onno_Garms">Onno Garms</a>, <a href="/CCC">CCC</a>, March 13, 2011 » <a href="/Internal_Iterative_Deepening">Internal Iterative Deepening</a>, <a href="/Onno">Onno</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=43041">When does a cut-node became an all-node?</a> by <a href="/Alcides_Schulz">Alcides Schulz</a>, <a href="/CCC">CCC</a>, March 27, 2012</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=48137">Question about PVS and nodes type</a> by <a href="/Patrice_Duhamel">Patrice Duhamel</a>, <a href="/CCC">CCC</a>, May 28, 2013 » <a href="/Principal_Variation_Search">Principal Variation Search</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48205">CUT/ALL nodes ratio</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, June 06, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48356">LMR at CUT nodes can be arbitrarily bad!</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, <a href="/CCC">CCC</a>, June 20, 2013 » <a href="/Late_Move_Reductions">Late Move Reductions</a>, <a href="/Python">Python</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50907">Pruning in PV nodes</a> by <a href="/Sergei_Markoff">Sergei S. Markoff</a>, <a href="/CCC">CCC</a>, January 14, 2014 » <a href="/Reductions">Reductions</a>, <a href="/Root">Root</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51422">Node Types and Thoughts On Their Application</a> by Cheney Nattress, <a href="/CCC">CCC</a>, February 26, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53049">Null move pruning on PV nodes</a> by <a href="/Eric_Oldre">Eric Oldre</a>, <a href="/CCC">CCC</a>, July 22, 2014 » <a href="/Null_Move_Pruning">Null Move Pruning</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54761">LMP in PV nodes</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, December 27, 2014 » <a href="/Futility_Pruning">Move Count Based Pruning</a>, <a href="/Texel">Texel</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59682">Recognizing PV nodes</a> by <a href="/Martin_Fierz">Martin Fierz</a>, <a href="/CCC">CCC</a>, March 29, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62890">What is wrong with doing Nulls &amp; ttcuts in a pv node ?</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, January 21, 2017 » <a href="/Null_Move_Pruning">Null Move Pruning</a>, <a href="/Node_Types">PV-Nodes</a>, <a href="/Transposition_Table">Transposition Table</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65477">cut nodes</a> by <a href="/Folkert_van_Heusden">Folkert van Heusden</a>, <a href="/CCC">CCC</a>, October 18, 2017 » Cut-Nodes</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69510">Pruning at PV nodes?</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, January 06, 2019 » <a href="/Pruning">Pruning</a>, PV-Nodes</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="http://www.netlib.org/utk/lsi/pcwLSI/text/node351.html">Analysis of Alpha-Beta Pruning</a> from the <a href="http://www.netlib.org/utk/lsi/pcwLSI/text/BOOK.html">Parallel Computing Works</a> ebook</li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Node">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Donald_Knuth">Donald Knuth</a>, <a href="http://www.informatik.uni-trier.de/~ley/pers/hd/m/Moore:Ronald_W=">Ronald W. Moore</a> (<strong>1975</strong>). <em><a href="http://www.scribd.com/doc/28194932/An-Analysis-of-Alpha-Beta-Pruning">An analysis of alpha-beta pruning</a>.</em> <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 6, No. 4, pp 293–326. Reprinted in <a href="/Donald_Knuth">Donald Knuth</a> (<strong>2000</strong>). <em><a href="http://www-cs-faculty.stanford.edu/~uno/aa.html">Selected Papers on Analysis of Algorithms</a></em>. <a href="http://web.stanford.edu/group/cslipublications/cslipublications/site/CSIN.shtml">CSLI lecture notes series</a> 102, ISBN 1-57586-212-3<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Judea_Pearl">Judea Pearl</a> (<strong>1982</strong>). <em>The Solution for the Branching Factor of the Alpha-Beta Pruning Algorithm and its Optimality</em>. <a href="/ACM">Communications of the ACM</a>, Vol. 25, No. 8, pp. 559-564<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="/Mark_Winands">Mark Winands</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Erik_van_der_Werf">Erik van der Werf</a> (<strong>2003</strong>). <em>Enhanced forward pruning.</em> <a href="http://www.personeel.unimaas.nl/m-winands/documents/Enhanced%20forward%20pruning.pdf">pdf</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="/Tony_Marsland">Tony Marsland</a>, <a href="/Fred_Popowich">Fred Popowich</a> (<strong>1985</strong>). <em>Parallel Game-Tree Search.</em> <a href="/IEEE">IEEE Transactions on Pattern Analysis and Machine Intelligence</a>, Vol. 7, No. 4, pp. 442-452. <a href="http://webdocs.cs.ualberta.ca/~tony/OldPapers/parallel.pdf">1984 pdf</a> (Draft)<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=399511&amp;t=38408">Re: On internal iterative deeping</a> by <a href="/Onno_Garms">Onno Garms</a>, <a href="/CCC">CCC</a>, March 17, 2011<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=399059&amp;t=38408">Re: On internal iterative deeping</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, March 15, 2011<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=48205">CUT/ALL nodes ratio</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, June 06, 2013<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=398061&amp;t=38317">Re: "CUT" vs "ALL" nodes</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, March 08, 2011<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Hyatt_Quotes">Hyatt Quotes</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Node_Types">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, ShawnXu.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

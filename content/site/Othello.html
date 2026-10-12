@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Othello - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Othello</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Games">Games</a> * Othello</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/a/ae/Othello_%28Reversi%29_board.jpg" alt="Reversi/Othello 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Reversi/Othello <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://en.wikipedia.org/wiki/Reversi">Reversi from Wikipedia</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Othello</strong>,<br />
+or differing in not having a defined starting position, <strong>Reversi</strong>, is a <a href="https://en.wikipedia.org/wiki/Two-player_game">two-player</a> <a href="https://en.wikipedia.org/wiki/Zero-sum_%28game_theory%29">zero-sum</a> and <a href="https://en.wikipedia.org/wiki/Perfect_information">perfect information</a> <a href="https://en.wikipedia.org/wiki/Abstract_strategy">abstract strategy</a> <a href="https://en.wikipedia.org/wiki/Board_game">board game</a>, usually played on a board with 8 rows and 8 columns and a set of light and a dark turnable pieces for each side. The player's goal is to have a majority of their colored pieces showing at the end of the game, turning over as many of their opponent's pieces as possible. The dark player makes the first move from the starting position, alternating with the light player. Each player has to place a piece on the board such that there exists at least one straight (horizontal, vertical, or diagonal) occupied line of opponent pieces between the new piece and another own piece. After placing the piece, the side turns over (flips, captures) all opponent pieces lying on any straight lines between the new piece and any anchoring own pieces. |}</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#othello-programming">Othello Programming</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#search">Search</a></li>
+<li><a href="#evaluation">Evaluation</a></li>
+<li><a href="#bitboards">Bitboards</a></li>
+</ol>
+</details></li>
+<li><a href="#solving-othello">Solving Othello</a></li>
+<li><a href="#computer-olympiads">Computer Olympiads</a></li>
+<li><a href="#photos">Photos</a></li>
+<li><a href="#othello-programs">Othello Programs</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#publications">Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1979">1979</a></li>
+<li><a href="#1980-">1980 ...</a></li>
+<li><a href="#1985-">1985 ...</a></li>
+<li><a href="#1990-">1990 ...</a></li>
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="othello-programming">Othello Programming</h2>
+<p>Writing an Othello program <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> is an appealing and interesting challenge. Beside the dedicated Othello programmers <a href="/Gunnar_Andersson">Gunnar Andersson</a>, <a href="/Michael_Buro">Michael Buro</a>, <a href="/Mark_Brockington">Mark Brockington</a>, <a href="/Paul_Hsieh">Paul Hsieh</a>, and Andrea Zinno, to name a few, many chess programmers were and are busy in this domain as well. Already in 1981 <a href="/Dan_Spracklen">Dan</a> and <a href="/Kathe_Spracklen">Kathe Spracklen</a> wrote a commercial Reversi program, marketed as <em>Reversi Sensory Challenger</em> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> by <a href="/Fidelity_Electronics">Fidelity Electronics</a>. <a href="/Larry_Atkin">Larry Atkin</a> and <a href="/Peter_W._Frey">Peter W. Frey</a> wrote the commercial program <a href="/Peter_W._Frey">Odin</a> in the early 80s as well <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>. Other programmers to mention are <a href="/Aart_Bik">Aart Bik</a>, <a href="/Bruno_Bras">Bruno Bras</a>, <a href="/Dennis_Breuker">Dennis Breuker</a>, <a href="/Joost_Buijs">Joost Buijs</a>, <a href="/Jonathan_Kreuzer">Jonathan Kreuzer</a>, <a href="/Fabien_Letouzey">Fabien Letouzey</a>, <a href="/Steve_Maughan">Steve Maughan</a>, and <a href="/Jean-Christophe_Weill">Jean-Christophe Weill</a>.</p>
+<h3 id="search">Search</h3>
+<p>In Othello, similar to chess, <a href="/Search">search</a> implementations are dominated by <a href="/Alpha-Beta">alpha-beta</a> and variants so far. An alternative approach called MGSS and MGSS* was proposed by <a href="/Stuart_Russell">Stuart Russell</a> and <a href="/Eric_Wefald">Eric Wefald</a> in 1988 <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> and 1989 <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> respectively. In Othello, there is no concept of <a href="/Quiescence_Search">standing pat</a> or <a href="/Quiescence_Search">quiescence</a>, and <a href="/Null_Move_Pruning">null move pruning</a> does not work.</p>
+<ul>
+<li><a href="/Jean-Christophe_Weill">Jean-Christophe Weill</a> elaborated on <a href="/NegaC%252A">NegaC*</a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> and for <a href="/Parallel_Search">parallel search</a> on <a href="/ABDADA">ABDADA</a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>.</li>
+<li><a href="/Michael_Buro">Michael Buro</a> successfully implemented his <a href="/ProbCut">ProbCut</a> and <a href="/ProbCut">Multi-ProbCut</a> (MPC) as <a href="/Selectivity">selective</a> extension <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> inside his successful Othello program <em>Logistello</em> <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a>, already described in his Ph.D. thesis <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a>.</li>
+<li>The <em>Asycnhronous Parallel Hierarchical Iterative Deepening</em> algorithm, <a href="/APHID">APHID</a> by <a href="/Mark_Brockington">Mark Brockington</a> was applied to Othello as well <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a> <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a> <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a> <a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a>.</li>
+<li>In 2011, <a href="/Jean_Méhat">Jean Méhat</a> and <a href="/Tristan_Cazenave">Tristan Cazenave</a> implemented <a href="/Monte-Carlo_Tree_Search">Monte-Carlo Tree Search</a> in parallel <a href="/General_Game_Playing">General Game Playing</a>, also covering Othello with promising results <a href="#fn15" class="footnote-ref" id="fnref15" role="doc-noteref"><sup>15</sup></a>.</li>
+</ul>
+<h3 id="evaluation">Evaluation</h3>
+<p>Despite <a href="/Material">material</a> as decisive feature in Othello, it is also a volatile one and difficult to <a href="/Evaluation">evaluate</a>. Othello programmers often use <a href="/Piece-Square_Tables">piece-square tables</a>, <a href="/Mobility">mobility</a> and take <a href="https://en.wikipedia.org/wiki/Computer_Othello#Evaluation_Techniques">various other features</a>, pattern, and heuristics into account, considering <a href="https://en.wikipedia.org/wiki/Reversi#Strategic_elements">strategic elements</a> like the importance of the edge squares. Paul Rosenbloom's program Iago of the early 80s used edge stability, internal stability <a href="#fn16" class="footnote-ref" id="fnref16" role="doc-noteref"><sup>16</sup></a>, current <a href="/Mobility">mobility</a> and potential mobility, weighted by coefficients as suggested by <a href="/Hans_Berliner">Hans Berliner</a> <a href="#fn17" class="footnote-ref" id="fnref17" role="doc-noteref"><sup>17</sup></a> <a href="#fn18" class="footnote-ref" id="fnref18" role="doc-noteref"><sup>18</sup></a>. In conjunction with <a href="https://en.wikipedia.org/wiki/Probability">probability</a> based <a href="/Pruning">pruning</a> aka <a href="/ProbCut">ProbCut</a>, <a href="/Michael_Buro">Michael Buro</a> elaborately addresses the evaluation function <a href="#fn19" class="footnote-ref" id="fnref19" role="doc-noteref"><sup>19</sup></a> <a href="#fn20" class="footnote-ref" id="fnref20" role="doc-noteref"><sup>20</sup></a> <a href="#fn21" class="footnote-ref" id="fnref21" role="doc-noteref"><sup>21</sup></a>. Further, <a href="/Yasuhiro_Osaki">Yasuhiro Osaki</a>, <a href="/Kazutomo_Shibahara">Kazutomo Shibahara</a>, <a href="/Yasuhiro_Tajima">Yasuhiro Tajima</a>, and <a href="/Yoshiyuki_Kotani">Yoshiyuki Kotani</a> applied <a href="/Temporal_Difference_Learning">Temporal Difference Learning</a> to an Othello evaluation function <a href="#fn22" class="footnote-ref" id="fnref22" role="doc-noteref"><sup>22</sup></a>.</p>
+<h3 id="bitboards">Bitboards</h3>
+<p>Othello is very <a href="/Bitboards">bitboard</a> friendly. It seems that <a href="/Dumb7Fill">Dumb7Fill</a> or <a href="/Kogge-Stone_Algorithm">Kogge-Stone</a> <a href="/Fill_Algorithms">Fill Algorithms</a> are suitable to <a href="/Move_Generation">generate moves</a>. Generator sets are the own pieces, propagator sets the opponent ones. The fill result, after a final <a href="/General_Setwise_Operations">direction shift</a> similar as fill based <a href="/Sliding_Piece_Attacks">sliding piece attacks</a> in chess, needs an <a href="/General_Setwise_Operations">intersection</a> with <a href="/Occupancy">empty squares</a> to determine the target squares per <a href="/Direction">direction</a>. Beside the target square coordinate, <a href="/Encoding_Moves">move encoding</a> may incorporate a direction set (one <a href="/Byte">Byte</a> with one distinct bit per direction) for all eight directions with anchor squares, and possibly the number of pieces to flip, may be even as set for more reliable <a href="/Move_Ordering">move ordering</a> and faster <a href="/Make_Move">make move</a>. An <a href="/MMX">MMX</a> implementation of Dumb7Fill in <a href="/Assembly">inline assembly</a> by <a href="/Gunnar_Andersson">Gunnar Andersson</a> <a href="#fn23" class="footnote-ref" id="fnref23" role="doc-noteref"><sup>23</sup></a> demonstrates determining mobility, while the implementation by co-author Toshihiko Okuhara in their program Zebra <a href="#fn24" class="footnote-ref" id="fnref24" role="doc-noteref"><sup>24</sup></a> looks <a href="/Parallel_Prefix_Algorithms">parallel prefixed</a> <a href="#fn25" class="footnote-ref" id="fnref25" role="doc-noteref"><sup>25</sup></a>.</p>
+<h2 id="solving-othello">Solving Othello</h2>
+<p>Othello on 4×4 <a href="#fn26" class="footnote-ref" id="fnref26" role="doc-noteref"><sup>26</sup></a> and 6×6 board <a href="#fn27" class="footnote-ref" id="fnref27" role="doc-noteref"><sup>27</sup></a> are <a href="https://en.wikipedia.org/wiki/Computer_Othello#Solving_Othello">strongly solved</a> and proved as a second player (white) to win. For 8x8 boards, <a href="/Victor_Allis">Victor Allis</a> estimated the number of legal positions in Othello is at most 10<span style="vertical-align: super; font-size: 80%;">28</span>, and it has a game-tree complexity of approximately 10<span style="vertical-align: super; font-size: 80%;">58</span> <a href="#fn28" class="footnote-ref" id="fnref28" role="doc-noteref"><sup>28</sup></a>. While still mathematically unsolved, there is strong suspicion that perfect play on both sides results in a draw <a href="#fn29" class="footnote-ref" id="fnref29" role="doc-noteref"><sup>29</sup></a> <a href="#fn30" class="footnote-ref" id="fnref30" role="doc-noteref"><sup>30</sup></a>.</p>
+<h2 id="computer-olympiads"><a href="/Computer_Olympiad">Computer Olympiads</a></h2>
+<ul>
+<li><a href="/1st_Computer_Olympiad">1st Computer Olympiad, London 1989</a></li>
+<li><a href="/2nd_Computer_Olympiad">2nd Computer Olympiad, London 1990</a></li>
+<li><a href="/3rd_Computer_Olympiad">3rd Computer Olympiad, Maastricht 1991</a></li>
+<li><a href="/4th_Computer_Olympiad">4th Computer Olympiad, London 1992</a></li>
+<li><a href="/20th_Computer_Olympiad">20th Computer Olympiad, Leiden 2017</a></li>
+</ul>
+<h2 id="photos">Photos</h2>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><a href="http://icga.org/?page_id=2137" target="_blank" rel="noopener noreferrer"><img src="/assets/Olympiad2017Othello10x10.jpg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></a></span> <a href="/20th_Computer_Olympiad">20th Computer Olympiad, Leiden 2017</a>, Othello 10x10 winners, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a> (Mothello10, Bronze),<br />
+<a href="/Fabien_Letouzey">Fabien Letouzey</a> with <a href="/WCCC_2005">WCCC 2005</a> shirt (Decapus, Gold) and Andrew Lin (Deep Nikita, Silver) <a href="#fn31" class="footnote-ref" id="fnref31" role="doc-noteref"><sup>31</sup></a></p>
+<h2 id="othello-programs">Othello Programs</h2>
+<ul>
+<li><a href="/Sanjoy_Mahajan">Bill</a> by <a href="/Kai-Fu_Lee">Kai-Fu Lee</a> and <a href="/Sanjoy_Mahajan">Sanjoy Mahajan</a></li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/ABDADA">ABDADA</a></li>
+<li><a href="/APHID">APHID</a></li>
+<li><a href="/Monte-Carlo_Tree_Search">Monte-Carlo Tree Search</a></li>
+<li><a href="/ProbCut">ProbCut</a></li>
+<li><a href="/David_E._Moriarty">SANE</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<h3 id="1979">1979</h3>
+<ul>
+<li>Peter B. Maggs (<strong>1979</strong>). <em><a href="https://archive.org/stream/byte-magazine-1979-11/1979_11_BYTE_04-11_Fun_and_Games#page/n67/mode/2up">Programming Strategies in the Game of Reversi</a></em>. <a href="/Byte_Magazine">BYTE, Vol. 4, No. 11</a>, pp. 66-79</li>
+</ul>
+<h3 id="1980-">1980 ...</h3>
+<ul>
+<li>Ed Wright (<strong>1980</strong>). <em><a href="http://www.atariarchives.org/bcc3/showpage.php?page=258">Othello</a></em>. <a href="/Creative_Computing">The Best of Creative Computing Volume 3</a></li>
+<li>Editor (<strong>1980</strong>). <em>Background and Origins of Othello</em>. <a href="/Personal_Computing">Personal Computing, Vol. 4, No. 7</a>, pp. 87</li>
+<li><a href="/Peter_W._Frey">Peter W. Frey</a> (<strong>1980</strong>). <em>Machine Othello</em>. <a href="/Personal_Computing">Personal Computing, Vol. 4, No. 7</a>, pp. 89</li>
+<li>Paul S. Rosenbloom (<strong>1981</strong>). <em>A world-championship-level Othello program</em>. Technical report, <a href="/Carnegie_Mellon_University">Carnegie Mellon University</a>, <a href="https://pdfs.semanticscholar.org/4033/a5b1d46beec14600427e391ce600159c0f61.pdf">pdf</a></li>
+<li>Alan S. Wolff, <a href="/Donald_H._Mitchell">Donald H. Mitchell</a>, <a href="/Peter_W._Frey">Peter W. Frey</a> (<strong>1984</strong>). <em><a href="https://www.tandfonline.com/doi/abs/10.1080/00223980.1984.9712586">Perceptual Skill in the Game of Othello</a></em>. <a href="https://en.wikipedia.org/wiki/The_Journal_of_Psychology">The Journal of Psychology</a>, Vol. 118, No. 1</li>
+<li><a href="/Donald_H._Mitchell">Donald H. Mitchell</a> (<strong>1984</strong>). <em>Using Features to Evaluate Positions in Experts' and Novices' Othello Games</em>. Master thesis, Department of Psychology, <a href="/Northwestern_University">Northwestern University</a>, Evanston, IL</li>
+</ul>
+<h3 id="1985-">1985 ...</h3>
+<ul>
+<li><a href="/Kai-Fu_Lee">Kai-Fu Lee</a>, <a href="/Sanjoy_Mahajan">Sanjoy Mahajan</a> (<strong>1986</strong>). <em><a href="https://kilthub.cmu.edu/articles/BILL_a_table-based_knowledge-intensive_othello_program/6603887/1">BILL: a table-based, knowledge-intensive othello program</a></em>. Technial Report CMU-CS-86-141, <a href="/Carnegie_Mellon_University">Carnegie Mellon University</a>, <a href="https://pdfs.semanticscholar.org/f7ab/15736ecc79452aa4546cf8d7f5aa94d6afa0.pdf">pdf</a></li>
+<li><a href="/Kai-Fu_Lee">Kai-Fu Lee</a> (<strong>1986</strong>). <em><a href="https://kilthub.cmu.edu/articles/A_pattern_classification_approach_to_evaluation_function_learning/6591158">A pattern classification approach to evaluation function learning</a></em>. Technial Report CMU-CS-86-173, <a href="/Carnegie_Mellon_University">Carnegie Mellon University</a></li>
+<li><a href="/Kai-Fu_Lee">Kai-Fu Lee</a>, <a href="/Sanjoy_Mahajan">Sanjoy Mahajan</a> (<strong>1988</strong>). <em><a href="https://www.sciencedirect.com/science/article/abs/pii/0004370288900768">A Pattern Classification Approach to Evaluation Function Learning</a></em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 36, No. 1</li>
+<li><a href="/Stuart_Russell">Stuart Russell</a>, <a href="/Eric_Wefald">Eric Wefald</a> (<strong>1988</strong>). <em>Decision-Theoretic Search Control: General Theory and an Application to Game-Playing.</em> Computer Science Division Technical Report 88/435, University of California, Berkeley, CA.</li>
+<li><a href="/Mathematician">Kenneth A. De Jong</a>, <a href="/Mathematician">Alan C. Schultz</a> (<strong>1988</strong>). <em>Using Experience-Based Learning in Game Playing</em>. Proceedings of the Fifth International Machine Learning Conference, <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.52.5381">CiteSeerX</a> » <a href="/Learning">Learning</a></li>
+<li><a href="/Stuart_Russell">Stuart Russell</a>, <a href="/Eric_Wefald">Eric Wefald</a> (<strong>1989</strong>). <em><a href="http://portal.acm.org/citation.cfm?id=1623807">On optimal game-tree search using rational metareasoning</a>.</em> In Proceedings of the Eleventh International Joint Conference on Artificial Intelligence, Detroit, MI: Morgan Kaufmann, <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.79.9229&amp;rep=rep1&amp;type=pdf">pdf</a></li>
+<li>Clarence Hewlett (<strong>1989</strong>). <em>Hardware Help on an Othello Endgame Analyzer</em>. <a href="/1st_Computer_Olympiad">Heuristic Programming in AI 1</a></li>
+<li><a href="/Anders_Kierulf">Anders Kierulf</a> (<strong>1989</strong>). <em>New Concepts in Computer Othello: Corner Value, Edge Advoidance, Access, and Parity</em>. <a href="/1st_Computer_Olympiad">Heuristic Programming in AI 1</a></li>
+<li>Greg M. Gupton (<strong>1989</strong>). <em>Genetic Learning Algorithm Applied to the Game of Othello</em>. <a href="/1st_Computer_Olympiad">Heuristic Programming in AI 1</a></li>
+</ul>
+<h3 id="1990-">1990 ...</h3>
+<ul>
+<li><a href="/Kai-Fu_Lee">Kai-Fu Lee</a>, <a href="/Sanjoy_Mahajan">Sanjoy Mahajan</a> (<strong>1990</strong>). <em><a href="https://www.sciencedirect.com/science/article/abs/pii/000437029090068B">The Development of a World Class Othello Program</a></em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 43, No. 1</li>
+<li><a href="/Jean-Christophe_Weill">Jean-Christophe Weill</a> (<strong>1991</strong>). <em>Experiments With the NegaC* Search - An Alternative for Othello Endgame Search.</em> <a href="/2nd_Computer_Olympiad">Heuristic Programming in AI 2</a></li>
+<li><a href="/Richard_Korf">Richard Korf</a> and <a href="/Max_Chickering">Max Chickering</a> (<strong>1994</strong>). <em><a href="http://www.aaai.org/Library/AAAI/1994/aaai94-210.php">Best-first minimax search: Othello results</a>.</em> Proceedings of the 13th National Conference on Artificial Intelligence (AAAI-94), pp. 1365-1370. AAAI Press, Menlo Park, CA.</li>
+<li><a href="/Victor_Allis">Victor Allis</a> (<strong>1994</strong>). <em>Searching for Solutions in Games and Artificial Intelligence</em>. Ph.D. Thesis, <a href="/Maastricht_University">University of Limburg</a>, <a href="http://fragrieu.free.fr/SearchingForSolutions.pdf">pdf</a></li>
+<li><a href="/David_E._Moriarty">David E. Moriarty</a>, <a href="/Risto_Miikkulainen">Risto Miikkulainen</a> (<strong>1994</strong>). <em><a href="http://nn.cs.utexas.edu/?moriarty:aaai94">Evolving Neural Networks to focus Minimax Search</a></em>. <a href="/Conferences">AAAI-94</a></li>
+</ul>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li><a href="/David_E._Moriarty">David E. Moriarty</a>, <a href="/Risto_Miikkulainen">Risto Miikkulainen</a> (<strong>1995</strong>). <em><a href="http://nn.cs.utexas.edu/?moriarty:connsci95">Discovering Complex Othello Strategies Through Evolutionary Neural Networks</a></em>. <a href="https://www.scimagojr.com/journalsearch.php?q=24173&amp;tip=sid">Connection Science</a>, Vol. 7</li>
+<li>Anton Leouski (<strong>1995</strong>). <em>Learning of Position Evaluation in the Game of Othello</em>. Master's Project, <a href="https://en.wikipedia.org/wiki/University_of_Massachusetts">University of Massachusetts</a>, <a href="https://en.wikipedia.org/wiki/Amherst,_Massachusetts">Amherst, Massachusetts</a>, <a href="http://people.ict.usc.edu/~leuski/publications/papers/UM-CS-1995-023.pdf">pdf</a></li>
+<li><a href="/Michael_Buro">Michael Buro</a> (<strong>1995</strong>). <em><a href="http://www.jair.org/papers/paper179.html">Statistical Feature Combination for the Evaluation of Game Positions</a></em>. <a href="https://en.wikipedia.org/wiki/Journal_of_Artificial_Intelligence_Research">JAIR</a>, Vol. 3</li>
+<li><a href="/Michael_Buro">Michael Buro</a> (<strong>1995</strong>). <em>ProbCut: An Effective Selective Extension of the Alpha-Beta Algorithm.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 18, No. 2</a>, pp. 71-76, <a href="http://www.cs.ualberta.ca/%7Emburo/ps/probcut.pdf">pdf</a></li>
+<li><a href="/Jean-Marc_Alliot">Jean-Marc Alliot</a>, <a href="/Mathematician">Nicolas Durand</a> (<strong>1995</strong>). <em><a href="https://hal-enac.archives-ouvertes.fr/hal-00937682">A Genetic Algorithm to Improve an Othello Program</a></em>. <a href="https://link.springer.com/book/10.1007/3-540-61108-8">Artificial Evolution</a>, <a href="https://en.wikipedia.org/wiki/Lecture_Notes_in_Computer_Science">LNCS</a> 1063, <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a></li>
+<li>David Currie (<strong>1996</strong>). <em>Othello Game Player</em>. <a href="https://en.wikipedia.org/wiki/St_John%27s_College,_Oxford">St. John's College</a>, <a href="http://david.currie.name/wp-content/othello.pdf">pdf</a></li>
+<li><a href="/Jean-Christophe_Weill">Jean-Christophe Weill</a> (<strong>1996</strong>). <em><a href="http://portal.acm.org/citation.cfm?id=228345">The ABDADA Distributed Minimax Search Algorithm</a></em>. Proceedings of the 1996 ACM Computer Science Conference, pp. 131-138. ACM, New York, N.Y, reprinted <a href="/ICGA_Journal">ICCA Journal, Vol. 19, No. 1</a>, <a href="http://www.recherche.enac.fr/%7Eweill/publications/acm.ps.gz">zipped ps</a></li>
+<li><a href="/Michael_Buro">Michael Buro</a> (<strong>1997</strong>). <em>An Evaluation Function for Othello Based on Statistics.</em> NEC Research Institute. Technical Report #31.</li>
+<li><a href="/Mark_Brockington">Mark Brockington</a> (<strong>1997</strong>). <em>KEYANO Unplugged - The Construction of an Othello Program</em>. Technical Report TR-97-05, Department of Computing Science, <a href="/University_of_Alberta">University of Alberta</a>, <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.49.2672">CiteSeerX</a></li>
+<li><a href="/Michael_Buro">Michael Buro</a> (<strong>1997</strong>). <em>Experiments with Multi-ProbCut and a New High-quality Evaluation Function for Othello.</em> Technical Report No. 96, NEC Research Institute, Princeton, N.J. <a href="http://skatgame.net/mburo/ps/improve.pdf">pdf</a></li>
+<li><a href="/Michael_Buro">Michael Buro</a> (<strong>1997</strong>). <em>The Othello match of the year: Takeshi Murakami vs Logistello</em>. <a href="/ICGA_Journal">ICCA Journal, Vol 20, No. 3</a>, <a href="http://skatgame.net/mburo/ps/match-report.ps.gz">zipped ps</a></li>
+<li><a href="/Craig_S._Bruce">Craig S. Bruce</a> (<strong>1998</strong>). <em><a href="http://uwspace.uwaterloo.ca/handle/10012/300">Performance Optimization for Distributed-Shared-Data Systems</a></em>. Ph.D. thesis, <a href="/University_of_Waterloo">University of Waterloo</a>, 6.6. Game-Tree Searching: Othello, pp. 188</li>
+<li><a href="/Ayumu_Nagai">Ayumu Nagai</a>, <a href="/Hiroshi_Imai">Hiroshi Imai</a> (<strong>1999</strong>). <em>Application of df-pn+ to Othello endgames</em>. <a href="/Conferences">5th Game Programming Workshop</a> » <a href="/Proof-Number_Search">Proof-Number Search</a></li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="/Michael_Buro">Michael Buro</a> (<strong>2000</strong>). <em>Experiments with Multi-ProbCut and a new High-Quality Evaluation Function for Othello.</em> Games in AI Research (eds. <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> and <a href="/Hiroyuki_Iida">Hiroyuki Iida</a>), pp. 77-96. <a href="/Maastricht_University">Universiteit Maastricht</a>, Maastricht, The Netherlands. ISBN 90-621-6416-1.</li>
+<li><a href="/Makoto_Sakuta">Makoto Sakuta</a>, <a href="/Hiroyuki_Iida">Hiroyuki Iida</a> (<strong>2001</strong>). <em>The Performance of PN*, PDS, and PN Search on 6x6 Othello and Tsume-Shogi</em>. <a href="/Advances_in_Computer_Games_9">Advances in Computer Games 9</a> » <a href="/Proof-Number_Search">Proof-Number Search</a></li>
+<li><a href="/Michael_Buro">Michael Buro</a> (<strong>2002</strong>). <em>Report on the IWEC-2002 Man-Machine Othello Match</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 25, No. 2</a>, <a href="https://skatgame.net/mburo/ps/iwec-match.pdf">pdf</a></li>
+<li>Konstantinos Tournavitis (<strong>2002</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-40031-8_2">MOUSE(μ): A Self-teaching Algorithm that Achieved Master-Strength at Othello</a></em>. <a href="/CG_2002">CG 2002</a></li>
+<li><a href="/Michael_Buro">Michael Buro</a> (<strong>2003</strong>). <em>The Evolution of Strong Othello Programs</em>. <a href="/IFIP">IFIP</a>, Vol. 112, <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a></li>
+<li>C.K. Wong, K.K. Lo and P.H.W. Leong (<strong>2004</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/freeabs_all.jsp?arnumber=1393254">An FPGA-based Othello Endgame Solver</a></em>. <a href="https://en.wikipedia.org/wiki/Chinese_University_of_Hong_Kong">The Chinese University of Hong Kong</a>, <a href="http://www.cse.cuhk.edu.hk/~phwl/mt/public/archives/papers/othello_fpt04.pdf">pdf</a></li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="/Simon_Lucas">Simon Lucas</a>, <a href="/Thomas_Philip_Runarsson">Thomas Philip Runarsson</a> (<strong>2006</strong>). <em><a href="https://scholar.google.is/citations?view_op=view_citation&amp;hl=en&amp;user=4eWdc_sAAAAJ&amp;citation_for_view=4eWdc_sAAAAJ:qjMakFHDy7sC">Temporal Difference Learning versus Co-Evolution for Acquiring Othello Position Evaluation</a></em>. <a href="/IEEE">IEEE CIG 2006</a></li>
+<li><a href="/Simon_Lucas">Simon Lucas</a> (<strong>2007</strong>). <em><a href="https://scholar.google.com/citations?view_op=view_citation&amp;hl=de&amp;user=Jz8DDVAAAAAJ&amp;cstart=20&amp;citation_for_view=Jz8DDVAAAAAJ:QIV2ME_5wuYC">Learning to play Othello with N-tuple systems</a></em>. <a href="https://www.chatbots.org/journal/australian_journal_of_intelligent_information_processing_systems/">Australian Journal of Intelligent Information Processing Systems</a>, Special Issue on Game Technology, Vol. 9, No. 4</li>
+<li>Edward P. Manning (<strong>2007</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=4219046">Temporal Difference Learning of an Othello Evaluation Function for a Small Neural Network with Shared Weights</a></em>. <a href="/IEEE">IEEE CIG 2007</a></li>
+<li><a href="/Thomas_Philip_Runarsson">Thomas Philip Runarsson</a>, <a href="https://dblp.uni-trier.de/pers/hd/j/Jonsson:Egill_Orn">Egill Orn Jonsson</a> (<strong>2007</strong>). <em>Effect of look-ahead search depth in learning position evaluation functions for Othello using -greedy exploration</em>. <a href="/IEEE">IEEE CIG 2007</a></li>
+<li>Pim Nijssen (<strong>2007</strong>). <em>Playing Othello Using Monte Carlo</em>. Bachelor's Thesis, <a href="/Maastricht_University">Maastricht University</a>, <a href="http://www.personeel.unimaas.nl/pim.nijssen/pub/bsc.pdf">pdf</a></li>
+<li><a href="/Yasuhiro_Osaki">Yasuhiro Osaki</a>, <a href="/Kazutomo_Shibahara">Kazutomo Shibahara</a>, <a href="/Yasuhiro_Tajima">Yasuhiro Tajima</a>, <a href="/Yoshiyuki_Kotani">Yoshiyuki Kotani</a> (<strong>2008</strong>). <em>An Othello Evaluation Function Based on Temporal Difference Learning using Probability of Winning</em>. <a href="http://www.csse.uwa.edu.au/cig08/Proceedings/toc.html">CIG'08</a>, <a href="http://www.csse.uwa.edu.au/cig08/Proceedings/papers/8010.pdf">pdf</a></li>
+<li>Toru Ueda, <a href="/Tsuyoshi_Hashimoto">Tsuyoshi Hashimoto</a>, <a href="/Junichi_Hashimoto">Junichi Hashimoto</a>, <a href="/Hiroyuki_Iida">Hiroyuki Iida</a> (<strong>2008</strong>). <em><a href="http://www.springerlink.com/content/v47864x734410148/">Weak Proof-Number Search</a></em>. <a href="/CG_2008">CG 2008</a> » <a href="/Proof-Number_Search">Proof-Number Search</a></li>
+<li><a href="/Marcin_Szubert">Marcin Szubert</a>, <a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a> (<strong>2009</strong>). <em>Coevolutionary Temporal Difference Learning for Othello</em>. <a href="/IEEE">IEEE Symposium on Computational Intelligence and Games</a>, <a href="http://www.cs.put.poznan.pl/wjaskowski/pub/papers/szubert09coevolutionary.pdf">pdf</a></li>
+<li><a href="/Marcin_Szubert">Marcin Szubert</a> (<strong>2009</strong>). <em>Coevolutionary Reinforcement Learning and its Application to Othello</em>. M.Sc. thesis, <a href="https://en.wikipedia.org/wiki/Pozna%C5%84_University_of_Technology">Poznań University of Technology</a>, supervisor <a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a>, <a href="https://mszubert.github.io/papers/Szubert_2009_MSC.pdf">pdf</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li>Edward P. Manning (<strong>2010</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=5409565">Using Resource-Limited Nash Memory to Improve an Othello Evaluation Function</a></em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 2, No. 1</li>
+<li>Edward P. Manning (<strong>2010</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=1830667">Coevolution in a Large Search Space using Resource-limited Nash Memory</a></em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/gecco/gecco2010.html#Manning10">GECCO '10</a></li>
+</ul>
+<p><strong>2011</strong></p>
+<ul>
+<li><a href="/Jean_Méhat">Jean Méhat</a>, <a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2011</strong>). <em>A Parallel General Game Player</em>. <a href="http://www.kuenstliche-intelligenz.de/">KI Journal</a>, Vol. 25, No. 1, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/rootparallelggp.pdf">pdf</a></li>
+<li><a href="/Marcin_Szubert">Marcin Szubert</a>, <a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a> (<strong>2011</strong>). <em>Learning Board Evaluation Function for Othello by Hybridizing Coevolution with Temporal Difference Learning</em>. <a href="http://control.ibspan.waw.pl:3000/mainpage">Control and Cybernetics</a>, Vol. 40, No. 3, <a href="http://www.cs.put.poznan.pl/wjaskowski/pub/papers/szubert2011learning.pdf">pdf</a></li>
+<li><a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a>, <a href="/Marcin_Szubert">Marcin Szubert</a> (<strong>2011</strong>). <em>Learning N-Tuple Networks for Othello by Coevolutionary Gradient Search</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/gecco/gecco2011.html#KrawiecS11">GECCO 2011</a>, <a href="http://www.cs.put.poznan.pl/mszubert/pub/krawiec2011gecco.pdf">pdf</a></li>
+<li>Damjan Strnad, Nikola Guid (<strong>2011</strong>). <em><a href="http://cit.fer.hr/index.php/CIT/article/view/2029">Parallel Alpha-Beta Algorithm on the GPU</a></em>. <a href="http://cit.fer.hr/index.php/CIT">CIT. Journal of Computing and Information Technology</a>, Vol. 19, No. 4 » <a href="/GPU">GPU</a>, <a href="/Parallel_Search">Parallel Search</a></li>
+</ul>
+<p><strong>2012</strong></p>
+<ul>
+<li><a href="/Paweł_Liskowski">Paweł Liskowski</a> (<strong>2012</strong>). <em>Co-Evolution versus Evolution with Random Sampling for Acquiring Othello Position Evaluation</em>. master's thesis, <a href="https://en.wikipedia.org/wiki/Pozna%C5%84_University_of_Technology">Poznań University of Technology</a>, supervisor <a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="http://www.cs.put.poznan.pl/wjaskowski/pub/var/pliskowski_msc.pdf">pdf</a></li>
+<li><a href="http://dblp.uni-trier.de/pers/hd/d/Dries:Sjoerd_van_den">Sjoerd van den Dries</a>, <a href="/Marco_Wiering">Marco Wiering</a> (<strong>2012</strong>). <em><a href="https://scholar.google.com/citations?view_op=view_citation&amp;hl=en&amp;user=xVas0I8AAAAJ&amp;cstart=40&amp;citation_for_view=xVas0I8AAAAJ:P5F9QuxV20EC">Neural-fitted TD-leaf learning for playing Othello with structured neural networks</a></em>. <a href="/IEEE">IEEE Transactions on Neural Networks and Learning Systems</a>, Vol. 23, No. 11</li>
+</ul>
+<p><strong>2013</strong></p>
+<ul>
+<li><a href="http://dblp.uni-trier.de/pers/hd/r/Ree:M=_van_der">Michiel van der Ree</a>, <a href="/Marco_Wiering">Marco Wiering</a> (<strong>2013</strong>). <em><a href="https://scholar.google.com/citations?view_op=view_citation&amp;hl=en&amp;user=xVas0I8AAAAJ&amp;cstart=60&amp;pagesize=80&amp;citation_for_view=xVas0I8AAAAJ:K3LRdlH-MEoC">Reinforcement Learning in the Game of Othello: Learning Against a Fixed Opponent and Learning from Self-Play</a></em>. <a href="http://dblp.uni-trier.de/db/conf/adprl/adprl2013.html#ReeW13">ADPRL 2013</a></li>
+<li><a href="/Marcin_Szubert">Marcin Szubert</a>, <a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a> (<strong>2013</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=6504736">On Scalability, Generalization, and Hybridization of Coevolutionary Learning: a Case Study for Othello</a></em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 5, No. 3</li>
+<li><a href="/Marcin_Szubert">Marcin Szubert</a>, <a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Paweł_Liskowski">Paweł Liskowski</a>, <a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a> (<strong>2013</strong>). <em>Shaping Fitness Function for Evolutionary Learning of Game Strategies</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/gecco/gecco2013.html#SzubertJLK13">GECCO 2013</a>, <a href="http://www.cs.put.poznan.pl/wjaskowski/pub/papers/szubert2013shaping.pdf">pdf</a></li>
+<li><a href="/Paweł_Liskowski">Paweł Liskowski</a> (<strong>2013</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=2482752">Quantitative Analysis of the Hall of Fame Coevolutionary Archives</a></em>. <a href="http://www.sigevo.org/gecco-2013/">GECCO '13</a> Companion Proceedings</li>
+<li><a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Paweł_Liskowski">Paweł Liskowski</a>, <a href="/Marcin_Szubert">Marcin Szubert</a>, <a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a> (<strong>2013</strong>). <em>Improving Coevolution by Random Sampling</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/gecco/gecco2013.html#JaskowskiLSK13">GECCO 2013</a>, <a href="http://www.cs.put.poznan.pl/mszubert/pub/jaskowski2013gecco.pdf">pdf</a></li>
+</ul>
+<p><strong>2014</strong></p>
+<ul>
+<li><a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Marcin_Szubert">Marcin Szubert</a>, <a href="/Paweł_Liskowski">Paweł Liskowski</a> (<strong>2014</strong>). <em>Multi-Criteria Comparison of Coevolution and Temporal Difference Learning on Othello</em>. <a href="http://www.evostar.org/2014/">EvoApplications 2014</a>, <a href="http://www.springer.com/computer/theoretical+computer+science/book/978-3-662-45522-7">Springer, volume 8602</a></li>
+<li><a href="/Shi-Jim_Yen">Shi-Jim Yen</a>, Tsan-Cheng Su, <a href="/Jr-Chang_Chen">Jr-Chang Chen</a>, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a> (<strong>2014</strong>). <em>Solving 6x6 Othello on Volunteer Computing System</em>. <a href="/Conferences">GPW-2014</a></li>
+<li><a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a> (<strong>2014</strong>). <em>Systematic n-Tuple Networks for Othello Position Evaluation</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 37, No. 2</a></li>
+<li><a href="/Thomas_Philip_Runarsson">Thomas Philip Runarsson</a>, <a href="/Simon_Lucas">Simon Lucas</a> (<strong>2014</strong>). <em>Preference Learning for Move Prediction and Evaluation Function Approximation in Othello</em>. <a href="/IEEE">IEEE CIG 2014</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li>Mohd Nor Akmal Khalid, E. Mei Ang, Umi Kalsom Yusof, <a href="/Hiroyuki_Iida">Hiroyuki Iida</a>, Taichi Ishitobi (<strong>2015</strong>). <em><a href="http://link.springer.com/chapter/10.1007%2F978-3-319-27947-3_6">Identifying Critical Positions Based on Conspiracy Numbers</a></em>. <a href="http://link.springer.com/book/10.1007/978-3-319-27947-3">Agents and Artificial Intelligence</a>, <a href="http://dblp.uni-trier.de/db/conf/icaart/icaart2015s.html#KhalidAYII15">ICAART 2015 - Revised Selected Papers</a></li>
+<li><a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Marcin_Szubert">Marcin Szubert</a> (<strong>2016</strong>). <em><a href="https://ieeexplore.ieee.org/document/7180338">Coevolutionary CMA-ES for Knowledge-Free Learning of Game Position Evaluation</a></em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 8, No. 4</li>
+<li><a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Paweł_Liskowski">Paweł Liskowski</a>, <a href="/Marcin_Szubert">Marcin Szubert</a>, <a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a> (<strong>2016</strong>). <em><a href="https://content.sciendo.com/view/journals/amcs/26/1/article-p215.xml">The performance profile: A multi–criteria performance evaluation method for test–based problems</a></em>. <a href="https://en.wikipedia.org/wiki/International_Journal_of_Applied_Mathematics_and_Computer_Science">International Journal of Applied Mathematics and Computer Science</a>, Vol. 26, No. 1</li>
+<li>Shantanu Thakoor, Surag Nair, Megha Jhunjhunwala (<strong>2017</strong>). <em>Learning to Play Othello Without Human Knowledge</em>. <a href="/Stanford_University">Stanford University</a>, <a href="https://github.com/suragnair/alpha-zero-general/blob/master/pretrained_models/writeup.pdf">pdf</a> » <a href="/AlphaZero">AlphaZero</a>, <a href="/Monte-Carlo_Tree_Search">MCTS</a>, <a href="/Deep_Learning">Deep Learning</a> <a href="#fn32" class="footnote-ref" id="fnref32" role="doc-noteref"><sup>32</sup></a></li>
+<li><a href="/Paweł_Liskowski">Paweł Liskowski</a>, <a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a> (<strong>2017</strong>). <em>Learning to Play Othello with Deep Neural Networks</em>. <a href="https://arxiv.org/abs/1711.06583">arXiv:1711.06583</a> <a href="#fn33" class="footnote-ref" id="fnref33" role="doc-noteref"><sup>33</sup></a></li>
+<li><a href="/Paweł_Liskowski">Paweł Liskowski</a>, <a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a> (<strong>2018</strong>). <em>Learning to Play Othello with Deep Neural Networks</em>. <a href="/IEEE">IEEE Transactions on Games</a></li>
+<li>Kiminori Matsuzaki (<strong>2018</strong>). <em>Empirical Analysis of PUCT Algorithm with Evaluation Functions of Different Quality</em>. <a href="/TAAI_2018">TAAI 2018</a> » <a href="/Christopher_D._Rosin">PUCT</a></li>
+<li>Kiminori Matsuzaki, Naoki Kitamura (<strong>2018</strong>). <em>Do evaluation functions really improve Monte-Carlo tree search?</em> <a href="/CG_2018">CG 2018</a>, <a href="/ICGA_Journal">ICGA Journal, Vol. 40, No. 3</a></li>
+<li>Nai-Yuan Chang, <a href="/Chih-Hung_Chen">Chih-Hung Chen</a>, <a href="/Shun-Shii_Lin">Shun-Shii Lin</a>, Surag Nair (<strong>2018</strong>). <em><a href="https://dl.acm.org/citation.cfm?id=3278325">The Big Win Strategy on Multi-Value Network: An Improvement over AlphaZero Approach for 6x6 Othello</a></em>. <a href="https://dl.acm.org/citation.cfm?id=3278312">MLMI2018</a></li>
+<li>Ching-Nung Lin, <a href="/Fabien_Letouzey">Fabien Letouzey</a>, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a> (<strong>2019</strong>). <em>Decapus wins Othello 10 × 10 tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 41, No. 1</a> » 21st Computer Olympiad 2018</li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/bcb03df7630d6274">Bitboards: speeding up FirstOne</a> by Laurent Desnogues, <a href="/Computer_Chess_Forums">rgcc</a>, April 10, 1996 » <a href="/BitScan">BitScan</a></li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/929a1b0a271d7080">Othello Match &amp; Call for Papers</a> by <a href="/Ingo_Althöfer">Ingo Althöfer</a>, <a href="/Computer_Chess_Forums">rgcc</a>, March 24, 1997</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/8ab4f917234eb016">Enhanced Transposition Table Cutoffs</a> by Andrea Zinno, <a href="/Computer_Chess_Forums">rgcc</a>, July 30, 1997 » <a href="/Enhanced_Transposition_Cutoff">Enhanced Transposition Cutoff</a></li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/79d0882097714876">Othello man machine match</a> by <a href="/Ingo_Althöfer">Ingo Althöfer</a>, <a href="/Computer_Chess_Forums">rgcc</a>, August 6, 1997</li>
+<li><a href="https://groups.google.com/group/comp.ai.games/browse_frm/thread/a38f4f81e0a8839d">Othello endgame search question</a> by Daniel Lidström, <a href="https://groups.google.com/group/comp.ai.games/topics">comp.ai.games</a>, December 13, 2001</li>
+<li><a href="https://groups.google.com/d/msg/comp.ai.games/WZeBxfkzfYY/VaCfy1ds2ZYJ">stability in a Othello game</a> by Daniel, comp.ai.games, October 10, 2002</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=30723">Performance: linux vs Windows vs Mac OS X</a> by <a href="/Richard_Delorme">Richard Delorme</a>, <a href="/CCC">CCC</a>, November 21, 2009 » <a href="https://en.wikipedia.org/wiki/Edax_(computing)">Edax</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?start=0&amp;t=37634">WinBoard, exotic version</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, January 15, 2011 » <a href="/WinBoard">WinBoard</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Reversi">Reversi from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Computer_Othello">Computer Othello from Wikipedia</a></li>
+<li><a href="http://www.othello.dk/book/index.php/Main_Page">The Othello Wiki Book Project</a></li>
+<li><a href="http://cassio.free.fr/engine-protocol.htm">The Othello Engine Protocol</a> by <a href="/Stephane_Nicolet">Stephane Nicolet</a></li>
+<li><a href="https://www.game-ai-forum.org/icga-tournaments/game.php?id=22">Othello (ICGA Tournaments)</a></li>
+<li><a href="http://satirist.org/learn-game/systems/othello/">The strong learning Othello Programs</a> from <a href="http://satirist.org/learn-game/">Machine Learning in Games</a> by <a href="/Jay_Scott">Jay Scott</a></li>
+<li><a href="http://www.cs.put.poznan.pl/wjaskowski/othello-league-players">Othello Players</a> by <a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a></li>
+<li><a href="http://radagast.se/othello/howto.html">Writing an Othello program</a> by <a href="/Gunnar_Andersson">Gunnar Andersson</a></li>
+<li><a href="http://www.aartbik.com/MISC/reversi.html">Perft for Reversi/Othello</a> by <a href="/Aart_Bik">Aart Bik</a> » <a href="/Perft">Perft</a> <a href="#fn34" class="footnote-ref" id="fnref34" role="doc-noteref"><sup>34</sup></a></li>
+<li><a href="http://www.andreazinno.it/">Andrea Zinno's Home Page</a> - Entirely dedicated to the Othello game, by Andrea Zinno</li>
+<li><a href="https://en.wikipedia.org/wiki/Othello_%28disambiguation%29">Othello (disambiguation) from Wikipedia</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Games">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://radagast.se/othello/howto.html">Writing an Othello program</a> by <a href="/Gunnar_Andersson">Gunnar Andersson</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.beppi.it/public/OthelloMuseum/pages/boards-museum/electronic-boards/reversi-sensory-challenger.php">The Othello Museum - Reversi Sensory Challenger</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://www.othello.dk/book/index.php/Odin">Odin - The Othello Wiki Book Project</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="/Stuart_Russell">Stuart Russell</a>, <a href="/Eric_Wefald">Eric Wefald</a> (<strong>1988</strong>). <em>Decision-Theoretic Search Control: General Theory and an Application to Game-Playing.</em> Computer Science Division Technical Report 88/435, University of California, Berkeley, CA.<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="/Stuart_Russell">Stuart Russell</a>, <a href="/Eric_Wefald">Eric Wefald</a> (<strong>1989</strong>). <em><a href="http://portal.acm.org/citation.cfm?id=1623807">On optimal game-tree search using rational metareasoning</a>.</em> In Proceedings of the Eleventh International Joint Conference on Artificial Intelligence, Detroit, MI: Morgan Kaufmann, <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.79.9229&amp;rep=rep1&amp;type=pdf">pdf</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="/Jean-Christophe_Weill">Jean-Christophe Weill</a> (<strong>1991</strong>). <em>Experiments With the NegaC* Search - An Alternative for Othello Endgame Search.</em> Heuristic Programming in Artificial Intelligence 2: the second computer olympiad (eds. <a href="/David_Levy">David Levy</a> and <a href="/Don_Beal">Don Beal</a>), pp. 174-188. Ellis Horwood, Chichester. ISBN 0-13-382615-5, <a href="http://www.recherche.enac.fr/%7Eweill/publications/negac.ps.gz">zipped ps</a> and <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.39.3189&amp;rep=rep1&amp;type=pdf">pdf</a> from <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.3189">CiteSeerX</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="/Jean-Christophe_Weill">Jean-Christophe Weill</a> (<strong>1996</strong>). <em><a href="http://portal.acm.org/citation.cfm?id=228345">The ABDADA Distributed Minimax Search Algorithm</a></em>. Proceedings of the 1996 ACM Computer Science Conference, pp. 131-138. ACM, New York, N.Y, reprinted <a href="/ICGA_Journal">ICCA Journal, Vol. 19, No. 1</a>, <a href="http://www.recherche.enac.fr/%7Eweill/publications/acm.ps.gz">zipped ps</a><a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="/Michael_Buro">Michael Buro</a> (<strong>1995</strong>). <em>ProbCut: An Effective Selective Extension of the Alpha-Beta Algorithm.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 18, No. 2</a>, pp. 71-76, <a href="http://www.cs.ualberta.ca/%7Emburo/ps/probcut.pdf">pdf</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="http://www.cs.ualberta.ca/%7Emburo/log.html">Logistello's Homepage</a><a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="/Michael_Buro">Michael Buro</a> (<strong>1994</strong>). <em>Techniken für die Bewertung von Spielsituationen anhand von Beispielen.</em> Ph.D. Thesis. <a href="/Paderborn_University">Paderborn University</a>, Paderborn, Germany. <a href="http://www.cs.ualberta.ca/%7Emburo/ps/mics_dis.pdf">pdf</a> (German)<a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="/Mark_Brockington">Mark Brockington</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a> (<strong>1996</strong>). <em>The APHID Parallel αβ Search Algorithm</em>. Technical Report 96-07, Department of Computing Science, <a href="/University_of_Alberta">University of Alberta</a>, Edmonton, Alberta, Canada. as <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.23.8215&amp;rep=rep1&amp;type=pdf">pdf</a> from <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.23.8215">CiteSeerX</a><a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="/Mark_Brockington">Mark Brockington</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a> (<strong>1997</strong>). <em>APHID Game-Tree Search</em>. <a href="/Advances_in_Computer_Chess_8">Advances in Computer Chess 8</a><a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="http://webdocs.cs.ualberta.ca/~games/aphid/index.html">APHID Parallel Game-Tree Search Library</a><a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p><a href="/Mark_Brockington">Mark Brockington</a> (<strong>1998</strong>). <em>Asynchronous Parallel Game-Tree Search</em>. Ph.D. Thesis, <a href="/University_of_Alberta">University of Alberta</a>, <a href="http://games.cs.ualberta.ca/articles/mgb_thesis.ps.gz">zipped postscript</a><a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn15"><p><a href="/Jean_Méhat">Jean Méhat</a>, <a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2011</strong>). <em>A Parallel General Game Player</em>. <a href="http://www.kuenstliche-intelligenz.de/">KI Journal</a>, Vol. 25, No. 1, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/rootparallelggp.pdf">pdf</a><a href="#fnref15" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn16"><p><a href="https://groups.google.com/d/msg/comp.ai.games/WZeBxfkzfYY/VaCfy1ds2ZYJ">stability in a Othello game</a> by Daniel, comp.ai.games, October 10, 2002<a href="#fnref16" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn17"><p><a href="/Hans_Berliner">Hans Berliner</a> (<strong>1980</strong>). <em><a href="http://www.bkgm.com/articles/Berliner/BackgammonProgramBeatsWorldChamp/">Backgammon Computer Program Beats World Champion</a></em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 14, hosted by <a href="http://www.bkgm.com/">Backgammon Galore</a>, reprinted in <a href="/David_Levy">David Levy</a> (ed.) (<strong>1988</strong>). <em><a href="http://link.springer.com/book/10.1007/978-1-4613-8716-9">Computer Games I</a></em><a href="#fnref17" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn18"><p>Paul S. Rosenbloom (<strong>1981</strong>). <em>A world-championship-level Othello program</em>. Technical report, <a href="/Carnegie_Mellon_University">Carnegie Mellon University</a>, <a href="https://pdfs.semanticscholar.org/4033/a5b1d46beec14600427e391ce600159c0f61.pdf">pdf</a><a href="#fnref18" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn19"><p><a href="/Michael_Buro">Michael Buro</a> (<strong>1997</strong>). <em>An Evaluation Function for Othello Based on Statistics.</em> NEC Research Institute. Technical Report #31.<a href="#fnref19" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn20"><p><a href="/Michael_Buro">Michael Buro</a> (<strong>1997</strong>). <em>Experiments with Multi-ProbCut and a New High-quality Evaluation Function for Othello.</em> Technical Report No. 96, NEC Research Institute, Princeton, N.J. <a href="http://skatgame.net/mburo/ps/improve.pdf">pdf</a><a href="#fnref20" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn21"><p><a href="/Michael_Buro">Michael Buro</a> (<strong>2000</strong>). <em>Experiments with Multi-ProbCut and a new High-Quality Evaluation Function for Othello.</em> Games in AI Research (eds. <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> and <a href="/Hiroyuki_Iida">Hiroyuki Iida</a>), pp. 77-96. <a href="/Maastricht_University">Universiteit Maastricht</a>, Maastricht, The Netherlands. ISBN 90-621-6416-1.<a href="#fnref21" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn22"><p><a href="/Yasuhiro_Osaki">Yasuhiro Osaki</a>, <a href="/Kazutomo_Shibahara">Kazutomo Shibahara</a>, <a href="/Yasuhiro_Tajima">Yasuhiro Tajima</a>, <a href="/Yoshiyuki_Kotani">Yoshiyuki Kotani</a> (<strong>2008</strong>). <em>An Othello Evaluation Function Based on Temporal Difference Learning using Probability of Winning</em>. <a href="http://www.csse.uwa.edu.au/cig08/Proceedings/toc.html">CIG'08</a>, <a href="http://www.csse.uwa.edu.au/cig08/Proceedings/papers/8010.pdf">pdf</a><a href="#fnref22" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn23"><p><a href="http://radagast.se/othello/bitmob.c">bitboard mobility</a> Copyright (c) 2003, <a href="/Gunnar_Andersson">Gunnar Andersson</a><a href="#fnref23" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn24"><p><a href="http://radagast.se/othello/zebra.html">Zebra</a> by <a href="/Gunnar_Andersson">Gunnar Andersson</a><a href="#fnref24" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn25"><p>bitbmob.c in <a href="http://radagast.se/othello/zebra.tar.gz">zebra.tar.gz</a><a href="#fnref25" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn26"><p><a href="http://ailab.awardspace.com/othello4x4.html">AI Lab - Othello 4x4</a><a href="#fnref26" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn27"><p><a href="/Shi-Jim_Yen">Shi-Jim Yen</a>, Tsan-Cheng Su, <a href="/Jr-Chang_Chen">Jr-Chang Chen</a>, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a> (<strong>2014</strong>). <em>Solving 6x6 Othello on Volunteer Computing System</em>. <a href="/Conferences">GPW-2014</a><a href="#fnref27" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn28"><p><a href="/Victor_Allis">Victor Allis</a> (<strong>1994</strong>). <em>Searching for Solutions in Games and Artificial Intelligence</em>. Ph.D. Thesis, <a href="/Maastricht_University">University of Limburg</a>, <a href="http://fragrieu.free.fr/SearchingForSolutions.pdf">pdf</a><a href="#fnref28" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn29"><p><a href="https://en.wikipedia.org/wiki/Reversi#Computer_opponents_and_research">Computer opponents and research from Wikipedia</a><a href="#fnref29" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn30"><p><a href="http://abulmo.perso.neuf.fr/games/book-2008.htm">2004 Opening Book Skeleton</a><a href="#fnref30" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn31"><p><a href="http://icga.org/?page_id=2137">Events 2017: Dinner - Photo 24 of 25</a> by <a href="/Jan_Krabbenbos">Jan Krabbenbos</a><a href="#fnref31" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn32"><p><a href="https://github.com/suragnair/alpha-zero-general">GitHub - suragnair/alpha-zero-general: A clean and simple implementation of a self-play learning algorithm based on AlphaGo Zero (any game, any framework!)</a><a href="#fnref32" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn33"><p><a href="https://en.wikipedia.org/wiki/Edax_(computing)">Edax</a> by <a href="/Richard_Delorme">Richard Delorme</a><a href="#fnref33" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn34"><p><a href="http://www.othello.dk/book/index.php/Aart_Bik">Aart Bik - The Othello Wiki Book Project</a><a href="#fnref34" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Othello">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

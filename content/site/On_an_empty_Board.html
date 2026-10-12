@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>On an empty Board - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">On an empty Board</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * <a href="/Sliding_Piece_Attacks">Sliding Piece Attacks</a> * On an empty Board</strong></p>
+<p><strong>Single sliding piece attacks</strong> on the <strong>otherwise empty board</strong> or their disjoint subsets on lines or <a href="/Rays">rays</a> are that simple than none sliding pieces. We simply use pre-calculated tables for each <a href="/Pieces">piece-type</a>, line or ray, indexed by square-index. To initialize those tables, one may use a <a href="/Kogge-Stone_Algorithm">fill approach</a> with single populated from-sets, if availably anyway since used elsewhere. While the proposed line-routines here are quite small and cheap, incremental update during an initialization loop has some merits.</p>
+<p>The various ray-,line- and piece sets are foundation of further attack calculation considering blocking pieces, for instance to mask the <a href="/Occupancy">occupancy</a> of relevant rays. Of course the piece attacks are union-sets of the disjoint line attacks, while the line attacks are unions of the disjoint ray attacks.</p>
+<p><span id="RayAttacks"></span></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#ray-attacks">Ray Attacks</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#rays-by-line">Rays by Line</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#positive-rays">Positive Rays</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#by-lookup">By Lookup</a></li>
+<li><a href="#initialization">Initialization</a></li>
+<li><a href="#by-calculation">By Calculation</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#negative-rays">Negative Rays</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#by-lookup-1">By Lookup</a></li>
+<li><a href="#initialization-1">Initialization</a></li>
+<li><a href="#by-calculation-1">By Calculation</a></li>
+</ol>
+</details></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#line-attacks">Line Attacks</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#by-lookup-2">By Lookup</a></li>
+<li><a href="#by-calculation-2">By Calculation</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#piece-attacks">Piece Attacks</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#by-lookup-3">By Lookup</a></li>
+<li><a href="#by-calculation-3">By Calculation</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="ray-attacks">Ray Attacks</h2>
+<pre><code>  northwest    north   northeast
+  noWe         nort         noEa
+          +7    +8    +9
+              \  |  /
+  west    -1 &lt;-  0 -&gt; +1    east
+              /  |  \
+          -9    -8    -7
+  soWe         sout         soEa
+  southwest    south   southeast</code></pre>
+<p><span id="SplitRaysFromLine"></span></p>
+<h3 id="rays-by-line">Rays by Line</h3>
+<p>Ray-Attacks may be conducted from Line-Attacks by intersection with "positive" and "negative" squares:</p>
+<pre><code> positiveRay[sq] = lineAttacks[sq] &amp; (0 - 2*singleBit[sq]);
+ negativeRay[sq] = lineAttacks[sq] &amp; (singleBit[sq] - 1);</code></pre>
+<p>or with shifts instead of lookups</p>
+<pre><code> positiveRay[sq] = lineAttacks[sq] &amp; (C64(-2) &lt;&lt; sq);
+ negativeRay[sq] = lineAttacks[sq] &amp; ((C64(1) &lt;&lt; sq) - 1);</code></pre>
+<p><span id="PositiveRays"></span></p>
+<h3 id="positive-rays">Positive Rays</h3>
+<p><em>Remember <a href="/Square_Mapping_Considerations">Square Mapping Considerations</a>.</em></p>
+<h4 id="by-lookup">By Lookup</h4>
+<pre><code>East (+1)           Nort (+8)            NoEa (+9)           NoWe (+7)
+. . . . . . . .     . . . 1 . . . .      . . . . . . . 1     . . . . . . . .
+. . . . . . . .     . . . 1 . . . .      . . . . . . 1 .     1 . . . . . . .
+. . . . . . . .     . . . 1 . . . .      . . . . . 1 . .     . 1 . . . . . .
+. . . . . . . .     . . . 1 . . . .      . . . . 1 . . .     . . 1 . . . . .
+. . . R 1 1 1 1     . . . R . . . .      . . . B . . . .     . . . B . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .     . . . . . . . .</code></pre>
+<h4 id="initialization">Initialization</h4>
+<p>North attacks are simple to initialize inside a loop, starting from a1, shifting left:</p>
+<pre><code>U64 nort = C64(0x0101010101010100);
+for (int sq=0; sq &lt; 64; sq++, nort &lt;&lt;= 1)
+   rayAttacks[sq][Nort] = nort;</code></pre>
+<p>Similar, but tad trickier for <a href="/Ranks">ranks</a> and <a href="/Diagonals">diagonals</a>, due to the wraps. For instance the north-east <a href="/Direction">direction</a>:</p>
+<pre><code>U64 noea = C64(0x8040201008040200);
+for (int f=0; f &lt; 8; f++, noea = eastOne(noea) {
+   U64 ne = noea;
+   for (int r8 = 0; r8 &lt; 8*8; r8 += 8, ne &lt;&lt;= 8)
+      rayAttacks[r8+f][NoEa] = ne;
+}</code></pre>
+<h4 id="by-calculation">By Calculation</h4>
+<p>Orthogonal positive rays are quite cheap to calculate on the fly. For diagonal rays split the lines as <a href="/On_an_empty_Board">mentioned</a>.</p>
+<pre><code>U64 eastMaskEx(int sq) {
+   const U64 one = 1;
+   return 2*( (one &lt;&lt; (sq|7)) - (one &lt;&lt; sq) );
+}
+
+U64 nortMaskEx(int sq) {
+   return C64(0x0101010101010100) &lt;&lt; sq;
+}</code></pre>
+<p><span id="NegativeRays"></span></p>
+<h3 id="negative-rays">Negative Rays</h3>
+<p>Remember <a href="/Square_Mapping_Considerations">Square Mapping Considerations</a>.</p>
+<h4 id="by-lookup-1">By Lookup</h4>
+<pre><code>West (-1)           Sout (-8)            SoWe (-9)           SoEa (-7)
+. . . . . . . .     . . . . . . . .      . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .      . . . . . . . .     . . . . . . . .
+1 1 1 R . . . .     . . . R . . . .      . . . B . . . .     . . . B . . . .
+. . . . . . . .     . . . 1 . . . .      . . 1 . . . . .     . . . . 1 . . .
+. . . . . . . .     . . . 1 . . . .      . 1 . . . . . .     . . . . . 1 . .
+. . . . . . . .     . . . 1 . . . .      1 . . . . . . .     . . . . . . 1 .</code></pre>
+<h4 id="initialization-1">Initialization</h4>
+<p>South attacks are simple to initialize inside a loop, starting from h8, shifting right:</p>
+<pre><code>U64 sout = C64(0x0080808080808080);
+for (int sq=63; sq &gt;= 0; sq--, sout &gt;&gt;= 1)
+   rayAttacks[sq][Sout] = sout;</code></pre>
+<p>Similar, but tad trickier for <a href="/Ranks">ranks</a> and <a href="/Diagonals">diagonals</a>, due to the wraps.</p>
+<h4 id="by-calculation-1">By Calculation</h4>
+<p>Orthogonal negative rays are quite cheap to calculate on the fly. For diagonal rays split the lines as <a href="/On_an_empty_Board">mentioned</a>.</p>
+<pre><code>U64 westMaskEx(int sq) {
+   const U64 one = 1;
+   return (one &lt;&lt; sq) - (one &lt;&lt; (sq&amp;56));
+}
+
+U64 soutMaskEx(int sq) {
+   return C64(0x0080808080808080) &gt;&gt; (sq ^ 63);
+}</code></pre>
+<p><span id="LineAttacks"></span></p>
+<h2 id="line-attacks">Line Attacks</h2>
+<pre><code> RankAttacks[sq]         = EastAttacks[sq] | WestAttacks[sq];
+ FileAttacks[sq]         = NortAttacks[sq] | SoutAttacks[sq];
+ DiagonalAttacks[sq]     = NoEaAttacks[sq] | SoWeAttacks[sq];
+ AntiDiagonalAttacks[sq] = NoWeAttacks[sq] | SoEaAttacks[sq];</code></pre>
+<h4 id="by-lookup-2">By Lookup</h4>
+<pre><code>Rank                File                 Diagonal            Anti-Diagonal
+. . . . . . . .     . . . 1 . . . .      . . . . . . . 1     . . . . . . . .
+. . . . . . . .     . . . 1 . . . .      . . . . . . 1 .     1 . . . . . . .
+. . . . . . . .     . . . 1 . . . .      . . . . . 1 . .     . 1 . . . . . .
+. . . . . . . .     . . . 1 . . . .      . . . . 1 . . .     . . 1 . . . . .
+1 1 1 R 1 1 1 1     . . . R . . . .      . . . B . . . .     . . . B . . . .
+. . . . . . . .     . . . 1 . . . .      . . 1 . . . . .     . . . . 1 . . .
+. . . . . . . .     . . . 1 . . . .      . 1 . . . . . .     . . . . . 1 . .
+. . . . . . . .     . . . 1 . . . .      1 . . . . . . .     . . . . . . 1 .</code></pre>
+<h4 id="by-calculation-2">By Calculation</h4>
+<p>To calculate line masks for <a href="/Ranks">ranks</a>, <a href="/Files">files</a>, <a href="/Diagonals">diagonals</a> and <a href="/Anti-Diagonals">antidiagonals</a> on the fly:</p>
+<pre><code>U64 rankMask(int sq) {return  C64(0xff) &lt;&lt; (sq &amp; 56);}
+
+U64 fileMask(int sq) {return C64(0x0101010101010101) &lt;&lt; (sq &amp; 7);}
+
+U64 diagonalMask(int sq) {
+   const U64 maindia = C64(0x8040201008040201);
+   int diag =8*(sq &amp; 7) - (sq &amp; 56);
+   int nort = -diag &amp; ( diag &gt;&gt; 31);
+   int sout =  diag &amp; (-diag &gt;&gt; 31);
+   return (maindia &gt;&gt; sout) &lt;&lt; nort;
+}
+
+U64 antiDiagMask(int sq) {
+   const U64 maindia = C64(0x0102040810204080);
+   int diag =56- 8*(sq&amp;7) - (sq&amp;56);
+   int nort = -diag &amp; ( diag &gt;&gt; 31);
+   int sout =  diag &amp; (-diag &gt;&gt; 31);
+   return (maindia &gt;&gt; sout) &lt;&lt; nort;
+}</code></pre>
+<p>The <a href="/General_Setwise_Operations">generalized shift</a> version for <a href="/Diagonals">diagonals</a> and <a href="/Anti-Diagonals">antidiagonals</a> as introduced by <a href="/Thomas_Jahn">Thomas Jahn</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> produces shorter and faster code on modern <a href="/X86-64">x86-64</a> processors due to <a href="/BMI2">BMI2</a> shift instructions not affecting the flags <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>:</p>
+<pre><code>U64 diagonalMask(int sq) {
+   const U64( maindia = C64(0x8040201008040201);
+   int diag  = (sq&amp;7) - (sq&gt;&gt;3);
+   return diag &gt;= 0 ? maindia &gt;&gt; diag*8 : maindia &lt;&lt; -diag*8;
+}
+
+U64 antiDiagMask(int sq) {
+   const U64( maindia = C64(0x0102040810204080);
+   int diag  = 7 - (sq&amp;7) - (sq&gt;&gt;3);
+   return diag &gt;= 0 ? maindia &gt;&gt; diag*8 : maindia &lt;&lt; -diag*8;
+}</code></pre>
+<p>Excluding the square bit:</p>
+<pre><code>U64 rankMaskEx    (int sq) {return (C64(1) &lt;&lt; sq) ^ rankMask(sq);}
+U64 fileMaskEx    (int sq) {return (C64(1) &lt;&lt; sq) ^ fileMask(sq);}
+U64 diagonalMaskEx(int sq) {return (C64(1) &lt;&lt; sq) ^ diagonalMask(sq);}
+U64 antiDiagMaskEx(int sq) {return (C64(1) &lt;&lt; sq) ^ antiDiagMask(sq);}</code></pre>
+<p><span id="PieceAttacks"></span></p>
+<h2 id="piece-attacks">Piece Attacks</h2>
+<pre><code>RookAttacks[sq]   = RankAttacks[sq]     | FileAttacks[sq];
+BishopAttacks[sq] = DiagonalAttacks[sq] | AntiDiagonalAttacks[sq];
+QueenAttacks[sq]  = RookAttacks[sq] | BishopAttacks[sq];</code></pre>
+<h4 id="by-lookup-3">By Lookup</h4>
+<pre><code>                                   Queen
+                               . . . 1 . . . 1
+                               1 . . 1 . . 1 .
+                               . 1 . 1 . 1 . .
+               Rook            . . 1 1 1 . . .         Bishop
+           . . . 1 . . . .     1 1 1 Q 1 1 1 1     . . . . . . . 1
+           . . . 1 . . . .     . . 1 1 1 . . .     1 . . . . . 1 .
+           . . . 1 . . . .     . 1 . 1 . 1 . .     . 1 . . . 1 . .
+           . . . 1 . . . .     1 . . 1 . . 1 .     . . 1 . 1 . . .
+           1 1 1 R 1 1 1 1                         . . . B . . . .
+           . . . 1 . . . .                         . . 1 . 1 . . .
+           . . . 1 . . . .                         . 1 . . . 1 . .
+           . . . 1 . . . .                         1 . . . . . 1 .</code></pre>
+<h4 id="by-calculation-3">By Calculation</h4>
+<pre><code>U64 rookMask    (int sq) {return rankMask(sq)     | fileMask(sq);}
+U64 bishopMask  (int sq) {return diagonalMask(sq) | antiDiagMask(sq);}
+
+U64 rookMaskEx  (int sq) {return rankMask(sq)     ^ fileMask(sq);}
+U64 bishopMaskEx(int sq) {return diagonalMask(sq) ^ antiDiagMask(sq);}
+
+U64 queenMask   (int sq) {return rookMask(sq)     | bishopMask(sq);}
+U64 queenMaskEx (int sq) {return rookMask(sq)     ^ bishopMask(sq);}</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Blockers_and_Beyond">Blockers and Beyond</a></li>
+<li><a href="/Kogge-Stone_Algorithm">Fill on an empty Board</a> with <a href="/Kogge-Stone_Algorithm">Kogge-Stone Algorithm</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79140">[Question] Efficiently generate ray masks?</a> by Daniel Infuehr, <a href="/CCC">CCC</a>, January 16, 2022</li>
+</ul>
+<p><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79140&amp;start=10">Re: [Question] Efficiently generate ray masks?</a> by <a href="/Thomas_Jahn">Thomas Jahn</a>, <a href="/CCC">CCC</a>, January 17, 2022</p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Sliding_Piece_Attacks">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79140&amp;start=10">Re: [Question] Efficiently generate ray masks?</a> by <a href="/Thomas_Jahn">Thomas Jahn</a>, <a href="/CCC">CCC</a>, January 17, 2022<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://www.felixcloutier.com/x86/sarx:shlx:shrx">SARX/SHLX/SHRX — Shift Without Affecting Flags</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/On_an_empty_Board">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
