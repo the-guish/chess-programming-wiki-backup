@@ -26,6 +26,7 @@ python3 tool/cpw_scraper.py crawl --max-requests 50   # small batch
 python3 tool/cpw_scraper.py crawl --no-assets         # pages, CSS and JS only (no images)
 python3 tool/cpw_scraper.py status                    # progress summary
 BATCH=500 tool/crawl_batches.sh                       # crawl + commit + push to main, batch by batch
+MAX_BATCHES=6 tool/crawl_batches.sh                   # same, but stop after 6 batches (about 100 min)
 ```
 
 ### Gentle

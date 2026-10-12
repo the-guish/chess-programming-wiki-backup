@@ -2,12 +2,16 @@
 # Crawl in batches, committing and pushing content/ after each one so progress
 # is never lost. Resumable: just run it again. Extra args go to `crawl`.
 #
-#   BATCH=500 BRANCH=main tool/crawl_batches.sh [--no-assets ...]
+#   BATCH=500 BRANCH=main MAX_BATCHES=0 tool/crawl_batches.sh [--no-assets ...]
+#
+# MAX_BATCHES > 0 stops after that many batches (exit 0, pending work left),
+# handy for runners with a time limit.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 BATCH=${BATCH:-500}
 BRANCH=${BRANCH:-main}
+MAX_BATCHES=${MAX_BATCHES:-0}
 TRAILER=${COMMIT_TRAILER:-}
 
 pending() { python3 tool/cpw_scraper.py status | awk '$1 == "pending:" {print $2}'; }
@@ -42,9 +46,16 @@ run() {
     [ "$rc" -eq 0 ] || exit "$rc"
 }
 
+batches=0
 while :; do
     run --max-requests "$BATCH" --no-retry-failed "$@"
     [ "$(pending)" = "" ] && break
+    batches=$((batches + 1))
+    if [ "$MAX_BATCHES" -gt 0 ] && [ "$batches" -ge "$MAX_BATCHES" ]; then
+        echo "reached MAX_BATCHES=$MAX_BATCHES; run again to continue" >&2
+        python3 tool/cpw_scraper.py status
+        exit 0
+    fi
 done
 run "$@"
 python3 tool/cpw_scraper.py status
