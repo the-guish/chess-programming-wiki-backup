@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thread - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Thread</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Programming">Programming</a> * Thread</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Multithreaded_process.svg" alt="Two threads on a single processor 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Two threads on a single processor <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://en.wikipedia.org/wiki/Thread_%28computing%29">Thread (computing) from Wikipedia</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p>A <strong>Thread</strong> is the smallest unit of processing that can be <a href="https://en.wikipedia.org/wiki/Scheduling_algorithm">scheduled</a> by an <a href="https://en.wikipedia.org/wiki/Operating_system">operating system</a>. One or multiple threads can exist within the same <a href="/Process">process</a> to share its resources such as <a href="/Memory">memory</a>. Modern operating systems support both <a href="https://en.wikipedia.org/wiki/Time-division_multiplexing">time-sliced</a> and multiprocessor threading within a process scheduler. Some operating systems such as <a href="/Windows">Windows</a> distinguish worker threads from GUI-threads, which incorporate a <a href="https://en.wikipedia.org/wiki/Event_loop">message loop</a>, able to receive messages from worker threads. Threads share <a href="https://en.wikipedia.org/wiki/Global_variable">global data</a> of the process, but use disjoint <a href="/Stack">stacks</a> for <a href="https://en.wikipedia.org/wiki/Local_variable">local variables</a>.</p>
+<p>Chess programs using threads for a <a href="/Parallel_Search">parallel search</a> have to deal with synchronization issues, if multiple threads read and write <a href="https://en.wikipedia.org/wiki/Linearizability">none atomic</a> global data simultaneously, requiring multiple read and/or write cycles. A good step to make a program <a href="https://en.wikipedia.org/wiki/Thread_safety">thread safe</a>, is to avoid global variables and to keep board and game states as locals on the stack. To minimize <a href="https://en.wikipedia.org/wiki/Context_switch">context switching</a>, chess programs often implement a <a href="https://en.wikipedia.org/wiki/Thread_pool_pattern">thread pooling pattern</a> along with explicitly or implicitly controlling <a href="https://en.wikipedia.org/wiki/Processor_affinity">processor affinity</a>, where the number of threads of the chess program is less or equal to the number of physical processor cores. Threads are further versatile to control <a href="https://en.wikipedia.org/wiki/Standard_streams">standard input</a> inside an engine.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#publications">Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1994-">1994 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1999">1999</a></li>
+<li><a href="#2000--1">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010--1">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#thread">Thread</a></li>
+<li><a href="#multithreading">Multithreading</a></li>
+<li><a href="#posix">Posix</a></li>
+<li><a href="#windows">Windows</a></li>
+<li><a href="#c">C++</a></li>
+<li><a href="#java">Java</a></li>
+<li><a href="#gpu">GPU</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Cilk">Cilk</a></li>
+<li><a href="/Lazy_SMP">Lazy SMP</a></li>
+<li><a href="/NUMA">NUMA</a></li>
+<li><a href="/Parallel_Search">Parallel Search</a></li>
+<li><a href="/Process">Process</a></li>
+<li><a href="/Shared_Hash_Table">Shared Hash Table</a></li>
+<li><a href="/SMP">SMP</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<h3 id="1994-">1994 ...</h3>
+<ul>
+<li><a href="/Michael_Halbherr">Michael Halbherr</a>, <a href="/Yuli_Zhou">Yuli Zhou</a>, <a href="/Chris_Joerg">Chris Joerg</a> (<strong>1994</strong>). <em><a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.16.9812">MIMD-Style Parallel Programming with Continuation-Passing Threads</a></em>. Proceedings of the 2nd International Workshop on Massive Parallelism: Hardware, Software, and Applications</li>
+<li><a href="/Robert_Blumofe">Robert Blumofe</a> (<strong>1995</strong>). <em>Executing Multithreaded Programs Efficiently</em>. Ph.D. thesis, <a href="/Massachusetts_Institute_of_Technology">MIT</a>, <a href="http://supertech.csail.mit.edu/papers/rdb-phdthesis.pdf">pdf</a></li>
+<li><a href="/Robert_Blumofe">Robert Blumofe</a>, <a href="/Chris_Joerg">Chris Joerg</a>, <a href="/Bradley_Kuszmaul">Bradley Kuszmaul</a>, <a href="/Charles_Leiserson">Charles Leiserson</a>, <a href="/Keith_H._Randall">Keith H. Randall</a>, <a href="/Yuli_Zhou">Yuli Zhou</a> (<strong>1995</strong>). <em>Cilk: An Efficient Multithreaded Runtime System</em>. Proceedings of the Fifth <a href="/ACM">ACM SIGPLAN</a> Symposium on Principles and Practice of Parallel Programming (PPoPP), <a href="http://supertech.csail.mit.edu/papers/PPoPP95.pdf">pdf</a> » <a href="/Cilk">Cilk</a></li>
+<li>Yaoqing Gao, <a href="/Tony_Marsland">Tony Marsland</a> (<strong>1996</strong>). <em>Multithreaded Pruned Tree Search in Distributed Systems</em>. Journal of Computing and Information, 2(1), 482-492, <a href="http://www.cs.ualberta.ca/%7Etony/RecentPapers/icci.pdf">pdf</a></li>
+<li><a href="/Charles_Leiserson">Charles Leiserson</a>, <a href="/Harald_Prokop">Harald Prokop</a> (<strong>1998</strong>). <em>A Minicourse on Multithreaded Programming</em>. <a href="http://supertech.csail.mit.edu/papers/minicourse.pdf">pdf</a></li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="http://comp.lang.pascal.delphi.misc.narkive.com/HW7VUOEV/martin-harvey-thread-tutorial">Martin Harvey</a> (<strong>2000</strong>). <em><a href="http://seti.net/engineering/threads/threads.php">Multithreading - The Delphi Way</a></em>. » <a href="/Delphi">Delphi</a></li>
+<li><a href="http://dblp.uni-trier.de/pers/hd/y/Yang:Yue">Yue Yang</a>, <a href="http://dblp.uni-trier.de/pers/hd/g/Gopalakrishnan:Ganesh">Ganesh Gopalakrishnan</a>, <a href="/Gary_Lindstrom">Gary Lindstrom</a> (<strong>2002</strong>). <em>Specifying Java Thread Semantics Using a Uniform Memory Model</em>. <a href="http://dblp.uni-trier.de/db/conf/java/java2002.html#YangGL02">Java Grande 2002</a>, <a href="http://formalverification.cs.utah.edu/yyang/papers/umm_old.pdf">pdf</a></li>
+<li><a href="http://www.hpl.hp.com/personal/Hans_Boehm/">Hans J. Boehm</a> (<strong>2004</strong>). <em>Threads Cannot be Implemented as a Library</em>. <a href="https://en.wikipedia.org/wiki/HP_Labs">HP Labs</a> <a href="https://en.wikipedia.org/wiki/Palo_Alto,_California">Palo Alto</a>, <a href="http://www.hpl.hp.com/techreports/2004/HPL-2004-209.pdf">pdf</a></li>
+<li><a href="/Jeff_Rollason">Jeff Rollason</a>, Dan Orme (<strong>2005</strong>). <em><a href="http://www.aifactory.co.uk/newsletter/2005_01_nonmultithreading_AI.htm">Writing cpu intensive AI without multi-threading</a></em>. <a href="/AI_Factory">AI Factory</a>, Spring 2005</li>
+<li><a href="http://ptolemy.berkeley.edu/~eal/">Edward A. Lee</a> (<strong>2006</strong>). <em><a href="http://www.eecs.berkeley.edu/Pubs/TechRpts/2006/EECS-2006-1.html">The Problem with Threads</a></em>. Technical Report No. UCB/EECS-2006-1, <a href="/University_of_California,_Berkeley">University of California, Berkeley</a>, <a href="http://www.eecs.berkeley.edu/Pubs/TechRpts/2006/EECS-2006-1.pdf">pdf</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Subhash_Saini">Subhash Saini</a>, <a href="http://people.nas.nasa.gov/~hjin/home.html">Haoqiang Jin</a>, <a href="https://www.linkedin.com/in/robert-hood-250756">Robert Hood</a>, <a href="https://www.linkedin.com/in/david-barker-31484240">David Barker</a>, <a href="https://www.linkedin.com/in/pimehrotra">Piyush Mehrotra</a>, <a href="https://www.linkedin.com/in/rupak-biswas-5229805">Rupak Biswas</a> (<strong>2011</strong>). <em>The Impact of Hyper-Threading on Processor Resource Utilization in Production Applications</em>. <a href="https://en.wikipedia.org/wiki/NASA_Advanced_Supercomputing_Division">NASA Advanced Supercomputing Division</a>, <a href="https://www.nas.nasa.gov/assets/pdf/papers/saini_s_impact_hyper_threading_2011.pdf">pdf</a>, <a href="http://www.nas.nasa.gov/assets/pdf/papers/Saini_etAl_IEEE_HiPC_2011.pdf">pdf</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></li>
+<li><a href="http://stackoverflow.com/users/5597/anthony-williams">Anthony Williams</a> (<strong>2012</strong>). <em><a href="http://www.cplusplusconcurrencyinaction.com/">C++ Concurrency in Action: Practical Multithreading</a></em>. <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></li>
+<li><a href="https://www.rrze.fau.de/wir-ueber-uns/organigramm/mitarbeiter/index.shtml/georg-hager.shtml">Georg Hager</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>, <a href="http://dblp.uni-trier.de/pers/hd/t/Treibig:Jan">Jan Treibig</a>, <a href="http://dblp.uni-trier.de/pers/hd/w/Wellein:Gerhard">Gerhard Wellein</a> (<strong>2013</strong>). <em>The Practitioner's Cookbook for Good Parallel Performance on Multi- and Many-Core Systems</em>. <a href="https://de.wikipedia.org/wiki/Regionales_Rechenzentrum_Erlangen">RRZE</a>, <a href="http://sc13.supercomputing.org/">SC13</a>, <a href="https://blogs.fau.de/hager/files/2013/11/sc13_tutorial_134.pdf">slides as pdf</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1999">1999</h3>
+<ul>
+<li><a href="http://www.stmintz.com/ccc/index.php?id=48199">Threads</a> by <a href="/James_Robertson">James Robertson</a>, <a href="/CCC">CCC</a>, April 06, 1999</li>
+<li><a href="http://www.stmintz.com/ccc/index.php?id=61963">gcc / cygwin threads revisited</a> by <a href="/James_Swafford">James Swafford</a>, <a href="/CCC">CCC</a>, July 24, 1999</li>
+</ul>
+<h3 id="2000--1">2000 ...</h3>
+<ul>
+<li><a href="http://www.stmintz.com/ccc/index.php?id=367073">Re: Stormx is this a Crafty Clone??</a> by <a href="/Sean_Empey">Sean Empey</a>, <a href="/CCC">CCC</a>, May 25, 2004 » <a href="/Windows">Windows</a></li>
+<li><a href="http://www.stmintz.com/ccc/index.php?id=370625">Approaches to threading</a> by <a href="/Eric_Oldre">Eric Oldre</a>, <a href="/CCC">CCC</a>, June 15, 2004</li>
+<li><a href="http://www.stmintz.com/ccc/index.php?id=389667">Kiwi for Win98 and input-reading stuff</a> by <a href="/Alessandro_Scotti">Alessandro Scotti</a>, <a href="/CCC">CCC</a>, September 29, 2004 » <a href="/Kiwi">Kiwi</a>, <a href="/Windows">Windows</a>, <a href="/Cpp">C++</a></li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="http://www.stmintz.com/ccc/index.php?id=435053">POSIX threads</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, July 05, 2005</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=5603">Threading issue under Polyglot</a> by <a href="/Nathan_Thom">Nathan Thom</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, September 18, 2006 » <a href="/PolyGlot">PolyGlot</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=14114">pthread weirdness</a> by <a href="/James_Swafford">James Swafford</a>, <a href="/CCC">CCC</a>, May 29, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=15662">multithreading questions</a> by <a href="/Martin_Fierz">Martin Fierz</a>, <a href="/CCC">CCC</a>, August 08, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=16334">Threads and cores questions</a> by Casey, <a href="/CCC">CCC</a>, September 07, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=22398">threads vs processes</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, July 16, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=22799">threads vs processes again</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, August 05, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=26434">Hyperthreading Hype predates Intel</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, February 07, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=26782">Multithreaded movepath enumeration (perft)</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, February 27, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=27279">kbhit() taking huge CPU??</a> by <a href="/John_Merlino">John Merlino</a>, <a href="/CCC">CCC</a>, April 01, 2009 » <a href="/C">C</a></li>
+</ul>
+<h3 id="2010--1">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=33705">Stockfish-1.7.0 Hyper-threading Detection</a> by <a href="/Louis_Zulli">Louis Zulli</a>, <a href="/CCC">CCC</a>, April 09, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=36103">Hyperthreading</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/CCC">CCC</a>, September 17, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=36465">To hyperthread or not to hyperthread (Crafty tested)</a> by <a href="/Martin_Thoresen">Martin Thoresen</a>, <a href="/CCC">CCC</a>, October 24, 2010 » <a href="/Crafty">Crafty</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=36637">Input / ThinkingThreads</a> by <a href="/Richard_Allbert">Richard Allbert</a>, <a href="/CCC">CCC</a>, November 08, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=36966">Thread management / organization in parallel processing?</a> by <a href="/Pham_Hong_Nguyen">Nguyen Pham</a>, <a href="/CCC">CCC</a>, December 06, 2010</li>
+</ul>
+<p><strong>2011</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=37896">Have Crafty's threads never gone to sleep?</a> by <a href="/Pham_Hong_Nguyen">Nguyen Pham</a>, <a href="/CCC">CCC</a>, January 31, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38411">On parallelization</a> by <a href="/Onno_Garms">Onno Garms</a>, <a href="/CCC">CCC</a>, March 13, 2011</li>
+</ul>
+<p><strong>2012</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=44658">hyper threading and move generation</a> by <a href="/Gabor_Buella">Gabor Buella</a>, <a href="/CCC">CCC</a>, August 01, 2012 » <a href="/Move_Generation">Move Generation</a></li>
+</ul>
+<p><strong>2013</strong></p>
+<ul>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2262">Multi-threaded memory access</a> by <a href="/ThinkingALot">ThinkingALot</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, February 10, 2013 » <a href="/Memory">Memory</a>, <a href="/Shared_Hash_Table">Shared Hash Table</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47757">Hyperthreading and Computer Chess: Intel i5-3210M</a> by Mike Scheidl, <a href="/CCC">CCC</a>, April 12, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47820">Implementation of multithreaded search in Jazz</a> by <a href="/Evert_Glebbeek">Evert Glebbeek</a>, <a href="/CCC">CCC</a>, April 20, 2013 » <a href="/Parallel_Search">Parallel Search</a>, <a href="/Jazz">Jazz</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48612">use sleeping threads</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, July 10, 2013 » <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48795">C++ Question</a> by Ted Wong, <a href="/CCC">CCC</a>, July 30, 2013 » <a href="/Cpp">C++</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48911">Writing to a Text File (Thread Safe)</a> by <a href="/Steve_Maughan">Steve Maughan</a>, <a href="/CCC">CCC</a>, August 10, 2013 » <a href="/Logging">Logging</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49540">SMP and Thread Pool Design pattern</a> by <a href="/Edsel_Apostol">Edsel Apostol</a>, <a href="/CCC">CCC</a>, October 02, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49592">Multithreaded LRU</a> by <a href="/Alvaro_Cardoso">Alvaro Cardoso</a>, <a href="/CCC">CCC</a>, October 06, 2013 » <a href="/Memory">Memory</a>, <a href="/Endgame_Tablebases">Endgame Tablebases</a></li>
+</ul>
+<p><strong>2014</strong></p>
+<ul>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2618">C++11 threads seem to get shafted for cycles</a> by <a href="/Dann_Corbit">User923005</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, March 18, 2014 » <a href="/Cpp">C++</a>, <a href="/Parallel_Search">Parallel Search</a>, <a href="/Senpai">Senpai</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51655">Threads-Test</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, March 18, 2014 » <a href="/Parallel_Search">Parallel Search</a>, <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52219">Threads-Test - SF, Zappa, Komodo - 1 vs. 2, 4, 8, 16 Threads</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, May 04, 2014 » <a href="/Stockfish">Stockfish</a>, <a href="/Zappa">Zappa</a>, <a href="/Komodo">Komodo</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?p=570955">Threads factor: Komodo, Houdini, Stockfish and Zappa</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, May 17, 2014 » <a href="/Komodo">Komodo</a>, <a href="/Houdini">Houdini</a>, <a href="/Stockfish">Stockfish</a>, <a href="/Zappa">Zappa</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53063">TinyThread++</a> by <a href="/Alberto_Sanjuan">Alberto Sanjuan</a>, <a href="/CCC">CCC</a>, July 24, 2014 <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53230">Best way to handle input thread</a> by <a href="/Stefano_Gemma">Stefano Gemma</a>, <a href="/CCC">CCC</a>, August 09, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53806">(Why) Is hyperthreading bad for chess engines?</a> by <a href="/Syed_Fahad">Syed Fahad</a>, <a href="/CCC">CCC</a>, September 23, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53995">Threads test incl. Stockfish 5 and Komodo 8</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, October 09, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54009">Threads test - Stockfish 5 against Komodo 8</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, October 10, 2014 » <a href="/Thread">Thread</a>, <a href="/Parallel_Search">Parallel Search</a>, <a href="/Stockfish">Stockfish</a>, <a href="/Komodo">Komodo</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54059">Threads test incl. Crafty 24.1</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, October 15, 2014 » <a href="/Crafty">Crafty</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54133">Current data - threads-nps efficiency up to 32 threads</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, October 24, 2014</li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55352">Stockfish with 16 threads - big news?</a> by <a href="/Louis_Zulli">Louis Zulli</a>, <a href="/CCC">CCC</a>, February 15, 2015</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=55368">Explanation for non-expert?</a> by <a href="/Louis_Zulli">Louis Zulli</a>, <a href="/CCC">CCC</a>, February 16, 2015 » <a href="/Stockfish">Stockfish</a></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55740">Thread count limits and core counts</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, March 22, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56081">Thread synchronization questions for experts</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, April 21, 2015 » <a href="/Symbolic">Symbolic</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56113">A cautionary tale on thread safety</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, April 25, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56327">A Nice routine</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, May 12, 2015</li>
+<li><a href="https://stackoverflow.com/questions/30330013/does-hyperthreading-have-trouble-with-avx">Does Hyperthreading have trouble with AVX?</a> by cmylin, <a href="https://en.wikipedia.org/wiki/Stack_Overflow">Stack Overflow</a>, May 19, 2015 » <a href="/AVX">AVX</a>, <a href="/AVX2">AVX2</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56523">Deep split perft()</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, May 29, 2015 » <a href="/Perft">Perft</a>, <a href="/Symbolic">Symbolic</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56858">thread affinity</a> by <a href="/Martin_Sedlak">Martin Sedlak</a>, <a href="/CCC">CCC</a>, July 03, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58236">Stockfish now benefits from hyperthreading</a> by <a href="/Dmitri_Gusev">Dmitri Gusev</a>, <a href="/CCC">CCC</a>, November 12, 2015 » <a href="/Stockfish">Stockfish</a></li>
+</ul>
+<p><strong>2016</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58882">Using more than 1 thread in C beginner question</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, January 11, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58887">Threads test incl. Stockfish 7</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, January 11, 2016 » <a href="/Parallel_Search">Parallel Search</a>, <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58950">Threads test incl. Komodo 9.3</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, January 17, 2016 » <a href="/Komodo">Komodo</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59423">threading</a> by <a href="/Folkert_van_Heusden">Folkert van Heusden</a>, <a href="/CCC">CCC</a>, March 03, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60979">lazy smp using ms vs2015 c++11 std::async</a> by Edward Yu, <a href="/CCC">CCC</a>, July 29, 2016 » <a href="/Lazy_SMP">Lazy SMP</a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61349">Baffling multithreading scaling behavior</a> by <a href="/Tom_Kerrigan">Tom Kerrigan</a>, <a href="/CCC">CCC</a>, September 06, 2016</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=61349&amp;start=16">Re: Baffling multithreading scaling behavior</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, September 07, 2016</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61408">Some hyperthreading results</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, September 12, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62146">Stockfish 8 - Double time control vs. 2 threads</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, November 15, 2016 » <a href="/Match_Statistics">Doubling TC</a>, <a href="/Depth">Diminishing Returns</a>, <a href="/Playing_Strength">Playing Strength</a>, <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=31863">Hyperthreading debate reopened?</a> by Zat, <a href="/Computer_Chess_Forums">Rybka Forum</a>, December 03, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62622">Diminishing returns and hyperthreading</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, December 27, 2016 » <a href="/Depth">Diminishing Returns</a>, <a href="/Match_Statistics">Match Statistics</a>, <a href="/Playing_Strength">Playing Strength</a></li>
+</ul>
+<p><strong>2017</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64441">Core behaviour</a> by <a href="/Ed_Schroder">Ed Schroder</a>, <a href="/CCC">CCC</a>, June 28, 2017 » <a href="/Engine_Testing">Engine Testing</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65844">Lazy SMP &gt;4 Thread Slowdown</a> by Can Cetin, <a href="/CCC">CCC</a>, November 29, 2017 » <a href="/Lazy_SMP">Lazy SMP</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=65844&amp;start=4">Re: Lazy SMP &gt;4 Thread Slowdown</a> by <a href="/Ronald_de_Man">Ronald de Man</a>, <a href="/CCC">CCC</a>, November 29, 2017</p>
+<p><strong>2018</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=67186">More questions about threads</a> by <a href="/Patrice_Duhamel">Patrice Duhamel</a>, <a href="/CCC">CCC</a>, April 21, 2018 » <a href="/Young_Brothers_Wait_Concept">Young Brothers Wait Concept</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=67932">Stockfish and serious hardware: 384 threads</a> by <a href="/Jouni_Uski">Jouni Uski</a>, <a href="/CCC">CCC</a>, July 08, 2018 » <a href="/Stockfish">Stockfish</a></li>
+</ul>
+<p><strong>2019</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69658">Hyperthreading on or off</a> by lovetb, <a href="/CCC">CCC</a>, January 20, 2019</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69658&amp;start=5">Re: Hyperthreading on or off</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, January 20, 2019</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70586">Prefetch and Threading</a> by <a href="/Dennis_Sceviour">Dennis Sceviour</a>, <a href="/CCC">CCC</a>, April 25, 2019 » <a href="/Memory">Memory</a>, <a href="/Transposition_Table">Transposition Table</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70919">strategies for finding slowdows in lazy smp</a> by <a href="/Folkert_van_Heusden">Folkert van Heusden</a>, <a href="/CCC">CCC</a>, June 04, 2019 » <a href="/Lazy_SMP">Lazy SMP</a>, <a href="/Nodes_per_Second">Nodes per Second</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=71739">Multithreaded noob question</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/CCC">CCC</a>, September 06, 2019</li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=74705">What happens with my hyperthreading?</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, August 06, 2020 » <a href="/Stockfish_NNUE">Stockfish NNUE</a>, <a href="/NNUE">NNUE</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75088">SMP, first shot at implementation</a> by <a href="/Chris_Whittington">Chris Whittington</a>, <a href="/CCC">CCC</a>, September 12, 2020 » <a href="/Lazy_SMP">Lazy SMP</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75116">Memory management and threads</a> by <a href="/Chris_Whittington">Chris Whittington</a>, <a href="/CCC">CCC</a>, September 15, 2020 » <a href="/Memory">Memory</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75151">Very Lazy SMP and worker threads</a> by <a href="/Chris_Whittington">Chris Whittington</a>, <a href="/CCC">CCC</a>, September 18, 2020 » <a href="/Lazy_SMP">Lazy SMP</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76190">Dispelling the Myth of NNUE with LazySMP: An Analysis</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, December 30, 2020 » <a href="/NNUE">NNUE</a>, <a href="/Lazy_SMP">Lazy SMP</a></li>
+</ul>
+<p><strong>2021</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77088">Missing input in ponder</a> by <a href="/Fabio_Gobbato">Fabio Gobbato</a>, <a href="/CCC">CCC</a>, April 15, 2021 » <a href="/UCI">UCI</a>, <a href="/Pondering">Pondering</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77142">Thread overhead in C++</a> by <a href="/Toni_Helminen">JohnWoe</a>, <a href="/CCC">CCC</a>, April 21, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77189">Listening for GUI input when searching</a> by <a href="/Niels_Abildskov">Niels Abildskov</a>, <a href="/CCC">CCC</a>, April 27, 2021 » <a href="/GUI">GUI</a>, <a href="/Search">Search</a>, <a href="/UCI">UCI</a></li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=78548">Single core?</a> by <a href="/Gabor_Szots">Gabor Szots</a>, <a href="/CCC">CCC</a>, October 30, 2021</li>
+</ul>
+<p><strong>2022</strong></p>
+<ul>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79588">Stockfish search</a> by Werewolf, <a href="/CCC">CCC</a>, March 26, 2022 » <a href="/Lazy_SMP">Lazy SMP</a>, <a href="/Stockfish">Stockfish</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<h3 id="thread">Thread</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Thread_%28computing%29">Thread (computing) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Thread_safety">Thread safety from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Thread_pool_pattern">Thread pool pattern from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Thread-local_storage">Thread-local storage from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Light-weight_process">Light-weight process from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Fiber_%28computer_science%29">Fiber (computer science) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Green_threads">Green threads from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Coroutine">Coroutines from Wikipedia</a></li>
+<li><a href="http://www.dmoz.org/Computers/Programming/Threads/">Open Directory - Computers: Programming: Threads</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Thread">Thread (disambiguation page) from Wikipedia</a></li>
+<li><a href="/Category:Phish">Phish</a> - Thread, <a href="https://en.wikipedia.org/wiki/Sigma_Oasis">Sigma Oasis</a> (2020),<a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/JzosgX-2Al8" title="YouTube video JzosgX-2Al8" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=JzosgX-2Al8">Watch on YouTube</a></p>
+<h3 id="multithreading">Multithreading</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Multithreading_%28computer_architecture%29">Multithreading from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Simultaneous_multithreading">Simultaneous multithreading from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Temporal_multithreading">Temporal multithreading from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Processor_affinity">Processor affinity from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Super-threading">Super-threading from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Hyper-threading">Hyper-threading from Wikipedia</a></li>
+</ul>
+<h3 id="posix">Posix</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Native_POSIX_Thread_Library">Native POSIX Thread Library from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/GNU_Portable_Threads">GNU Portable Threads</a></li>
+<li><a href="https://en.wikipedia.org/wiki/LinuxThreads">LinuxThreads from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/FSU_Pthreads">FSU Pthread from Wikipedia</a></li>
+<li><a href="http://www.ibm.com/developerworks/library/l-posix1/index.html">POSIX threads explained</a> by <a href="http://www.ibm.com/developerworks/library/l-posix1/index.html#author1">Daniel Robbins</a>, <a href="http://www.ibm.com/developerworks/">IBM developerWorks</a></li>
+<li><a href="http://sourceware.org/pthreads-win32/">POSIX Threads (pthreads) for Win32</a> (win64 <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>)</li>
+</ul>
+<h3 id="windows"><a href="/Windows">Windows</a></h3>
+<ul>
+<li><a href="http://msdn.microsoft.com/en-us/library/windows/desktop/ms686937%28v=VS.85%29.aspx">Using Processes and Threads</a>, <a href="http://msdn.microsoft.com/en-us/windows/desktop">Windows Desktop Development</a></li>
+</ul>
+<p><a href="http://msdn.microsoft.com/en-us/library/windows/desktop/ms682516%28v=vs.85%29.aspx">Creating Threads</a></p>
+<ul>
+<li><a href="http://msdn.microsoft.com/en-us/library/ms684841%28v=VS.85%29.aspx">Processes and Threads, MSDN</a></li>
+<li><a href="http://msdn.microsoft.com/en-us/library/kdzttdcb%28v=VS.100%29.aspx">_beginthread, _beginthreadex, MSDN</a></li>
+<li><a href="http://msdn.microsoft.com/en-us/library/system.threading.thread.aspx">Thread Class (System.Threading) .NET. MSDN</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Win32_Thread_Information_Block">Win32 Thread Information Block from Wikipedia</a></li>
+<li><a href="http://www.relisoft.com/win32/active.html">Windows API Tutorial: Using Threads</a>, <a href="http://www.relisoft.com/index.htm">Reliable Software</a></li>
+<li><a href="http://download.microsoft.com/download/5/b/3/5b38800c-ba6e-4023-9078-6e9ce2383e65/c06x1116607.pdf">Processes, Threads, and Jobs</a> (pdf) from <a href="http://www.microsoft.com/learning/en/us/book.aspx?ID=6710&amp;locale=en-us">Microsoft® Windows® Internals, Fourth Edition: Windows 2000, Windows XP, and Windows Server 2003</a> by <a href="http://www.solsem.com/">David Solomon</a> and <a href="https://en.wikipedia.org/wiki/Mark_Russinovich">Mark Russinovich</a></li>
+</ul>
+<h3 id="c"><a href="/Cpp">C++</a></h3>
+<ul>
+<li><a href="http://ludwig.csie.ncku.edu.tw/members/alvin/2010_9/ESL/C++_Process_2010.pdf">Brief Review to C++ / Process / Thread</a> (pdf)</li>
+<li><a href="http://ftp.dreamtime.org/pub/programming/c++/orbacus-jtc/2.0/JTC-2.0.0.pdf">JThreads/C++ - “Java-like Threads for C++”</a> (pdf)</li>
+<li><a href="http://www.boost.org/doc/libs/1_47_0/doc/html/thread.html">Chapter 24. Thread - Boost 1.47.0</a> by <a href="http://stackoverflow.com/users/5597/anthony-williams">Anthony Williams</a></li>
+<li><a href="http://doc.qt.nokia.com/latest/threads.html">Qt 4.7: Thread Support in Qt</a></li>
+<li><a href="http://alaric.fendrich.se/Downloads.html#Topic7">Input thread, code</a> from <a href="/Alaric">Alaric</a> Downloads by <a href="/Peter_Fendrich">Peter Fendrich</a></li>
+<li><a href="http://tinythreadpp.bitsnbites.eu/">TinyThread++ - Portable thread library for C++</a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a></li>
+</ul>
+<h3 id="java"><a href="/Java">Java</a></h3>
+<ul>
+<li><a href="http://download.oracle.com/javase/1.5.0/docs/api/java/lang/Thread.html">Thread (Java 2 Platform SE 5.0)</a></li>
+<li><a href="http://docs.oracle.com/javase/tutorial/essential/concurrency/procthread.html">Processes and Threads (The Java™ Tutorials &gt; Essential Classes &gt; Concurrency)</a></li>
+</ul>
+<h3 id="gpu"><a href="/GPU">GPU</a></h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Parallel_Thread_Execution">Parallel Thread Execution from Wikipedia</a> » <a href="/SIMD_and_SWAR_Techniques">SIMD and SWAR Techniques</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Programming">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=60979&amp;start=4">Re: lazy smp using ms vs2015 c++11 std::async</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, July 31, 2016<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://scottmeyers.blogspot.co.uk/2012/04/information-on-c11-memory-model.html">Information on the C++11 Memory Model</a> by <a href="https://en.wikipedia.org/wiki/Scott_Meyers">Scott Meyers</a>, April 24, 2012<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://blogs.fau.de/hager/">Georg Hager's Blog | Random thoughts on High Performance Computing</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://tinythreadpp.bitsnbites.eu/">TinyThread++ - Portable thread library for C++</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://en.cppreference.com/w/cpp/thread/async">std::async - cppreference.com</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="https://code.google.com/p/libusb-winusb-wip/downloads/detail?name=pthread-win32_x64.zip&amp;can=2&amp;q=">pthread-win32_x64.zip - libusb-winusb-wip</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=53063">TinyThread++</a> by <a href="/Alberto_Sanjuan">Alberto Sanjuan</a>, <a href="/CCC">CCC</a>, July 24, 2014<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Phish">Phish</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Thread">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

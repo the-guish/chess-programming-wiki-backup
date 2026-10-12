@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Time Management - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Time Management</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Search">Search</a> * Time Management</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="/assets/Roland_Barcsik_Timeout.jpg" alt="Roland La Tuffo Barcsik - Time out 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Arts">Roland La Tuffo Barcsik</a> - Time out <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://streathambrixtonchess.blogspot.de/2009/11/chess-in-art-postscript-chess-in_22.html">The Streatham &amp; Brixton Chess Blog: Chess in Art Postscript: Chess-in-Artists do for Christmas</a> The site <em>Roland La Tuffo Barczik Hungarian artist, La Tuffo's Artwork, Barcsik's Chess Art</em> no longer available<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Time management</strong> refers to algorithms and heuristics to allocate time for searching a move under <a href="https://en.wikipedia.org/wiki/Time_control">time control</a> requirements in a <a href="/Chess_Game">game of chess</a>. The player <a href="/Side_to_move">to move</a> consumes his time, and if he exceeds his time limit, the <a href="/Chess_Game">game</a> is lost on demand of the opponent player, or in automatic computer chess play by an arbiter instance.</p>
+<p><a href="/Iterative_Deepening">Iterative deepening</a> in conjunction with its predictable <a href="/Branching_Factor">effective branching factor</a> allows a flexible time management either to terminate the current <a href="/Iteration">iteration</a> and to fall back on <a href="/Best_Move">best move</a> and <a href="/Principal_Variation">PV</a> of the previous iteration, or to decide about termination prior to start a new iteration or to search a next root-move.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#time-controls">Time Controls</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#sudden-death">Sudden Death</a></li>
+<li><a href="#cyclic-time-controls">Cyclic Time Controls</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#time-control-with-increment">Time Control with Increment</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#fischer-time">Fischer Time</a></li>
+<li><a href="#bronstein-time">Bronstein Time</a></li>
+</ol>
+</details></li>
+</ol>
+</details></li>
+<li><a href="#basic-tm">Basic TM</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#enhancements">Enhancements</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#soft-bound">Soft Bound</a></li>
+<li><a href="#considerations">Considerations</a></li>
+<li><a href="#premature-termination">Premature Termination</a></li>
+<li><a href="#historical-techniques">Historical Techniques</a></li>
+</ol>
+</details></li>
+<li><a href="#losing-on-time">Losing on Time</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1993-">1993 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="time-controls">Time Controls</h2>
+<p><a href="https://en.wikipedia.org/wiki/Fast_chess">Fast chess</a> is usually played with an immediate <a href="https://en.wikipedia.org/wiki/Sudden_death_%28sport%29#Board_games">sudden death</a> time control, while others may have one or more regular time controls before the sudden death control applies there as well. <span id="SuddenDeath"></span></p>
+<h3 id="sudden-death">Sudden Death</h3>
+<p>Sudden death refers to a requirement that all the remaining moves, rather than a fixed number of moves, need to be played within the remaining time. Typically programs estimate the game will last further 25..40 moves, and divide the remaining time by this number.</p>
+<h3 id="cyclic-time-controls">Cyclic Time Controls</h3>
+<p>Cyclic time controls define a number of moves to be made in a fixed amount of time. We don't have to make estimations for how long the game will last. However, some time should be saved in order to have a buffer in case later moves warrant longer thinking times.</p>
+<h3 id="time-control-with-increment">Time Control with Increment</h3>
+<p>To avoid time trouble where often blunders decide the game, chess champions, most notable <a href="https://en.wikipedia.org/wiki/Bobby_Fischer">Bobby Fischer</a> and <a href="/David_Bronstein">David Bronstein</a>, proposed a delay or increment of time for each move made. It requires a special delay clock, which became handy with the <a href="https://en.wikipedia.org/wiki/Game_clock#Early_development_of_digital_game_clocks">development of digital chess clocks</a> in the 70s and 80s <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> .</p>
+<p>Time trouble is also an issue in computer chess, either due to operators in over the board chess, boosted by deviation of internal and external clock, or in transmitting move transfer latencies in automatic play, where it is quite common nowadays to play with increment per move. <span id="FischerTime"></span></p>
+<h4 id="fischer-time">Fischer Time</h4>
+<p>In 1988 <a href="https://en.wikipedia.org/wiki/Bobby_Fischer">Bobby Fischer</a> proposed an unconditional increment per move, no matter whether the delay was exhausted or not. With Fischer time one may therefor increase the remaining time if one moves faster than the delay <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> .</p>
+<h4 id="bronstein-time">Bronstein Time</h4>
+<p><a href="/David_Bronstein">Bronstein's</a> time works similar, but never increases the remaining time. It was for instance used during the late <a href="/Aegon_Tournaments">Aegon Tournaments</a>.</p>
+<h2 id="basic-tm">Basic TM</h2>
+<p>A basic time management technique is to use <span style="background-color: #e0e0e0;">base / 20 + increment / 2</span> time per move. This is very competitive with advanced time management schemes, and is typically chosen as the foundation to build upon.</p>
+<h2 id="enhancements">Enhancements</h2>
+<p>Human chess players often wonder about the inflexible time management of various programs. A basic time management scheme might be enhanced in several ways, considering dynamic, statistical as well as static features of the search, the <a href="/Best_Move">best move</a> and its <a href="/Principal_Variation">PV</a>.</p>
+<h3 id="soft-bound">Soft Bound</h3>
+<p>Drawing on the observation that terminating a depth halfway is wasteful, a large enhancement to a basic time management scheme is to introduce two levels of time allocation. Namely, one optimium time threshold (soft bound), and one maximum time threshold (hard bound). During search, the optimum time threshold is checked on each iteration of <a href="/Iterative_Deepening">iterative deepening</a>, while the maximum time threshold is checked periodically, usually by every set amount of nodes.</p>
+<h3 id="considerations">Considerations</h3>
+<ul>
+<li>How often did the <a href="/Best_Move">best move</a> change during the (last N) previous iterations?</li>
+<li>The score function over iterations and best moves, increase or decrease and/or oscillation, score amplitude, etc.</li>
+<li>The ratio of the size of the subtree under the best move versus the size of the whole <a href="/Search_Tree">search tree</a></li>
+<li>Only one obvious way to recapture in an otherwise quiet position</li>
+</ul>
+<h3 id="premature-termination">Premature Termination</h3>
+<ul>
+<li>Only one legal move</li>
+<li>Prior a start of a new iteration, the relation of elapsed and allocated time (f.i. &gt; 50%) <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></li>
+</ul>
+<h3 id="historical-techniques">Historical Techniques</h3>
+<p>These techniques saw use in older programs, but have fallen out of use with the advent of modern testing and tuning.</p>
+<ul>
+<li>Fail low situations, a severe drop of the score may cause programs to allocate "panic time" to hopefully solve the critical situation</li>
+<li>During the first moves out of the <a href="/Opening_Book">opening book</a> programs often allocate more time</li>
+</ul>
+<p>For instance, <a href="/Robert_Hyatt">Robert Hyatt</a> gave following formula from <a href="/Cray_Blitz">Cray Blitz</a> in <em>Using Time Wisely</em> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a></p>
+<!-- -->
+
+<pre><code>   nMoves =  min( numberOfMovesOutOfBook, 10 );
+   factor = 2 -  nMoves / 10 
+   target = timeLeft / numberOfMovesUntilNextTimeControl
+   time   = factor * target</code></pre>
+<p>inspired by following graph of human timing from several grandmaster tournament games</p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="/assets/GrandmasterThinkingTime.jpg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></p>
+<p><strong>Note that good time management for humans differs greatly from good time management for engines, and this graph should not be taken as a way to shape your engine's time usage.</strong></p>
+<ul>
+<li>New and therefor likely not singular best moves, but statically "suspect", like weakening the <a href="/Pawn_Structure">pawn structure</a> or a <a href="/Sacrifice">sacrifice</a> favors to allocate extra time and to start a further iteration, even if the score is fine.</li>
+</ul>
+<h2 id="losing-on-time">Losing on Time</h2>
+<ul>
+<li><a href="/ACM_1974">Tech 2 versus Ribbit</a> at <a href="/ACM_1974">ACM 1974</a></li>
+<li><a href="/ACM_1974">Duchess vs. T. Belle</a> at <a href="/ACM_1974">ACM 1974</a></li>
+<li><a href="/Massy_2002">Chess Tiger X - Pharaon 2.65</a> at <a href="/Massy_2002">Massy 2002</a></li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/CPW-Engine_chronos">CPW-Engine_chronos</a></li>
+<li><a href="/Iterative_Deepening">Iterative Deepening</a></li>
+<li><a href="/Playing_Strength">Playing Strength</a></li>
+<li><a href="/Pondering">Pondering</a></li>
+<li><a href="/Search_Explosion">Search Explosion</a></li>
+<li><a href="/Search_Statistics">Search Statistics</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Robert_Hyatt">Robert Hyatt</a> (<strong>1984</strong>). <em>Using Time Wisely</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 7, No. 1</a></li>
+<li><a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Albert_Gower">Albert Gower</a>, <a href="/Harry_Nelson">Harry Nelson</a> (<strong>1985</strong>). <em>Using Time Wisely, revisited (extended abstract).</em> Proceedings of the 1985 ACM annual conference on The range of computing: mid-80's perspective, p. 271, Denver, Colorado. ISBN 0-89791-170-9.</li>
+<li><a href="/Shaul_Markovitch">Shaul Markovitch</a>, Yaron Sella (<strong>1993</strong>). <em><a href="https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-8640.1996.tb00254.x">Learning of Resource Allocation Strategies for Game Playing</a></em>. <a href="/Conferences">IJCAI 1993</a>, <a href="https://www.ijcai.org/Proceedings/93-2/Papers/020.pdf">pdf</a></li>
+<li><a href="/Ingo_Althöfer">Ingo Althöfer</a>, <a href="/Chrilly_Donninger">Chrilly Donninger</a>, <a href="/Ulf_Lorenz">Ulf Lorenz</a>, <a href="/Valentin_Rottmann">Valentin Rottmann</a> (<strong>1994</strong>). <em>On Timing, Permanent Brain and Human Intervention.</em> <a href="/Advances_in_Computer_Chess_7">Advances in Computer Chess 7</a></li>
+<li><a href="/Chrilly_Donninger">Chrilly Donninger</a> (<strong>1994</strong>). <em>A la Recherche du Temps Perdu: 'That was easy'</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 17, No. 1</a></li>
+<li><a href="/Levente_Kocsis">Levente Kocsis</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2000</strong>). <em><a href="http://link.springer.com/chapter/10.1007/3-540-45579-5_11">Learning Time Allocation using Neural Networks</a></em>. <a href="/CG_2000">CG 2000</a>, <a href="http://zaphod.aml.sztaki.hu/papers/kocsis-CG00.ps">postscript</a></li>
+<li><a href="/Vladan_Vučković">Vladan Vučković</a>, Rade Šolak (<strong>2009</strong>). <em><a href="http://facta.junis.ni.ac.rs/acar/acar200901/acar2009-07.html">Time Management Procedure in Computer Chess</a></em>. <a href="http://facta.junis.ni.ac.rs/acar/acar200901/acar200901toc.html">Facta Universitatis, Automatic Control and Robotics, Vol. 8, No. 1</a></li>
+<li>Rade Šolak, <a href="/Vladan_Vučković">Vladan Vučković</a> (<strong>2009</strong>). <em>Time Management during a Chess Game</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 32 No. 4</a></li>
+<li><a href="/Shih-Chieh_Huang">Shih-Chieh Huang</a>, <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/Shun-Shii_Lin">Shun-Shii Lin</a> (<strong>2011</strong>). <em>Time Management for Monte-Carlo Tree Search Applied to the Game of Go</em>. TAAI 2010, <a href="http://remi.coulom.free.fr/Publications/TimeManagement.pdf">pdf</a></li>
+<li><a href="/Hendrik_Baier">Hendrik Baier</a>, <a href="/Mark_Winands">Mark Winands</a> (<strong>2011</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-642-31866-5_4">Time Management for Monte-Carlo Tree Search in Go</a></em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a></li>
+<li><a href="/Hendrik_Baier">Hendrik Baier</a>, <a href="/Mark_Winands">Mark Winands</a> (<strong>2016</strong>). <em>Time Management for Monte Carlo Tree Search</em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 8, No. 3, <a href="https://dke.maastrichtuniversity.nl/m.winands/documents/time_management_for_monte_carlo_tree_search.pdf">draft as pdf</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1993-">1993 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.chess/browse_frm/thread/c7bf58b3c59273e2/f388d174febe18d2">Open Letter To Chess Computer Programmers</a> by Kevin Gowen, <a href="/Computer_Chess_Forums">rec.games.chess</a>, December 26, 1993</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/5ecf6f473db3eeb6">Computer chess strategy</a> by Al, <a href="/Computer_Chess_Forums">rgcc</a>, April 22, 1997</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=12827">Time usage</a> by John Bartkiw, <a href="/CCC">CCC</a>, December 08, 1997</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=14872">How to program search timeout ?</a> by <a href="/Rudolf_Posch">Rudolf Posch</a>, <a href="/CCC">CCC</a>, February 04, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=15406">How much time per move?</a> by <a href="/Andrew_Williams">Andrew Williams</a>, <a href="/CCC">CCC</a>, March 02, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=18553">Time control legend</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, May 13, 1998</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=95710">Question: Fail low at root and time management</a> by <a href="/William_Bryant">William Bryant</a>, <a href="/CCC">CCC</a>, February 08, 2000 » <a href="/Fail-Low">Fail-Low</a>, <a href="/Root">Root</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=282702">new idea on managing time using depth reduction at root</a> by <a href="/Scott_Farrell">Scott Farrell</a>, <a href="/CCC">CCC</a>, February 08, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=359869">finding when a move is obvious</a> by <a href="/Eric_Oldre">Eric Oldre</a>, <a href="/CCC">CCC</a>, April 13, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=378905">question about fixing the time management of movei</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, July 25, 2004</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?p=131908">Where to put timeout() code in search?</a> by <a href="/Stuart_Cracraft">Stuart Cracraft</a>, <a href="/CCC">CCC</a>, July 18, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=20125">obvious/easy move</a> by <a href="/Charles_Roberson">Charles Roberson</a>, <a href="/CCC">CCC</a>, March 12, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=27446">Crafty (and others?) time management question</a> by <a href="/John_Merlino">John Merlino</a>, <a href="/CCC">CCC</a>, April 14, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=28438">Time managment on ponder hit</a> by <a href="/Mathieu_Pagé">Mathieu Pagé</a>, <a href="/CCC">CCC</a>, June 16, 2009 » <a href="/Pondering">Pondering</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=30326">Info from timeout search</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, <a href="/CCC">CCC</a>, October 26, 2009</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=35554">As though they were pondering</a> by <a href="/Gabor_Szots">Gabor Szots</a>, <a href="/CCC">CCC</a>, July 23, 2010 » <a href="/Pondering">Pondering</a></li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=588">Move on Hash Hit</a> by <a href="/Franklin_Titus">kingliveson</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, August 18, 2010 » <a href="/Pondering">Pondering</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=35931">New Time Controls for WB</a> by <a href="/Matthias_Gemuh">Matthias Gemuh</a>, <a href="/CCC">CCC</a>, August 30, 2010 » <a href="/Chess_Engine_Communication_Protocol">Chess Engine Communication Protocol</a>, <a href="/WinBoard">WinBoard</a>, <a href="/ChessGUI">ChessGUI</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=38608">Repeating moves to add time</a> by <a href="/Fermin_Serrano">Fermin Serrano</a>, <a href="/CCC">CCC</a>, March 31, 2011</li>
+</ul>
+<p><strong>2012</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=43636">Sudden death time controls</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, May 10, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=45325">Winboard protocol and fractional increments</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, September 25, 2012 » <a href="/Chess_Engine_Communication_Protocol">Chess Engine Communication Protocol</a>, <a href="/WinBoard">WinBoard</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46503">Adjustable search pruning depending on time control</a> by Jerry Donald, <a href="/CCC">CCC</a>, December 20, 2012 » <a href="/Pruning">Pruning</a>, <a href="/Late_Move_Reductions">Late Move Reductions</a></li>
+</ul>
+<p><strong>2013</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47242">"panic time" and "easy moves"</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, February 16, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47251">Yet another time allocation heuristic</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, February 17, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47442">easy-hard moves (again)</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, March 08, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48824">Easy easy move</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, August 02, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48903">out-of-time: what to do?</a> by <a href="/Folkert_van_Heusden">Folkert van Heusden</a>, <a href="/CCC">CCC</a>, August 09, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50705">Losing on time</a> by <a href="/Gregory_Strong">Gregory Strong</a>, <a href="/CCC">CCC</a>, December 31, 2013</li>
+</ul>
+<p><strong>2014</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50718">Time control comparison between engines</a> by <a href="/Ed_Schroder">Ed Schroder</a>, <a href="/CCC">CCC</a>, January 01, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51135">fixed time control management</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, February 01, 2014</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=53060">Question about Time Management</a> by ambrooks1, <a href="/Computer_Chess_Forums">Winboard Forum</a>, February 06, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51720">Move time and compiler optimization</a> by <a href="/Edmund_Moshammer">Edmund Moshammer</a>, <a href="/CCC">CCC</a>, March 23, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52021">Playing strength development - increasing time control</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, April 17, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52069">Time based contempt</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, April 20, 2014 » <a href="/Contempt_Factor">Contempt Factor</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52464">Time Management</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, May 29, 2014</li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54939">Elo gain and optimal time management</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, January 11, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56534">What's the fastest time control you can effectively test at?</a> by Jordan Bray, <a href="/CCC">CCC</a>, May 30, 2015</li>
+</ul>
+<p><strong>2016</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=60869">Time management trick</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/CCC">CCC</a>, July 19, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61672">Photographing Chess Clock</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, October 10, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61784">Doubling of time control</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, October 21, 2016 » <a href="/Match_Statistics">Doubling TC</a>, <a href="/Depth">Diminishing Returns</a>, <a href="/Playing_Strength">Playing Strength</a>, <a href="/Komodo">Komodo</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61976">New idea for "easy move detection"</a> by <a href="/Rasmus_Althoff">Rasmus Althoff</a>, <a href="/CCC">CCC</a>, November 05, 2016 » <a href="/CT800">CT800</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62146">Stockfish 8 - Double time control vs. 2 threads</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, November 15, 2016 » <a href="/Match_Statistics">Doubling TC</a>, <a href="/Depth">Diminishing Returns</a>, <a href="/Playing_Strength">Playing Strength</a>, <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62586">On time management</a> by <a href="/Rasmus_Althoff">Rasmus Althoff</a>, <a href="/CCC">CCC</a>, December 24, 2016</li>
+</ul>
+<p><strong>2017</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63362">Time managment ?</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, March 07, 2017</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=3098">Time management ideas</a> by lucasart, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, April 03, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64683">Invariance with time control of rating schemes</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, July 22, 2017 <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66099">Time Managment translating to SMP</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, December 23, 2017 » <a href="/Parallel_Search">Parallel Search</a></li>
+</ul>
+<p><strong>2018 ...</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66821">Time control envelope in top engines could be improved?</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, March 13, 2018 » <a href="/Match_Statistics">Match Statistics</a>, <a href="/Playing_Strength">Playing Strength</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=68692">easy move?</a> by <a href="/Folkert_van_Heusden">Folkert van Heusden</a>, <a href="/CCC">CCC</a>, October 19, 2018</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=68692&amp;start=8">Re: easy move?</a> by <a href="/Álvaro_Begué">Álvaro Begué</a>, <a href="/CCC">CCC</a>, October 19, 2018</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72686">UCI pondering and time management</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, December 30, 2019 » <a href="/UCI">UCI</a>, <a href="/Pondering">Pondering</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75944">CECP "time" and "otim"</a> by <a href="/Marcel_Vanthoor">Marcel Vanthoor</a>, <a href="/CCC">CCC</a>, November 30, 2020 » <a href="/Chess_Engine_Communication_Protocol">CECP</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="http://web.archive.org/web/20070607151549/www.brucemo.com/compchess/programming/time.htm">Time Allocation</a> from <a href="/Bruce_Moreland">Bruce Moreland's</a> <a href="http://web.archive.org/web/20070607231311/www.brucemo.com/compchess/programming/index.htm">Programming Topics</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Time_control">Time control from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Time_management">Time management from Wikipedia</a></li>
+<li><a href="http://web.archive.org/web/20050328050743/http://www.playwitharena.com:80/">Timing with a Neural Networks</a> by <a href="/Volker_Annuss">Volker Annuss</a>, <a href="/Arena">Arena</a> News-Ticker, Page 6, 86, FQ, March 23, 2005 (<a href="https://en.wikipedia.org/wiki/Wayback_Machine">Wayback Machine</a>)</li>
+<li><a href="http://web.archive.org/web/20100615030345/http://www.chesscafe.com/text/time.txt">Time Management During a Chess Game</a> by <a href="/Dan_Heisman">Dan Heisman</a> (<a href="https://en.wikipedia.org/wiki/Wayback_Machine">Wayback Machine</a>)</li>
+<li><a href="https://en.wikipedia.org/wiki/Time_of_check_to_time_of_use">Time of check to time of use from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Buddy_Rich">Buddy Rich</a> - <a href="https://en.wikipedia.org/wiki/Don_Menza#Educator_and_composer">Time Check</a>, at The Top of the <a href="https://en.wikipedia.org/wiki/Midtown_Plaza_%28Rochester%29">Plaza</a> in <a href="https://en.wikipedia.org/wiki/Rochester,_New_York">Rochester, NY</a>, February 6, 1973, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/5reK-_e-02Q" title="YouTube video 5reK-_e-02Q" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=5reK-_e-02Q">Watch on YouTube</a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Hiromi_Uehara#Hiromi.27s_Sonicbloom">Hiromi’s Sonicbloom</a> - <a href="https://en.wikipedia.org/wiki/Time_Control">Time Difference</a>, 2007, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p><a href="/Category:Hiromi_Uehara">Hiromi Uehara</a>, <a href="https://en.wikipedia.org/wiki/Martin_Valihora">Martin Valihora</a>, <a href="https://en.wikipedia.org/wiki/Tony_Grey">Tony Grey</a>, <a href="/Category:David_Fiuczynski">David Fiuczynski</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/cUUcHuy12ZQ" title="YouTube video cUUcHuy12ZQ" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=cUUcHuy12ZQ">Watch on YouTube</a></p>
+<ul>
+<li><a href="/Category:Hiromi_Uehara">Hiromi Uehara</a>, <a href="/Category:David_Fiuczynski">David Fiuczynski</a>, <a href="https://en.wikipedia.org/wiki/Tony_Grey">Tony Grey</a>, <a href="http://www.linkedin.com/pub/jordan-perlson/18/562/b1b">Jordan Perlson</a> - <a href="https://en.wikipedia.org/wiki/Time_Control">Time Out</a>, <a href="https://es.wikipedia.org/wiki/Festival_Internacional_de_Jazz_de_San_Javier">XI Festival de Jazz de San Javier</a>, 2008, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/GzOSJZ7xGKM" title="YouTube video GzOSJZ7xGKM" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=GzOSJZ7xGKM">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Search">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://digitalgametechnology.com/site/index.php/History/clock-history.html">History of the clocks</a> from <a href="http://digitalgametechnology.com/site/">DGT - Digital Game Technology</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://www.google.com/patents?vid=4884255">Digital chess clock - Google Patent Search</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://www.stmintz.com/ccc/index.php?id=378905">question about fixing the time management of movei</a> by <a href="/Uri_Blass">Uri Blass</a> from <a href="/CCC">CCC</a>, July 25, 2004<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="/Robert_Hyatt">Robert Hyatt</a> (<strong>1984</strong>). <em>Using Time Wisely</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 7, No. 1</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://hardy.uhasselt.be/Toga/normalized_elo.pdf">Normalized Elo</a> (pdf) by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:David_Fiuczynski">David Fiuczynski</a> · <a href="/Category:Hiromi_Uehara">Hiromi Uehara</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Time_Management">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, ShawnXu, Ciekce.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Uncertainty Cut-Offs - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Uncertainty Cut-Offs</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Search">Search</a> * <a href="/Selectivity">Selectivity</a> * <a href="/Pruning">Pruning</a> * Uncertainty Cut-Offs</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/4/47/Uncertainty_principle.gif" alt="Uncertainty principle 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Uncertainty principle <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1">The <a href="https://en.wikipedia.org/wiki/Gaussian_function">gaussian</a> <a href="https://en.wikipedia.org/wiki/Wave_function">wave function</a> Ψ of an initially very localized free particle, by <a href="https://commons.wikimedia.org/wiki/User:Thierry_Dugnolle">Thierry Dugnolle</a>, <a href="https://en.wikipedia.org/wiki/Uncertainty_principle">Uncertainty principle from Wikipedia</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Uncertainty Cut-Offs</strong>,<br />
+a safe pruning technique performed in <a href="/Principal_Variation_Search">PVS</a> at <a href="/Sibling_Node">siblings</a> of a <a href="/Node_Types">PV-node</a>, which are <a href="/Node_Types">Cut-nodes</a>, expected to <a href="/Fail-High">fail-high</a> and therefor to don't improve the score at the parent PV-node. Even more, the fail-high occurs in &gt; 90% from the first move <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. Sometimes, previous expectations are changing, and an expected Cut-node turns out to become an <a href="/Node_Types">All-node</a>, yielding in a re-search.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#the-idea">The Idea</a></li>
+<li><a href="#abstract">Abstract</a></li>
+<li><a href="#pseudo-code">Pseudo Code</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="the-idea">The Idea</h2>
+<p>The basic idea of Uncertainty Cut-Offs is that after the first and some further promising moves didn't fail-high at an expected Cut-Node, to don't waste time with late moves, to premature return an uncertain score of an All-node, indicated by a boolean flag to the PV-node callee. Uncertainty Cut-Offs were investigated by <a href="/Yngvi_Björnsson">Yngvi Björnsson</a> and <a href="/Andreas_Junghanns">Andreas Junghanns</a> during the mid 90s at <a href="/University_of_Alberta">University of Alberta</a>, as implemented in their chess program <a href="/The_Turk">The Turk</a>. The contribution of Yngvi Björnsson, <a href="/Tony_Marsland">Tony Marsland</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a> and <a href="/Andreas_Junghanns">Andreas Junghanns</a> was introduced by Björnsson at the <a href="/Advances_in_Computer_Chess_8">Advances in Computer Chess 8</a> conference 1996 <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>, published in the conference proceedings and the <a href="/ICGA_Journal">ICCA Journal</a>.</p>
+<h2 id="abstract">Abstract</h2>
+<p><a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></p>
+<p><code>A new domain-independent pruning method is described that guarantees returning a correct game value. Even though alpha-beta-based chess programs are already searching close to the minimal tree, there is still scope for improvement. Our idea hinges on the recognition that the game tree has two types of node, those were cut-offs occur and those that must be fully explored. In the latter case one of the moves is best and yields the subtree value, thus for the remaining alternatives one is simply proving their inferiority. This offers the opportunity for pruning, while introducing some potential for uncertainty in the search process. There are two cases of interest. One considers the immediate alternatives to the Principal Variation itself, and here a safe uncertainty cut-off is presented, the second is a proposal for an unsafe generalization, one which offers substantial search reduction but with the potential for control of the error probability. Experiments with the new pruning method show some potential for savings in the search. </code></p>
+<h2 id="pseudo-code">Pseudo Code</h2>
+<p><em>slightly modified <a href="/C">C</a>-like syntax</em> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a></p>
+<pre><code>TreeValue pvs( node, α, β, depth, ply ) {
+   if ( depth == 0 ) return evaluate( node );
+   next = firstSuccessor( node );
+   best = -pvs( next, -β, -α, depth-1, ply+1 );
+   next = nextSibling( next );
+   while ( next ) {
+      if ( bext &gt;= β ) return best;
+      α = max( α, best );
+      {merit, unsure} = -nws( next, -α, depth-1, ply+1, PV);
+      if ( unsure )
+         merit =  -pvs( next, -β, -α, depth-1, ply+1 );
+      else if ( merit &gt; α &amp;&amp; merit &lt; β )
+         merit =  -pvs( next, -β, -merit, depth-1, ply+1 );
+      best = max( merit, best );
+      next = nextSibling( next );
+   }
+   return best;
+}
+
+{TreeValue, Boolean} nws( node, β, depth, ply, parent ) {
+   if ( depth == 0 ) return {evaluate( node ), false};
+   next = firstSuccessor( node );
+   type = parent == CUT ? ALL : CUT;
+   uncertain = false;
+   estimate = -oo;
+   while ( next ) {
+      {merit, unsure} = -nws( next, 1-β, depth-1, ply+1, type);
+      if ( unsure ) uncertain = true;
+      estimate = max ( merit, estimate );
+      if ( merit &gt;= β )
+         return {estimate, unsure}; /* CUT node */
+      if ( uncertaintyCutoff( estimate, ply,  parent ) )
+         return {estimate, true};   /* premature ALL node */
+      next = nextSibling( next );
+   }
+   return {estimate, uncertain};    /* ALL node */
+}</code></pre>
+<p>While the above PVS framework applies the backup of uncertainty, the particular cut-off constraints as implemented in <em>uncertaintyCutoff</em> given below does not need to back up uncertainty information. This is because the pruning is only applied if it is guaranteed that the sub-branch will be re-searched.</p>
+<pre><code>Boolean uncertaintyCutoff( best, ply, parent ) {
+   return ( parent == PV
+         &amp;&amp; searchStack[ply].movesTried &gt; moveLimit
+         &amp;&amp; -best &gt; searchStack[ply-1].α
+         &amp;&amp; -best &lt; searchStack[ply-1].β
+         &amp;&amp; ...
+          );
+}</code></pre>
+<h2 id="conclusion">Conclusion</h2>
+<p>Experiments by Björnsson and Junghanns indicate, even though the savings are small, and this pruning technique does not make much difference in most cases, it can significantly decrease the search effort when move ordering heuristics fail.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Enhanced_Forward_Pruning">Enhanced Forward Pruning</a></li>
+<li><a href="/Late_Move_Reductions">Late Move Reductions</a></li>
+<li><a href="/Multi-Cut">Multi-Cut</a></li>
+<li><a href="/ProbCut">ProbCut</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Yngvi_Björnsson">Yngvi Björnsson</a>, <a href="/Tony_Marsland">Tony Marsland</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, <a href="/Andreas_Junghanns">Andreas Junghanns</a> (<strong>1997</strong>). <em>Searching with Uncertainty Cut-offs.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 20, No. 1</a>, <a href="http://www.ru.is/faculty/yngvi/pdf/BjornssonMSJ00.pdf">pdf</a></li>
+<li><a href="/Yngvi_Björnsson">Yngvi Björnsson</a>, <a href="/Tony_Marsland">Tony Marsland</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, <a href="/Andreas_Junghanns">Andreas Junghanns</a> (<strong>1997</strong>). <em>Searching with Uncertainty Cut-offs</em>. <a href="/Advances_in_Computer_Chess_8">Advances in Computer Chess 8</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Uncertainty">Uncertainty from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Uncertainty_principle">Uncertainty principle from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Uncertainty_%28film%29">Uncertainty (film) from Wikipedia</a></li>
+<li><a href="http://apollo.lsc.vsc.edu/classes/remote/lecture_notes/measurements/uncertainty.html">Uncertainty and Bias</a> from <a href="http://apollo.lsc.vsc.edu/classes/remote/lecture_notes/measurements/index.html">Making Meteorological Measurements</a></li>
+<li><a href="/Category:The_Heliocentrics">The Heliocentrics</a> - The Uncertainty Principle, <a href="https://theheliocentrics.bandcamp.com/album/a-world-of-masks-2">A World Of Masks</a> (2017), <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/ISHbL_ueHDc" title="YouTube video ISHbL_ueHDc" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=ISHbL_ueHDc">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Pruning">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, <a href="/Wim_Pijls">Wim Pijls</a>, <a href="/Arie_de_Bruin">Arie de Bruin</a> (<strong>1996</strong>). <em>Exploiting Graph Properties of Game Trees.</em> <a href="/Conferences">AAAI-96</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/1c08a4963480dbf9">ICCAJ v.19 n.2 now in North America</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/Computer_Chess_Forums">rgcc</a>, July 03, 1996<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://groups.google.com/group/rec.games.chess.computer/msg/a034d6ccec29aa01">Re: ICCAJ v.19 n.2 now in North America</a> by <a href="/Dennis_Breuker">Dennis Breuker</a>, <a href="/Computer_Chess_Forums">rgcc</a>, July 09, 1996<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="/Yngvi_Björnsson">Yngvi Björnsson</a>, <a href="/Tony_Marsland">Tony Marsland</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, <a href="/Andreas_Junghanns">Andreas Junghanns</a> (<strong>1997</strong>). <em>Searching with Uncertainty Cut-offs.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 20, No. 1</a>, <a href="http://www.ru.is/faculty/yngvi/pdf/BjornssonMSJ00.pdf">pdf</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:The_Heliocentrics">The Heliocentrics</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Uncertainty_Cut-Offs">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transposition Table - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Transposition Table</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Search">Search</a> * Transposition Table</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="https://en.wikipedia.org/wiki/The_Persistence_of_Memory" target="_blank" rel="noopener noreferrer"><img src="/assets/The_Persistence_of_Memory.jpg" alt="Salvador Dalí, The Persistence of Memory 1931" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Salvador_Dalí">Salvador Dalí</a>, <a href="https://en.wikipedia.org/wiki/The_Persistence_of_Memory">The Persistence of Memory</a> 1931</span></span></p>
+<p>A <strong>Transposition Table</strong>,<br />
+first used in <a href="/Richard_Greenblatt">Greenblatt's</a> program <a href="/Mac_Hack">Mac Hack VI</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>, is a database that stores results of previously performed searches. It is a way to greatly reduce the search space of a <a href="/Search_Tree">chess tree</a> with little negative impact. Chess programs, during their <a href="/Brute-Force">brute-force</a> search, encounter the same <a href="/Chess_Position">positions</a> again and again, but from different sequences of <a href="/Moves">moves</a>, which is called a <a href="/Transposition">transposition</a>. Transposition (and <a href="/Refutation_Table">refutation</a>) tables are techniques derived from <a href="/Dynamic_Programming">dynamic programming</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>, a term coined by <a href="/Richard_E._Bellman">Richard E. Bellman</a> in the 1950s, when programming meant planning and dynamic programming was conceived to optimally plan multistage processes <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> .</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#how-it-works">How it works</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#hash-functions">Hash functions</a></li>
+<li><a href="#address-calculation">Address Calculation</a></li>
+</ol>
+</details></li>
+<li><a href="#what-information-is-stored">What Information is Stored</a></li>
+<li><a href="#table-entry-types">Table Entry Types</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#using-the-transposition-table">Using the Transposition Table</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#transposition-table-cutoffs">Transposition Table Cutoffs</a></li>
+<li><a href="#hash-move">Hash Move</a></li>
+<li><a href="#singular-extensions">Singular Extensions</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#collisions">Collisions</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#cardinalities">Cardinalities</a></li>
+<li><a href="#index-collisions">Index Collisions</a></li>
+<li><a href="#key-collisions">Key Collisions</a></li>
+<li><a href="#bits-required">Bits Required</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#replacement-strategies">Replacement Strategies</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#always-replace">Always Replace</a></li>
+<li><a href="#priority-by-searched-nodes-count">Priority by Searched Nodes Count</a></li>
+<li><a href="#priority-by-move-ordering-position">Priority by Move Ordering Position</a></li>
+<li><a href="#depth-preferred">Depth-Preferred</a></li>
+<li><a href="#two-tier-system">Two-tier System</a></li>
+<li><a href="#bucket-systems">Bucket Systems</a></li>
+<li><a href="#aging">Aging</a></li>
+</ol>
+</details></li>
+<li><a href="#tt-and-parallel-search">TT and Parallel Search</a></li>
+<li><a href="#further-hash-tables">Further Hash Tables</a></li>
+<li><a href="#maximizing-transpositions">Maximizing Transpositions</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#publications">Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1967-">1967 ...</a></li>
+<li><a href="#1970-">1970 ...</a></li>
+<li><a href="#1980-">1980 ...</a></li>
+<li><a href="#1990-">1990 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1990--1">1990 ...</a></li>
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000--1">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010--1">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="how-it-works">How it works</h2>
+<p>When the search encounters a <a href="/Transposition">transposition</a>, it is beneficial to 'remember' what was determined the last time the position was examined, rather than redoing the entire search again. For this reason, chess programs have a transposition table, which is a large <a href="/Hash_Table">hash table</a> storing information about positions previously searched, how deeply they were searched, and what we concluded about them. Even if the <a href="/Depth">depth</a> (draft) of the related transposition table entry is not big enough, or does not contain the right bound for a cutoff, a <a href="/Best_Move">best</a> (or good enough) move from a previous search can improve <a href="/Move_Ordering">move ordering</a>, and save search time. This is especially true inside an <a href="/Iterative_Deepening">iterative deepening</a> framework, where one gains valuable table hits from previous iterations.</p>
+<h3 id="hash-functions">Hash functions</h3>
+<p><a href="https://en.wikipedia.org/wiki/Hash_function">Hash functions</a> convert chess positions into an almost unique, scalar signature, allowing fast index calculation as well as space-saving verification of stored positions.</p>
+<ul>
+<li><a href="/Zobrist_Hashing">Zobrist Hashing</a></li>
+<li><a href="/BCH_Hashing">BCH Hashing</a></li>
+</ul>
+<p>Both, the more common Zobrist hashing as well BCH hashing use fast hash functions, to provide hash keys or signatures as a kind of <a href="https://en.wikipedia.org/wiki/G%C3%B6del_number">Gödel number</a> of chess positions, today typically <a href="/Quad_Word">64-bit</a> wide. They are <a href="/Incremental_Updates">updated incrementally</a> during <a href="/Make_Move">make</a> and <a href="/Unmake_Move">unmake move</a> by either own-inverse <a href="/General_Setwise_Operations">exclusive or</a> or by addition versus subtraction.</p>
+<h3 id="address-calculation">Address Calculation</h3>
+<p>The index is not based on the entire hash key because this is usually a 64-bit number, and with current hardware limitations, no hash table can be large enough to accommodate it. Therefore calculating the address or index requires a signature <a href="https://en.wikipedia.org/wiki/Modulo_operator">modulo</a> a number of entries, for the power of two sized tables, the lower part of the hash key, masked by an 'and'-instruction accordantly.</p>
+<p><span id="Entry"></span></p>
+<h2 id="what-information-is-stored">What Information is Stored</h2>
+<p>Typically, the following information is stored as determined by the <a href="/Search">search</a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> :</p>
+<ul>
+<li><a href="/Zobrist_Hashing">Zobrist-</a> or <a href="/BCH_Hashing">BCH-key</a>, to see whether the position is the right one while probing</li>
+<li><a href="/Best_Move">Best-</a> or <a href="/Refutation_Move">Refutation move</a></li>
+<li><a href="/Depth">Depth</a> (draft)</li>
+<li><a href="/Score">Score</a>, <em>either with</em> <a href="/Integrated_Bounds_and_Values">Integrated Bound and Value</a> <em>or otherwise with</em></li>
+<li><a href="/Node_Types">Type of Node</a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a></li>
+</ul>
+<p><a href="/Node_Types">PV-Node</a>, Score is <a href="/Exact_Score">Exact</a></p>
+<p><a href="/Node_Types">All-Node</a>, Score is <a href="/Upper_Bound">Upper Bound</a></p>
+<p><a href="/Node_Types">Cut-Node</a>, Score is <a href="/Lower_Bound">Lower Bound</a></p>
+<ul>
+<li><a href="/Transposition_Table">Age</a> is used to determine when to overwrite entries from searching previous positions during the <a href="/Chess_Game">game of chess</a></li>
+</ul>
+<h2 id="table-entry-types">Table Entry Types</h2>
+<p>In an <a href="/Alpha-Beta">alpha-beta search</a>, we usually do not find the exact value of a position. But we are happy to know that the value is either too low or too high for us to be concerned with searching any further. If we have the exact value, of course, we store that in the transposition table. But if the value of our position is either high enough to set the lower bound, or low enough to set the upper bound, it is good to store that information also. So each entry in the transposition table is identified with the <a href="/Node_Types">type of node</a>, often referred to as <a href="/Exact_Score">exact</a>, <a href="/Lower_Bound">lower</a>- or <a href="/Upper_Bound">upper bound</a>.</p>
+<span id="Usage">
+
+<h2 id="using-the-transposition-table">Using the Transposition Table</h2>
+<p>Transposition Tables are an integral part of an engine's search. It is used in both search heuristics and move ordering.</p>
+<h3 id="transposition-table-cutoffs">Transposition Table Cutoffs</h3>
+<p>Depth, value, and bound information can be used to produce cutoffs and reduce redudant computation. In more advanced engines transposition table cutoffs are not performed on <a href="/Node_Types"> PV-Nodes</a>.</p>
+<p>A cutoff can be performed when the depth of entry is greater (or equal) to the depth of the current node and one of the following criteria is satisfied:</p>
+<ul>
+<li>The entry type is <a href="/Exact_Score"> EXACT</a></li>
+<li>The entry type is <a href="/Lower_Bound"> LOWERBOUND</a> and greater than or equal to beta</li>
+<li>The entry type is <a href="/Upper_Bound"> UPPERBOUND</a> and less than alpha</li>
+</ul>
+<h3 id="hash-move">Hash Move</h3>
+<p><em>Main Article: <a href="/Hash_Move">Hash Move</a></em></p>
+<p>Best move/Refutation move information from the transposition table is the most important part of move ordering. They are first in order and can be searched before other moves are generated. When the hash move fails high, generating other moves is not necessary. In <a href="/Stockfish">Stockfish</a>, 75% of cutoffs produced in a position with hash moves are caused by the hash move.</p>
+<h3 id="singular-extensions">Singular Extensions</h3>
+<p><a href="/Singular_Extensions">Restricted SE</a> is only attempted on a position where a TT entry exist, they entry has a valid TT move, the entry has a high enough depth, and the entry has exact or lowerbound bounds.</p>
+<p><span id="Collisions"></span></p>
+<h2 id="collisions">Collisions</h2>
+<p>The <a href="https://en.wikipedia.org/wiki/Surjection">surjective</a> mapping from chess positions to a signature and an, even more, denser index range implies <strong>collisions</strong>, different positions share the same entries, for two different reasons, hopefully, rare ambiguous keys (type-1 errors), or regularly ambiguous indices (type-2 errors).</p>
+<h3 id="cardinalities">Cardinalities</h3>
+<p>The typical cardinalities of positions and signatures inside the search reflect the likelihood of collisions:</p>
+<table>
+<thead>
+<tr>
+<th><p>Cardinalities of positions and signatures</p></th>
+<th><p>#</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>Upper bound for the number of reachable <a href="/Chess_Position">chess positions</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p></td>
+<td style="text-align:right;"><p>1e46</p></td>
+</tr>
+<tr>
+<td><p>Different <a href="/Quad_Word">64 bit</a> keys</p></td>
+<td style="text-align:right;"><p>1.84e19</p></td>
+</tr>
+<tr>
+<td><p>Some number of distinct nodes searched per game,<br />
+assuming 100 moves times 1e8 nodes per move</p></td>
+<td style="text-align:right;"><p>1e10</p></td>
+</tr>
+<tr>
+<td><p>Different <a href="/Double_Word">32 bit</a> keys</p></td>
+<td style="text-align:right;"><p>4.29e9</p></td>
+</tr>
+<tr>
+<td><p>Some arbitrary table size in the number of entries</p></td>
+<td style="text-align:right;"><p>1e8</p></td>
+</tr>
+</tbody>
+</table>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="/Shirish_Chinchalkar">Shirish Chinchalkar</a> (<strong>1996</strong>). <em>An Upper Bound for the Number of Reachable Positions</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 19, No. 3</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><span id="IndexCollisions"></span></p>
+<h3 id="index-collisions">Index Collisions</h3>
+<p>Index collisions or type-2 errors <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a>, where different hash keys index same entries, happen regularly. They require detection, realized by storing the signature as part of the hash entry, to check whether a stored entry matches the position while probing. Especially with the power of two entry tables, many programmers choose to trade-off space for accuracy and only store that part of the hash key not already considered as an index, or even less. <span id="KeyCollisions"></span></p>
+<h3 id="key-collisions">Key Collisions</h3>
+<p>Key collisions or type-1 errors are inherent in using signatures with far fewer bits than required to encode all reachable chess positions. A key collision occurs when two different positions map the same hash key or signature <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a> <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a>. When storing only a partial key, the chance of a collision greatly increases. To accept only hits where <a href="/Hash_Move">stored moves</a> are <a href="/Pseudo-Legal_Move">pseudo-legal</a> decreases the chance of type-1 errors. On his computer chess page <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a>, <a href="/Kenneth_W._Regan">Ken Regan</a> broached on chess engine bugs, anomalies and hash collisions, and mentions a <a href="/Shredder">Shredder 9.1</a> game where a key collision might have caused a strange move <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a> <a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a>. <span id="bits"></span></p>
+<h3 id="bits-required">Bits Required</h3>
+<p>During the <a href="/WCCC_1989">WCCC 1989</a> Workshop <a href="/WCCC_1989">New Directions in Game-Tree Search</a>, <a href="/James_Gillogly">James Gillogly</a>, author of <a href="/Tech">Tech</a>, discussed transposition table collisions <a href="#fn15" class="footnote-ref" id="fnref15" role="doc-noteref"><sup>15</sup></a> . He produced the following table using the <a href="https://en.wikipedia.org/wiki/Birthday_problem">Birthday Paradox</a>, where the columns are the number of positions stored and the rows are the probability of collision. The entries are the number of bits of combined address and check hash required to reduce the probability of collision to the desired amount.</p>
+<table>
+<thead>
+<tr>
+<th colspan="2"><p>Number of Positions:</p></th>
+<th><p>10<span style="font-size: 80%; vertical-align: super;">5</span></p></th>
+<th><p>10<span style="font-size: 80%; vertical-align: super;">6</span></p></th>
+<th><p>10<span style="font-size: 80%; vertical-align: super;">7</span></p></th>
+<th><p>10<span style="font-size: 80%; vertical-align: super;">8</span></p></th>
+<th><p>10<span style="font-size: 80%; vertical-align: super;">9</span></p></th>
+<th><p>10<span style="font-size: 80%; vertical-align: super;">10</span></p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td rowspan="4"><p>Collision<br />
+probability:</p></td>
+<td style="text-align:left;"><p>.01</p></td>
+<td style="text-align:right;"><p>39</p></td>
+<td style="text-align:right;"><p>46</p></td>
+<td style="text-align:right;"><p>53</p></td>
+<td style="text-align:right;"><p>59</p></td>
+<td style="text-align:right;"><p>66</p></td>
+<td style="text-align:right;"><p>73</p></td>
+</tr>
+<tr>
+<td style="text-align:left;"><p>.001</p></td>
+<td style="text-align:right;"><p>43</p></td>
+<td style="text-align:right;"><p>49</p></td>
+<td style="text-align:right;"><p>56</p></td>
+<td style="text-align:right;"><p>63</p></td>
+<td style="text-align:right;"><p>69</p></td>
+<td style="text-align:right;"><p>76</p></td>
+</tr>
+<tr>
+<td style="text-align:left;"><p>.0001</p></td>
+<td style="text-align:right;"><p>46</p></td>
+<td style="text-align:right;"><p>53</p></td>
+<td style="text-align:right;"><p>59</p></td>
+<td style="text-align:right;"><p>66</p></td>
+<td style="text-align:right;"><p>73</p></td>
+<td style="text-align:right;"><p>79</p></td>
+</tr>
+<tr>
+<td style="text-align:left;"><p>.00001</p></td>
+<td style="text-align:right;"><p>49</p></td>
+<td style="text-align:right;"><p>56</p></td>
+<td style="text-align:right;"><p>63</p></td>
+<td style="text-align:right;"><p>69</p></td>
+<td style="text-align:right;"><p>76</p></td>
+<td style="text-align:right;"><p>83</p></td>
+</tr>
+</tbody>
+</table>
+
+<p>During the discussion, <a href="/David_Slate">David Slate</a> and <a href="/Ken_Thompson">Ken Thompson</a> pointed out that the Birthday Paradox does not apply to most programs, since the hash table will fill up and not all previous positions will be in the table; thus these figures must be regarded as an upper bound on the number of bits required for safety <a href="#fn16" class="footnote-ref" id="fnref16" role="doc-noteref"><sup>16</sup></a>. The dangers of transposition table collisions were further studied by <a href="/Robert_Hyatt">Robert Hyatt</a> and <a href="/Anthony_Cozzie">Anthony Cozzie</a> as published in their 2005 paper <em>Hash Collisions Effect</em> <a href="#fn17" class="footnote-ref" id="fnref17" role="doc-noteref"><sup>17</sup></a>. They gave a surprising answer to the question “Is it really worth all the effort to absolutely minimize signature collisions?”, and concluded that 64-bit signatures are more than sufficient.</p>
+<p><span id="ReplacementStrategies"></span></p>
+<h2 id="replacement-strategies">Replacement Strategies</h2>
+<p>Because there are a limited number of entries in a transposition table, and because in modern chess programs, they can fill up very quickly, it is necessary to have a scheme by which the program can decide which entries would be most valuable to keep, i.e. a replacement scheme <a href="#fn18" class="footnote-ref" id="fnref18" role="doc-noteref"><sup>18</sup></a> . Replacement schemes are used to solve an index collision when a program attempts to store a position in a table slot that already has a different entry in it. There are two opposing considerations to replacement schemes:</p>
+<ul>
+<li>Entries that were searched to a high depth save more work per table hit than those searched to a low depth.</li>
+<li>Entries that are closer to the leaves of the tree are more likely to be searched multiple times, making the table hits of them higher. Also, entries that were searched recently are more likely to be searched again.</li>
+<li>Most well-performing replacement strategies use a mix of these considerations.</li>
+</ul>
+<p><span id="AlwaysReplace"></span></p>
+<h3 id="always-replace">Always Replace</h3>
+<p>This replacement strategy is very simple, placing all emphasis on the second consideration. Any old entries are replaced immediately when a new entry is stored <a href="#fn19" class="footnote-ref" id="fnref19" role="doc-noteref"><sup>19</sup></a>.</p>
+<h3 id="priority-by-searched-nodes-count">Priority by Searched Nodes Count</h3>
+<p>This replacement strategy uses the number of nodes searched spent to obtain an entry, as replacement priority.</p>
+<h3 id="priority-by-move-ordering-position">Priority by Move Ordering Position</h3>
+<p>This replacement strategy uses the position of entry move in <a href="/Move_Ordering">move ordering</a> list as replacement priority. The main idea is that if the best move was not considered as a good cut-off candidate by the move-ordering algorithm, storing it in TT should provide better help for the search. <span id="DepthPreferred"></span></p>
+<h3 id="depth-preferred">Depth-Preferred</h3>
+<p>This replacement strategy puts all emphasis on the first consideration. The only criterion in deciding whether to overwrite an entry is whether the new entry has a higher depth than the old entry. <span id="TwoTier"></span></p>
+<h3 id="two-tier-system">Two-tier System</h3>
+<p>This strategy, devised by <a href="/Ken_Thompson">Ken Thompson</a> and <a href="/Joe_Condon">Joe Condon</a> <a href="#fn20" class="footnote-ref" id="fnref20" role="doc-noteref"><sup>20</sup></a> , uses two tables, side by side. For each table slot, there is a depth-preferred and an always-replace entry <a href="#fn21" class="footnote-ref" id="fnref21" role="doc-noteref"><sup>21</sup></a> . <span id="Bucket"></span></p>
+<h3 id="bucket-systems">Bucket Systems</h3>
+<p>This family of strategies is similar to the two-tier system, but any number of tiers (known as "buckets") can be used (typically the number is based on the size of a cache line). The difference is that the buckets are not specific to one consideration, but rather the new entry overwrites the entry in the bucket with the lowest depth <a href="#fn22" class="footnote-ref" id="fnref22" role="doc-noteref"><sup>22</sup></a> . <span id="Aging"></span></p>
+<h3 id="aging">Aging</h3>
+<p>Aging considers searches for different chess positions during gameplay. While early implementations and programs relying on <a href="/Piece-Square_Tables">root pre-processing</a> to guide search and <a href="/Evaluation">evaluation</a> were obligated to clear the hash table between root positions, most todays programs do not, profit from entries of previous searches. Nevertheless, to avoid persistence of old entries which may no longer occur from the current root, aging is used to likely replace those entries by new ones, even if their draft and flags would otherwise protect them. To implement aging, one often stores and compares the current <a href="/Halfmove_Clock">halfmove clock</a> as age, likely modulo some power two constant, depending on how many bits are used to store it inside an entry <a href="#fn23" class="footnote-ref" id="fnref23" role="doc-noteref"><sup>23</sup></a> <a href="#fn24" class="footnote-ref" id="fnref24" role="doc-noteref"><sup>24</sup></a>.</p>
+<h2 id="tt-and-parallel-search">TT and Parallel Search</h2>
+<p>A <a href="/Shared_Hash_Table">global transposition table</a>, shared by multiple <a href="/Thread">threads</a> or <a href="/Process">processes</a> is essential for effective <a href="/Parallel_Search">parallel search</a> algorithms on modern multi-core CPUs, and might be accessed <a href="/Shared_Hash_Table">lock-less</a>, as proposed by <a href="/Robert_Hyatt">Robert Hyatt</a> and <a href="/Tim_Mann">Tim Mann</a> <a href="#fn25" class="footnote-ref" id="fnref25" role="doc-noteref"><sup>25</sup></a> .</p>
+<h2 id="further-hash-tables">Further Hash Tables</h2>
+<p>Besides storing the best move and scores of the search trees, further <a href="/Hash_Table">hash tables</a> are often used to cache other features.</p>
+<ul>
+<li><a href="/Evaluation_Hash_Table">Evaluation Hash Table</a></li>
+<li><a href="/Material_Hash_Table">Material Hash Table</a></li>
+<li><a href="/Pawn_Hash_Table">Pawn Hash Table</a></li>
+<li><a href="/Principal_Variation">Separate TT for the PV</a></li>
+</ul>
+<h2 id="maximizing-transpositions">Maximizing Transpositions</h2>
+<ul>
+<li><a href="/Enhanced_Transposition_Cutoff">Enhanced Transposition Cutoff</a></li>
+<li><a href="/Repetitions">Repetitions</a></li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/CPW-Engine_transposition">CPW-Engine_transposition</a></li>
+<li><a href="/Fifty-move_Rule">Fifty-move Rule</a></li>
+<li><a href="/Graph_History_Interaction">Graph History Interaction</a></li>
+<li><a href="/Population_Count">Hamming Distance</a> <a href="#fn26" class="footnote-ref" id="fnref26" role="doc-noteref"><sup>26</sup></a></li>
+<li><a href="/Hash_Move">Hash Move</a></li>
+<li><a href="/Hash_Table">Hash Table</a></li>
+<li><a href="/Memory">Huge Pages</a></li>
+<li><a href="/Integrated_Bounds_and_Values">Integrated Bounds and Values</a></li>
+<li><a href="/Interior_Node_Recognizer">Interior Node Recognizer</a></li>
+<li><a href="/Iterative_Deepening">Iterative Deepening</a></li>
+<li><a href="/Lasker-Reichhelm_Position">Lasker-Reichhelm Position</a> (Fine #70)</li>
+<li><a href="/Move_Ordering">Move Ordering</a></li>
+<li><a href="/Path-Dependency">Path-Dependency</a></li>
+<li><a href="/Persistent_Hash_Table">Persistent Hash Table</a></li>
+<li><a href="/Refutation_Table">Refutation Table</a></li>
+<li><a href="/Repetitions">Repetitions</a></li>
+<li><a href="/Search_Instability">Search Instability</a></li>
+<li><a href="/Shared_Hash_Table">Shared Hash Table</a></li>
+<li><a href="/Transposition">Transposition</a></li>
+<li><a href="/Search_Statistics">TT Statistics</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<h3 id="1967-">1967 ...</h3>
+<ul>
+<li><a href="/Richard_Greenblatt">Richard Greenblatt</a>, <a href="/Donald_Eastlake">Donald Eastlake</a>, <a href="/Stephen_D._Crocker">Stephen D. Crocker</a> (<strong>1967</strong>). <em>The Greenblatt Chess Program</em>. Proceedings of the AfiPs Fall Joint Computer Conference, Vol. 31, pp. 801-810. Reprinted (<strong>1988</strong>) in <a href="/Computer_Chess_Compendium">Computer Chess Compendium</a>, <a href="http://archive.computerhistory.org/projects/chess/related_materials/text/2-4.Greenblatt_Chess_Program/The_Greenblatt_Chess_Program.Greenblatt_Eastlake_Crocker.1967.Fall_Joint_Computer_Conference.062303060.sm.pdf">pdf</a> from <a href="/The_Computer_History_Museum">The Computer History Museum</a> or as <a href="http://dspace.mit.edu/handle/1721.1/6176">pdf or ps</a> from <a href="http://libraries.mit.edu/dspace-mit/">DSpace</a> at <a href="/Massachusetts_Institute_of_Technology">MIT</a></li>
+</ul>
+<h3 id="1970-">1970 ...</h3>
+<ul>
+<li><a href="/Albert_Zobrist">Albert Zobrist</a> (<strong>1970</strong>). <em>A New Hashing Method with Application for Game Playing</em>. Technical Report #88, Computer Science Department, The University of Wisconsin, Madison, WI, USA. Reprinted (<strong>1990</strong>) in <a href="/ICGA_Journal">ICCA Journal, Vol. 13, No. 2.</a>, <a href="http://www.cs.wisc.edu/techreports/1970/TR88.pdf">pdf</a></li>
+<li><a href="/David_Slate">David Slate</a>, <a href="/Larry_Atkin">Larry Atkin</a> (<strong>1977</strong>). <em>CHESS 4.5 - The Northwestern University Chess Program.</em> <a href="/Chess_Skill_in_Man_and_Machine">Chess Skill in Man and Machine</a> (ed. <a href="/Peter_W._Frey">Peter W. Frey</a>), pp. 82-118. Springer-Verlag, New York, N.Y. 2nd ed. 1983. ISBN 0-387-90815-3. Reprinted (<strong>1988</strong>) in <a href="/Computer_Chess_Compendium">Computer Chess Compendium</a> » <a href="/Chess_%28Program%29">Chess</a></li>
+</ul>
+<h3 id="1980-">1980 ...</h3>
+<ul>
+<li><a href="/Harry_Nelson">Harry Nelson</a> (<strong>1985</strong>). <em>Hash Tables in Cray Blitz</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 8, No. 1</a></li>
+<li><a href="/Tony_Warnock">Tony Warnock</a>, <a href="/Burton_Wendroff">Burton Wendroff</a> (<strong>1988</strong>). <em>Search Tables in Computer Chess</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 11, No. 1</a></li>
+<li><a href="/James_Gillogly">James Gillogly</a> (<strong>1989</strong>). <em>Transposition Table Collisions</em>. <a href="/WCCC_1989">Workshop on New Directions in Game-Tree Search</a></li>
+<li><a href="/Harry_Nelson">Harry Nelson</a> (<strong>1989</strong>). <em>Some Observations about Hash Tables in Cray Blitz</em>. <a href="/WCCC_1989">Workshop on New Directions in Game-Tree Search</a></li>
+</ul>
+<h3 id="1990-">1990 ...</h3>
+<ul>
+<li><a href="/Dennis_Breuker">Dennis Breuker</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>1996</strong>). <em>Replacement Schemes and Two-Level Tables</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 19, No. 3</a>.</li>
+<li><a href="/Don_Beal">Don Beal</a>, <a href="/Martin_C._Smith">Martin C. Smith</a> (<strong>1996</strong>). <em>Multiple Probes of Transposition Tables</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 19, No. 4</a></li>
+<li><a href="/Dennis_Breuker">Dennis Breuker</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>1997</strong>). <em>Information in Transposition Tables</em>. <a href="/Advances_in_Computer_Chess_8">Advances in Computer Chess 8</a></li>
+<li><a href="/Dennis_Breuker">Dennis Breuker</a> (<strong>1998</strong>). <em><a href="http://www.dennisbreuker.nl/thesis/">Memory versus Search in Games</a></em>. Ph.D. Thesis, <a href="/Maastricht_University">Universiteit Maastricht</a>, The Netherlands. ISBN 90-9012006-8.</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="/John_Romein">John Romein</a>, <a href="/Henri_Bal">Henri Bal</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, <a href="/Aske_Plaat">Aske Plaat</a> (<strong>2002</strong>). <em>A Performance Analysis of Transposition-Table-Driven Scheduling in Distributed Search</em>. IEEE Transactions on Parallel and Distributed Systems, Vol. 13, No. 5, pp. 447–459. <a href="http://www.cs.vu.nl/~bal/Papers/tds.pdf">pdf</a> » <a href="/Parallel_Search">Parallel Search</a> <a href="#fn27" class="footnote-ref" id="fnref27" role="doc-noteref"><sup>27</sup></a> <a href="#fn28" class="footnote-ref" id="fnref28" role="doc-noteref"><sup>28</sup></a></li>
+<li><a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Tim_Mann">Tim Mann</a> (<strong>2002</strong>). <em><a href="http://www.craftychess.com/hyatt/hashing.html">A lock-less transposition table implementation for parallel search chess engines</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 25, No. 1</a></li>
+<li><a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Anthony_Cozzie">Anthony Cozzie</a> (<strong>2005</strong>). <em><a href="http://www.craftychess.com/hyatt/collisions.html">The Effect of Hash Signature Collisions in a Chess Program</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 28, No. 3</a></li>
+<li><a href="/Borko_Bošković">Borko Bošković</a>, <a href="/Sašo_Greiner">Sašo Greiner</a>, <a href="/Janez_Brest">Janez Brest</a>, <a href="/Viljem_Žumer">Viljem Žumer</a> (<strong>2005</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/freeabs_all.jsp?arnumber=1491153">The Representation of Chess Game</a></em>. Proceedings of the 27th International Conference on Information Technology Interfaces</li>
+<li><a href="/Joel_Veness">Joel Veness</a>, <a href="/Alan_Blair">Alan Blair</a> (<strong>2007</strong>). <em>Effective Use of Transposition Tables in Stochastic Game Tree Search</em>. IEEE Symposium on Computational Intelligence and Games, <a href="http://jveness.info/publications/cig2007%20-%20effective%20use%20of%20transposition%20tables%20in%20stochastic%20game%20tree%20search.pdf">pdf</a></li>
+<li>Rune Rasmussen, Frédéric Maire, Ross Hayward (<strong>2007</strong>). <em><a href="http://eprints.qut.edu.au/12527/">A Template Matching Table for Speeding-Up Game-Tree Searches for Hex</a></em>. 20th Australian Joint Conference on Artificial Intelligence » <a href="/Hex">Hex</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li>Timothy Furtak, <a href="/Michael_Buro">Michael Buro</a> (<strong>2011</strong>). <em>Using Payoff-Similarity to Speed Up Search</em>. <a href="/Conferences">IJCAI 2011</a>, <a href="http://ijcai.org/papers11/Papers/IJCAI11-097.pdf">pdf</a> » <a href="https://en.wikipedia.org/wiki/Skat_%28card_game%29">Skat</a></li>
+<li><a href="/Robert_Hyatt">Robert Hyatt</a> (<strong>2014</strong>). <em>A Solution to Short PVs Caused by Exact Hash Matches</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 37, No. 3</a> » <a href="/Principal_Variation">Separate TT for the PV</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1990--1">1990 ...</h3>
+<ul>
+<li><a href="https://groups.google.de/group/rec.games.chess/browse_thread/thread/87d436c2293f9138">Hash tables - Clash!!! What happens next?</a> by <a href="/Valavan_Manohararajah">Valavan Manohararajah</a>, <a href="/Computer_Chess_Forums">rec.games.chess</a>, March 14, 1994</li>
+<li><a href="https://groups.google.com/group/rec.games.chess/browse_frm/thread/a9d5fb3e489196ed/68f9f93c938f3349">Hash table question</a> by <a href="/John_Stanback">John Stanback</a>, <a href="/Computer_Chess_Forums">rec.games.chess</a>, March 23, 1994</li>
+</ul>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/Taxgk4l-S90/ggkiWEVavYsJ">hash mem in win-chess progs</a> by <a href="/Adrian_Millett">Pc Sol</a>, <a href="/Computer_Chess_Forums">rgcc</a>, September 28, 1995 » <a href="/Windows">Windows</a></li>
+</ul>
+<p><strong>1996</strong></p>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/34826d5ec57f0923">Transposition table</a> by Matthew Bengtson, <a href="/Computer_Chess_Forums">rgcc</a>, January 25, 1996</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/b9de346eb1e8300/">Collision probability</a> by <a href="/Dennis_Breuker">Dennis Breuker</a>, <a href="/Computer_Chess_Forums">rgcc</a>, April 15, 1996</li>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/p8GbiiLjp0o/81vZ3czsthIJ">Alpha-Beta window in transposition tables?</a> by Marty Bochane, <a href="/Computer_Chess_Forums">rgcc</a>, October 25, 1996 <a href="#fn29" class="footnote-ref" id="fnref29" role="doc-noteref"><sup>29</sup></a></li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/259fbfd2b39b8ee4/80c64ba0f632fc31">Re: Berliner vs. Botvinnik Some interesting points</a>, post 8 by <a href="/Bradley_Kuszmaul">Bradley C. Kuszmaul</a>, <a href="/Computer_Chess_Forums">rgcc</a>, November 06, 1996 » Transposition Table in <a href="/Mac_Hack">Mac Hack</a></li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/77ec7b3a94555fb4/d8019f5c3716cd1a">hash table fail high/fail low problem</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Computer_Chess_Forums">rgcc</a>, November 26, 1996</li>
+</ul>
+<p><strong>1997</strong></p>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/0sIKY_dfLUs/Qw9J1ECWeBoJ">Hash functions for use with a transition table</a> by <a href="/Tim_Foden">Tim Foden</a>, <a href="/Computer_Chess_Forums">rgcc</a>, March 5, 1997 » <a href="/Transposition_Table">Transposition Table</a></li>
+</ul>
+<p><a href="https://groups.google.com/d/msg/rec.games.chess.computer/0sIKY_dfLUs/aMlLOXkDJJsJ">Re: Hash functions for use with a transition table</a> by <a href="/Ronald_de_Man">Ronald de Man</a>, <a href="/Computer_Chess_Forums">rgcc</a>, March 7, 1997 » <a href="/BCH_Hashing">BCH Hashing</a></p>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/1d601e208c97c395">Handling of repetition (draw) in transposition table</a> by Bjarke Dahl Ebert, <a href="/Computer_Chess_Forums">rgcc</a>, June 9, 1997 » <a href="/Repetitions">Repetitions</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=10317">double hash tables</a> by <a href="/Chris_Whittington">Chris Whittington</a>, <a href="/CCC">CCC</a>, October 01, 1997</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=10471">Hash collisions (was Re: Let's analyze move 36)</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, October 08, 1997 » Collisions</li>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/S70uojQGHNU/vU-xEHCfFl0J">Using values from transition tables</a> by <a href="/Tim_Foden">Tim Foden</a>, <a href="/Computer_Chess_Forums">rgcc</a>, October 13, 1997</li>
+</ul>
+<p><strong>1998</strong></p>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=13810">Fast hash algorithm</a> by John Scalo, <a href="/CCC">CCC</a>, January 08, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=14053">Fast hash key method - Revisited!</a> by John Scalo, <a href="/CCC">CCC</a>, January 14, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=14226">Hash tables and data-cache, some programmer stuff...</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, January 17, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=19515">Hash Table Size Versus Performance</a> by Steven Juchnowski, <a href="/CCC">CCC</a>, May 30, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=21654">Selective deepening and Hashtables</a> by <a href="/Werner_Inmann">Werner Inmann</a>, <a href="/CCC">CCC</a>, June 30, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=58">Using too-shallow mate scores from the hash table</a> by <a href="/David_Eppstein">David Eppstein</a>, <a href="/CCC">CCC</a>, July 05, 1998 » <a href="/Score">Mate Scores</a></li>
+</ul>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=21814">Re: Using too-shallow mate scores from the hash table</a> by <a href="/David_Eppstein">David Eppstein</a>, <a href="/CCC">CCC</a>, July 06, 1998</p>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=21838">Re: Using too-shallow mate scores from the hash table</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, July 07, 1998</p>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=22816">draw by repetition and hash tables</a> by <a href="/Werner_Inmann">Werner Inmann</a>, <a href="/CCC">CCC</a>, July 24, 1998</li>
+</ul>
+<p><strong>1999</strong></p>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=41612">Hash Tables - Should one store EP, Castling rights etc?</a> by <a href="/Steve_Maughan">Steve Maughan</a>, <a href="/CCC">CCC</a>, January 30, 1999 » <a href="/Castling_Rights">Castling Rights</a>, <a href="/En_passant">En passant</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=43613">Hash collisions and a little maths</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/CCC">CCC</a>, February 18, 1999</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=43990">Hash Collisions</a> by KarinsDad, <a href="/CCC">CCC</a>, February 21, 1999</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=72221">Problem with draws by rep and hash table</a> by <a href="/James_Robertson">James Robertson</a>, <a href="/CCC">CCC</a>, October 07, 1999</li>
+</ul>
+<h3 id="2000--1">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=93686">Can we use hash table at root?</a> by Tim, <a href="/CCC">CCC</a>, January 31, 2000 » <a href="/Root">Root</a></li>
+<li><a href="https://groups.google.com/group/comp.lang.asm.x86/browse_frm/thread/ab55c5d57a3a1fd1">Re: Atomic write of 64 bits</a> by <a href="/Frans_Morsch">Frans Morsch</a>, <a href="https://groups.google.com/group/comp.lang.asm.x86/topics">comp.lang.asm.x86</a>, September 25, 2000 » <a href="/MMX">MMX</a>, <a href="/Parallel_Search">Parallel Search</a></li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/e70ef78a6a17f225">hashing function</a> by <a href="/Vladimir_Medvedev">Vladimir R. Medvedev</a>, <a href="/Computer_Chess_Forums">rgcc</a>, October 17, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=143022">Hash table efficiency</a> by <a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a>, <a href="/CCC">CCC</a>, December 05, 2000 » <a href="/Gaviota">Gaviota</a>, <a href="/Search_Statistics">Search Statistics</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=143234">Why not store both a lower and an upper bound in a hashtable?</a> by <a href="/Leen_Ammeraal">Leen Ammeraal</a>, <a href="/CCC">CCC</a>, December 06, 2000</li>
+</ul>
+<p><strong>2001</strong></p>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=175221">A fast hash -- assuming you are not planning to do incremental updates</a> by <a href="/Dann_Corbit">Dann Corbit</a>, <a href="/CCC">CCC</a>, June 15, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=182927">"Don't trust draw score" &lt;=Is it true?</a> by <a href="/Teerapong_Tovirat">Teerapong Tovirat</a>, <a href="/CCC">CCC</a>, August 08, 2001 » <a href="/Repetitions">Repetitions</a>, <a href="/Path-Dependency">Path-Dependency</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=200366">About random numbers and hashing</a> by <a href="/Severi_Salminen">Severi Salminen</a>, <a href="/CCC">CCC</a>, December 04, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=200622">Re: About random numbers and hashing</a> by <a href="/Sven_Reichard">Sven Reichard</a>, <a href="/CCC">CCC</a>, December 05, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=203516">When to RecordHash()?</a> by <a href="/Sune_Fischer">Sune Fischer</a>, <a href="/CCC">CCC</a>, December 25, 2001</li>
+</ul>
+<p><strong>2002</strong></p>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=214125">Non power of two hash table sizes</a> by <a href="/Alvaro_Cardoso">Alvaro Jose Povoa Cardoso</a>, <a href="/CCC">CCC</a>, February 18, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=214562">Detecting Draws using a Small Hash Table?</a> by <a href="/Steve_Maughan">Steve Maughan</a>, <a href="/CCC">CCC</a>, February 20, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=252097">hash entry replacement schemes</a> by <a href="/Scott_Farrell">Scott Farrell</a>, <a href="/CCC">CCC</a>, September 14, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=252598">hash numbers requested: authors please read</a> by <a href="/James_Swafford">James Swafford</a>, <a href="/CCC">CCC</a>, September 17, 2002</li>
+</ul>
+<p><strong>2003</strong></p>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=291039">How important is a big hash table? Measurements...</a> by <a href="/Tom_Kerrigan">Tom Kerrigan</a>, <a href="/CCC">CCC</a>, March 29, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=306858">Another memory latency test</a> by <a href="/Dieter_Bürßner">Dieter Bürßner</a>, <a href="/CCC">CCC</a>, July 17, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=308392">Replacement shemes</a> by <a href="/Sune_Fischer">Sune Fischer</a>, <a href="/CCC">CCC</a>, July 27, 2003</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/42c6f293450dba50/">Is it necessary to include empty fields in the hash key of a position?</a> by Frank Hablizel, <a href="/Computer_Chess_Forums">rgcc</a>, December 25, 2003</li>
+</ul>
+<p><strong>2004</strong></p>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=339934">I need your opinion about this hash entry structure</a> by <a href="/Federico_Andrés_Corigliano">Federico Corigliano</a>, <a href="/CCC">CCC</a>, January 02, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=344036">Question about details of hashing (olithink)</a> by <a href="/Michel_Langeveld">Michel Langeveld</a>, <a href="/CCC">CCC</a>, January 22, 2004 » <a href="/OliThink">OliThink</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=354012">Fruit - Question for Fabien</a> by <a href="/Dan_Honeycutt">Dan Honeycutt</a>, <a href="/CCC">CCC</a>, March 11, 2004 » <a href="/Fruit">Fruit</a>, <a href="/Node_Types">Node Types</a>, <a href="/Principal_Variation">Principal Variation</a>, <a href="/Principal_Variation_Search">Principal Variation Search</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=358836">Hashkey collisions (typical numbers)</a> by <a href="/Jan_Renze_Steenhuisen">Renze Steenhuisen</a>, <a href="/CCC">CCC</a>, April 07, 2004 » <a href="/Transposition_Table">Transposition Table - Collisions</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=378351">A move to search 2nd... Keep in the trans table?</a> by <a href="/Eric_Oldre">Eric Oldre</a>, <a href="/CCC">CCC</a>, July 21, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=379721">Transposition table replacement</a> by <a href="/Eric_Oldre">Eric Oldre</a>, <a href="/CCC">CCC</a>, July 29, 2004</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=1855">Side effects of transposition tables</a> by <a href="/Alessandro_Scotti">Alessandro Scotti</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, March 04, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=432374">Hashing double bounds</a> by <a href="/Rasjid_Chan">Rasjid Chan</a>, <a href="/CCC">CCC</a>, June 20, 2005</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=3405">Mate scores in the hash table</a> by Eduardo Waghabi, <a href="/Computer_Chess_Forums">Winboard Forum</a>, September 02, 2005 » <a href="/Score">Mate Scores</a></li>
+</ul>
+<p><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=3405#p17151">Re: Mate scores in the hash table</a> by <a href="/Bruce_Moreland">Bruce Moreland</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, September 04, 2005</p>
+<p><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=3405#p17152">Re: Mate scores in the hash table</a> by <a href="/Josué_Forte">Josué Forte</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, September 04, 2005</p>
+<ul>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?t=3838">Hash table hit rate</a> by Stef Luijten, <a href="/Computer_Chess_Forums">Winboard Forum</a>, November 16, 2005</li>
+</ul>
+<p><strong>2007</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=131367">Transposition Tables</a> by Colin, <a href="/CCC">CCC</a>, July 15, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?start=0&amp;t=15505">fail high handling with tranposition tables</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, August 01, 2007</li>
+</ul>
+<p><strong>2008</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=18854">Problem with Transposition Table and Repitition-Draw</a> by <a href="/Oliver_Brausch">Oliver Brausch</a>, <a href="/CCC">CCC</a>, January 11, 2008 » <a href="/Repetitions">Repetitions</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=19867">Transposition Table and nps drop</a> by <a href="/Mathieu_Pagé">Mathieu Pagé</a>, <a href="/CCC">CCC</a>, February 27, 2008 » <a href="/Nodes_per_Second">Nodes per Second</a></li>
+<li><a href="http://talkchess.com/forum/viewtopic.php?t=21343">Semi-Path Dependent Hashing: a semi-useless idea</a> by <a href="/Zach_Wegner">Zach Wegner</a>, <a href="/CCC">CCC</a>, May 24, 2008 » <a href="/Path-Dependency">Path-Dependency</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=22274">Is 64 bits enough as a hash length</a> by <a href="/Mathieu_Pagé">Mathieu Pagé</a>, <a href="/CCC">CCC</a>, July 10, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=23562">31 bit hash values. How often will it fail?</a> by <a href="/Carey_Bloodworth">Carey</a>, <a href="/CCC">CCC</a>, September 07, 2008 » <a href="/Transposition_Table">Transposition Table - Collisions</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=25599">Adaptative LMR and TT</a> by <a href="/Fermin_Serrano">Fermin Serrano</a>, <a href="/CCC">CCC</a>, December 23, 2008 » <a href="/Late_Move_Reductions">Late Move Reductions</a></li>
+</ul>
+<p><strong>2009</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=28119">transposition table details</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, May 26, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=28652">Transposition Table</a> by <a href="/Pablo_Vazquez">Pablo Vazquez</a>, <a href="/CCC">CCC</a>, June 26, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=285407">Cache pollution when reading/writing hash table</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, August 09, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=305218">Transposition table pruning</a> by <a href="/Luca_Hemmerich">Luca Hemmerich</a>, <a href="/CCC">CCC</a>, November 25, 2009</li>
+</ul>
+<h3 id="2010--1">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=32396">Correcting Evaluation with the hash table</a> by <a href="/Mark_Lefler">Mark Lefler</a>, <a href="/CCC">CCC</a>, February 05, 2010 » <a href="/Evaluation">Evaluation</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=32897">TT hit/miss rates</a> by <a href="/Vlad_Stamate">Vlad Stamate</a>, <a href="/CCC">CCC</a>, February 25, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=33084">Zero window TT entry</a> by <a href="/Vlad_Stamate">Vlad Stamate</a>, <a href="/CCC">CCC</a>, March 05, 2010 » <a href="/Null_Window">Null Window</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=33514">Null-move pruning and the hash table</a> by Robert Purves, <a href="/CCC">CCC</a>, March 28, 2010 » <a href="/Null_Move_Pruning">Null Move Pruning</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=34606">Crafty Transpostion Table Question</a> by Eric Stock, <a href="/CCC">CCC</a>, May 30, 2010 » <a href="/Crafty">Crafty</a>, <a href="/Shared_Hash_Table">Lockless Hashing</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=39481">TT behavior</a> by <a href="/Karlo_Balla">Karlo Bala Jr.</a>, <a href="/CCC">CCC</a>, June 25, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=36099">working!</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, September 17, 2010 » <a href="/Principal_Variation">Separate TT for the PV</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=36516">Is a querying the hash tables such a huge bottleneck?</a> by <a href="/Oliver_Uwira">Oliver Uwira</a>, <a href="/CCC">CCC</a>, October 28, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=37016">Puzzle with mate scores in TT</a> by Robert Purves, <a href="/CCC">CCC</a>, December 10, 2010 » <a href="/Score">Mate Scores</a></li>
+</ul>
+<p><strong>2011</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38464">Transposition Table: addressing slots</a> by <a href="/Michael_Hoffmann">Michael Hoffmann</a>, <a href="/CCC">CCC</a>, March 18, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38740">Transposition Table updates in Stockfish</a> by <a href="/Onno_Garms">Onno Garms</a>, <a href="/CCC">CCC</a>, April 12, 2011 » <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=39289">Hashing the PV</a> by Stef Luijten, <a href="/CCC">CCC</a>, June 06, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=39889">Dual Bound TT</a> by João Guerra, <a href="/CCC">CCC</a>, July 28, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40062">TT Key Collisions, Workarounds?</a> by Clemens Pruell, <a href="/CCC">CCC</a>, August 16, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40388">Repetitions/50 moves and TT</a> by <a href="/Sergei_Markoff">Sergei Markoff</a>, <a href="/CCC">CCC</a>, September 13, 2011 » <a href="/Fifty-move_Rule">Fifty-move Rule</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40450">Determining the age of TT buckets</a> by <a href="/Julien_Marcel">Julien Marcel</a>, <a href="/CCC">CCC</a>, Sepember 18, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40849">Key collision handling</a> by <a href="/Jonatan_Pettersson">Jonatan Pettersson</a>, <a href="/CCC">CCC</a>, October 21, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41640">Mate score in TT</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, December 28, 2011 » <a href="/Score">Mate Scores</a></li>
+</ul>
+<p><strong>2012</strong></p>
+<ul>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=52138">Question on TT</a> by <a href="/Giuseppe_Cannella">Giuseppe Cannella</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, January 06, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41917">Stockfish hash implementation</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, January 10, 2012 » <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=42833">cache alignment of tt</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, March 11, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=43172">Hash table division</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, April 05, 2012</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=43769">TT question?</a> by <a href="/Fermin_Serrano">Fermin Serrano</a>, <a href="/CCC">CCC</a>, May 19, 2012 » <a href="/Quiescence_Search">Quiescence Search</a></li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=52394">hashtables</a> by <a href="/Daniel_Anulliero">Daniel Anulliero</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, May 22, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=44082">how to measure frequency of hash collisions</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, June 16, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=44666">TT avoid nullmove flag</a> by <a href="/Matthew_R._Brades">Matthew R. Brades</a>, <a href="/CCC">CCC</a>, August 02, 2012 » <a href="/Null_Move_Pruning">Null Move Pruning</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46269">Transposition Table - Replacement and PV</a> by Cheney Nattress, <a href="/CCC">CCC</a>, December 04, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46346">Speaking of the hash table</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, December 09, 2012</li>
+</ul>
+<p><strong>2013</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47373">Transposition table usage in quiescent search?</a> by Jerry Donald, <a href="/CCC">CCC</a>, March 01, 2013 » <a href="/Quiescence_Search">Quiescence Search</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47700">Transposition driven scheduling</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, April 04, 2013 <a href="#fn30" class="footnote-ref" id="fnref30" role="doc-noteref"><sup>30</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47773">The effect of larger hash size</a> by Jacob Børs Lind, <a href="/CCC">CCC</a>, April 13, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47872">Effect of the Hash Table size</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, April 28, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48315">Hash cutoffs and analysis</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, June 17, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48479">Hashing based on move lists</a> by <a href="/Matthew_R._Brades">Matthew R. Brades</a>, <a href="/CCC">CCC</a>, June 30, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48735">transposition tables</a> by <a href="/Folkert_van_Heusden">Folkert van Heusden</a>, <a href="/CCC">CCC</a>, July 23, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49362">ep and castle rights hashing</a> by Natale Galioto, <a href="/CCC">CCC</a>, September 15, 2013 » <a href="/Castling_Rights">Castling Rights</a>, <a href="/En_passant">En passant</a>, <a href="/Repetitions">Repetitions</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50430">Hash tables: one bound or two bounds?</a> by <a href="/Alberto_Sanjuan">Alberto Sanjuan</a>, <a href="/CCC">CCC</a>, December 11, 2013</li>
+</ul>
+<p><strong>2014</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52169">LMR &amp; TT interaction</a> by Natale Galioto, <a href="/CCC">CCC</a>, April 29, 2014 » <a href="/Late_Move_Reductions">Late Move Reductions</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52226">transposition and multithreading question</a> by <a href="/Marco_Belli">Marco Belli</a>, <a href="/CCC">CCC</a>, May 04, 2014 » <a href="/Parallel_Search">Parallel Search</a></li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2703">transposition table implementation help</a> by lazyguy123, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, August 09, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53462">Transposition table chaining and replacement strategy</a> by Alex Ferguson, <a href="/CCC">CCC</a>, August 28, 2014</li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/6nNXAQQAXOE/FXs2chqDargJ">Using the Transposition Table for long searches</a> by Theodr Elwurtz, <a href="/Computer_Chess_Forums">FishCooking</a>, September 22, 2014 » <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53849">Speculative prefetch</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, September 27, 2014 » <a href="/Memory">Memory</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53859">Transposition Table Oddity</a> by <a href="/Thomas_Kolarik">Thomas Kolarik</a>, <a href="/CCC">CCC</a>, September 28, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53965">Can someone explain what advantage there is to...</a> by Forrest Hoch, <a href="/CCC">CCC</a>, October 06, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54063">Cache over-writing and PV's</a> by Forrest Hoch, <a href="/CCC">CCC</a>, October 16, 2014 » <a href="/Principal_Variation">Principal Variation</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54141">Mate score from the transposition table</a> by <a href="/Evert_Glebbeek">Evert Glebbeek</a>, <a href="/CCC">CCC</a>, October 25, 2014 » <a href="/Score">Mate Scores</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54666">Two hash functions for distributed transposition table</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, December 16, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54755">Transposition table in Q-search</a> by Alex Ferguson, <a href="/CCC">CCC</a>, December 26, 2014 » <a href="/Quiescence_Search">Quiescence Search</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54941">Legality Check on TT move</a> by Jordan Bray, <a href="/CCC">CCC</a>, January 11, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55501">(iteration+depth) TT replacement policy</a> by <a href="/Aleks_Peshkov">Aleks Peshkov</a>, <a href="/CCC">CCC</a>, February 27, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55921">Idea #9228: Clearing stale transtable entries</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, April 06, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55965">TTable questions</a> by Henk van den Belt, <a href="/CCC">CCC</a>, April 11, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56044">Fractional plies and transposition tables</a> by <a href="/Alexandru_Mosoi">Alexandru Mosoi</a>, <a href="/CCC">CCC</a>, April 18, 2015 » <a href="/Depth">Depth - Fractional Plies</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57235&amp;start=3">Re: Worst advice</a> by <a href="/Alexandru_Mosoi">Alexandru Mosoi</a>, <a href="/CCC">CCC</a>, August 10, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57255">most similar hashes of two positions</a> by <a href="/Alexandru_Mosoi">Alexandru Mosoi</a>, <a href="/CCC">CCC</a>, August 12, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57348">The cost of transposition table instrumentation</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, August 23, 2015</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=57634">atomic TT</a> by lucasart, <a href="/CCC">CCC</a>, September 13, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57603">Transposition table test positons</a> by <a href="/Robert_Pope">Robert Pope</a>, <a href="/CCC">CCC</a>, September 11, 2015 » <a href="/Test-Positions">Test-Positions</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57924">Hash cache</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, October 12, 2015</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2913">Perft and hash with legal move generator</a> by Peterpan, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, November 12, 2015 » <a href="/Perft">Perft</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58727">Transposition table utilizattion</a> by <a href="/Shawn_Chidester">Shawn Chidester</a>, <a href="/CCC">CCC</a>, December 29, 2015</li>
+</ul>
+<p><strong>2016</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58890">On-the fly hash key generation?</a> by <a href="/Evert_Glebbeek">Evert Glebbeek</a>, <a href="/CCC">CCC</a>, January 12, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59047">Transposition Age Tutorial</a> by <a href="/Dennis_Sceviour">Dennis Sceviour</a>, <a href="/CCC">CCC</a>, January 25, 2016</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2951">TT Mate scores</a> by rgoomes, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, February 10, 2016 » <a href="/Score">Mate Scores</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59334">Hashing question</a> by Kenneth Jones, <a href="/CCC">CCC</a>, February 23, 2016</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2961">TT and Iterative Deepening</a> by kuket15, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, February 26, 2016 » <a href="/Iterative_Deepening">Iterative Deepening</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59401">Transposition table replacement strategies</a> by <a href="/Shawn_Chidester">Shawn Chidester</a>, <a href="/CCC">CCC</a>, March 01, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59426">about hashtable</a> by <a href="/Daniel_Anulliero">Daniel Anulliero</a>, <a href="/CCC">CCC</a>, March 04, 2016</li>
+<li><a href="http://talkchess.com/forum/viewtopic.php?t=59740">Hashing in Qsearch?</a> by <a href="/Martin_Fierz">Martin Fierz</a>, <a href="/CCC">CCC</a>, April 03, 2016 » <a href="/Quiescence_Search">Quiescence Search</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59856">Shifting alpha/beta on hash hit</a> by <a href="/Martin_Fierz">Martin Fierz</a>, <a href="/CCC">CCC</a>, April 14, 2016 » <a href="/Search_Instability">Search Instability</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59949">What happens during a hash collision in say Stockfish ...</a> by Isaac Haïk Dunn, <a href="/CCC">CCC</a>, April 24, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59960">Hashtable aging</a> by <a href="/Martin_Fierz">Martin Fierz</a>, <a href="/CCC">CCC</a>, April 25, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60056">Transposition Table replacement schemes</a> by Andrew Grant, <a href="/CCC">CCC</a>, May 05, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60122">lockless hashing</a> by Lucas Braesch, <a href="/CCC">CCC</a>, May 10, 2016 » <a href="/Shared_Hash_Table">Shared Hash Table</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60243">Suggestion for hash tables and analysis</a> by J. Wesley Cleveland, May 22, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60264">Hashtable and 50 move rule draws</a> by <a href="/Stan_Arts">Stan Arts</a>, <a href="/CCC">CCC</a>, May 24, 2016 » <a href="/Fifty-move_Rule">Fifty-move Rule</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60589">Transposition Table - Updating entries</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, June 24, 2016</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2991">Transposition Table Usage</a> by theturk1234, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, July 12, 2016</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2995">Aspiration window with TT question</a> by sandermvdb, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, August 01, 2016 » <a href="/Aspiration_Windows">Aspiration Windows</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61015">Storing both alpha and beta scores in TT</a> by <a href="/Thomas_Dybdahl_Ahle">Thomas Dybdahl Ahle</a>, <a href="/CCC">CCC</a>, August 02, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61051">Using side to move as a separate bit in hash key</a> by J. Wesley Cleveland, <a href="/CCC">CCC</a>, August 06, 2016 » <a href="/Side_to_move">Side to move</a></li>
+<li><a href="https://groups.google.com/forum/#!topic/fishcooking/Mh8SzJhxmHQ">Question about TT</a> by stefano.c, <a href="/Computer_Chess_Forums">FishCooking</a>, August 21, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61193">transposition table pseudocode</a> by <a href="/Erin_Dame">Erin Dame</a>, <a href="/CCC">CCC</a>, August 22, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61384">transposition tables and three-fold repetition</a> by <a href="/Erin_Dame">Erin Dame</a>, <a href="/CCC">CCC</a>, September 10, 2016 » <a href="/Repetitions">Repetitions</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61543">Transposition tables in Cray Blitz</a> by <a href="/Erin_Dame">Erin Dame</a>, <a href="/CCC">CCC</a>, September 26, 2016 <a href="#fn31" class="footnote-ref" id="fnref31" role="doc-noteref"><sup>31</sup></a> » <a href="/Cray_Blitz">Cray Blitz</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61614">Hash table transformation</a> by <a href="/Dann_Corbit">Dann Corbit</a>, <a href="/CCC">CCC</a>, October 05, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62391">Modify hash probing code to pvs</a> by Fernando Tenorio, <a href="/CCC">CCC</a>, December 05, 2016</li>
+</ul>
+<p><strong>2017</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62890">What is wrong with doing Nulls &amp; ttcuts in a pv node ?</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, January 21, 2017 » <a href="/Null_Move_Pruning">Null Move Pruning</a>, <a href="/Node_Types">PV-Nodes</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63693">Interesting hash-replacement scheme</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, April 08, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63726">Problems with TT, sometimes makes blunder moves</a> by Tony Soares, <a href="/CCC">CCC</a>, April 12, 2017</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=3106">TT Table replacement strategy</a> by kickstone, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, April 29, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64021">Hash Tables Deep Blue</a> by Gustavo Mallada, <a href="/CCC">CCC</a>, May 18, 2017 » <a href="/Deep_Blue">Deep Blue</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64274">Hash table</a> by <a href="/Daniel_José_Queraltó">Daniel José Queraltó</a>, <a href="/CCC">CCC</a>, June 12, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64522">Improving hash replacing schema for analysis mode</a> by <a href="/Daniel_José_Queraltó">Daniel José Queraltó</a>, <a href="/CCC">CCC</a>, July 05, 2017 » Replacement Strategy, <a href="/Persistent_Hash_Table">Persistent Hash Table</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64564">TT aging</a> by <a href="/Marco_Pampaloni">Marco Pampaloni</a>, <a href="/CCC">CCC</a>, July 09, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64604">Equidistributed draft</a> by <a href="/Alvaro_Cardoso">Alvaro Cardoso</a>, <a href="/CCC">CCC</a>, July 14, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64606">2-level TT</a> by <a href="/Rein_Halbersma">Rein Halbersma</a>, <a href="/CCC">CCC</a>, July 14, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64688">cutechess-cli: not restarting an engine because of tt</a> by <a href="/Folkert_van_Heusden">Folkert van Heusden</a>, <a href="/CCC">CCC</a>, July 22, 2017 » <a href="/Cutechess-cli">Cutechess-cli</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65327">Size of Transposition Table Entry</a> by Jason Fernandez, <a href="/CCC">CCC</a>, September 29, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65526">Transposition table and Fine#70</a> by <a href="/Vincent_Tang">Vincent Tang</a>, <a href="/CCC">CCC</a>, October 23, 2017 » <a href="/Lasker-Reichhelm_Position">Lasker-Reichhelm Position</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=65903">TT in Qsearch</a> by <a href="/Laurie_Tunnicliffe">Laurie Tunnicliffe</a>, <a href="/CCC">CCC</a>, December 05, 2017 » <a href="/Quiescence_Search">Quiescence Search</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66135">Transposition table based pruning idea</a> by Jerry Donald, <a href="/CCC">CCC</a>, December 25, 2017 » <a href="/Pruning">Pruning</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66183">hashing in chess4j</a> by <a href="/James_Swafford">James Swafford</a>, <a href="/CCC">CCC</a>, December 30, 2017 » <a href="/Chess4j">chess4j</a></li>
+</ul>
+<p><strong>2018</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66640">Marcel Duchamp endgame "splits" engines / hash phenomenon</a> by <a href="/Kenneth_W._Regan">Kenneth Regan</a>, <a href="/CCC">CCC</a>, February 19, 2018 » <a href="/Category:Marcel_Duchamp">Marcel Duchamp</a></li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=3170">Do You Track Hash Table Efficiency?</a> by OneMoreTime, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, April 07, 2018</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=67049">Mate scores in TT (a new?... approach)</a> by Vince Sempronio, <a href="/CCC">CCC</a>, April 09, 2018</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=67078">Yet another Mate scores in TT thread</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, April 12, 2018 » <a href="/Checkmate">Checkmate</a>, <a href="/Score">Score</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=67102">Draw scores in TT</a> by <a href="/Srdja_Matovic">Srdja Matovic</a>, <a href="/CCC">CCC</a>, April 14, 2018 » <a href="/Draw">Draw</a>, <a href="/Score">Draw Score</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=67131">Depth extensions and effect on transposition queries</a> by Kenneth Jones, <a href="/CCC">CCC</a>, April 16, 2018 » <a href="/Extensions">Extensions</a>, <a href="/Check_Extensions">Check Extensions</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=67387">Not detected collisions in tt probing</a> by <a href="/Andreas_Matthies">Andreas Matthies</a>, <a href="/CCC">CCC</a>, May 09, 2018 » Collisions</li>
+</ul>
+<p><strong>2019</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69629">Playing transposition table moves in the Quiescence search</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, January 17, 2019 » <a href="/Quiescence_Search">Quiescence Search</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70586">Prefetch and Threading</a> by <a href="/Dennis_Sceviour">Dennis Sceviour</a>, <a href="/CCC">CCC</a>, April 25, 2019 » <a href="/Memory">Memory</a>, <a href="/Thread">Thread</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=67599">Debugging a transposition table</a> by <a href="/Vincent_Tang">Vincent Tang</a>, <a href="/CCC">CCC</a>, May 29, 2018 » <a href="/Debugging">Debugging</a>, <a href="/Lasker-Reichhelm_Position">Lasker-Reichhelm Position</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70931">Hash collision?</a> by <a href="/Tom_King">Tom King</a>, <a href="/CCC">CCC</a>, June 05, 2019</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=71994">Looking for TT policy advice</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, October 04, 2019 » Replacement Strategy</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72462">Probing the transposition table at depth 0</a> by Gonzalo Arro, <a href="/CCC">CCC</a>, November 29, 2019</li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72932">hash collisions</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, January 28, 2020 » Key Collisions</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72964">Dense board representation as hash code</a> by koedem, <a href="/CCC">CCC</a>, February 01, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73110">Zobrist key independence</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, February 17, 2020 » <a href="/Zobrist_Hashing">Zobrist Hashing</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73126">SIMD methods in TT probing and replacement</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, February 20, 2020 » <a href="/SIMD_and_SWAR_Techniques">SIMD and SWAR Techniques</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73202">Measuring Hash Collisions (once again)</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, February 27, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73232">Hash size, hash fullness, strength</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, February 29, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73493">Where to enter/read position into hash table in perft?</a> by <a href="/Marcel_Vanthoor">Marcel Vanthoor</a>, <a href="/CCC">CCC</a>, March 28, 2020 » <a href="/Perft">Perft</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73516">Hash entry/bucket memory usage optimization</a> by <a href="/Marcel_Vanthoor">Marcel Vanthoor</a>, <a href="/CCC">CCC</a>, March 30, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74081">asymmetric evaluation and TT</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, June 02, 2020 » <a href="/Asymmetric_Evaluation">Asymmetric Evaluation</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74411">Correct way to store and extract mate scores</a> by Ian Mitchell, <a href="/CCC">CCC</a>, July 08, 2020 » <a href="/Checkmate">Checkmate</a>, <a href="/Score">Score</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75549">Principal Variation Search vs. Transposition Table</a> by <a href="/Marcel_Vanthoor">Marcel Vanthoor</a>, <a href="/CCC">CCC</a>, October 26, 2020 » <a href="/Principal_Variation">Principal Variation</a>, <a href="/Principal_Variation_Search">Principal Variation Search</a></li>
+</ul>
+<p><strong>2021</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76499">Transposition table replacement scheme</a> by <a href="/Niels_Abildskov">Niels Abildskov</a>, <a href="/CCC">CCC</a>, February 05, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76508">Best practices for transposition tables</a> by Brian Adkins, <a href="/CCC">CCC</a>, February 06, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76575">TT: key collisions</a> by Brian Adkins, <a href="/CCC">CCC</a>, February 13, 2021 » Key Collisions</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76887">Hash move ordering vs. Hash cuts: savings in number of nodes visited</a> by <a href="/Marcel_Vanthoor">Marcel Vanthoor</a>, <a href="/CCC">CCC</a>, March 16, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77054">PERFT transposition table funny?!</a> by <a href="/Martin_Bryant">Martin Bryant</a>, <a href="/CCC">CCC</a>, April 10, 2021 » <a href="/Perft">Perft</a>, <a href="/Memory">Memory</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77286">For or against the transposition table probe in quiet search?</a> by Eugene Kotlov, <a href="/CCC">CCC</a>, May 11, 2021 » <a href="/Quiescence_Search">Quiescence Search</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77470">Saving moves into the TT</a> by <a href="/Marcel_Vanthoor">Marcel Vanthoor</a>, <a href="/CCC">CCC</a>, June 11, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77504">Hash value composition</a> by <a href="/Yves_De_Billoëz">Yves De Billoëz</a>, <a href="/CCC">CCC</a>, June 17, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77569">When to clear the Transposition table?</a> by <a href="/Thomas_Jahn">Thomas Jahn</a>, <a href="/CCC">CCC</a>, June 28, 2021</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=78474">About move ordering and TT hitrate</a> by Giovanni Maria Manduca, <a href="/CCC">CCC</a>, October 22, 2021 » <a href="/Move_Ordering">Move Ordering</a></li>
+</ul>
+<p><strong>2022</strong></p>
+<ul>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79647">Transposition table based cutoffs</a> by Michal Witanowski, <a href="/CCC">CCC</a>, April 05, 2022</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79720">Consensus for TT: Buckets with Entries, or Entries with Buckets?</a> by <a href="/Marcel_Vanthoor">Marcel Vanthoor</a>, <a href="/CCC">CCC</a>, April 19, 2022</li>
+</ul>
+<p><strong>2023</strong></p>
+<ul>
+<li><a href="https://talkchess.com/viewtopic.php?t=82494">Checking TT move for legality</a> by Aaron Li, <a href="/CCC">CCC</a>, August 20, 2023</li>
+</ul>
+<p><strong>2024</strong></p>
+<ul>
+<li><a href="https://talkchess.com/viewtopic.php?t=83222">Help with transposition table</a> by E Boatwright, <a href="/CCC">CCC</a>, January 21, 2024</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=83549">adding TT reduces NPS by allot</a> by Ravael Jansen, <a href="/CCC">CCC</a>, March 29, 2024</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=83695">Hybride replacemment strategy worse than always-replace</a> by mathmoi, <a href="/CCC">CCC</a>, April 25, 2024</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="http://web.archive.org/web/20070809015843/www.seanet.com/%7Ebrucemo/topics/hashing.htm">The Main Transposition Table</a> from <a href="/Bruce_Moreland">Bruce Moreland's</a> <a href="http://web.archive.org/web/20070607231311/www.brucemo.com/compchess/programming/index.htm">Programming Topics</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Transposition_table">Transposition table from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Zobrist_hashing">Zobrist hashing from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/G%C3%B6del_numbering">Gödel numbering from Wikipedia</a></li>
+<li><a href="http://www.cse.buffalo.edu/~regan/chess/computer/">Computer Chess - Hash Collisions in Chess Engines, and What They May Mean...</a> by <a href="/Kenneth_W._Regan">Kenneth W. Regan</a></li>
+<li><a href="http://www.jamesswafford.com/2017/12/30/hashing-in-chess4j/">Hashing in chess4j</a> by <a href="/James_Swafford">James Swafford</a>, December 30, 2017» <a href="/Chess4j">chess4j</a></li>
+<li><a href="/Category:Tal_Wilkenfeld">Tal Wilkenfeld</a> - <a href="https://en.wikipedia.org/wiki/Transformation_%28Tal_Wilkenfeld_album%29">Table For One</a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/yu6zUwDv-o4" title="YouTube video yu6zUwDv-o4" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=yu6zUwDv-o4">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Search">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Richard_Greenblatt">Richard Greenblatt</a>, <a href="/Donald_Eastlake">Donald Eastlake</a>, <a href="/Stephen_D._Crocker">Stephen D. Crocker</a> (<strong>1967</strong>). <em>The Greenblatt Chess Program</em>. Proceedings of the AfiPs Fall Joint Computer Conference, Vol. 31, pp. 801-810. Reprinted (<strong>1988</strong>) in <a href="/Computer_Chess_Compendium">Computer Chess Compendium</a>, <a href="http://archive.computerhistory.org/projects/chess/related_materials/text/2-4.Greenblatt_Chess_Program/The_Greenblatt_Chess_Program.Greenblatt_Eastlake_Crocker.1967.Fall_Joint_Computer_Conference.062303060.sm.pdf">pdf</a> from <a href="/The_Computer_History_Museum">The Computer History Museum</a> or as <a href="http://dspace.mit.edu/handle/1721.1/6176">pdf or ps</a> from <a href="http://libraries.mit.edu/dspace-mit/">DSpace</a> at <a href="/Massachusetts_Institute_of_Technology">MIT</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Albert_Zobrist">Albert Zobrist</a> (<strong>1970</strong>). <em>A New Hashing Method with Application for Game Playing</em>. Technical Report #88, Computer Science Department, The University of Wisconsin, Madison, WI, USA. Reprinted (<strong>1990</strong>) in <a href="/ICGA_Journal">ICCA Journal, Vol. 13, No. 2</a>, <a href="http://www.cs.wisc.edu/techreports/1970/TR88.pdf">pdf</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/259fbfd2b39b8ee4/80c64ba0f632fc31">Re: Berliner vs. Botvinnik Some interesting points</a>, post 8 by <a href="/Bradley_Kuszmaul">Bradley C. Kuszmaul</a>, <a href="/Computer_Chess_Forums">rgcc</a>, November 06, 1996 » Transposition Table in <a href="/Mac_Hack">Mac Hack</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://en.wikipedia.org/wiki/Dynamic_programming#Algorithms_that_use_dynamic_programming">Algorithms that use dynamic programming from Wikipedia</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="/Mathematician">Sanjoy Dasgupta</a>, <a href="/Mathematician">Christos H. Papadimitriou</a>, <a href="/Mathematician">Umesh Vazirani</a> (<strong>2006</strong>). <em><a href="http://www.cs.berkeley.edu/%7Evazirani/algorithms.html">Algorithms</a></em>. <a href="https://en.wikipedia.org/wiki/McGraw-Hill">McGraw-Hill</a>, ISBN: 978-0073523408, <a href="https://www.amazon.com/gp/product/0073523402?ie=UTF8&amp;tag=ebookdire-20&amp;link_code=as3&amp;camp=211189&amp;creative=373489&amp;creativeASIN=0073523402">amazon</a>, Chapter 6, Dynamic programming<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="/Dennis_Breuker">Dennis Breuker</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>1997</strong>). <em>Information in Transposition Tables</em>. <a href="/Advances_in_Computer_Chess_8">Advances in Computer Chess 8</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="/MTD%28f%29">MTD(f)</a>- and some <a href="/Principal_Variation_Search">PVS</a>-implementations store distinct <a href="/Upper_Bound">upper</a> and <a href="/Upper_Bound">lower bound</a> scores, rather than one score with flags<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="/Albert_Zobrist">Albert Zobrist</a> (<strong>1970</strong>). <em>A New Hashing Method with Application for Game Playing</em>. Technical Report #88, Computer Science Department, The University of Wisconsin, Madison, WI, USA. Reprinted (1990) in <a href="/ICGA_Journal">ICCA Journal, Vol. 13, No. 2</a>, <a href="http://www.cs.wisc.edu/techreports/1970/TR88.pdf">pdf</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/b9de346eb1e8300/">Collision probability</a> by <a href="/Dennis_Breuker">Dennis Breuker</a>, <a href="/Computer_Chess_Forums">rgcc</a>, April 15, 1996<a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=40062">TT Key Collisions, Workarounds?</a> by Clemens Pruell, <a href="/CCC">CCC</a>, August 16, 2011<a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=44082">how to measure frequency of hash collisions</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, June 16, 2012<a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="http://www.cse.buffalo.edu/~regan/chess/computer/">Computer Chess - Hash Collisions in Chess Engines, and What They May Mean...</a> by <a href="/Kenneth_W._Regan">Kenneth W. Regan</a><a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="http://www.chessgames.com/perl/chessgame?gid=1352348">Pablo Lafuente vs Shredder (Computer) (2005)</a> from <a href="http://www.chessgames.com/index.html">chessgames.com</a><a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p><a href="http://www.chessbase.com/newsdetail.asp?newsid=2525">Current tournaments – Sanjin, Biel, Argentina, Israel</a>, <a href="/ChessBase">ChessBase News</a>, July 21, 2005<a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn15"><p><a href="/James_Gillogly">James Gillogly</a> (<strong>1989</strong>). <em>Transposition Table Collisions</em>. <a href="/WCCC_1989">Workshop on New Directions in Game-Tree Search</a><a href="#fnref15" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn16"><p><a href="/James_Gillogly">James Gillogly</a> (<strong>1989</strong>). <em>New Directions in Game-Tree Search - First Workshop Session</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 12, No. 2</a><a href="#fnref16" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn17"><p><a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Anthony_Cozzie">Anthony Cozzie</a> (<strong>2005</strong>). <em><a href="http://www.craftychess.com/hyatt/collisions.html">The Effect of Hash Signature Collisions in a Chess Program</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 28, No. 3</a><a href="#fnref17" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn18"><p><a href="/Dennis_Breuker">Dennis Breuker</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>1994</strong>). <em>Replacement Schemes for Transposition Tables</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 17, No. 4</a><a href="#fnref18" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn19"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=47373&amp;start=28">Re: Transposition table usage in quiescent search?</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, March 06, 2013<a href="#fnref19" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn20"><p><a href="/Joe_Condon">Joe Condon</a>, <a href="/Ken_Thompson">Ken Thompson</a> (<strong>1983</strong>). <em>BELLE Chess Hardware</em>. <a href="/Advances_in_Computer_Chess_3">Advances in Computer Chess 3</a><a href="#fnref20" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn21"><p><a href="/Dennis_Breuker">Dennis Breuker</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>1996</strong>). <em>Replacement Schemes and Two-Level Tables</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 19, No. 3</a><a href="#fnref21" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn22"><p><a href="/Don_Beal">Don Beal</a>, <a href="/Martin_C._Smith">Martin C. Smith</a> (<strong>1996</strong>). <em>Multiple Probes of Transposition Tables</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 19, No. 4</a><a href="#fnref22" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn23"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=59047">Transposition Age Tutorial</a> by <a href="/Dennis_Sceviour">Dennis Sceviour</a>, <a href="/CCC">CCC</a>, January 25, 2016<a href="#fnref23" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn24"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=59960">Hashtable aging</a> by <a href="/Martin_Fierz">Martin Fierz</a>, <a href="/CCC">CCC</a>, April 25, 2016<a href="#fnref24" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn25"><p><a href="/Robert_Hyatt">Robert Hyatt</a> and <a href="/Tim_Mann">Tim Mann</a> (<strong>2002</strong>). <em><a href="http://www.craftychess.com/hyatt/hashing.html">A lock-less transposition table implementation for parallel search chess engines</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 25, No. 1</a><a href="#fnref25" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn26"><p><a href="https://www.stmintz.com/ccc/index.php?id=200622">Re: About random numbers and hashing</a> by <a href="/Sven_Reichard">Sven Reichard</a>, <a href="/CCC">CCC</a>, December 05, 2001<a href="#fnref26" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn27"><p><a href="https://en.wikipedia.org/wiki/Transposition-driven_scheduling">Transposition-driven scheduling - Wikipedia</a><a href="#fnref27" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn28"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=47700">Transposition driven scheduling</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, April 04, 2013<a href="#fnref28" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn29"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=55889&amp;start=8">Re. Fail low after fail high</a> by <a href="/Marcel_van_Kervinck">Marcel van Kervinck</a>, <a href="/CCC">CCC</a>, April 05, 2015 » <a href="/Fail-Low">Fail-Low</a>, <a href="/Fail-High">Fail-High</a><a href="#fnref29" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn30"><p><a href="/John_Romein">John Romein</a>, <a href="/Henri_Bal">Henri Bal</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, <a href="/Aske_Plaat">Aske Plaat</a> (<strong>2002</strong>). <em>A Performance Analysis of Transposition-Table-Driven Scheduling in Distributed Search</em>. IEEE Transactions on Parallel and Distributed Systems, Vol. 13, No. 5, pp. 447–459. <a href="http://www.cs.vu.nl/~bal/Papers/tds.pdf">pdf</a><a href="#fnref30" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn31"><p><a href="/David_E._Welsh">David E. Welsh</a>, <a href="/Boris_Baczynskyj">Boris Baczynskyj</a> (<strong>1985</strong>). <em><a href="https://www.amazon.com/Computer-Chess-II-David-Welsh/dp/0697099113">Computer Chess II</a></em>. William C Brown Publications, ISBN-13: 978-0697099112<a href="#fnref31" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Salvador_Dalí">Salvador Dalí</a> · <a href="/Category:Marcel_Duchamp">Marcel Duchamp</a> · <a href="/Category:Tal_Wilkenfeld">Tal Wilkenfeld</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Transposition_Table">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, Phhnguyen, ShawnXu.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

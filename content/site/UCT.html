@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UCT - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">UCT</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Search">Search</a> * <a href="/Monte-Carlo_Tree_Search">Monte-Carlo Tree Search</a> * UCT</strong></p>
+<p><strong>UCT</strong> (<strong>U</strong>pper <strong>C</strong>onfidence bounds applied to <strong>T</strong>rees),<br />
+a popular <a href="/Algorithms">algorithm</a> that deals with the flaw of Monte-Carlo Tree Search, when a program may favor a losing move with only one or a few forced refutations, but due to the vast majority of other moves provides a better random playout score than other, better moves. UCT was introduced by <a href="/Levente_Kocsis">Levente Kocsis</a> and <a href="/Csaba_Szepesvári">Csaba Szepesvári</a> in 2006 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>, which accelerated the Monte-Carlo revolution in computer <a href="/Go">Go</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> and games difficult to <a href="/Evaluation">evaluate</a> statically. If given infinite time and <a href="/Memory">memory</a>, UCT theoretically converges to <a href="/Minimax">Minimax</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#selection">Selection</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#rave">RAVE</a></li>
+<li><a href="#puct">PUCT</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#quotes">Quotes</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#gian-carlo-pascutto">Gian-Carlo Pascutto</a></li>
+<li><a href="#raghuram-ramanujan-et-al">Raghuram Ramanujan et al.</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#publications">Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2010--1">2010 ...</a></li>
+<li><a href="#2015--1">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="selection">Selection</h2>
+<p>In UCT, upper <a href="https://en.wikipedia.org/wiki/Confidence_interval">confidence bounds</a> (UCB1) guide the selection of a node <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>, treating selection as a <a href="https://en.wikipedia.org/wiki/Multi-armed_bandit">multi-armed bandit problem</a>, where the crucial tradeoff the <a href="https://en.wikipedia.org/wiki/Gambling">gambler</a> faces at each trial is between <a href="https://en.wikipedia.org/wiki/Monte_Carlo_tree_search#Exploration_and_exploitation">exploration and exploitation</a> - <a href="https://en.wikipedia.org/wiki/Exploitation_%28disambiguation%29">exploitation</a> of the <a href="https://en.wikipedia.org/wiki/Slot_machine">slot machine</a> that has the highest expected payoff and <a href="https://en.wikipedia.org/wiki/Exploration">exploration</a> to get more information about the expected payoffs of the other machines. Child node j is selected which maximizes the UCT Evaluation: <span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="/assets/UCTFormula.jpg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span> where:</p>
+<ul>
+<li>X<span style="font-size: 80%; vertical-align: sub;">j</span> is the <a href="/Match_Statistics">win ratio</a> of the child</li>
+<li>n is the number of times the parent has been visited</li>
+<li>n<span style="font-size: 80%; vertical-align: sub;">j</span> is the number of times the child has been visited</li>
+<li>C is a constant to adjust the amount of exploration and incorporates the sqrt(2) from the UCB1 formula</li>
+</ul>
+<p>The first component of the UCB1 formula above corresponds to exploitation, as it is high for moves with high average win ratio. The second component corresponds to exploration, since it is high for moves with few simulations.</p>
+<h3 id="rave">RAVE</h3>
+<p>Most contemporary implementations of MCTS are based on some variant of UCT <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>. Modifications have been proposed, with the aim of shortening the time to find good moves. They can be divided into improvements based on expert knowledge and into domain-independent improvements in the playouts, and in building the tree in modifying the exploitation part of the UCB1 formula, for instance in <a href="https://en.wikipedia.org/wiki/Monte_Carlo_tree_search#Improvements">Rapid Action Value Estimation</a> (<strong>RAVE</strong>) <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> considering <a href="/Transposition">transpositions</a>.</p>
+<h3 id="puct">PUCT</h3>
+<p><a href="/Christopher_D._Rosin">Chris Rosin's</a> <a href="/Christopher_D._Rosin">PUCT</a> modifies the original UCB1 multi-armed bandit policy by approximately predicting good arms at the start of a sequence of multi-armed bandit trials ('Predictor' + UCB = PUCB) <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>. A variation of PUCT was used in the AlphaGo and <a href="/AlphaZero">AlphaZero</a> projects <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> , and subsequently also in Leela Zero and <a href="/Leela_Chess_Zero">Leela Chess Zero</a> <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a>.</p>
+<h2 id="quotes">Quotes</h2>
+<h3 id="gian-carlo-pascutto">Gian-Carlo Pascutto</h3>
+<p>Quote by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a> in 2010 <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a>:</p>
+<p><code>There is no significant difference between an </code><a href="/Alpha-Beta"><code>alpha-beta search</code></a><code> with heavy </code><a href="/Late_Move_Reductions"><code>LMR</code></a><code>  and a </code><a href="/Evaluation"><code>static evaluator</code></a><code> (current state of the art in </code><a href="/Chess"><code>chess</code></a><code>) and an UCT searcher with a small exploration constant that does playouts (state of the art in </code><a href="/Go"><code>go</code></a><code>).</code></p>
+<p><code>The shape of the </code><a href="/Search_Tree"><code>tree</code></a><code> they search is very similar. The main breakthrough in Go the last few years was how to backup an uncertain Monte Carlo score. This was solved. For chess this same problem was solved around the time </code><a href="/Quiescence_Search"><code>quiescent search</code></a><code> was developed.</code></p>
+<p><code>Both are producing strong programs and we've proven for both the methods that they scale in strength as hardware speed goes up.</code></p>
+<p><code>So I would say that we've successfully adopted the simple, brute force methods for chess to Go and they already work without increases in computer speed. The increases will make them progressively stronger though, and with further software tweaks they will eventually surpass humans. </code></p>
+<h3 id="raghuram-ramanujan-et-al">Raghuram Ramanujan et al.</h3>
+<p>Quote by <a href="/Raghuram_Ramanujan">Raghuram Ramanujan</a>, <a href="/Ashish_Sabharwal">Ashish Sabharwal</a>, and <a href="/Bart_Selman">Bart Selman</a> from their abstract <em>On Adversarial Search Spaces and Sampling-Based Planning</em> <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a>:</p>
+<p><code>UCT has been shown to outperform traditional </code><a href="/Minimax"><code>minimax</code></a><code> based approaches in several challenging domains such as </code><a href="/Go"><code>Go</code></a><code> and </code><a href="/KriegSpiel"><code>KriegSpiel</code></a><code>, although minimax search still prevails in other domains such as </code><a href="/Chess"><code>Chess</code></a><code>. This work provides insights into the properties of adversarial search spaces that play a key role in the success or failure of UCT and similar sampling-based approaches. We show that certain "early loss" or "shallow trap" configurations, while unlikely in Go, occur surprisingly often in games like Chess (even in grandmaster games). We provide evidence that UCT, unlike minimax search, is unable to identify such traps in Chess and spends a great deal of time exploring much deeper game play than needed. </code></p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Ari_Weinstein">FSSS-Minimax</a></li>
+<li><a href="/Match_Statistics">Match Statistics</a></li>
+<li><a href="/Jakob_Erdmann">MC and UCT poster</a> by <a href="/Jakob_Erdmann">Jakob Erdmann</a></li>
+<li><a href="/MCαβ">MCαβ</a></li>
+<li><a href="/Christopher_D._Rosin">PUCT</a></li>
+<li><a href="/Reinforcement_Learning">Reinforcement Learning</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="/Peter_Auer">Peter Auer</a>, <a href="/Nicolò_Cesa-Bianchi">Nicolò Cesa-Bianchi</a>, <a href="/Paul_Fischer">Paul Fischer</a> (<strong>2002</strong>). <em><a href="http://link.springer.com/article/10.1023%2FA%3A1013689704352">Finite-time Analysis of the Multiarmed Bandit Problem</a></em>. <a href="https://en.wikipedia.org/wiki/Machine_Learning_%28journal%29">Machine Learning</a>, Vol. 47, No. 2, <a href="http://homes.di.unimi.it/~cesabian/Pubblicazioni/ml-02.pdf">pdf</a></li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<p><strong>2006</strong></p>
+<ul>
+<li><a href="/Levente_Kocsis">Levente Kocsis</a>, <a href="/Csaba_Szepesvári">Csaba Szepesvári</a> (<strong>2006</strong>). <em><a href="http://www.computer-go.info/resources/bandit.html">Bandit based Monte-Carlo Planning</a></em>. ECML-06, LNCS/LNAI 4212, <a href="http://old.sztaki.hu/~szcsaba/papers/ecml06.pdf">pdf</a></li>
+<li><a href="/Levente_Kocsis">Levente Kocsis</a>, <a href="/Csaba_Szepesvári">Csaba Szepesvári</a>, Jan Willemson (<strong>2006</strong>). <em>Improved Monte-Carlo Search</em>. <a href="http://www.sztaki.hu/~szcsaba/papers/cg06-ext.pdf">pdf</a></li>
+<li><a href="/Sylvain_Gelly">Sylvain Gelly</a>, <a href="/Yizao_Wang">Yizao Wang</a> (<strong>2006</strong>). <em>Exploration exploitation in Go: UCT for Monte-Carlo Go</em>. <a href="http://www.lri.fr/%7Egelly/paper/nips_exploration_exploitation_mogo.pdf">pdf</a></li>
+<li><a href="/Sylvain_Gelly">Sylvain Gelly</a>, <a href="/Yizao_Wang">Yizao Wang</a>, <a href="/Rémi_Munos">Rémi Munos</a>, <a href="/Olivier_Teytaud">Olivier Teytaud</a> (<strong>2006</strong>). <em>Modiﬁcation of UCT with Patterns in Monte-Carlo Go</em>. <a href="http://hal.inria.fr/inria-00117266">INRIA</a></li>
+</ul>
+<p><strong>2007</strong></p>
+<ul>
+<li><a href="/Yizao_Wang">Yizao Wang</a>, <a href="/Sylvain_Gelly">Sylvain Gelly</a> (<strong>2007</strong>). <em>Modifications of UCT and Sequence-Like Simulations for Monte-Carlo Go</em>. IEEE Symposium on Computational Intelligence and Games, Honolulu, USA, 2007, <a href="http://www.stat.lsa.umich.edu/%7Eyizwang/publications/wang07modifications.pdf">pdf</a></li>
+<li>Shugo Nakamura, <a href="/Makoto_Miwa">Makoto Miwa</a>, <a href="/Takashi_Chikayama">Takashi Chikayama</a> (<strong>2007</strong>). <em>Improvement of UCT using evaluation function</em>. <a href="http://www.computer-shogi.org/gpw/gpw12_e.html">12th Game Programming Workshop 2007</a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a>, Nicolas Jouandeau (<strong>2007</strong>). <em>On the Parallelization of UCT</em>. <a href="/CGW_2007">CGW 2007</a>, <a href="http://www.lamsade.dauphine.fr/%7Ecazenave/papers/parallelUCT.pdf">pdf</a> » <a href="/Parallel_Search">Parallel Search</a></li>
+<li><a href="/Jean-Yves_Audibert">Jean-Yves Audibert</a>, <a href="/Rémi_Munos">Rémi Munos</a>, <a href="/Csaba_Szepesvári">Csaba Szepesvári</a> (<strong>2007</strong>). <em>Tuning Bandit Algorithms in Stochastic Environments</em>. <a href="http://certis.enpc.fr/~audibert/ucb_alt.pdf">pdf</a></li>
+</ul>
+<p><strong>2008</strong></p>
+<ul>
+<li><a href="/Nathan_Sturtevant">Nathan Sturtevant</a> (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_4">An Analysis of UCT in Multi-player Games</a></em>. <a href="/CG_2008">CG 2008</a></li>
+<li><a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, <a href="/Mark_Winands">Mark Winands</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_6">Parallel Monte-Carlo Tree Search</a></em>. <a href="/CG_2008">CG 2008</a>, <a href="https://dke.maastrichtuniversity.nl/m.winands/documents/multithreadedMCTS2.pdf">pdf</a></li>
+</ul>
+<p><strong>2009</strong></p>
+<ul>
+<li><a href="/Rémi_Coulom">Rémi Coulom</a> (<strong>2009</strong>). <em>The Monte-Carlo Revolution in Go</em>. JFFoS'2008: Japanese-French Frontiers of Science Symposium, <a href="http://remi.coulom.free.fr/JFFoS/JFFoS.pdf">slides as pdf</a></li>
+<li><a href="/Fabien_Teytaud">Fabien Teytaud</a>, <a href="/Olivier_Teytaud">Olivier Teytaud</a> (<strong>2009</strong>). <em>Creating an Upper-Confidence-Tree program for Havannah</em>. <a href="/Advances_in_Computer_Games_12">Advances in Computer Games 12</a>, <a href="http://hal.inria.fr/docs/00/38/05/39/PDF/hav.pdf">inria-00380539 as pdf</a> » <a href="/Havannah">Havannah</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="/Jean_Méhat">Jean Méhat</a>, <a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2010</strong>). <em>Combining UCT and Nested Monte-Carlo Search for Single-Player General Game Playing</em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 2, No. 4, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/ggp2009.pdf">pdf 2009</a> » <a href="/General_Game_Playing">General Game Playing</a></li>
+<li><a href="/Raghuram_Ramanujan">Raghuram Ramanujan</a>, <a href="/Ashish_Sabharwal">Ashish Sabharwal</a>, <a href="/Bart_Selman">Bart Selman</a> (<strong>2010</strong>). <em><a href="http://www.aaai.org/ocs/index.php/ICAPS/ICAPS10/paper/view/1458">On Adversarial Search Spaces and Sampling-Based Planning</a></em>. <a href="http://www.aaai.org/Press/Proceedings/icaps10.php">ICAPS 2010</a> <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a></li>
+<li>Damien Pellier, <a href="/Bruno_Bouzy">Bruno Bouzy</a>, Marc Métivier (<strong>2010</strong>). <em>An UCT Approach for Anytime Agent-based Planning</em>. <a href="http://www.springer.com/de/book/9783642123832">PAAMS'10</a>, <a href="http://www.mi.parisdescartes.fr/~bouzy/publications/pellier-bouzy-metivier-paams10.pdf">pdf</a></li>
+<li>Thomas J. Walsh, Sergiu Goschin, <a href="/Michael_L._Littman">Michael L. Littman</a> (<strong>2010</strong>). <em>Integrating sample-based planning and model-based reinforcement learning.</em> <a href="/AAAI">AAAI</a>, <a href="https://pdfs.semanticscholar.org/bdc9/bfb6ecc6fb5afb684df03d7220c46ebdbf4e.pdf">pdf</a> » <a href="/Reinforcement_Learning">Reinforcement Learning</a></li>
+<li>Takayuki Yajima, <a href="/Tsuyoshi_Hashimoto">Tsuyoshi Hashimoto</a>, Toshiki Matsui, <a href="/Junichi_Hashimoto">Junichi Hashimoto</a>, Kristian Spoerer (<strong>2010</strong>). <em><a href="https://link.springer.com/chapter/10.1007%2F978-3-642-17928-0_11">Node-Expansion Operators for the UCT Algorithm</a></em>. <a href="/CG_2010">CG 2010</a></li>
+</ul>
+<p><strong>2011</strong></p>
+<ul>
+<li><a href="/Junichi_Hashimoto">Junichi Hashimoto</a>, <a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, Kazuki Yoshizoe, <a href="/Kokolo_Ikeda">Kokolo Ikeda</a> (<strong>2011</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-642-31866-5_1">Accelerated UCT and Its Application to Two-Player Games</a></em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a></li>
+<li><a href="/Jeff_Rollason">Jeff Rollason</a> (<strong>2011</strong>). <em><a href="http://www.aifactory.co.uk/newsletter/2011_02_mcts_static.htm">Mixing MCTS with Conventional Static Evaluation: Experiments and shortcuts en-route to full UCT</a></em>. <a href="/AI_Factory">AI Factory</a>, Winter 2011 » <a href="/Evaluation">Evaluation</a></li>
+<li><a href="/Sylvain_Gelly">Sylvain Gelly</a>, <a href="/David_Silver">David Silver</a> (<strong>2011</strong>). <em>Monte-Carlo tree search and rapid action value estimation in computer Go</em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 175, No. 11, <a href="http://www0.cs.ucl.ac.uk/staff/D.Silver/web/Applications_files/mcrave.pdf">preprint as pdf</a></li>
+<li>Lars Schaefers, Marco Platzner, <a href="/Ulf_Lorenz">Ulf Lorenz</a> (<strong>2011</strong>). <em>UCT-Treesplit - Parallel MCTS on Distributed Memory</em>. <a href="http://www.aaai.org/Press/Proceedings/icaps11.php">ICAPS 2011</a>, <a href="http://www.cs.uni-paderborn.de/fileadmin/Informatik/AG-Platzner/People/Schaefers/TreesplitICAPS.pdf">pdf</a> » <a href="/Parallel_Search">Parallel Search</a></li>
+<li><a href="/Raghuram_Ramanujan">Raghuram Ramanujan</a>, <a href="/Bart_Selman">Bart Selman</a> (<strong>2011</strong>). <em><a href="http://aaai.org/ocs/index.php/ICAPS/ICAPS11/paper/view/2708">Trade-Offs in Sampling-Based Adversarial Planning</a></em>. <a href="http://www.aaai.org/Press/Proceedings/icaps11.php">ICAPS 2011</a></li>
+<li><a href="/Christopher_D._Rosin">Christopher D. Rosin</a> (<strong>2011</strong>). <em><a href="https://link.springer.com/article/10.1007/s10472-011-9258-6">Multi-armed bandits with episode context</a></em>. Annals of Mathematics and Artificial Intelligence, Vol. 61, No. 3, <a href="http://gauss.ececs.uc.edu/Workshops/isaim2010/papers/rosin.pdf">ISAIM 2010 pdf</a> » <a href="/Christopher_D._Rosin">PUCT</a></li>
+<li>Adrien Couëtoux, <a href="/Jean-Baptiste_Hoock">Jean-Baptiste Hoock</a>, Nataliya Sokolovska, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, Nicolas Bonnard (<strong>2011</strong>). <em>Continuous Upper Confidence Trees</em>. <a href="https://dblp.uni-trier.de/db/conf/lion/lion2011.html">LION 2011</a>, <a href="https://hal.archives-ouvertes.fr/hal-00542673v1/document">pdf</a></li>
+<li>David Tolpin, <a href="/Solomon_Eyal_Shimony">Solomon Eyal Shimony</a> (<strong>2011</strong>). <em>Doing Better Than UCT: Rational Monte Carlo Sampling in Trees</em>. <a href="https://arxiv.org/abs/1108.3711">arXiv:1108.3711</a></li>
+</ul>
+<p><strong>2012</strong></p>
+<ul>
+<li>Oleg Arenz (<strong>2012</strong>). <em>Monte Carlo Chess</em>. B.Sc. thesis, <a href="/Darmstadt_University_of_Technology">Darmstadt University of Technology</a>, advisor <a href="/Johannes_Fürnkranz">Johannes Fürnkranz</a>, <a href="http://www.ke.tu-darmstadt.de/lehre/arbeiten/bachelor/2012/Arenz_Oleg.pdf">pdf</a> » <a href="/Stockfish">Stockfish</a></li>
+<li><a href="/Cameron_Browne">Cameron Browne</a>, Edward Powley, Daniel Whitehouse, <a href="/Simon_Lucas">Simon Lucas</a>, Peter Cowling, Philipp Rohlfshagen, Stephen Tavener, Diego Perez, Spyridon Samothrakis, Simon Colton (<strong>2012</strong>). <em><a href="https://ieeexplore.ieee.org/document/6145622">A Survey of Monte Carlo Tree Search Methods</a></em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 4, No. 1, <a href="http://ccg.doc.gold.ac.uk/ccg_old/papers/browne_tciaig12_1.pdf">pdf</a></li>
+<li><a href="/Sylvain_Gelly">Sylvain Gelly</a>, <a href="/Marc_Schoenauer">Marc Schoenauer</a>, <a href="/Michèle_Sebag">Michèle Sebag</a>, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, <a href="/Levente_Kocsis">Levente Kocsis</a>, <a href="/David_Silver">David Silver</a>, <a href="/Csaba_Szepesvári">Csaba Szepesvári</a> (<strong>2012</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=2093548.2093574">The Grand Challenge of Computer Go: Monte Carlo Tree Search and Extensions</a></em>. <a href="/ACM">Communications of the ACM</a>, Vol. 55, No. 3, <a href="http://www0.cs.ucl.ac.uk/staff/D.Silver/web/Applications_files/grand-challenge.pdf">pdf preprint</a></li>
+<li>Adrien Couetoux, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, Hassen Doghmen (<strong>2012</strong>). <em>Learning a Move-Generator for Upper Confidence Trees</em>. <a href="http://ics2012.ndhu.edu.tw/">ICS 2012</a>, <a href="https://en.wikipedia.org/wiki/Hualien_City">Hualien</a>, <a href="https://en.wikipedia.org/wiki/Taiwan">Taiwan</a>, December 2012 » <a href="/Learning">Learning</a>, <a href="/Move_Generation">Move Generation</a></li>
+<li><a href="/Ashish_Sabharwal">Ashish Sabharwal</a>, Horst Samulowitz, Chandra Reddy (<strong>2012</strong>). <em><a href="http://link.springer.com/chapter/10.1007%2F978-3-642-29828-8_23">Guiding Combinatorial Optimization with UCT</a></em>. <a href="http://dblp.uni-trier.de/db/conf/cpaior/cpaior2012.html#SabharwalSR12">CPAIOR 2012</a>, <a href="http://web.emn.fr/x-info/cpaior-2012/uploads/Abstracts/CPAIOR%20-%2072980356.pdf">abstract as pdf</a>, <a href="http://www.cs.toronto.edu/~horst/cogrobo/papers/uctmip.pdf">draft as pdf</a></li>
+<li><a href="/Raghuram_Ramanujan">Raghuram Ramanujan</a>, <a href="/Ashish_Sabharwal">Ashish Sabharwal</a>, <a href="/Bart_Selman">Bart Selman</a> (<strong>2012</strong>). <em>Understanding Sampling Style Adversarial Search Methods</em>. <a href="http://arxiv.org/abs/1203.4011">arXiv:1203.4011</a></li>
+<li><a href="/Cheng-Wei_Chou">Cheng-Wei Chou</a>, Ping-Chiang Chou, <a href="/Chang-Shing_Lee">Chang-Shing Lee</a>, David L. Saint-Pierre, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, <a href="/Mei-Hui_Wang">Mei-Hui Wang</a>, Li-Wen Wu, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a> (<strong>2012</strong>). <em>Strategic Choices: Small Budgets and Simple Regret</em>. TAAI 2012, <a href="http://www.csie.ndhu.edu.tw/csieweb/en/node/685">Excellent Paper Award</a>, <a href="https://hal.inria.fr/hal-00753145v2/document">pdf</a></li>
+<li><a href="/Arthur_Guez">Arthur Guez</a>, <a href="/David_Silver">David Silver</a>, <a href="/Peter_Dayan">Peter Dayan</a> (<strong>2012</strong>). <em>Efficient Bayes-Adaptive Reinforcement Learning using Sample-Based Search</em>. <a href="https://arxiv.org/abs/1205.3109">arXiv:1205.3109</a></li>
+<li><a href="/Truong-Huy_Dinh_Nguyen">Truong-Huy Dinh Nguyen</a>, <a href="/Wee_Sun_Lee">Wee Sun Lee</a>, Tze-Yun Leong (<strong>2012</strong>). <em>Bootstrapping Monte Carlo Tree Search with an Imperfect Heuristic</em>. <a href="https://arxiv.org/abs/1206.5940">arXiv:1206.5940</a></li>
+<li>David Tolpin, <a href="/Solomon_Eyal_Shimony">Solomon Eyal Shimony</a> (<strong>2012</strong>). <em>MCTS Based on Simple Regret</em>. <a href="/Conferences">AAAI-2012</a>, <a href="https://arxiv.org/abs/1207.5536">arXiv:1207.5536</a></li>
+</ul>
+<p><strong>2013</strong></p>
+<ul>
+<li><a href="/Simon_Viennot">Simon Viennot</a>, <a href="/Kokolo_Ikeda">Kokolo Ikeda</a> (<strong>2013</strong>). <em><a href="http://link.springer.com/chapter/10.1007%2F978-3-319-09165-5_3">Efficiency of Static Knowledge Bias in Monte-Carlo Tree Search</a></em>. <a href="/CG_2013">CG 2013</a></li>
+<li>Rui Li, Yueqiu Wu, Andi Zhang, Chen Ma, Bo Chen, Shuliang Wang (<strong>2013</strong>). <em><a href="http://cpfd.cnki.com.cn/Article/CPFDTOTAL-KZJC201309001170.htm">Technique Analysis and Designing of Program with UCT Algorithm for NoGo</a></em>. <a href="http://www.ccdc.neu.edu.cn/CCDC2013/">CCDC2013</a></li>
+<li><a href="/Ari_Weinstein">Ari Weinstein</a>, <a href="/Michael_L._Littman">Michael L. Littman</a>, Sergiu Goschin (<strong>2013</strong>). <em><a href="http://proceedings.mlr.press/v24/weinstein12a.html">Rollout-based Game-tree Search Outprunes Traditional Alpha-beta</a></em>. <a href="http://proceedings.mlr.press/">PMLR</a>, Vol. 24 » <a href="/Ari_Weinstein">FSSS-Minimax</a>, <a href="/Monte-Carlo_Tree_Search">MCTS</a></li>
+</ul>
+<p><strong>2014</strong></p>
+<ul>
+<li><a href="/Rémi_Munos">Rémi Munos</a> (<strong>2014</strong>). <em>From Bandits to Monte-Carlo Tree Search: The Optimistic Principle Applied to Optimization and Planning</em>. <a href="http://dblp.uni-trier.de/db/journals/ftml/ftml7.html#Munos14">Foundations and Trends in Machine Learning, Vol. 7, No 1</a>, <a href="https://hal.archives-ouvertes.fr/hal-00747575">hal-00747575v5</a>, <a href="http://chercheurs.lille.inria.fr/~munos/papers/files/AAAI2013_slides.pdf">slides as pdf</a></li>
+<li>David W. King (<strong>2014</strong>). <em>Complexity, Heuristic, and Search Analysis for the Games of Crossings and Epaminondas</em>. Masters thesis, <a href="https://en.wikipedia.org/wiki/Air_Force_Institute_of_Technology">Air Force Institute of Technology</a>, <a href="http://www.afit.edu/docs/AFIT-ENG-14-M-44_King.pdf">pdf</a> <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a></li>
+<li>David W. King, Gilbert L. Peterson (<strong>2014</strong>). <em>Epaminondas: Exploring Combat Tactics</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 37, No. 3</a> <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a></li>
+<li><a href="/Truong-Huy_Dinh_Nguyen">Truong-Huy Dinh Nguyen</a>, Tomi Silander, <a href="/Wee_Sun_Lee">Wee Sun Lee</a>, Tze-Yun Leong (<strong>2014</strong>). <em><a href="https://www.aaai.org/ocs/index.php/ICAPS/ICAPS14/paper/view/7934">Bootstrapping Simulation-Based Algorithms with a Suboptimal Policy</a></em>. <a href="https://dblp.uni-trier.de/db/conf/aips/icaps2014.html">ICAPS 2014</a>, <a href="https://youtu.be/ccwcZZj5vKM">YouTube Video</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="/Xi_Liang">Xi Liang</a>, <a href="/Ting-Han_Wei">Ting-Han Wei</a>, <a href="/I-Chen_Wu">I-Chen Wu</a> (<strong>2015</strong>). <em>Job-level UCT search for solving Hex</em>. <a href="http://dblp.uni-trier.de/db/conf/cig/cig2015.html#LiangWW15">CIG 2015</a></li>
+<li>Yusaku Mandai, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a> (<strong>2015</strong>). <em>LinUCB Applied to Monte Carlo Tree Search</em>. <a href="/Advances_in_Computer_Games_14">Advances in Computer Games 14</a></li>
+<li>Yun-Ching Liu, <a href="/Yoshimasa_Tsuruoka">Yoshimasa Tsuruoka</a> (<strong>2015</strong>). <em>Adapting Improved Upper Confidence Bounds for Monte-Carlo Tree Search</em>. <a href="/Advances_in_Computer_Games_14">Advances in Computer Games 14</a></li>
+<li><a href="/S._Ali_Mirsoleimani">S. Ali Mirsoleimani</a>, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2015</strong>). <em>Ensemble UCT Needs High Exploitation</em>. <a href="http://arxiv.org/abs/1509.08434">CoRR abs/1509.08434</a></li>
+<li>Johannes Heinrich, <a href="/David_Silver">David Silver</a> (<strong>2015</strong>). <em>Smooth UCT Search in Computer Poker</em>. <a href="/Conferences">IJCAI 2015</a>, <a href="http://www0.cs.ucl.ac.uk/staff/d.silver/web/Publications_files/smooth_uct.pdf">pdf</a></li>
+<li><a href="/Xi_Liang">Xi Liang</a>, <a href="/Ting-Han_Wei">Ting-Han Wei</a>, <a href="/I-Chen_Wu">I-Chen Wu</a> (<strong>2015</strong>). <em>Solving Hex Openings Using Job-Level UCT Search</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 38, No. 3</a></li>
+<li><a href="/Naoki_Mizukami">Naoki Mizukami</a>, Jun Suzuki, Hirotaka Kameko, <a href="/Yoshimasa_Tsuruoka">Yoshimasa Tsuruoka</a> (<strong>2017</strong>). <em>Exploration Bonuses Based on Upper Confidence Bounds for Sparse Reward Games</em>. <a href="/Advances_in_Computer_Games_15">Advances in Computer Games 15</a></li>
+<li><a href="/Jacek_Mańdziuk">Jacek Mańdziuk</a> (<strong>2018</strong>). <em>MCTS/UCT in Solving Real-Life Problems</em>. <a href="https://www.springer.com/us/book/9783319679457">Advances in Data Analysis with Computational Intelligence Methods</a>, <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a></li>
+<li>Kiminori Matsuzaki (<strong>2018</strong>). <em>Empirical Analysis of PUCT Algorithm with Evaluation Functions of Different Quality</em>. <a href="/TAAI_2018">TAAI 2018</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2010--1">2010 ...</h3>
+<ul>
+<li><a href="http://computer-go.org/pipermail/computer-go/2010-June/000376.html">Re: Chess vs Go // AI vs IA</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, June 02, 2010</li>
+<li><a href="http://www.lifein19x19.com/forum/viewtopic.php?f=18&amp;t=2184">Monte Carlo (upper confidence bounds applied to trees)</a> by ChessGO, <a href="http://www.lifein19x19.com/forum/viewforum.php?f=18">Computer Go</a>, October 22, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38554">UCT surprise for checkers !</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, March 25, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=42590">uct on gpu</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, February 24, 2012 » <a href="/GPU">GPU</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50721">My new book</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, January 02, 2014 » <a href="/Opening_Book">Opening Book</a></li>
+</ul>
+<h3 id="2015--1">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65964">Nebiyu-MCTS vs TSCP 1-0</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, December 10, 2017 » <a href="/Nebiyu">Nebiyu</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66125">Search traps in MCTS and chess</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, December 25, 2017 » <a href="/Raghuram_Ramanujan">Sampling-Based Planning</a></li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=32429">MCTS weakness wrt AB (via Daniel Shawul)</a> by <a href="/Chris_Whittington">Chris Whittington</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, December 25, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66280">Announcing lczero</a> by <a href="/Gary_Linscott">Gary</a>, <a href="/CCC">CCC</a>, January 09, 2018 » <a href="/Leela_Chess_Zero">Leela Chess Zero</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75484">uct algorithm bad at chess?</a> by Ofek Shochat, <a href="/CCC">CCC</a>, October 21, 2020</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Monte_Carlo_tree_search#Exploration_and_exploitation">Exploration and exploitation - in Monte Carlo tree search from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Confidence_interval">Confidence interval from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Multi-armed_bandit">Multi-armed bandit from Wikipedia</a></li>
+<li><a href="https://github.com/theKGS/MCTS">GitHub - theKGS/MCTS: Java implementation of UCT based MCTS and Flat MCTS</a></li>
+<li><a href="https://senseis.xmp.net/?UCT">Sensei's Library: UCT</a></li>
+<li><a href="https://althofer.de/lange-nacht-jena.html">Lange Nacht der Wissenschaften - Long Night of Sciences Jena - 2007</a> by <a href="/Ingo_Althöfer">Ingo Althöfer</a>, <a href="/Jakob_Erdmann">MC and UCT poster</a> by <a href="/Jakob_Erdmann">Jakob Erdmann</a></li>
+<li><a href="/Category:Weather_Report">Weather Report</a> - <a href="https://en.wikipedia.org/wiki/Sweetnighter">Boogie Woogie Waltz</a>, 1974, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p><a href="/Category:Joe_Zawinul">Joe Zawinul</a>, <a href="/Category:Wayne_Shorter">Wayne Shorter</a>, <a href="/Category:Alphonso_Johnson">Alphonso Johnson</a>, <a href="https://www.allmusic.com/artist/darryl-brown-mn0001213839">Darryl Brown</a>, <a href="/Category:Dom_Um_Romão">Dom Um Romão</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/MRs5ROwfgW4" title="YouTube video MRs5ROwfgW4" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=MRs5ROwfgW4">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Monte-Carlo_Tree_Search">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Levente_Kocsis">Levente Kocsis</a>, <a href="/Csaba_Szepesvári">Csaba Szepesvári</a> (<strong>2006</strong>). <em><a href="http://www.computer-go.info/resources/bandit.html">Bandit based Monte-Carlo Planning</a></em> ECML-06, LNCS/LNAI 4212, <a href="http://www.sztaki.hu/%7Eszcsaba/papers/ecml06.pdf">pdf</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Sylvain_Gelly">Sylvain Gelly</a>, <a href="/Marc_Schoenauer">Marc Schoenauer</a>, <a href="/Michèle_Sebag">Michèle Sebag</a>, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, <a href="/Levente_Kocsis">Levente Kocsis</a>, <a href="/David_Silver">David Silver</a>, <a href="/Csaba_Szepesvári">Csaba Szepesvári</a> (<strong>2012</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=2093548.2093574">The Grand Challenge of Computer Go: Monte Carlo Tree Search and Extensions</a></em>. <a href="/ACM">Communications of the ACM</a>, Vol. 55, No. 3, <a href="http://www0.cs.ucl.ac.uk/staff/D.Silver/web/Applications_files/grand-challenge.pdf">pdf preprint</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>see UCB1 in <a href="/Peter_Auer">Peter Auer</a>, <a href="/Nicolò_Cesa-Bianchi">Nicolò Cesa-Bianchi</a>, <a href="/Paul_Fischer">Paul Fischer</a> (<strong>2002</strong>). <em><a href="http://link.springer.com/article/10.1023%2FA%3A1013689704352">Finite-time Analysis of the Multiarmed Bandit Problem</a></em>. <a href="https://en.wikipedia.org/wiki/Machine_Learning_%28journal%29">Machine Learning</a>, Vol. 47, No. 2<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://en.wikipedia.org/wiki/Monte_Carlo_tree_search#Exploration_and_exploitation">Exploration and exploitation - in Monte Carlo tree search from Wikipedia</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="/Sylvain_Gelly">Sylvain Gelly</a>, <a href="/David_Silver">David Silver</a> (<strong>2011</strong>). <em>Monte-Carlo tree search and rapid action value estimation in computer Go</em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 175, No. 11, <a href="http://www0.cs.ucl.ac.uk/staff/D.Silver/web/Applications_files/mcrave.pdf">preprint as pdf</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="/Christopher_D._Rosin">Christopher D. Rosin</a> (<strong>2011</strong>). <em><a href="https://link.springer.com/article/10.1007/s10472-011-9258-6">Multi-armed bandits with episode context</a></em>. Annals of Mathematics and Artificial Intelligence, Vol. 61, No. 3, <a href="http://gauss.ececs.uc.edu/Workshops/isaim2010/papers/rosin.pdf">ISAIM 2010 pdf</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="/David_Silver">David Silver</a>, <a href="/Shih-Chieh_Huang">Aja Huang</a>, <a href="/Chris_J._Maddison">Chris J. Maddison</a>, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Laurent_Sifre">Laurent Sifre</a>, George van den Driessche, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, Veda Panneershelvam, <a href="/Marc_Lanctot">Marc Lanctot</a>, Sander Dieleman, Dominik Grewe, John Nham, Nal Kalchbrenner, <a href="/Ilya_Sutskever">Ilya Sutskever</a>, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, Madeleine Leach, <a href="/Koray_Kavukcuoglu">Koray Kavukcuoglu</a>, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Demis_Hassabis">Demis Hassabis</a> (<strong>2016</strong>). <em><a href="http://www.nature.com/nature/journal/v529/n7587/full/nature16961.html">Mastering the game of Go with deep neural networks and tree search</a></em>. <a href="https://en.wikipedia.org/wiki/Nature_%28journal%29">Nature</a>, Vol. 529<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="https://github.com/LeelaChessZero/lc0/wiki/FAQ">FAQ · LeelaChessZero/lc0 Wiki · GitHub</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="http://computer-go.org/pipermail/computer-go/2010-June/000376.html">Re: Chess vs Go // AI vs IA</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, June 02, 2010<a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="/Raghuram_Ramanujan">Raghuram Ramanujan</a>, <a href="/Ashish_Sabharwal">Ashish Sabharwal</a>, <a href="/Bart_Selman">Bart Selman</a> (<strong>2010</strong>). <em><a href="http://www.aaai.org/ocs/index.php/ICAPS/ICAPS10/paper/view/1458">On Adversarial Search Spaces and Sampling-Based Planning</a></em>. <a href="http://www.aaai.org/Press/Proceedings/icaps10.php">ICAPS 2010</a><a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=66125">Search traps in MCTS and chess</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, December 25, 2017<a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="https://en.wikipedia.org/wiki/Crossings_%28game%29">Crossings from Wikipedia</a><a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="https://en.wikipedia.org/wiki/Epaminondas_%28game%29">Epaminondas from Wikipedia</a><a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Quotes">Quotes</a> · <a href="/Category:Weather_Report">Weather Report</a> · <a href="/Category:Alphonso_Johnson">Alphonso Johnson</a> · <a href="/Category:Dom_Um_Romão">Dom Um Romão</a> · <a href="/Category:Wayne_Shorter">Wayne Shorter</a> · <a href="/Category:Joe_Zawinul">Joe Zawinul</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/UCT">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unmake Move - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Unmake Move</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Chess">Chess</a> * <a href="/Moves">Moves</a> * Unmake Move</strong></p>
+<p><strong>Unmake Move</strong> is a function inside a chess program to update the internal <a href="/Chess_Position">chess position</a> and its <a href="/Board_Representation">Board representation</a> as well as associated or dependent state variables and data by a move unmade on the internal board. In unmake move, reversible aspects of a position can be <a href="/Incremental_Updates">incrementally updated</a> by the <a href="https://en.wikipedia.org/wiki/Inverse_function">inverse</a> or <a href="https://en.wikipedia.org/wiki/Involution_%28mathematics%29">own inverse</a> operation of <a href="/Make_Move">Make Move</a>. Irreversible aspects of a position, such as <a href="/En_passant">ep state</a>, <a href="/Castling_Rights">castling rights</a> and the <a href="/Halfmove_Clock">halfmove clock</a> are either restored from a <a href="/Stack">stack</a> (<a href="https://en.wikipedia.org/wiki/LIFO_%28computing%29">LIFO</a>), or simply kept in arrays indexed by current search or game <a href="/Ply">ply</a>. Alternatively, one may capacitate the move with all the necessary information to recover those irreversible aspects of a position as well.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#negamax">Negamax</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1998-">1998 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+</ol>
+</details></li>
+</ol>
+</details><h2 id="negamax">Negamax</h2>
+<p>This is how <a href="/Make_Move">make</a> and Unmake Move are applied inside a <a href="/Recursion">recursive</a> search routine, for simplicity <a href="/Negamax">Negamax</a>:</p>
+<pre><code>int negaMax( int depth ) {
+    if ( depth == 0 ) return evaluate();
+    int max = -oo;
+    generateMoves(...);
+    while ( m = getNextMove(...) )  {
+        makeMove(m); 
+        score = -negaMax( depth - 1 );
+        unmakeMove(m); 
+        if( score &gt; max )
+            max = score;
+    }
+    return max;
+}</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/General_Setwise_Operations">Bitboard Update By Move</a></li>
+<li><a href="/Copy-Make">Copy-Make</a></li>
+<li><a href="/Encoding_Moves">Encoding Moves</a></li>
+<li><a href="/Incremental_Updates">Incremental Updates</a></li>
+<li><a href="/Make_Move">Make Move</a></li>
+<li><a href="/Piece-Lists">Piece-List Update by Unmake Move</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1998-">1998 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/EQxCixpytBg/e1R0a7u1WMsJ">Working with moves or with positions</a> by Guillem Barnolas, <a href="/Computer_Chess_Forums">rgcc</a>, February 22, 1998 » <a href="/KC_Chess">KC Chess</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=40653">Unmake move v copy the board</a> by Hugh Cumper, <a href="/CCC">CCC</a>, January 24, 1999</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=60557">Move Make/Unmake Questions</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, July 15, 1999</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/64f953b94ae312b">Does Unmake Move Really Save Time?</a> by Adrian Jackson, <a href="/Computer_Chess_Forums">rgcc</a>, March 08, 2001</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/f5e2343c99ae6388">UnMakeMove</a> by Orhan Öztürk, <a href="/Computer_Chess_Forums">rgcc</a>, December 09, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=286582">Why have a UnMakeMove or UndoMove function (not as stupid as it sounds)?</a> by <a href="/Albert_Bertilsson">Albert Bertilsson</a>, <a href="/CCC">CCC</a>, February 24, 2003 » <a href="/Sharper">Sharper</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=312031">The need to unmake move</a> by <a href="/Mathieu_Pagé">Mathieu Pagé</a>, <a href="/CCC">CCC</a>, August 19, 2003</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=13764">doing undoing</a> by <a href="/Fritz_Reul">Fritz Reul</a>, <a href="/CCC">CCC</a>, May 14, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=19214">implementation of undoMove()?</a> by cyberfish, <a href="/CCC">CCC</a>, January 26, 2008</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=4641">make/unmake</a> by <a href="/Robert_Pope">Robert Pope</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, April 08, 2006 » <a href="/Beaches">Beaches</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=29770">undo move vs. Position Cloning</a> by BoldReceiver, <a href="/CCC">CCC</a>, September 16, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=29798">copy/make vs make/unmake test results</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, September 19, 2009 » <a href="/Crafty">Crafty</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=665">Copy Board vs Unmake Move</a> by ChrisJ, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, September 29, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=39938">performance of copy-make</a> by <a href="/Rein_Halbersma">Rein Halbersma</a>, <a href="/CCC">CCC</a>, August 02, 2011</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=42665">make and unmake statistics</a> by <a href="/Fermin_Serrano">Fermin Serrano</a>, <a href="/CCC">CCC</a>, February 28, 2012 » <a href="/Search_Statistics">Search Statistics</a></li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2250">Make and Unmake implementation</a> by <a href="/Christian_Daley">CDaley11</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, February 01, 2013 » <a href="/Make_Move">Make Move</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47882">How costly is taking moves back ?</a> by Piotr Lopusiewicz, <a href="/CCC">CCC</a>, April 30, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50805">copy/make vs make/unmake</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, January 07, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53502">Memory usage in make/unmake vs logic complexity</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, August 30, 2014</li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58647">Unifying make/undo and copy-make</a> by <a href="/Rein_Halbersma">Rein Halbersma</a>, <a href="/CCC">CCC</a>, December 21, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62090">Copy-make vs Make/Unmake ?</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, November 12, 2016</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=53892">Is Unmake Move truly necessary?</a> by SethCS, <a href="/Computer_Chess_Forums">Winboard Forum</a>, May 18, 2017</li>
+</ul>
+<p><strong><a href="/Moves">Up one Level</a></strong></p>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Unmake_Move">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

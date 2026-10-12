@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zugzwang - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Zugzwang</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Chess">Chess</a> * <a href="/Tactics">Tactics</a> * Zugzwang</strong></p>
+<p><strong>Zugzwang</strong> is a position in which it is disadvantageous to move, as every move leads to a worse, and often lost position. Most of the time it happens in late <a href="/Endgame">endgames</a>, specially <a href="/Pawn_Endgame">pawn endings</a>, the most obvious example being a <a href="/KPK">KPK endgame</a>, where <a href="/Opposition">opposition</a> can be regarded as a special case of zugzwang.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#zugzwang-and-null-move">Zugzwang and Null Move</a></li>
+<li><a href="#mutual-zugzwang">Mutual Zugzwang</a></li>
+<li><a href="#trébuchet">Trébuchet</a></li>
+<li><a href="#see-also">See Also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1999">1999</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#zugzwang">Zugzwang</a></li>
+<li><a href="#misc">Misc</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="zugzwang-and-null-move">Zugzwang and Null Move</h2>
+<p>Zugzwang positions are known cause the <a href="/Null_Move_Pruning">Null Move Pruning</a> go wrong. For that reason most programs do not use null move in the late endings. As far as <a href="/Middlegame">middlegame</a> positions are concerned, programmers either assume that they happen too rarely to bother with them, or use some sort of <a href="/Null_Move_Pruning">verification</a> pruning. <span id="MutualZugzwang"></span></p>
+<h2 id="mutual-zugzwang">Mutual Zugzwang</h2>
+<p>Mutual or <a href="https://en.wikipedia.org/wiki/Zugzwang#Reciprocal_zugzwang">reciprocal zugzwang</a> is a rare position such that who ever is to move is in zugzwang, which may occur in late endings <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>.</p>
+<h2 id="trébuchet">Trébuchet</h2>
+<p>A <a href="https://en.wikipedia.org/wiki/Zugzwang#Tr.C3.A9buchet">Trébuchet</a> is an extreme winning/losing type of reciprocal zugzwang in <a href="/Pawn_Endgame">pawn endgames</a>, also broached in <a href="/Noam_Elkies">Noam Elkies</a> publication <em>On numbers and endgames</em>. <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>.</p>
+<h2 id="see-also">See Also</h2>
+<ul>
+<li><a href="/AlphaZero">Alpha Zero's "Immortal Zugzwang Game"</a></li>
+<li><a href="/Chess_Problems,_Compositions_and_Studies">Chess Problems, Compositions and Studies</a></li>
+<li><a href="/Corresponding_Squares">Corresponding Squares</a></li>
+<li><a href="/Null_Move_Observation">Null Move Observation</a></li>
+<li><a href="/Null_Move_Pruning">Null Move Pruning</a></li>
+<li><a href="/Null_Move_Reductions">Null Move Reductions</a></li>
+<li><a href="/Null_Move_Test-Positions">Null Move Test-Positions</a>, where Null Move may fail due to Zugzwang</li>
+<li><a href="/Fail-High_Reductions">Fail-High Reductions</a></li>
+<li><a href="/Triangulation">Triangulation</a></li>
+<li><a href="/Zugzwang_%28Program%29">Zugzwang (Program)</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<p><a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></p>
+<ul>
+<li><a href="/John_Roycroft">John Roycroft</a> (<strong>1990</strong>). <em>Identifying Three Types of Zugzwang</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 13, No. 4</a></li>
+<li><a href="/Lars_Rasmussen">Lars Rasmussen</a> (<strong>1991 - 2000</strong>). <em>Mutual Zugzwang Results</em>. (various) <a href="https://en.wikipedia.org/wiki/EG_%28magazine%29">EG</a></li>
+<li><a href="/Ingo_Althöfer">Ingo Althöfer</a>, Bernhard Walter (<strong>1994</strong>). <em>Weak Zugzwang: Statistics on some Chess Endgames</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 17, No. 2</a></li>
+<li><a href="/Stefan_Plenkner">Stefan Plenkner</a> (<strong>1995</strong>). <em>A Null-Move Technique Impervious to Zugzwang.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 18, No. 2</a></li>
+<li><a href="/Noam_Elkies">Noam D. Elkies</a> (<strong>1999</strong>). <em>On numbers and endgames: Combinatorial game theory in chess endgames</em>. <a href="http://arxiv.org/PS_cache/math/pdf/9905/9905198v1.pdf">pdf</a>, differs only in trivial stylistic details from the (<strong>1996</strong>) version published in <a href="http://library.msri.org/books/Book29/index.html">Games of No Chance</a> edited by <a href="/Richard_J._Nowakowski">Richard J. Nowakowski</a></li>
+<li><a href="/Guy_Haworth">Guy Haworth</a>, <a href="/Peter_Karrer">Peter Karrer</a>, <a href="/John_Tamplin">John Tamplin</a>, <a href="/Christoph_Wirth">Christoph Wirth</a> (<strong>2001</strong>). <em><a href="http://centaur.reading.ac.uk/4581/">3-5-man chess: Maximals and mzugs</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 24, No. 4</a></li>
+<li><a href="/Zvi_Retchkiman_Königsberg">Zvi Retchkiman Königsberg</a> (<strong>2007</strong>). <em>A Combinatorial Game Mathematical Strategy Planning Procedure for a Class of Chess Endgames</em>. <a href="http://www.m-hikari.com/imf-password2007/65-68-2007/index.html">International Mathematical Forum, Vol. 2, No. 68</a></li>
+<li><a href="/Eiko_Bleicher">Eiko Bleicher</a>, <a href="/Guy_Haworth">Guy Haworth</a> (<strong>2010</strong>). <em><a href="http://centaur.reading.ac.uk/4518/">6-Man Chess and Zugzwangs</a></em>. <a href="/Advances_in_Computer_Games_12">Advances in Computer Games 12</a></li>
+<li><a href="/Guy_Haworth">Guy Haworth</a>, <a href="/Harold_van_der_Heijden">Harold van der Heijden</a>, <a href="/Eiko_Bleicher">Eiko Bleicher</a> (<strong>2011</strong>). <em>Zugzwangs in Chess Studies</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 34, No. 2</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1999">1999</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=76399">It is a nullmove killer (zugzwang)</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/CCC">CCC</a>, November 05, 1999 » <a href="/Null_Move_Pruning">Null Move Pruning</a></li>
+</ul>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=76542">Pseudo-code for verification search</a> by <a href="/Daniel_Homan">Dan Homan</a>, <a href="/CCC">CCC</a>, November 06, 1999</p>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=212698">Looking for "Zugzwang" positions</a> by <a href="/Alex_Kure">Alexander Kure</a>, <a href="/CCC">CCC</a>, February 09, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=347777">to Tim Foden: zugzwang positions</a> by <a href="/Jaime_Benito_de_Valle_Ruiz">Jaime Benito de Valle Ruiz</a>, <a href="/CCC">CCC</a>, February 07, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=387057">Zugzwang</a> by Mihaly Szalai, <a href="/CCC">CCC</a>, September 10, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=391553">New Zugzwang Testsuite</a> by Robert Allgeuer, <a href="/CCC">CCC</a>, October 14, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=392369">Zugzwang Test Suite ZPTS - updated version and results of Fruit</a> by Robert Allgeuer, <a href="/CCC">CCC</a>, October 19, 2004 <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=472074">A zugzwang position</a> by <a href="/Guy_Haworth">Guy Haworth</a>, <a href="/CCC">CCC</a>, December 21, 2005</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=29873">Null-moves and zugzwang</a> by <a href="/Luca_Hemmerich">Luca Hemmerich</a>, <a href="/CCC">CCC</a>, September 25, 2009</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=361912&amp;t=35338">Re: Mate in 17 revisited</a> by <a href="/Robert_Houdart">Robert Houdart</a>, <a href="/CCC">CCC</a>, July 16, 2010</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=1856">Zugzwang Collection</a> by <a href="/Franklin_Titus">kingliveson</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, February 14, 2012 » <a href="/Engine_Testing">Engine Testing</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51071">test position: Rookie-Arasan</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, January 27, 2014 » <a href="/Arasan">Arasan</a>, <a href="/Rookie">Rookie</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51249">Zugzwang Test Suite ZPTS by Robert Allgeuer</a> by Paul Henri, <a href="/CCC">CCC</a>, February 12, 2014 <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58316">static mate/stalemate detection?</a> by <a href="/Alexandru_Mosoi">Alexandru Mosoi</a>, <a href="/CCC">CCC</a>, November 21, 2015 » <a href="/Null_Move_Test-Positions">Null Move Test-Positions</a>, <a href="/Stalemate">Stalemate</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60798">4 old zugzwangs where modern engines still have troubles</a> by Vincent Lejeune, <a href="/CCC">CCC</a>, July 12, 2016</li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/Ual8DTYpH0I/Ah6hDc-ZBQAJ">zugzwang suggestion</a> by <a href="/Warren_D._Smith">Warren D. Smith</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, September 15, 2019 » <a href="/Stockfish">Stockfish</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<h3 id="zugzwang">Zugzwang</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Zugzwang">Zugzwang from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki?title=Talk:Zugzwang">Talk:Zugzwang from Wikipedia</a></li>
+<li><a href="https://en.wiktionary.org/wiki/Zugzwang">Zugzwang - Wiktionary</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Immortal_Zugzwang_Game">Immortal Zugzwang Game from Wikipedia</a></li>
+<li><a href="http://www.chesshistory.com/winter/extra/zugzwang.html">Zugzwang</a> by <a href="https://en.wikipedia.org/wiki/Edward_Winter_%28chess_historian%29">Edward Winter</a></li>
+<li><a href="http://www.chesshistory.com/winter/extra/earliest.html">Earliest Occurrences of Chess Terms</a> by <a href="https://en.wikipedia.org/wiki/Edward_Winter_%28chess_historian%29">Edward Winter</a></li>
+</ul>
+<h3 id="misc">Misc</h3>
+<ul>
+<li><a href="https://crimealwayspays.blogspot.com/2007/11/chess-interlude-in-which-dominant-queen.html">Crime Always Pays: The Chess Bit: In Which A Dominant Queen Bashes The Bishop</a></li>
+<li><a href="http://en.chessbase.com/post/zugzwang-in-kristiansund">Zugzwang in Kristiansund</a>, <a href="/ChessBase">ChessBase News</a>, September 30, 2010</li>
+<li><a href="http://catalogo.artium.org/dossieres/1/rudolf-herz/obra/zugzwang">Zugzwang - Forced Movement</a> by <a href="https://de.wikipedia.org/wiki/Rudolf_Herz">Rudolf Herz</a>, an artistic thesis on <a href="https://en.wikipedia.org/wiki/Modern_art">Modern Art</a>, <a href="/Category:Marcel_Duchamp">Marcel Duchamp</a> and <a href="https://en.wikipedia.org/wiki/Adolf_Hitler">Hitler</a>, various Exhibitions inter alia at <a href="http://www.kunstvereinruhr.de/">Kunstverein Ruhr</a>, <a href="https://en.wikipedia.org/wiki/Essen">Essen</a> 1995, <a href="https://en.wikipedia.org/wiki/Jewish_Museum_(Manhattan)">The Jewish Museum</a>, <a href="https://en.wikipedia.org/wiki/New_York_City">New York City</a> 2002, <a href="http://zkm.de/en/event/2015/05/zugzwang">panel discussion</a> at <a href="https://en.wikipedia.org/wiki/Karlsruhe_University_of_Arts_and_Design">Karlsruhe University of Arts and Design (HfG)</a>, May 12, 2015</li>
+<li><a href="https://en.wikipedia.org/wiki/Zugzwang_(musical_work)">Zugzwang (musical work) from Wikipedia</a></li>
+<li>Matt Elliott - Zugzwang, <a href="http://www.fipradio.fr/emissions/live-fip/2016">Live à Fip</a> (2016), <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/fVWeXobk0yk" title="YouTube video fVWeXobk0yk" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=fVWeXobk0yk">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Tactics">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://chess.jaet.org/cgi-bin/mzugs">List of All Known Mutual Zugzwangs</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Noam_Elkies">Noam D. Elkies</a> (<strong>1999</strong>). <em>On numbers and endgames: Combinatorial game theory in chess endgames</em>. <a href="http://arxiv.org/PS_cache/math/pdf/9905/9905198v1.pdf">pdf</a>, differs only in trivial stylistic details from the (<strong>1996</strong>) version published in <a href="http://library.msri.org/books/Book29/index.html">Games of No Chance</a> edited by <a href="/Richard_J._Nowakowski">Richard J. Nowakowski</a>, <a href="http://www.msri.org/publications/books/Book29/index.html">MSRI Publications Volume 29</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="/ICGA_Journal">ICGA Reference Database</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=51249">Zugzwang Test Suite ZPTS by Robert Allgeuer</a> by Paul Henri, <a href="/CCC">CCC</a>, February 12, 2014<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="https://www.stmintz.com/ccc/index.php?id=392369">Zugzwang Test Suite ZPTS - updated version and results of Fruit</a> by Robert Allgeuer, <a href="/CCC">CCC</a>, October 19, 2004<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Marcel_Duchamp">Marcel Duchamp</a> · <a href="/Category:Matt_Elliott">Matt Elliott</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Zugzwang">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

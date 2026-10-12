@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yace - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Yace</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Engines">Engines</a> * Yace</strong></p>
+<p><strong>Yace</strong>,<br />
+a <a href="/Chess_Engine_Communication_Protocol">Chess Engine Communication Protocol</a> and <a href="/UCI">UCI</a> compatible chess engine, Yet Another Chess Engine by <a href="/Dieter_Bürßner">Dieter Bürßner</a>. Yace is famous for its enormous <a href="/Endgame">endgame</a> <a href="/Knowledge">knowledge</a> and ability of interactive backward analysis <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> due to preserving important information in the <a href="/Transposition_Table">transposition table</a> also mentioned as orthogonal <a href="/Persistent_Hash_Table">persistent hash table</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#learning">Learning</a></li>
+<li><a href="#search-tuning">Search Tuning</a></li>
+<li><a href="#tablebases">Tablebases</a></li>
+<li><a href="#tournament-play">Tournament Play</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#photos--games">Photos &amp;amp; Games</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#ipccc-2001">IPCCC 2001</a></li>
+<li><a href="#ipccc-2003">IPCCC 2003</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="learning">Learning</h2>
+<p>Within its <a href="/Learning">positional learning</a>, Yace stores positions inside a text file when a significant score drop occurs some moves after leaving the <a href="/Opening_Book">opening book</a>. It tries to avoid these positions in games played later, preparing the <a href="/Search">search</a>. Additionally, since version 0.99.50 in June 2001 <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>, Yace also features <a href="/Book_Learning">Book Learning</a>.</p>
+<h2 id="search-tuning">Search Tuning</h2>
+<p>Users are encouraged to <a href="/Automated_Tuning">tune</a> the <a href="/Search">search</a> <a href="/Selectivity">selectivity</a>, in particular <a href="/Quiescence_Search">quiescence search</a> and <a href="/Null_Move_Pruning">null move pruning</a> by passing corresponding <a href="https://en.wikipedia.org/wiki/Attribute%E2%80%93value_pair">attribute-value pairs</a> inside an initialization file or engines setup. Further, users can parameterize <a href="/Extensions">fractional extensions</a> with with floating point values, internally mapped to 1/64 <a href="/Ply">Ply</a> resolution for <a href="/Check_Extensions">check extensions</a> for first and consecutive checks, <a href="/Passed_Pawn_Extensions">passed pawn extensions</a> when reaching the 7th rank, and <a href="/Mate_Threat_Extensions">threat extensions</a> when <a href="/Null_Move">null move</a> indicates trouble <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>.</p>
+<h2 id="tablebases">Tablebases</h2>
+<p>Yace supports the <a href="/Nalimov_Tablebases">Nalimov Tablebases</a> and further has its own 4-men WDL <a href="/Endgame_Bitbases">bitbase format</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>, well suited to use inside the search.</p>
+<h2 id="tournament-play">Tournament Play</h2>
+<p>During the early 2000s, Yace was a quite active tournament player, online six <a href="/CCT_Tournaments">CCT Tournaments</a>, <a href="/CCT2">CCT2</a>-<a href="/CCT7">CCT7</a>, and also over the board the Paderborn <a href="/IPCCC_2001">IPCCC 2001</a>, the <a href="/IPCCC_2003">IPCCC 2003</a>, where Yace became runner up behind <a href="/Fritz">Fritz</a>, and the <a href="/IPCCC_2004">IPCCC 2004</a>, as well as the <a href="/ICT_2001">ICT 2001</a> in Leiden operated by Jan Kaan, and the <a href="/BELCT_2001">BELCT 2001</a> in Berlin operated by <a href="/Ingo_Bauer">Ingo Bauer</a>.</p>
+<h2 id="photos--games">Photos &amp; Games</h2>
+<h3 id="ipccc-2001">IPCCC 2001</h3>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]" style="--wiki-img-w:640px"><a href="https://web.archive.org/web/20180713110850/http://chess.fsv.de/aboutus/aboutus.htm" target="_blank" rel="noopener noreferrer"><img src="/assets/YaceHolmes2001.jpg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></a></span> Torsten Schoop and Gunnar Schönemann <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> observing the game <a href="/Yace">Yace</a> - <a href="/Holmes">Holmes</a>,<br />
+operated by their authors <a href="/Dieter_Bürßner">Dieter Bürßner</a> (front) and <a href="/Andreas_Herrmann">Andreas Herrmann</a>, <a href="/IPCCC_2001">IPCCC 2001</a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a></p>
+<pre><code>[Event &quot;IPCCC 2001&quot;]
+[Site &quot;Paderborn GER&quot;]
+[Date &quot;2001.02.25&quot;]
+[Round &quot;09&quot;]
+[White &quot;Yace&quot;]
+[Black &quot;Holmes&quot;]
+[Result &quot;1-0&quot;]
+
+1.Nf3 c5 2.c4 Nf6 3.Nc3 d5 4.cxd5 Nxd5 5.d4 Nxc3 6.bxc3 g6 7.e3 Bg7 8.Bd3 O-O 
+9.O-O Qc7 10.Ba3 Nd7 11.e4 e6 12.Rb1 Rd8 13.Bc1 Rb8 14.Bg5 Re8 15.Qd2 c4 
+16.Be2 Ra8 17.Bh6 Bxh6 18.Qxh6 a5 19.Nd2 Nb6 20.e5 f5 21.exf6 Nd5 22.Bxc4 Nxf6 
+23.Rfe1 Ng4 24.Qh4 h5 25.Bd3 Kg7 26.Nf3 Qe7 27.Rb5 e5 28.h3 Qxh4 29.Nxh4 Nxf2 
+30.Kxf2 g5 31.Nf3 g4 32.hxg4 hxg4 33.Nxe5 Rh8 34.Ng6 Rf8+ 35.Nxf8 Kxf8 36.Bc4 
+g3+ 37.Kxg3 Ra6 38.Rg5 Be6 39.Bxe6 Rxe6 40.Rxe6 Kf7 41.Rge5 b6 42.Kg4 Kg7 
+43.Re8 a4 44.Kg5 a3 45.R5e7# 1-0</code></pre>
+<h3 id="ipccc-2003">IPCCC 2003</h3>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]" style="--wiki-img-w:640px"><a href="https://web.archive.org/web/20041103061005fw_/http://www.fsv.de/chess-server/Pics/Paderborn2003/baderborn2003a.htm" target="_blank" rel="noopener noreferrer"><img src="/assets/ShredderYace2003.JPG" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></a></span> <a href="/IPCCC_2003">IPCCC 2003</a>: <a href="/Shredder">Shredder</a> - <a href="/Yace">Yace</a>, <a href="/Stefan_Meyer-Kahlen">Stefan Meyer-Kahlen</a>, <a href="/Dieter_Bürßner">Dieter Bürßner</a> and <a href="/Peter_Berger">Peter Berger</a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a></p>
+<pre><code>[Event &quot;IPCCC 2003&quot;]
+[Site &quot;Paderborn GER&quot;]
+[Date &quot;2003.02.23&quot;]
+[Round &quot;07&quot;]
+[White &quot;Shredder&quot;]
+[Black &quot;Yace&quot;]
+[Result &quot;0-1&quot;]
+
+1.e4 e6 2.d4 d5 3.Nc3 Nf6 4.Bg5 Bb4 5.e5 h6 6.Bd2 Bxc3 7.bxc3 Ne4 8.Qg4 Kf8
+9.Qf4 c5 10.Nf3 c4 11.Be2 Nc6 12.O-O Nxd2 13.Nxd2 Qg5 14.Qxg5 hxg5 15.f4 gxf4
+16.Rxf4 Bd7 17.Raf1 Nd8 18.a3 Ke7 19.R1f3 Rc8 20.Rg4 Rh7 21.Rf1 Rc6 22.h4 Rb6 
+23.Rb1 Rxb1+ 24.Nxb1 f6 25.Nd2 Nf7 26.Nf3 Ba4 27.Bd1 Be8 28.Rf4 Nh6 29.g4 f5 
+30.Ng5 Rh8 31.Bf3 Nxg4 32.Bxg4 Rxh4 33.Nxe6 Rxg4+ 34.Rxg4 fxg4 35.Nf4 Bf7 
+36.Kf2 g5 37.Ng2 b5 38.Ne3 Be6 39.Kg3 Ke8 40.Nxg4 Kf7 41.Nf6 Kg6 42.Ne8 Bd7 
+43.Nc7 Bc6 44.Kf2 Kf7 45.Kg3 a5 46.Kh3 a4 47.Kg3 Kg7 48.Ne6+ Kh6 49.Kf3 Kg6 
+50.Nc5 Kf5 51.Ke3 Kg6 52.Na6 Kg7 53.Nc5 Kf7 54.Ke2 Ke7 55.Kf2 Be8 56.Kg3 Kf7 
+57.Kf3 Kg6 58.Kf2 Kf5 59.Na6 Bc6 60.Nc7 Kg6 61.Kg2 Kh6 62.Kg1 Kg6 63.Ne6 Kf5
+64.Nc7 Kg6 65.Kf2 Kf7 66.Kg2 Ke7 67.Kf2 Kf7 68.Kg3 Kg7 69.Ne6+ Kg6 70.Kf3 Kf5
+71.Nc5 Kg6 72.Ne6 Kh6 73.Nc5 Kg6 74.Kg4 Be8 75.Nb7 Bd7+ 76.Kg3 Bf5 77.Nd6 Bd7 
+78.Kg2 Kh5 79.Kg3 Kh6 80.Nb7 Bf5 81.Nd6 Bd7 82.Nb7 Bf5 83.Kf3 Bxc2 84.Nd6 b4 
+85.cxb4 c3 86.Ke3 Bg6 87.Nb5 c2 88.Kd2 g4 89.Nc3 g3 90.Ne2 g2 91.Ng1 Bd3 
+92.Nh3 Kg7 93.b5 Bxb5 94.Kxc2 Be2 95.Kd2 Bg4 96.Ng1 Kg6 97.Kd3 Kg5 98.Ke3 Kf5 
+99.Kf2 Ke4 100.Kxg2 Kxd4 101.Kg3 Bd7 102.Kf2 Kxe5 103.Ne2 d4 104.Ke1 Bb5 
+105.Nc1 Bc4 106.Kd1 Kf4 107.Kd2 Ke4 108.Kc2 Ke3 109.Kb1 0-1</code></pre>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=113833">New Winboard program "Yace"</a> by <a href="/Dann_Corbit">Dann Corbit</a>, <a href="/CCC">CCC</a>, June 08, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=114010">Problems with winboard protocol (Crafty 17.10 vs Yace)</a> by <a href="/Dieter_Bürßner">Dieter Bürßner</a>, <a href="/CCC">CCC</a>, June 10, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=121819">Yace 0.22 by Dieter Buerssner is available !</a> by <a href="/Frank_Quisinsky">Frank Quisinsky</a>, <a href="/CCC">CCC</a>, July 26, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=131391">Yace 0.23 by Dieter Buerssner is available !</a> by <a href="/Frank_Quisinsky">Frank Quisinsky</a>, <a href="/CCC">CCC</a>, October 04, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=156036">Yace in Paderborn</a> by <a href="/Dieter_Bürßner">Dieter Bürßner</a>, <a href="/CCC">CCC</a>, February 26, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=177410">Yace 0.99.50 available for download</a> by <a href="/Dieter_Bürßner">Dieter Bürßner</a>, <a href="/CCC">CCC</a>, June 28, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=198559">YACE extensions?!?</a> by <a href="/Steve_Maughan">Steve Maughan</a>, <a href="/CCC">CCC</a>, November 23, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=248794">Kramer Vs Kramer (Yace + Book against Yace + No Book = 13.5 - 6.5)</a> by <a href="/Arturo_Ochoa">Arturo Ochoa</a>, <a href="/CCC">CCC</a>, August 30, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=278666">Yace at CCT5</a> by <a href="/Dieter_Bürßner">Dieter Bürßner</a>, <a href="/CCC">CCC</a>, January 21, 2003 » <a href="/CCT5">CCT5</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=298082">A little correction for the Yace Information</a> by <a href="/Arturo_Ochoa">Arturo Ochoa</a>, <a href="/CCC">CCC</a>, May 26, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=319788">Problem ending for Yace</a> by <a href="/Jouni_Uski">Jouni Uski</a>, <a href="/CCC">CCC</a>, October 06, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=370997">Any programs besides Yace and Patzer that can use bitbase files</a> by <a href="/Dann_Corbit">Dann Corbit</a>, <a href="/CCC">CCC</a>, June 17, 2004 » <a href="/Endgame_Bitbases">Endgame Bitbases</a>, <a href="/Patzer">Patzer</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=379228">Re: full documentation of yace commands</a> by <a href="/Dieter_Bürßner">Dieter Bürßner</a>, <a href="/CCC">CCC</a>, July 27, 2004</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=427356">(long) Some Statistics from Pavel's Yace Paderborn vs. Aristrach 4.5</a> by <a href="/Dieter_Bürßner">Dieter Bürßner</a>, <a href="/CCC">CCC</a>, May 21, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=447238">Re: Is chess knowledge always meaningful? (An Example)</a> by <a href="/Dieter_Bürßner">Dieter Bürßner</a>, <a href="/CCC">CCC</a>, September 03, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=467250">Bitbases - yace, scorpio, gambitfruit</a> by Bernhard Bauer, <a href="/CCC">CCC</a>, December 06, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=487256">Question Concerning Yace !!</a> by George Speight, <a href="/CCC">CCC</a>, February 16, 2006</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=22521">Do somebody have news about YACE ?</a> by Vincent Lejeune, <a href="/CCC">CCC</a>, July 23, 2008</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=36144">YACE (author Dieter Bürßner) -older versions</a> by <a href="/Norbert_Raimund_Leisner">Norbert Raimund Leisner</a>, <a href="/CCC">CCC</a>, September 22, 2010</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="http://web.archive.org/web/20020601214103/home1.stofanet.dk/moq/">The Yace Website</a> (<a href="https://en.wikipedia.org/wiki/Wayback_Machine">Wayback Machine</a>)</li>
+<li><a href="https://ccrl.chessdom.com/ccrl/4040/cgi/engine_details.cgi?print=Details&amp;each_game=1&amp;eng=Yace%200.99.87">Yace 0.99.87</a> in <a href="/CCRL">CCRL 40/15</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Engines">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Lars_Bremer">Lars Bremer</a> (<strong>2004</strong>). <em>Das Rückwärts-Genie</em>. <a href="/Computerschach_und_Spiele">CSS 4/04</a> (German), <a href="http://www.lbremer.de/artikel/Yace.pdf">pdf</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://www.stmintz.com/ccc/index.php?id=177410">Yace 0.99.50 available for download</a> by <a href="/Dieter_Bürßner">Dieter Bürßner</a>, <a href="/CCC">CCC</a>, June 28, 2001<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://sites.google.com/site/marochess/yace">Yace Archive Page</a>, yace_ReadMe.pdf<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://www.stmintz.com/ccc/index.php?id=371131">Re: Any programs besides Yace and Patzer that can use bitbase files</a> by <a href="/Dieter_Bürßner">Dieter Bürßner</a>, <a href="/CCC">CCC</a>, June 18, 2004<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="https://web.archive.org/web/20090306190203/http://fsv.de:80/founders.htm">FSV Netzwerk GmbH - Gesellschafter</a> (<a href="https://en.wikipedia.org/wiki/Wayback_Machine">Wayback Machine</a>)<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p>Photo by <a href="/Roland_Pfister">Roland Pfister</a>, <a href="https://web.archive.org/web/20180713110850/http://chess.fsv.de/aboutus/aboutus.htm">FSV - About us</a> (<a href="https://en.wikipedia.org/wiki/Wayback_Machine">Wayback Machine</a>)<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="https://web.archive.org/web/20041103061005fw_/http://www.fsv.de/chess-server/Pics/Paderborn2003/baderborn2003a.htm">FSV personal chess service - Paderborn 2003 Pics</a> by Torsten Schoop (<a href="https://en.wikipedia.org/wiki/Wayback_Machine">Wayback Machine</a>)<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:WinBoard">WinBoard</a> · <a href="/Category:XBoard">XBoard</a> · <a href="/Category:UCI">UCI</a> · <a href="/Category:PC">PC</a> · <a href="/Category:X86">X86</a> · <a href="/Category:Windows">Windows</a> · <a href="/Category:Linux">Linux</a> · <a href="/Category:Acronym">Acronym</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Yace">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

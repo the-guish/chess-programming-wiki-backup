@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>X-ray Attacks (Bitboards) - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">X-ray Attacks (Bitboards)</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * X-ray Attacks</strong></p>
+<p>The term <strong>X-ray attack</strong> was apparently originated by <a href="https://en.wikipedia.org/wiki/Kenneth_Harkness">Kenneth Harkness</a>. On page 25 of the April 1947 <a href="https://en.wikipedia.org/wiki/Chess_Review">Chess Review</a>, in his series <em>Picture Guide to Chess</em>, he mentioned forks and then wrote <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>:</p>
+<p><code>There is another type of double attack in which the targets are threatened in one direction. The attacking piece threatens two units, one behind the other, on the same rank, file or diagonal. This double threat has lacked a good descriptive name. We suggest ‘X-Ray’ attack. </code></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#attacking-through">Attacking through</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#single-sliders">Single Sliders</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#modifying-occupancy">Modifying Occupancy</a></li>
+<li><a href="#x-rays-with-one-lookup">X-rays with one Lookup</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#multiple-sliders">Multiple Sliders</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#blockers-by-targets">Blockers by Targets</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="attacking-through">Attacking through</h2>
+<p>There are several <a href="/Tactics">tactical</a> motives, where a <a href="/Sliding_Pieces">sliding piece</a> attacks through any other piece in a <a href="/Direction">ray-direction</a>:</p>
+<table>
+<thead>
+<tr>
+<th>Motiv</th>
+<th>Blocker</th>
+<th>Target behind Blocker</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="/Battery">Battery</a></td>
+<td>own sliding piece</td>
+<td>any square or piece</td>
+</tr>
+<tr>
+<td><a href="/Discovered_Attack">Discovered Attack</a></td>
+<td>own piece may remove</td>
+<td>any opposing piece</td>
+</tr>
+<tr>
+<td><a href="/Discovered_Check">Discovered Check</a></td>
+<td>own piece may remove</td>
+<td>opposing king</td>
+</tr>
+<tr>
+<td><a href="/Pin">Pin</a></td>
+<td>opposing piece</td>
+<td>opposing valuable piece</td>
+</tr>
+<tr>
+<td><a href="/Pin">Absolute Pin</a></td>
+<td>opposing piece</td>
+<td>opposing king</td>
+</tr>
+<tr>
+<td><a href="/Pin">Partial Pin</a></td>
+<td>opposing sliding piece</td>
+<td>opposing valuable piece</td>
+</tr>
+<tr>
+<td><a href="/Skewer">Skewer</a></td>
+<td>opposing valuable piece</td>
+<td>opposing piece</td>
+</tr>
+<tr>
+<td><a href="/X-ray">X-ray</a></td>
+<td>opposing sliding piece</td>
+<td>own piece</td>
+</tr>
+</tbody>
+</table>
+<h2 id="single-sliders">Single Sliders</h2>
+<p>The single sliding piece, a rook, bishop or queen is specified by square index, likely from a <a href="/BitScan">bitscan</a> of a piece-wise <a href="/Bitboard_Serialization">bitboard serialization</a> of a sliding piece bitboard from a <a href="/Bitboard_Board-Definition">standard board-definition</a>. <span id="ModifyingOccupancy"></span></p>
+<h3 id="modifying-occupancy">Modifying Occupancy</h3>
+<p>Following routines may be used to get all kind of x-ray attacks or defenses through the blockers for one particular slider. The idea is to intersect the sliding attacks with the desired blockers, which are subset of occupied. In a second run, those blockers are removed from the occupancy, to get the x-ray attacks as the symmetric difference of both attacks.</p>
+<pre><code>U64 xrayRookAttacks(U64 occ, U64 blockers, enumSquare rookSq) {
+   U64 attacks = rookAttacks(occ, rookSq);
+   blockers &amp;= attacks;
+   return attacks ^ rookAttacks(occ ^ blockers, rookSq);
+}
+
+U64 xrayBishopAttacks(U64 occ, U64 blockers, enumSquare bishopSq) {
+   U64 attacks = bishopAttacks(occ, bishopSq);
+   blockers &amp;= attacks;
+   return attacks ^ bishopAttacks(occ ^ blockers, bishopSq);
+}</code></pre>
+<p>Alternatively one may use a condition to save the second lookup - one may use disjoint line-attacks rather than piece-attacks. If so, it makes sense to exclude the outer squares from the blockers.</p>
+<pre><code>U64 xrayFileAttacks(U64 occ, U64 blockers, enumSquare rookSq) {
+   U64 attacks = fileAttacks(occ, rookSq);
+   blockers &amp;= attacks &amp; C64(0x00FFFFFFFFFFFF00);
+   if ( blockers == 0 ) return blockers;
+   return attacks ^ fileAttacks(occ ^ blockers, rookSq);
+}
+
+U64 xrayRankAttacks(U64 occ, U64 blockers, enumSquare rookSq) {
+   U64 attacks = rankAttacks(occ, rookSq);
+   blockers &amp;= attacks &amp; C64(0x7E7E7E7E7E7E7E7E);
+   if ( blockers == 0 ) return blockers;
+   return attacks ^ rankAttacks(occ ^ blockers, rookSq);
+}
+
+U64 xrayDiagonalAttacks(U64 occ, U64 blockers, enumSquare bishopSq) {
+   U64 attacks = diagonalAttacks(occ, bishopSq);
+   blockers &amp;= attacks &amp; C64(0x007E7E7E7E7E7E00);
+   if ( blockers == 0 ) return blockers;
+   return attacks ^ diagonalAttacks(occ ^ blockers, bishopSq);
+}</code></pre>
+<p><span id="Xray1"></span></p>
+<h3 id="x-rays-with-one-lookup">X-rays with one Lookup</h3>
+<p>Another idea is to consider all kind of blockers in one run, and to traverse intersections of the x-rays attacks with different target sets, to determine the blocking piece inside a loop. In the context of absolute pins, <a href="/Oliver_Brausch">Oliver Brausch</a> introduced to lookup x-ray attacks through any blocker in his engine <a href="/OliThink">OliThink</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> - similar to any occupied lookup technique to get <a href="/Sliding_Piece_Attacks">sliding piece attacks</a>. Instead of the pre-calculated line-attacks we can also pre-calculate attacks behind the first blocker, including a possible second blocker. <a href="/First_Rank_Attacks">The outer squares</a> are redundant as well. Some sample on a rank:</p>
+<pre><code>rook      00001000
+occupied  01011010
+attacks   00010110
+x-ray     01100001</code></pre>
+<p>Since absolute pins and discovered checkers are usually quite rare, it might be worth to spend some additional memory, e.g. 8 KByte for <a href="/Kindergarten_Bitboards">kindergarten</a> - x-rays. Also the <a href="/The_Switch_Approach">switch approach</a> is great to consider all kind of x-ray stuff on a line.</p>
+<h2 id="multiple-sliders">Multiple Sliders</h2>
+<p>If keeping eight disjoint ray-direction attacks from fill-routines like <a href="/Kogge-Stone_Algorithm">Kogge-Stone Algorithm</a> one may intersect them with desired blockers - and to perform another fill with that intersection:</p>
+<pre><code>U64 xrayAttacks(U64 sliders, U64 empty, U64 blockers, int dir8) {
+   U64 attacks = slidingAttacks (sliders, empty, dir8);
+   blockers &amp;= attacks; // &amp; notOuterSquares[dir8];
+   if ( blockers )
+      return slidingAttacks (blockers, empty, dir8);
+   return 0;
+}</code></pre>
+<h3 id="blockers-by-targets">Blockers by Targets</h3>
+<p>The other idea is to fill the potential target set, and to intersect it with the opposite ray-direction fill of the sliders and the relevant blockers:</p>
+<pre><code>U64 betweenSliderAndTarget(U64 sliders, U64 empty, U64 targets, int dir8) {
+   U64 attacks    = slidingAttacks (sliders, empty, dir8);
+   U64 fromtarget = slidingAttacks (targets, empty, opposite(dir8));
+   return attacks &amp; fromtarget;
+}</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/OliThink">Sliding Piece Attacks</a> in <a href="/OliThink">OliThink</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=29577">Generating "through" attacks with rotated bitboard</a> by <a href="/Vlad_Stamate">Vlad Stamate</a>, <a href="/CCC">CCC</a>, August 28, 2009 » <a href="/Rotated_Bitboards">Rotated Bitboards</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/X-ray_(chess)">X-ray (chess) from Wikipedia</a></li>
+<li><a href="/Category:Defunkt">Defunkt</a> - See Through, <a href="https://de.wikipedia.org/wiki/Jazzopen_Stuttgart">Jazzopen Stuttgart</a> 1996, <a href="https://en.wikipedia.org/wiki/3sat">3sat</a> broadcast, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p>lineup: <a href="/Category:Joseph_Bowie">Joseph Bowie</a>, <a href="http://www.allmusic.com/artist/kelvyn-bell-mn0001577170/credits">Kelvyn Bell</a>, <a href="http://www.dfmusicinc.com/news/item.asp?ID=15">Larry Bowen</a>, <a href="http://www.discogs.com/artist/299640-Bahnamous-Bowie">Bahnamous Bowie</a>, <a href="http://www.discogs.com/artist/363770-Byron-Bowie">Byron Bowie</a>, <a href="/Category:Kim_Clarke">Kim Clarke</a>, <a href="http://www.allmusic.com/artist/scooter-warner-mn0000645895/credits">Scooter Warner</a>, <a href="https://en.wikipedia.org/wiki/Ronny_Drayton">Ronny Drayton</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/k-4IsT9TrOA" title="YouTube video k-4IsT9TrOA" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=k-4IsT9TrOA">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Bitboards">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Jack_O’Keefe">Jack O’Keefe</a> in <a href="http://www.chesshistory.com/winter/winter20.html#4245._X-ray_attack_C.N._4231">Chess Note 4245. X-ray attack</a> by <a href="https://en.wikipedia.org/wiki/Edward_Winter_%28chess_historian%29">Edward Winter</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=166649&amp;t=18750">Re: Question about SEE (Static exchange evaluation)</a> by <a href="/Oliver_Brausch">Oliver Brausch</a>, <a href="/CCC">CCC</a>, December 18, 2007<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Defunkt">Defunkt</a> · <a href="/Category:Joseph_Bowie">Joseph Bowie</a> · <a href="/Category:Kim_Clarke">Kim Clarke</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/X-ray_Attacks_(Bitboards)">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

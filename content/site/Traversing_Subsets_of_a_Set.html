@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Traversing Subsets of a Set - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Traversing Subsets of a Set</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Programming">Programming</a> * <a href="/Algorithms">Algorithms</a> * Traversing Subsets of a Set</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="https://commons.wikimedia.org/wiki/File:Hypercubeorder_binary.svg" target="_blank" rel="noopener noreferrer"><img src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Hypercubeorder_binary.svg" alt="4D-hypercube 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">4D-hypercube <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1">The <a href="https://en.wikipedia.org/wiki/Four-dimensional_space">4D</a>-<a href="https://en.wikipedia.org/wiki/Hypercube">hypercube</a>, layered according to distance from one corner. As described in "<a href="/Alice">Alice in Wonderland</a>" by the <a href="https://en.wikipedia.org/wiki/Cheshire_Cat">Cheshire Cat</a>, this vertex-first-shadow of the <a href="https://en.wikipedia.org/wiki/Tesseract">tesseract</a> forms a <a href="https://en.wikipedia.org/wiki/Rhombic_dodecahedron">rhombic dodecahedron</a>. Note that the two central (green) vertices should coincide if using an orthogonal projection from 4 to 3 dimensions, but were drawn here slightly apart. The eight <a href="/Nibble">nibbles</a> with odd binary digit sums form a cube and are marked in white. The two <a href="https://en.wikipedia.org/wiki/Palindrome">palindromes</a> 0110 and 1001 (compare XOR and XNOR) are projected in the center of the rhombic dodecahedron and are marked in green. The other six nibbles with even binary digit sums form an <a href="https://en.wikipedia.org/wiki/Octahedron">octahedron</a> and are marked in blue, image by Lipedia, 2010, <a href="https://en.wikipedia.org/wiki/Hasse_diagram">Hasse diagram from Wikipedia</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Traversing Subsets of a Set</strong> determines the <a href="https://en.wikipedia.org/wiki/Power_set">power set</a> of a set, or a subset of the power set with certain properties such as equal <a href="https://en.wikipedia.org/wiki/Cardinality">cardinality</a>. Represented by a <a href="/Bitboards">bitboard</a>, this is useful to loop over possible <a href="/Occupancy">occupancies</a> of a set of rays or lines, and to <a href="/Looking_for_Magics">look for</a> <a href="/Magic_Bitboards">magic factors</a> with a certain cardinality.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#enumerating-all-subsets">Enumerating All Subsets</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#all-subsets-of-the-universal-set">All Subsets of the Universal Set</a></li>
+<li><a href="#all-subsets-of-any-set">All Subsets of any Set</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#subsets-with-equal-cardinality">Subsets with equal Cardinality</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#snoobing-the-universe">Snoobing the Universe</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#modified-snoob">Modified Snoob</a></li>
+<li><a href="#reverse-snoob">Reverse Snoob</a></li>
+</ol>
+</details></li>
+<li><a href="#snoobing-any-sets">Snoobing any Sets</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#selected-publications">Selected Publications</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="enumerating-all-subsets">Enumerating All Subsets</h2>
+<h3 id="all-subsets-of-the-universal-set">All Subsets of the Universal Set</h3>
+<p>To enumerate all subsets of the universal set -1 is obvious, but takes some time. Assuming one loop cycle takes one nano-second, it would still take 18,446,744,073 seconds or about 585 years!</p>
+<pre><code>// enumerate all subsets of the universal set -1
+void enumerateAllSubsetsOfTheBitboardUniverse() {
+   U64 n = 0;
+   do {
+      doSomeThingWithSubset(n);
+      n++;
+   } while ( n );
+}</code></pre>
+<h3 id="all-subsets-of-any-set"><span id="AllSubsetsofanySet"></span>All Subsets of any Set</h3>
+<pre><code>// enumerate all subsets of set d
+void enumerateAllSubsets(U64 d) {
+   U64 n = 0;
+   do {
+      doSomeThingWithSubset(n);
+      n = (n - d) &amp; d;
+   } while ( n );
+}</code></pre>
+<p>This is how the Carry-Rippler, introduced by <a href="/Marcel_van_Kervinck">Marcel van Kervinck</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> and later by <a href="/Steffan_Westcott">Steffan Westcott</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> works: we first set all "unused" bits of the set by oring the One's Complement of d. The increment ripples a possible carry through all unused bits - and finally we clear all unused bits again by intersection with the set d:</p>
+<pre><code>n = ((n | ~d) + 1) &amp; d;</code></pre>
+<p>We can safely replace bitwise-or by add, since unused bits are always zero:</p>
+<pre><code>n = ((n + ~d) + 1) &amp; d;</code></pre>
+<p>Replacing One's Complement by Two's Complement minus one</p>
+<pre><code>n = ((n + (-d-1) + 1) &amp; d;</code></pre>
+<p>leaves the final expression</p>
+<pre><code>n = (n - d) &amp; d;</code></pre>
+<h2 id="subsets-with-equal-cardinality"><span id="Snoob"></span>Subsets with equal Cardinality</h2>
+<p>Traversing subsets with one bit set was already mentioned in the <a href="/Bitboard_Serialization">Bitboard Serialization</a> topic.</p>
+<p>Equal cardinality subsets have <strong>S</strong>ame <strong>n</strong>umber <strong>o</strong>f <strong>o</strong>ne <strong>b</strong>its - thus <strong>Snoob</strong>, as synonym of the iterator-function. To use snoob in a loop:</p>
+<pre><code>U64 x, y, first = 0x0f; // traverse all 4-bit sequences
+for (x = first; (y = snoob(x)) &gt; x; x = y)
+   doSomethingWith(y);</code></pre>
+<p>We add the <a href="/General_Setwise_Operations">LS1B</a> (smallest) to the set, to get a greater number. The former LS1B becomes zero with overflow. If the next higher bit was zero, it takes the carry and the number of set bits didn't change - two flipped bits. Otherwise, if the carry ripples through, leaving further zero(s), we need to set least significant bits accordingly, to keep the cardinality equal. Thus, we xor ripple to get the flipped bits as ones. We shift this sequence right, until it becomes the least significant bits (divide by smallest). To take the two compensating bits off, we need to further divide by 4 (leading or trailing shift right 2). Get the next higher number with the same number of one bits (Snoob) was devised by <a href="/Bill_Gosper">Bill Gosper</a> as <a href="/Bill_Gosper">HAKMEM 175</a> in <a href="/PDP-6">PDP-6</a> <a href="/Assembly">Assembly</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> and elaborated in <a href="/Henry_S._Warren,_Jr.">Hacker's Delight</a> by <a href="/Henry_S._Warren,_Jr.">Henry S. Warren, Jr.</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>.</p>
+<h3 id="snoobing-the-universe"><span id="NextSnoob"></span>Snoobing the Universe</h3>
+<pre><code>// get next greater value with same number of one bits
+// Taken from &quot;Hacker&#39;s Delight&quot; by Henry S. Warren, Jr.
+// originally appeared as  HAKMEM ITEM 175 (Bill Gosper)
+U64 snoob (U64 x) {
+   U64 smallest, ripple, ones;
+   smallest = x &amp; -x;
+   ripple = x + smallest;
+   ones = x ^ ripple;
+   ones = (ones &gt;&gt; 2) / smallest;
+   return ripple | ones;
+}</code></pre>
+<h4 id="modified-snoob">Modified Snoob</h4>
+<p>Division by power of two replaced by <a href="/BitScan">De Bruijn bitscan</a> and shift right:</p>
+<pre><code>const U64 deBruijn = C64(0x03f79d71b4cb0a89);
+
+const unsigned int deBruijnLookup[64] = // or unsigned char
+{
+    0,  1, 48,  2, 57, 49, 28,  3,
+   61, 58, 50, 42, 38, 29, 17,  4,
+   62, 55, 59, 36, 53, 51, 43, 22,
+   45, 39, 33, 30, 24, 18, 12,  5,
+   63, 47, 56, 27, 60, 41, 37, 16,
+   54, 35, 52, 21, 44, 32, 23, 11,
+   46, 26, 40, 15, 34, 20, 31, 10,
+   25, 14, 19,  9, 13,  8,  7,  6,
+};
+
+// get next greater value with same number of one bits
+U64 snoob (U64 x) {
+   U64 smallest, ripple, ones;
+   smallest = x &amp; (0-x);
+   ripple   = x + smallest;
+   ones     = x ^ ripple;
+   ones     = (ones &gt;&gt; 2) &gt;&gt; deBruijnLookup[(smallest*deBruijn) &gt;&gt; 58];
+   return ripple | ones;
+}</code></pre>
+<p>Due to implicit modulo(64) of the shift amount by the processor</p>
+<pre><code>(ones &gt;&gt; i) &gt;&gt; 2 == (ones &gt;&gt; 2) &gt;&gt; i might not equal to ones &gt;&gt; (2 + i)!</code></pre>
+<h4 id="reverse-snoob">Reverse Snoob</h4>
+<p>based on <a href="/General_Setwise_Operations">One's Complement</a>:</p>
+<pre><code>// get next less value with same number of one bits
+U64 rSnoob (U64 sub) {
+   return ~snoob(~sub);
+}</code></pre>
+<p>or to safe some bitscans</p>
+<pre><code>// get next less value with same number of one bits
+U64 rSnoob (U64 sub) {
+   if ( sub &amp; 1 )
+      return ~snoob(~sub);
+   U64 lsb = sub &amp; (0-sub);
+   return sub ^ lsb ^ (lsb&gt;&gt;1);
+}</code></pre>
+<h3 id="snoobing-any-sets">Snoobing any Sets</h3>
+<p>combining the Carry Rippler with Snoob - a little more complicated</p>
+<pre><code>set:
+... 1110 0110 0x..e6
+e.g. all subsets with two set bits:
+... 0000 0110 0x..06
+... 0010 0010 0x..22
+... 0010 0100 0x..24
+... 0100 0010 0x..42
+... 0100 0100 0x..44
+... 0110 0000 0x..60
+... 1000 0010 0x..82
+... 1000 0100 0x..84
+... 1010 0000 0x..a0
+... 1100 0000 0x..c0
+
+// get next greater subset of set with same number of one bits
+U64 snoob (U64 sub, U64 set) {
+   U64 tmp = sub-1;
+   U64 rip = set &amp; (tmp + (sub &amp; (0-sub)) - set);
+   for(sub = (tmp &amp; sub) ^ rip; sub &amp;= sub-1; rip ^= tmp, set ^= tmp)
+       tmp = set &amp; (0-set);
+   return rip;
+}
+
+// get next less set of a subset with same number of one bits
+U64 rSnoob (U64 sub, U64 set) {
+   return ~snoob(~sub &amp; set, set) &amp; set;
+}</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Bitboard_Serialization">Bitboard Serialization</a></li>
+<li><a href="/De_Bruijn_Sequence">De Bruijn Sequence</a></li>
+<li><a href="/Magic_Bitboards">Magic Bitboards</a></li>
+</ul>
+<h2 id="selected-publications">Selected Publications</h2>
+<ul>
+<li>Michael Beeler, <a href="/Bill_Gosper">Bill Gosper</a>, <a href="https://en.wikipedia.org/wiki/Richard_Schroeppel">Rich Schroeppel</a> (<strong>1972</strong>). <em><a href="http://home.pipeline.com/~hbaker1/hakmem/hakmem.html">HAKMEM</a>, Memo 239</em>. <a href="https://en.wikipedia.org/wiki/MIT_Computer_Science_and_Artificial_Intelligence_Laboratory">CSAIL</a>, <a href="/Massachusetts_Institute_of_Technology">MIT</a>, <a href="http://home.pipeline.com/~hbaker1/hakmem/hacks.html#item175">ITEM 175 (Gosper)</a></li>
+<li><a href="/Mathematician">Frank Ruskey</a> (<strong>2003</strong>). <em>Combinatorial Generation</em>. <a href="https://en.wikipedia.org/wiki/University_of_Victoria">University of Victoria</a>, <a href="http://www.1stworks.com/ref/ruskeycombgen.pdf">pdf</a></li>
+<li><a href="/Henry_S._Warren,_Jr.">Henry S. Warren, Jr.</a> (<strong>2012</strong>). <em><a href="http://hackersdelight.org/">Hacker's Delight, 2nd Edition</a></em>. <a href="https://en.wikipedia.org/wiki/Addison%E2%80%93Wesley">Addison-Wesley</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.chess/msg/f4f0751cc8b928c8">Re: move generators in computer chess, Tricky bit tricks</a> by <a href="/Marcel_van_Kervinck">Marcel van Kervinck</a>, <a href="/Computer_Chess_Forums">rgcc</a>, October 20, 1994</li>
+<li><a href="http://www.stmintz.com/ccc/index.php?id=490129">Re: algorithm question</a> by <a href="/Steffan_Westcott">Steffan Westcott</a>, <a href="/CCC">CCC</a>, February 27, 2006</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73198">Don't understand CarryRippler</a> by <a href="/Marcel_Vanthoor">Marcel Vanthoor</a>, <a href="/CCC">CCC</a>, February 27, 2020 » Carry-Rippler, <a href="/Rust">Rust</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Partially_ordered_set">Partially ordered set from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Power_set">Power set from Wikipedia</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Algorithms">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://groups.google.com/d/msg/rec.games.chess/KnJvBnhgDKU/yCi5yBx18PQJ">Tricky bit tricks</a> by <a href="/Marcel_van_Kervinck">Marcel van Kervinck</a>, <a href="/Computer_Chess_Forums">rec.games.chess</a>, October 20, 1994<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.stmintz.com/ccc/index.php?id=490129">Re: algorithm question</a> by <a href="/Steffan_Westcott">Steffan Westcott</a>, <a href="/CCC">CCC</a>, February 27, 2006<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>Michael Beeler, <a href="/Bill_Gosper">Bill Gosper</a>, <a href="https://en.wikipedia.org/wiki/Richard_Schroeppel">Rich Schroeppel</a> (<strong>1972</strong>). <em><a href="http://home.pipeline.com/~hbaker1/hakmem/hakmem.html">HAKMEM</a>, Memo 239</em>. <a href="https://en.wikipedia.org/wiki/MIT_Computer_Science_and_Artificial_Intelligence_Laboratory">CSAIL</a>, <a href="/Massachusetts_Institute_of_Technology">MIT</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.hackersdelight.org/basics1.pdf">Sample section of Hacker's Delight, Chapter 2 Basics</a> (pdf) by <a href="/Henry_S._Warren,_Jr.">Henry S. Warren, Jr.</a> pp.14 Figure 2–1. <em>Next higher number with same number of 1-bits</em>.<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://www.hackersdelight.org/hdcodetxt/snoob.c.txt">C code for most of the programs that appear in HD | Fig. 2-1. Next higher number with same number of 1-bits</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Traversing_Subsets_of_a_Set">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zobrist Hashing - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Zobrist Hashing</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Search">Search</a> * <a href="/Transposition_Table">Transposition Table</a> * Zobrist Hashing</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/King_Wen_%28I_Ching%29.svg" alt="King Wen sequence 1 2" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="https://en.wikipedia.org/wiki/King_Wen_sequence">King Wen sequence</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://en.wikipedia.org/wiki/King_Wen_sequence">King Wen sequence</a>, <a href="https://en.wikipedia.org/wiki/I_Ching">I Ching</a> <a href="https://en.wikipedia.org/wiki/I_Ching_divination">divination</a> involves obtaining a <a href="https://en.wikipedia.org/wiki/Hexagram_%28I_Ching%29">Hexagram</a> by random generation<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+<li id="fn2">All of <a href="/Category:John_Cage">Cage's</a> <a href="https://en.wikipedia.org/wiki/Music_of_Changes">music</a> since 1951 was composed using <a href="https://en.wikipedia.org/wiki/John_Cage#Chance">chance</a> procedures, most commonly using the <a href="https://en.wikipedia.org/wiki/I_Ching">I Ching</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Zobrist Hashing</strong>,<br />
+a technique to transform a board <a href="/Chess_Position">position</a> of arbitrary size into a number of a set length, with an equal distribution over all possible numbers, invented by <a href="/Albert_Zobrist">Albert Zobrist</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. In an early Usenet post in 1982, <a href="/Tom_Truscott">Tom Truscott</a> mentioned <a href="/James_Gillogly">Jim Gillogly's</a> n-bit hashing technique <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>, who apparently read Zobrist's paper early, and credits Zobrist in a 1997 <a href="/Computer_Chess_Forums">rgcc</a> post <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>. Zobrist Hashing is an instance of <a href="https://en.wikipedia.org/wiki/Tabulation_hashing">tabulation hashing</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>, a method for constructing <a href="https://en.wikipedia.org/wiki/Universal_hashing">universal families of hash functions</a> by combining <a href="https://en.wikipedia.org/wiki/Lookup_table">table lookup</a> with <a href="/General_Setwise_Operations">exclusive or</a> operations. Zobrist Hashing was rediscovered by <a href="/Mathematician">J. Lawrence Carter</a> and <a href="/Mathematician">Mark N. Wegman</a> in 1977 <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> and studied in more detail by <a href="/Mathematician">Mihai Pătrașcu</a> and <a href="/Mathematician">Mikkel Thorup</a> in 2011 <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>.</p>
+<p>The main purpose of Zobrist hash codes in chess programming is to get an almost unique index number for any chess position, with a very important requirement that two similar positions generate entirely different indices. These index numbers are used for faster and more space-efficient <a href="/Hash_Table">Hash tables</a> or databases, e.g. <a href="/Transposition_Table">transposition tables</a> and <a href="/Opening_Book">opening books</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#metamorphosis">Metamorphosis</a></li>
+<li><a href="#initialization">Initialization</a></li>
+<li><a href="#runtime">Runtime</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#collisions">Collisions</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#theory">Theory</a></li>
+<li><a href="#praxis">Praxis</a></li>
+<li><a href="#lack-a-true-integer-type">Lack a True Integer Type</a></li>
+<li><a href="#linear-independence">Linear Independence</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1982-">1982 ...</a></li>
+<li><a href="#1990-">1990 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="metamorphosis">Metamorphosis</h2>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]" style="--wiki-img-w:640px"><a href="http://www.mcescher.com/Gallery/gallery-recogn.htm" target="_blank" rel="noopener noreferrer"><img src="/assets/Metamorphosis_II_1.jpg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></a></span> <span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]" style="--wiki-img-w:640px"><a href="http://www.mcescher.com/Gallery/gallery-recogn.htm" target="_blank" rel="noopener noreferrer"><img src="/assets/Metamorphosis_II_2.jpg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></a></span> <a href="/Category:M._C._Escher">M. C. Escher</a>, <a href="https://en.wikipedia.org/wiki/Metamorphosis">Metamorphosis</a> III, 1967-1968 <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a></p>
+<h2 id="initialization">Initialization</h2>
+<p>At program initialization, we generate an <a href="/Array">array</a> of <a href="/Pseudorandom_Number_Generator">pseudorandom numbers</a> <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a> <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a>:</p>
+<ul>
+<li>One number for each <a href="/Pieces">piece</a> at each <a href="/Squares">square</a></li>
+<li>One number to indicate the <a href="/Side_to_move">side to move</a> is black</li>
+<li>Four numbers to indicate the <a href="/Castling_Rights">castling rights</a>, though usually 16 (2^4) are used for speed</li>
+<li>Eight numbers to indicate the <a href="/Files">file</a> of a valid <a href="/En_passant">En passant</a> square, if any</li>
+</ul>
+<p>This leaves us with an array of 781 (12*64 + 1 + 4 + 8) random numbers. Since pawns don't happen on first and eighth rank, one might be fine with 12*64, though. There are even proposals and implementations to use overlapping keys from unaligned access up to an array of only 12 numbers for every piece and to rotate that number by square <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a> <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a>.</p>
+<p>Programs usually implement their own <a href="/Pseudorandom_Number_Generator">Pseudorandom number generator</a> (PRNG), both for better quality random numbers than standard library functions, and also for reproducibility. This means that whatever platform the program is run on, it will use the exact same set of Zobrist keys. This is also useful for things like opening books, where the positions in the book can be stored by hash key and be used portably across machines, considering <a href="/Endianness">endianness</a>.</p>
+<h2 id="runtime">Runtime</h2>
+<p>If we now want to get the Zobrist hash code of a certain position, we initialize the hash key by <a href="/General_Setwise_Operations">xoring</a> all random numbers linked to the given feature, e.g. the <a href="/Initial_Position">initial position</a>:</p>
+<pre><code>[Hash for White Rook on a1] xor [Hash for White Knight on b1] xor [Hash for White Bishop on c1] xor ... ( all pieces )
+... xor [Hash for White king castling] xor [Hash for White queen castling] xor ... ( all castling rights )</code></pre>
+<p>The fact that xor-operation is <a href="https://en.wikipedia.org/wiki/Involution">own inverse</a> and can be undone by using the same xor-operation again, is often used by chess engines. It allows a fast <a href="/Incremental_Updates">incremental update</a> of the hash key during <a href="/Make_Move">make</a> or <a href="/Unmake_Move">unmake</a> <a href="/Moves">moves</a>. E.g., for a White Knight that jumps from b1 to c3, capturing a Black Bishop, these operations are performed:</p>
+<pre><code>[Original Hash of position] xor [Hash for White Knight on b1] ... ( removing the knight from b1 )
+... xor [Hash for Black Bishop on c3] ( removing the captured bishop from c3 )
+... xor [Hash for White Knight on c3] ( placing the knight on the new square )
+... xor [Hash for Black to move] ( change sides)</code></pre>
+<h2 id="collisions">Collisions</h2>
+<p><a href="/Transposition_Table">Key collisions</a> or type-1 errors are inherent in using Zobrist keys with far fewer bits than required to encode all reachable chess positions.</p>
+<h3 id="theory">Theory</h3>
+<p>An important issue is the question of what size the hash keys should have. Smaller hash keys are faster and more space-efficient, while larger ones reduce the risk of a hash collision. A collision occurs if two positions map the same key <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a> . The dangers of which were well assessed by <a href="/Robert_Hyatt">Robert Hyatt</a> and <a href="/Anthony_Cozzie">Anthony Cozzie</a> in their paper <em>Hash Collisions Effect</em> <a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a>. Usually, 64-bit is used as a standard size in modern chess programs.</p>
+<p>Hash collisions demonstrate the <a href="https://en.wikipedia.org/wiki/Birthday_problem">birthday "paradox"</a>, which is to say the chance of collisions approaches certainty at around the <strong>square root</strong> of the number of possible keys, contrary to some people's expectations. You can expect to encounter a collision in a 32-bit hash when you have evaluated sqrt(2 ^ 32) == 2 ^ 16 or around 65 thousand positions. With a 64-bit hash, you can expect a collision after about 2 ^ 32 or 4 billion positions.</p>
+<h3 id="praxis">Praxis</h3>
+<p>Post by <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a> <a href="#fn15" class="footnote-ref" id="fnref15" role="doc-noteref"><sup>15</sup></a> :</p>
+<p><code>... I can speak from experience here. In the early versions of my chess program </code><a href="/Phoenix"><code>Phoenix</code></a><code>, I generated my Zobrist hash numbers using my student ID number as a seed, naively thinking the random numbers generated by this seed would be good enough. A few years later I put code in to detect when my 32-bit hash key matched the wrong position. To my surprise, there were </code><strong><code>lots</code></strong><code> of errors. I changed my seed to another number, and the error rate dropped dramatically. With this better seed, it became very, very rare to see a hash error. All randomly generated numbers are not the same! </code></p>
+<h3 id="lack-a-true-integer-type">Lack a True Integer Type</h3>
+<p><span id="LackInt"></span>Some languages (such as <a href="/JavaScript">JavaScript</a> and <a href="https://en.wikipedia.org/wiki/Lua_%28programming_language%29">Lua</a>) only have a <a href="/Double">64-bit floating point</a> "Number" type. In JavaScript, this type breaks down into a 32-bit integer when bitwise operators are used. One way to get a 64-bit hash is to use two 32-bit numbers in parallel, as <a href="/Garbochess-JS">Garbochess-JS</a> <a href="#fn16" class="footnote-ref" id="fnref16" role="doc-noteref"><sup>16</sup></a> does. Another, which <a href="/P4wn">p4wn</a> used at one stage, is to use 47 or 48-bit <strong>additive</strong> hashes. 64-bit floating point numbers are true integers up to 53 bits, so it is possible to sum at least 32 (and on average close to 64) random 48-bit numbers, which was enough for p4wn's purposes. For additive Zobrist hashing, you add the number when placing a piece and subtract it when removing it, rather than using xor both ways. There is no difference in accuracy or speed, and 48-bit hashes give you collisions at around the 2 ^ 24 or 16 million point.</p>
+<h3 id="linear-independence">Linear Independence</h3>
+<p>The minimum and average <a href="/Population_Count">Hamming Distance</a> over all Zobrist keys was often considered as a "quality" measure of the keys. However, maximising the minimal hamming distance leads to very poor Zobrist keys. As long the minimum hamming distance is greater zero, <a href="https://en.wikipedia.org/wiki/Linear_independence">linear independence</a> (that is a small subset of all keys doesn't xor to zero), is much more important than hamming distance as explained by <a href="/Sven_Reichard">Sven Reichard</a> <a href="#fn17" class="footnote-ref" id="fnref17" role="doc-noteref"><sup>17</sup></a> :</p>
+<p>Assume we associate a bitstring to every piece-square combination. That is what's usually done in chess programs; some codes are added for the side to move, castling rights, e.p. squares, etc. We obtain the code of a position by XOR-ing the codes of all the pieces contained in it.</p>
+<p>What we want to avoid is collisions at nodes close to the root. For nodes close to the leaves, the cost of recomputing the score is smaller. Hence, we want to avoid that:</p>
+<pre><code>x1^x2^...^xm = y1^y2^...^yn
+for codes xi, yi and small numbers m and n, and xi not equal to yj</code></pre>
+<p>To translate that to a language that is more familiar - at least for people of a mathematical background - we consider the <a href="https://en.wikipedia.org/wiki/Field_%28mathematics%29#Finite_fields">field F2</a> of two elements. The elements are 0 and 1, and we can add and multiply them as usual, with the additional rule that 1 + 1 = 0. This is really a field, just like the <a href="https://en.wikipedia.org/wiki/Real_number">real</a> or <a href="https://en.wikipedia.org/wiki/Complex_number">complex numbers</a>, and we can do calculations as usual. Note that addition is just the exclusive or.</p>
+<p>Now the codes or bitstrings become <a href="https://en.wikipedia.org/wiki/Vector_%28mathematics_and_physics%29">vectors</a> over the field F2, and the bitwise exclusive or becomes componentwise addition, i.e., usual addition of vectors. All these vectors form the <a href="https://en.wikipedia.org/wiki/Vector_space">vector space</a> F2^k, where k is the length of the vectors. Typically, k = 64.</p>
+<p>So, what we want to avoid is an equation</p>
+<pre><code>x1 + x2 + ... + xm = y1 + y2 + ... + yn</code></pre>
+<p>or</p>
+<pre><code>x1 + x2 + ... + xm + y1 + y2 + ... + yn = 0</code></pre>
+<p>since in F2, subtraction is the same as addition. Remembering some <a href="https://en.wikipedia.org/wiki/Linear_algebra">linear algebra</a>, this just means that we want the set x1,...,xm,y1,...,yn to be linearly independent.</p>
+<p>This leads to the following criterion for picking a set of hash codes: A set of vectors in F2^k is a good set of hash codes if each small subset of non-zero vectors is linearly independent. What is not clear here is the meaning of "small", but we want small to be as big as possible. In other words, we consider sets of size up to a certain size as small, and if we can make that size bigger, it is better, since this leads to unique codes deeper in the tree.</p>
+<p>However, what is clear is that this quality criterion does not depend on the base of the vector space. I.e., if we have a good set and multiply each vector by an invertible matrix (in other words, if we rotate the vectors), the obtained set will be just as good, since the rotation does not change the linear independence. The Hamming distance, on the other hand, is highly dependent on the vector space base. Take, for example, the vectors (1,0) and (0,1) in F2^2; they have Hamming distance 2. If we multiply both of them by</p>
+<pre><code>(1 1)
+(0 1)</code></pre>
+<p>We get (1,1) and (0,1), which have a Hamming distance of 1. Actually, we can change any distance to anything else (except for 0) by an appropriate matrix. Thus, we try to approximate something that is independent of the base (the quality of our hash codes) by something that depends on it (the Hamming distance). Simple logic tells you that this approximation has to be really bad. An example where it doesn't work: It has been said that the Hamming distance shouldn't be too small or too big. So, vectors at a distance that is half the length should be ok, right? Let the length be 8 (I don't want to type too many 0's and 1's), and consider the vectors</p>
+<pre><code>11110000
+11001100
+00111100</code></pre>
+<p>They all have weight 4, their pairwise distance is 4, and yet they add up to 0. Just by looking at Hamming distances, you have no chance of detecting that.</p>
+<p>Summarising I can say that I see no connection between the quality of hash codes and their Hamming distance. Using a good RNG like the one provided in GNU's stdlib will yield good hash codes ( you can actually prove that), and so I will take the codes as they are supplied by rand() or random() without messing with them and thereby most likely make them worse.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/CPW-Engine_transposition">CPW-Engine_transposition</a></li>
+<li><a href="/BCH_Hashing">BCH Hashing</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Albert_Zobrist">Albert Zobrist</a> (<strong>1970</strong>). <em>A New Hashing Method with Application for Game Playing</em>. Technical Report #88, Computer Science Department, The University of Wisconsin, Madison, WI, USA. Reprinted (1990) in <a href="/ICGA_Journal">ICCA Journal, Vol. 13, No. 2</a>, <a href="http://www.cs.wisc.edu/techreports/1970/TR88.pdf">pdf</a></li>
+<li><a href="/Mathematician">J. Lawrence Carter</a>, <a href="/Mathematician">Mark N. Wegman</a> (<strong>1977</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=803400">Universal classes of hash functions</a></em>. <a href="http://dl.acm.org/citation.cfm?id=800105">STOC '77</a></li>
+<li><a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Anthony_Cozzie">Anthony Cozzie</a> (<strong>2005</strong>). <em><a href="http://www.craftychess.com/hyatt/collisions.html">The Effect of Hash Signature Collisions in a Chess Program</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 28., No. 3</a></li>
+<li><a href="/Borko_Bošković">Borko Bošković</a>, <a href="/Sašo_Greiner">Sašo Greiner</a>, <a href="/Janez_Brest">Janez Brest</a>, <a href="/Viljem_Žumer">Viljem Žumer</a> (<strong>2005</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/freeabs_all.jsp?arnumber=1491153">The Representation of Chess Game</a></em>. Proceedings of the 27th International Conference on Information Technology Interfaces</li>
+<li><a href="/Mathematician">Mihai Pătrașcu</a>, <a href="/Mathematician">Mikkel Thorup</a> (<strong>2011</strong>). <em>The Power of Simple Tabulation Hashing</em>. <a href="http://arxiv.org/abs/1011.5200">arXiv:1011.5200v2</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1982-">1982 ...</h3>
+<ul>
+<li><a href="http://quux.org:70/Archives/usenet-a-news/NET.chess/82.01.07_duke.1593_net.chess.txt">compact representation of chess positions</a> by <a href="/Tom_Truscott">Tom Truscott</a>, net.chess, January 7, 1982</li>
+</ul>
+<h3 id="1990-">1990 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess/h9Q2wik_kTg/Jq7rYE0vqtoJ">Hash tables - Clash!!! What happens next?</a> by <a href="/Valavan_Manohararajah">Valavan Manohararajah</a>, <a href="/Computer_Chess_Forums">rgc</a>, March 15, 1994</li>
+</ul>
+<p><a href="https://groups.google.com/d/msg/rec.games.chess/h9Q2wik_kTg/9zrP0flwuzAJ">Re: Hash tables - Clash!!! What happens next?</a> by <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, March 17, 1994</p>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/C53jRusegwA/XzgyZLbzcn8J">Collision probability</a> by <a href="/Dennis_Breuker">Dennis Breuker</a>, <a href="/Computer_Chess_Forums">rgcc</a>, April 15, 1996</li>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/JZ-_0rObjuQ/Mfwy9qBLxoAJ">Re: Berliner vs. Botvinnik Some interesting points</a> by <a href="/Bradley_Kuszmaul">Bradley C. Kuszmaul</a>, <a href="/Computer_Chess_Forums">rgcc</a>, November 6, 1996</li>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/oKgv-7WbfO0/TH-p0KUIo2kJ">Re: Hashing function for board positions</a>by <a href="/James_Gillogly">Jim Gillogly</a>, <a href="/Computer_Chess_Forums">rgcc</a>, May 12, 1997</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=13810">Fast hash algorithm</a> by John Scalo, <a href="/CCC">CCC</a>, January 08, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=14053">Fast hash key method - Revisited!</a> by John Scalo, <a href="/CCC">CCC</a>, January 14, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=29817">How to create a set of random integers for hashing?</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, October 18, 1998</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/587d039679461fb8">Why Random Number Needed In HashFunction[piece</a>[position]] by Cheok Yan Cheng, <a href="/Computer_Chess_Forums">rgcc</a>, June 12, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=200366">About random numbers and hashing</a> by <a href="/Severi_Salminen">Severi Salminen</a>, <a href="/CCC">CCC</a>, December 04, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=245775">Random keys and hamming distance</a> by <a href="/James_Swafford">James Swafford</a>, <a href="/CCC">CCC</a>, August 16, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=313807">Hamming distance and lower hash table indexing</a> by <a href="/Tom_Likens">Tom Likens</a>, <a href="/CCC">CCC</a>, September 02, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=324223">64-Bit random numbers</a> by Martin Schreiber, <a href="/CCC">CCC</a>, October 28, 2003</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/42c6f293450dba50/">Is it necessary to include empty fields in the hash key of a position?</a> by Frank Hablizel, <a href="/Computer_Chess_Forums">rgcc</a>, December 25, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=358836">Hashkey collisions (typical numbers)</a> by <a href="/Jan_Renze_Steenhuisen">Renze Steenhuisen</a>, <a href="/CCC">CCC</a>, April 07, 2004</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=26152">Zobrist key random numbers</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, January 21, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=28523">Incremental Zobrist - slow?</a> by <a href="/Vlad_Stamate">Vlad Stamate</a>, <a href="/CCC">CCC</a>, June 20, 2009 » <a href="/Incremental_Updates">Incremental Updates</a></li>
+<li><a href="http://talkchess.com/forum/viewtopic.php?t=28545">On Zobrist keys</a> by <a href="/Lasse_Hansen">Lasse Hansen</a>, <a href="/CCC">CCC</a>, June 21, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=30008">Overlapped Zobrist keys array</a> by <a href="/Stefano_Gemma">Stefano Gemma</a>, <a href="/CCC">CCC</a>, October 06, 2009</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=35415">Transposition table random numbers</a> by Justin Madru, <a href="/CCC">CCC</a>, July 13, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40062">TT Key Collisions, Workarounds?</a> by Clemens Pruell, <a href="/CCC">CCC</a>, August 16, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40849">Key collision handling</a> by <a href="/Jonatan_Pettersson">Jonatan Pettersson</a>, <a href="/CCC">CCC</a>, October 21, 2011</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=1872">Using a Transposition Table with Zobrist Keys</a> by Miyagi403, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, February 21, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=43910">MT or KISS ?</a> by <a href="/Dan_Honeycutt">Dan Honeycutt</a>, <a href="/CCC">CCC</a>, June 02, 2012 <a href="#fn18" class="footnote-ref" id="fnref18" role="doc-noteref"><sup>18</sup></a> <a href="#fn19" class="footnote-ref" id="fnref19" role="doc-noteref"><sup>19</sup></a> <a href="#fn20" class="footnote-ref" id="fnref20" role="doc-noteref"><sup>20</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=44043">Zobrist alternative?</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, June 12, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=45605">Zobrist Number Statistics and WHat to Look For</a> by Andrew Templeton, <a href="/CCC">CCC</a>, October 16, 2012</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2178">Question about Zobrist code</a> by Hamfer, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, December 19, 2012</li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55449">Zobrist keys - measure of quality?</a> by <a href="/Martin_Sedlak">Martin Sedlak</a>, <a href="/CCC">CCC</a>, February 24, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58890">On-the fly hash key generation?</a> by <a href="/Evert_Glebbeek">Evert Glebbeek</a>, <a href="/CCC">CCC</a>, January 12, 2016</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=58890&amp;start=13">Re: On-the fly hash key generation?</a> by <a href="/Aleks_Peshkov">Aleks Peshkov</a>, <a href="/CCC">CCC</a>, January 13, 2016</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61411">Rotated hash</a> by J. Wesley Cleveland, <a href="/CCC">CCC</a>, September 13, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61533">No Zobrist key</a> by Henk van den Belt, <a href="/CCC">CCC</a>, September 26, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62733">Enpass + Castling for Zorbist hashes</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, January 06, 2017 » <a href="/Castling_Rights">Castling Rights</a>, <a href="/En_passant">En passant</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66372">Zobrist hashing for text</a> by <a href="/Alvaro_Cardoso">Alvaro Cardoso</a>, <a href="/CCC">CCC</a>, January 20, 2018</li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73110">Zobrist key independence</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, February 17, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76508">Best practices for transposition tables</a> by Brian Adkins, <a href="/CCC">CCC</a>, February 06, 2021</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=85156">Zobrist keys</a> by Ben Vining, <a href="/CCC">CCC</a>, June 07, 2025</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Zobrist_hashing">Zobrist hashing from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Tabulation_hashing">Tabulation hashing from Wikipedia</a></li>
+<li><a href="http://web.archive.org/web/20070810003508/www.seanet.com/%7Ebrucemo/topics/zobrist.htm">Zobrist keys</a> from <a href="/Bruce_Moreland">Bruce Moreland's</a> <a href="http://web.archive.org/web/20070811182741/www.seanet.com/%7Ebrucemo/topics/topics.htm">Programming Topics</a></li>
+<li><a href="https://mediocrechess.blogspot.com/2007/01/guide-zobrist-keys.html">Zobrist keys</a> from <a href="https://mediocrechess.blogspot.com/">Mediocre Chess</a> by <a href="/Jonatan_Pettersson">Jonatan Pettersson</a></li>
+<li><a href="https://en.wikipedia.org/wiki/G%C3%B6del_numbering">Gödel numbering from Wikipedia</a></li>
+<li><a href="/Category:John_Cage">John Cage</a> - <a href="https://en.wikipedia.org/wiki/Music_of_Changes">Music of Changes</a>, Book 1 (1951), performed by <a href="https://www.facebook.com/vickychowpianist">Vicky Chow</a>, <a href="https://www.facebook.com/DiMennaCenter">DiMenna Center</a>, <a href="https://en.wikipedia.org/wiki/New_York_City">NYC</a>, June 09, 2012, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/Y7LD1iTl-lM" title="YouTube video Y7LD1iTl-lM" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=Y7LD1iTl-lM">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Transposition_Table">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Albert_Zobrist">Albert Zobrist</a> (<strong>1970</strong>). <em>A New Hashing Method with Application for Game Playing</em>. Technical Report #88, Computer Science Department, The University of Wisconsin, Madison, WI, USA. Reprinted (1990) in <a href="/ICGA_Journal">ICCA Journal, Vol. 13, No. 2</a>, <a href="http://www.cs.wisc.edu/techreports/1970/TR88.pdf">pdf</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://quux.org:70/Archives/usenet-a-news/NET.chess/82.01.07_duke.1593_net.chess.txt">compact representation of chess positions</a> by <a href="/Tom_Truscott">Tom Truscott</a>, net.chess, January 7, 1982<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://groups.google.com/d/msg/rec.games.chess.computer/oKgv-7WbfO0/TH-p0KUIo2kJ">Re: Hashing function for board positions</a>by <a href="/James_Gillogly">Jim Gillogly</a>, <a href="/Computer_Chess_Forums">rgcc</a>, May 12, 1997<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=55449&amp;start=4">Re: Zobrist keys - measure of quality?</a> by <a href="/Rein_Halbersma">Rein Halbersma</a>, <a href="/CCC">CCC</a>, February 24, 2015<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="/Mathematician">J. Lawrence Carter</a>, <a href="/Mathematician">Mark N. Wegman</a> (<strong>1977</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=803400">Universal classes of hash functions</a></em>. <a href="http://dl.acm.org/citation.cfm?id=800105">STOC '77</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="/Mathematician">Mihai Pătrașcu</a>, <a href="/Mathematician">Mikkel Thorup</a> (<strong>2011</strong>). <em>The Power of Simple Tabulation Hashing</em>. <a href="http://arxiv.org/abs/1011.5200">arXiv:1011.5200v2</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="https://en.wikipedia.org/wiki/Tabulation_hashing">Tabulation hashing from Wikipedia</a><a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="http://www.mcescher.com/Gallery/gallery-recogn.htm">Picture gallery "Recognition and Success 1955 - 1972"</a> from <a href="http://www.mcescher.com/">The Official M.C. Escher Website</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="https://www.random.org/integers/?mode=advanced">RANDOM.ORG - Integer Generator</a><a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="http://www.stat.fsu.edu/pub/diehard/">The Marsaglia Random Number CDROM including the Diehard Battery of Tests</a> by <a href="/Mathematician">George Marsaglia</a><a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=245932&amp;t=26152">Re: Zobrist key random numbers</a> by <a href="/Zach_Wegner">Zach Wegner</a>, <a href="/CCC">CCC</a>, January 22, 2009<a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=30008">Overlapped Zobrist keys array</a> by <a href="/Stefano_Gemma">Stefano Gemma</a>, <a href="/CCC">CCC</a>, October 06, 2009<a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="https://www.stmintz.com/ccc/index.php?id=358836">Hashkey collisions (typical numbers)</a> by <a href="/Jan_Renze_Steenhuisen">Renze Steenhuisen</a>, <a href="/CCC">CCC</a>, April 07, 2004<a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p><a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Anthony_Cozzie">Anthony Cozzie</a> (<strong>2005</strong>). <em><a href="http://www.craftychess.com/hyatt/collisions.html">The Effect of Hash Signature Collisions in a Chess Program</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 28, No. 3</a><a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn15"><p><a href="https://groups.google.com/d/msg/rec.games.chess/h9Q2wik_kTg/9zrP0flwuzAJ">Re: Hash tables - Clash!!! What happens next?</a> by <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, March 17, 1994<a href="#fnref15" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn16"><p><a href="http://forwardcoding.com/projects/ajaxchess/chess.html">Garbochess-JS</a><a href="#fnref16" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn17"><p><a href="https://www.stmintz.com/ccc/index.php?id=200622">Re: About random numbers and hashing</a> by <a href="/Sven_Reichard">Sven Reichard</a>, <a href="/CCC">CCC</a>, December 05, 2001<a href="#fnref17" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn18"><p><a href="https://en.wikipedia.org/wiki/Mersenne_twister">Mersenne twister from Wikipedia</a><a href="#fnref18" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn19"><p><a href="http://compgroups.net/comp.lang.fortran/64-bit-kiss-rngs/601519">64-bit KISS RNGs</a> by <a href="/Mathematician">George Marsaglia</a>, <a href="http://compgroups.net/comp.lang.fortran/">comp.lang.fortran | Computer Group</a>, February 28, 2009<a href="#fnref19" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn20"><p><a href="/Bob_Jenkins">RKISS</a> by <a href="/Bob_Jenkins">Bob Jenkins</a><a href="#fnref20" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Schaeffer_Quotes">Schaeffer Quotes</a> · <a href="/Category:M._C._Escher">M. C. Escher</a> · <a href="/Category:John_Cage">John Cage</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Zobrist_Hashing">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, Phhnguyen.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
