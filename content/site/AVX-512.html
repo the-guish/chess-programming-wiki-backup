@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AVX-512 - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">AVX-512</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Hardware">Hardware</a> * <a href="/X86-64">x86-64</a> * AVX-512</strong></p>
+<p><strong>AVX-512</strong>,<br />
+an expansion of <a href="/Intel">Intel's</a> <a href="/AVX">AVX</a> and <a href="/AVX2">AVX2</a> instructions using the <a href="https://en.wikipedia.org/wiki/EVEX_prefix">EVEX prefix</a>, featuring <strong>32</strong> 512-bit wide vector <a href="/SIMD_and_SWAR_Techniques">SIMD</a> registers zmm0 through zmm31, keeping either eight <a href="/Double">doubles</a> or integer <a href="/Quad_Word">quad words</a> such as <a href="/Bitboards">bitboards</a>, and eight (seven) dedicated mask registers which specify which vector elements are operated on and written. If the Nth bit of a vector mask register is set, then the Nth element of the destination vector is overridden with the result of the operation; otherwise, dependent of the instruction, the element is zeroed, or overridden by an element from another source register (remains unchanged if same source). A vector mask register can be set using vector compare instructions, instructions to move contents from a GP register, or a special subset of vector mask arithmetic instructions.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#extensions">Extensions</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#selected-instructions">Selected Instructions</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#vpternlog">VPTERNLOG</a></li>
+<li><a href="#vplzcnt">VPLZCNT</a></li>
+<li><a href="#vpopcnt">VPOPCNT</a></li>
+<li><a href="#vpdpbusd">VPDPBUSD</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#simd">SIMD</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><a href="#manuals">Manuals</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#blogs">Blogs</a></li>
+<li><a href="#compiler-support">Compiler Support</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="extensions">Extensions</h2>
+<p>AVX-512 consists of multiple extensions not all meant to be supported by all AVX-512 capable processors. Only the core extension AVX-512F (AVX-512 Foundation) is required by all implementations <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> AVX-512F and AVX-512CD were first implemented in the <a href="https://en.wikipedia.org/wiki/Xeon_Phi">Xeon Phi</a> processor and coprocessor known by the code name <a href="https://en.wikipedia.org/wiki/Xeon_Phi#Knights_Landing">Knights Landing</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> , launched on June 20, 2016.</p>
+<table>
+<thead>
+<tr>
+<th><p>Extension</p></th>
+<th><p>Description</p></th>
+<th><p>Architecture</p></th>
+<th><p><a href="https://en.wikipedia.org/wiki/CPUID#EAX.3D7.2C_ECX.3D0:_Extended_Features">CPUID 7</a> Reg:Bit <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>AVX-512 F</p></td>
+<td><p>Foundation</p></td>
+<td rowspan="4"><p><a href="https://en.wikipedia.org/wiki/Xeon_Phi#Knights_Landing">Knights Landing</a></p></td>
+<td><p>EBX:16</p></td>
+</tr>
+<tr>
+<td><p>AVX-512 CD</p></td>
+<td><p>Conflict Detection Instructions</p></td>
+<td><p>EBX:28</p></td>
+</tr>
+<tr>
+<td><p>AVX-512 ER</p></td>
+<td><p>Exponential and Reciprocal Instructions</p></td>
+<td><p>EBX:27</p></td>
+</tr>
+<tr>
+<td><p>AVX-512 PF</p></td>
+<td><p>Prefetch Instructions</p></td>
+<td><p>EBX:26</p></td>
+</tr>
+<tr>
+<td><p>AVX-512 BW</p></td>
+<td><p><a href="/Byte">Byte</a> and <a href="/Word">Word</a> Instructions</p></td>
+<td rowspan="3"><p><a href="https://en.wikipedia.org/wiki/Skylake_(microarchitecture)">Skylake X</a></p></td>
+<td><p>EBX:30</p></td>
+</tr>
+<tr>
+<td><p>AVX-512 DQ</p></td>
+<td><p><a href="/Double_Word">Doubleword</a> and <a href="/Quad_Word">Quadword</a> Instructions</p></td>
+<td><p>EBX:17</p></td>
+</tr>
+<tr>
+<td><p>AVX-512 VL</p></td>
+<td><p>Vector Length Extensions</p></td>
+<td><p>EBX:31</p></td>
+</tr>
+<tr>
+<td><p>AVX-512 IFMA</p></td>
+<td><p>Integer Fused Multiply Add</p></td>
+<td rowspan="2"><p><a href="https://en.wikipedia.org/wiki/Cannonlake">Cannonlake</a></p></td>
+<td><p>EBX:21</p></td>
+</tr>
+<tr>
+<td><p>AVX-512 VBMI</p></td>
+<td><p>Vector Byte Manipulation Instructions</p></td>
+<td><p>ECX:01</p></td>
+</tr>
+<tr>
+<td><p>AVX-512 VPOPCNTDQ</p></td>
+<td><p>Vector <a href="/Population_Count">Population Count</a></p></td>
+<td rowspan="3"><p><a href="https://en.wikipedia.org/wiki/Xeon_Phi#Knights_Mill">Knights Mill</a></p></td>
+<td><p>ECX:14</p></td>
+</tr>
+<tr>
+<td><p>AVX-512-4VNNIW</p></td>
+<td><p>Vector <a href="/Neural_Networks">Neural Network</a> Instructions<br />
+Word variable precision</p></td>
+<td><p>EDX:02</p></td>
+</tr>
+<tr>
+<td><p>AVX-512-4FMAPS</p></td>
+<td><p>Fused Multiply Accumulation<br />
+Packed Single precision</p></td>
+<td><p>EDX:03</p></td>
+</tr>
+<tr>
+<td><p>AVX-512 VNNI</p></td>
+<td><p>Vector Neural Network Instructions<br />
+Vector Instructions for <a href="/Deep_Learning">Deep Learning</a></p></td>
+<td rowspan="4"><p><a href="https://en.wikipedia.org/wiki/Ice_Lake_(microprocessor)">Ice Lake</a></p></td>
+<td><p>ECX:11</p></td>
+</tr>
+<tr>
+<td><p>AVX-512 VBMI2</p></td>
+<td><p>Vector Byte Manipulation Instructions 2<br />
+<a href="/Byte">Byte</a>/<a href="/Word">Word</a> Load, Store and Concatenation with Shift</p></td>
+<td></td>
+</tr>
+<tr>
+<td><p>AVX-512 BITALG</p></td>
+<td><p>Bit Algorithms<br />
+Byte/Word Bit Manipulation Instructions expanding VPOPCNTDQn</p></td>
+<td></td>
+</tr>
+<tr>
+<td><p>AVX-512 GFNI</p></td>
+<td><p>Galois field New Instructions<br />
+Vector Instructions for calculating <a href="https://en.wikipedia.org/wiki/Finite_field">Galois Field</a> GF(2^8)</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://www.heise.de/ct/zcontent/17/16-hocmsmeta/1501873687265857/ct.1617.016-017.qxp_table_29578.html">AVX512 table</a> from <a href="https://en.wikipedia.org/wiki/Heinz_Heise">Heise</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<h2 id="selected-instructions">Selected Instructions</h2>
+<h3 id="vpternlog">VPTERNLOG<span id="VPTERNLOG"></span></h3>
+<p>AVX-512 F features the instruction VPTERNLOGQ (or VPTERNLOGD) to perform bitwise <a href="https://en.wikipedia.org/wiki/Ternary_operation">ternary logic</a>, for instance to <a href="/General_Setwise_Operations">operate</a> on vectors of <a href="/Bitboards">bitboards</a>. Three input vectors are bitwise <a href="/Combinatorial_Logic">combined</a> by an operation determined by an immediate byte operand (<strong>imm8</strong>), whose 256 possible values corresponds with the boolean output vector of the <a href="https://en.wikipedia.org/wiki/Truth_table">truth table</a> for all eight combinations of the three input bits, as demonstrated with some selected imm8 values in the table below <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> :</p>
+<table>
+<thead>
+<tr>
+<th colspan="4"><p>Input</p></th>
+<th></th>
+<th colspan="12"><p>Output of Operations</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td colspan="4"></td>
+<td><p>imm8</p></td>
+<td style="text-align:center;"><p>0x00</p></td>
+<td style="text-align:center;"><p>0x01</p></td>
+<td style="text-align:center;"><p>0x16</p></td>
+<td style="text-align:center;"><p>0x17</p></td>
+<td style="text-align:center;"><p>0x28</p></td>
+<td style="text-align:center;"><p>0x80</p></td>
+<td style="text-align:center;"><p>0x88</p></td>
+<td style="text-align:center;"><p>0x96</p></td>
+<td style="text-align:center;"><p>0xca</p></td>
+<td style="text-align:center;"><p>0xe8</p></td>
+<td style="text-align:center;"><p>0xfe</p></td>
+<td style="text-align:center;"><p>0xff</p></td>
+</tr>
+<tr>
+<td><p>#</p></td>
+<td><p>a</p></td>
+<td><p>b</p></td>
+<td><p>c</p></td>
+<td><p>C-exp</p></td>
+<td style="text-align:center;"><p>false</p></td>
+<td style="text-align:center;"><p>~(a|b|c)</p></td>
+<td style="text-align:center;"><p>a?~(b|c):b^c</p></td>
+<td><p>minor(a,b,c)</p></td>
+<td style="text-align:center;"><p>c&amp;(a^b)</p></td>
+<td style="text-align:center;"><p>a&amp;b&amp;c</p></td>
+<td style="text-align:center;"><p>b&amp;c</p></td>
+<td style="text-align:center;"><p>a^b^c</p></td>
+<td style="text-align:center;"><p>a?b:c</p></td>
+<td style="text-align:center;"><p><a href="/General_Setwise_Operations">major</a>(a,b,c)</p></td>
+<td style="text-align:center;"><p>a|b|c</p></td>
+<td style="text-align:center;"><p>true</p></td>
+</tr>
+<tr>
+<td><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>1</p></td>
+</tr>
+<tr>
+<td><p>1</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+</tr>
+<tr>
+<td><p>2</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+</tr>
+<tr>
+<td><p>3</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+</tr>
+<tr>
+<td><p>4</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+</tr>
+<tr>
+<td><p>5</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+</tr>
+<tr>
+<td><p>6</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+</tr>
+<tr>
+<td><p>7</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>0</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+<td style="text-align:center;"><p>1</p></td>
+</tr>
+</tbody>
+</table>
+
+<p>Following VPTERNLOGQ intrinsics are declared, where the maskz version sets unmasked destination quad word elements to zero, while the mask version copies unmasked elements from s:</p>
+<pre><code>__m256i _mm256_ternarylogic_epi64(__m256i a, __m256i b, __m256i c, int imm8);
+__m256i _mm256_maskz_ternarylogic_epi64(__mmask8 k, __m256i a, __m256i b, __m256i c, int imm8);
+__m256i _mm256_mask_ternarylogic_epi64(__m256i src, __mmask8 k, __m256i a, __m256i b, int imm8);
+__m512i _mm512_ternarylogic_epi64(__m512i a, __m512i b, __m512i c, int imm8);
+__m512i _mm512_maskz_ternarylogic_epi64( __mmask8 m, __m512i a, __m512i b, __m512i c, int imm8);
+__m512i _mm512_mask_ternarylogic_epi64(__m512i s, __mmask8 m, __m512i a, __m512i b, __m512i c, int imm8);</code></pre>
+<p><span id="VPLZCNT"></span></p>
+<h3 id="vplzcnt">VPLZCNT</h3>
+<p>AVX-512 CD has Vector <a href="/BitScan">Leading Zero Count</a> - VPLZCNTQ counts leading zeroes on a vector of eight bitboards in parallel <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> - using following intrinsics <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>, where the maskz version sets unmasked destination elements to zero, while the mask version copies unmasked elements from s:</p>
+<pre><code>__m256i _mm256_lzcnt_epi64(__m256i a);
+__m256i _mm256_maskz_lzcnt_epi64(__mmask8 k, __m256i a);
+__m256i _mm256_mask_lzcnt_epi64(__m256i src, __mmask8 k, __m256i a);
+__m512i _mm512_lzcnt_epi64(__m512i a);
+__m512i _mm512_maskz_lzcnt_epi64(__mmask8 k, __m512i a);
+__m512i _mm512_mask_lzcnt_epi64(__m512i src, __mmask8 k, __m512i a);</code></pre>
+<p><span id="VPOPCNT"></span></p>
+<h3 id="vpopcnt">VPOPCNT</h3>
+<p>The AVX-512 VPOPCNTDQ extension has a vector <a href="/Population_Count">population count</a> instruction to count one bits of either 16 32-bit double words (VPOPCNTD) or 8 64-bit quad words aka bitboards (VPOPCNTQ) in parallel <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a>.</p>
+<pre><code>__m128i _mm_mask_popcnt_epi32(__m128i src, __mmask8 k, __m128i a);
+__m128i _mm_maskz_popcnt_epi32(__mmask8 k, __m128i a);
+__m128i _mm_popcnt_epi3 (__m128i a);
+__m256i _mm256_mask_popcnt_epi32(__m256i src, __mmask8 k, __m256i a);
+__m256i _mm256_maskz_popcnt_epi32(__mmask8 k, __m256i a);
+__m256i _mm256_popcnt_epi32(__m256i a);
+__m512i _mm512_mask_popcnt_epi32(__m512i src, __mmask16 k, __m512i a);
+__m512i _mm512_maskz_popcnt_epi32(__mmask16 k, __m512i a);
+__m512i _mm512_popcnt_epi32(__m512i a);
+
+__m128i _mm_mask_popcnt_epi64(__m128i src, __mmask8 k, __m128i a);
+__m128i _mm_maskz_popcnt_epi64(__mmask8 k, __m128i a);
+__m128i _mm_popcnt_epi64(__m128i a);
+__m256i _mm256_mask_popcnt_epi64(__m256i src, __mmask8 k, __m256i a);
+__m256i _mm256_maskz_popcnt_epi64(__mmask8 k, __m256i a);
+__m256i _mm256_popcnt_epi64(__m256i a);
+__m512i _mm512_mask_popcnt_epi64(__m512i src, __mmask8 k, __m512i a);
+__m512i _mm512_maskz_popcnt_epi64(__mmask8 k, __m512i a);
+__m512i _mm512_popcnt_epi64(__m512i a)</code></pre>
+<h3 id="vpdpbusd">VPDPBUSD</h3>
+<p>The AVX-512 VNNI extension features several instructions speeding up <a href="/Neural_Networks">neural network</a> and <a href="/Deep_Learning">deep learning</a> calculations on the CPU, for instance <a href="/NNUE">NNUE</a> inference using uint8/int8. VPDPBUSD - Multiply and Add Unsigned and Signed Bytes <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a>, executes on both port 0 and port 5 in one cycle <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a>.</p>
+<pre><code>__m512i _mm512_dpbusd_epi32 (__m512i src, __m512i a, __m512i b)
+{
+  for (j=0; j &lt; 16; j++) {
+    tmp1.word := Signed(ZeroExtend16(a.byte[4*j  ]) * SignExtend16(b.byte[4*j  ]);
+    tmp2.word := Signed(ZeroExtend16(a.byte[4*j+1]) * SignExtend16(b.byte[4*j+1]);
+    tmp3.word := Signed(ZeroExtend16(a.byte[4*j+2]) * SignExtend16(b.byte[4*j+2]);
+    tmp4.word := Signed(ZeroExtend16(a.byte[4*j+3]) * SignExtend16(b.byte[4*j+3]);
+    dst.dword[j] := src.dword[j] + tmp1 + tmp2 + tmp3 + tmp4
+  }
+  return dst;
+}</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/CFish">CFish - AVX2 Attacks</a></li>
+<li><a href="/DirGolem">DirGolem</a></li>
+<li><a href="/NNUE">NNUE</a></li>
+<li><a href="/Stockfish_NNUE">Stockfish NNUE</a></li>
+<li><a href="/SIMD_and_SWAR_Techniques">SIMD and SWAR Techniques</a></li>
+</ul>
+<h2 id="simd">SIMD</h2>
+<ul>
+<li><a href="/AltiVec">AltiVec</a></li>
+<li><a href="/AVX">AVX</a></li>
+<li><a href="/AVX2">AVX2</a></li>
+<li><a href="/SSE2">SSE2</a></li>
+<li><a href="/XOP">XOP</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="https://os.itec.kit.edu/21_3247.php">Mathias Gottschlag</a>, <a href="https://os.itec.kit.edu/21_31.php">Frank Bellosa</a> (<strong>2018</strong>). <em><a href="https://os.itec.kit.edu/21_3486.php">Mechanism to Mitigate AVX-Induced Frequency Reduction</a></em>. <a href="https://arxiv.org/abs/1901.04982">arXiv:1901.04982</a></li>
+<li><a href="https://os.itec.kit.edu/21_3247.php">Mathias Gottschlag</a>, <a href="https://os.itec.kit.edu/97_3742.php">Philipp Machauer</a>, <a href="https://os.itec.kit.edu/21_3571.php">Yussuf Khalil</a>, <a href="https://os.itec.kit.edu/21_31.php">Frank Bellosa</a> (<strong>2021</strong>). <em><a href="https://www.usenix.org/conference/atc21/presentation/gottschlag">Fair Scheduling for AVX2 and AVX-512 Workloads</a></em>. <a href="https://www.usenix.org/conference/atc21">USENIX ATC '21</a></li>
+</ul>
+<h2 id="manuals">Manuals</h2>
+<ul>
+<li><a href="https://software.intel.com/sites/default/files/managed/c5/15/architecture-instruction-set-extensions-programming-reference.pdf">Intel® Architecture Instruction Set Extensions Programming Reference</a> (pdf)</li>
+<li><a href="https://software.intel.com/content/www/us/en/develop/download/intel-64-and-ia-32-architectures-optimization-reference-manual.html">Intel® 64 and IA-32 Architectures Optimization Reference Manual</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75049">AVX-512 and NNUE</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, <a href="/CCC">CCC</a>, September 08, 2020 » <a href="/NNUE">NNUE</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77246">VPOPCNTDQ and VBMI2</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, May 04, 2021</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/AVX-512">AVX-512 from Wikipedia</a></li>
+<li><a href="https://en.wikichip.org/wiki/x86/avx512_vnni">AVX-512 Vector Neural Network Instructions (VNNI) - x86 - WikiChip</a></li>
+<li><a href="https://www.intel.com/content/www/us/en/architecture-and-technology/avx-512-overview.html">Intel® Advanced Vector Extensions 512 (Intel® AVX-512) Overview</a></li>
+<li><a href="https://software.intel.com/en-us/intel-isa-extensions">Intel Instruction Set Architecture Extensions</a></li>
+</ul>
+<h3 id="blogs">Blogs</h3>
+<ul>
+<li><a href="https://software.intel.com/en-us/blogs/2013/avx-512-instructions">AVX-512 instructions | Intel® Developer Zone</a> by <a href="https://software.intel.com/en-us/user/335550">James Reinders</a>, July 23, 2013</li>
+<li><a href="http://www.agner.org/optimize/blog/read.php?i=288">Future instruction set: AVX-512</a> by <a href="http://www.agner.org/">Agner Fog</a>, October, 09, 2013</li>
+<li><a href="https://software.intel.com/en-us/blogs/additional-avx-512-instructions">Additional AVX-512 instructions | Intel® Developer Zone</a> by <a href="https://software.intel.com/en-us/user/335550">James Reinders</a>, July 17, 2014</li>
+<li><a href="https://software.intel.com/en-us/blogs/2014/07/24/processing-arrays-of-bits-with-intel-advanced-vector-extensions-512-intel-avx-512">Processing Arrays of Bits with Intel® Advanced Vector Extensions 512 (Intel® AVX-512) | Intel® Developer Zone</a> by <a href="https://software.intel.com/en-us/user/123920">Thomas Willhalm</a>, July 24, 2014</li>
+<li><a href="https://www.hpcwire.com/2017/06/29/reinders-avx-512-may-hidden-gem-intel-xeon-scalable-processors/">AVX-512 May Be a Hidden Gem” in Intel Xeon Scalable Processors</a> by <a href="https://software.intel.com/en-us/user/335550">James Reinders</a>, <a href="https://www.hpcwire.com/">HPCwire</a>, June 29, 2017</li>
+<li><a href="https://software.intel.com/content/www/us/en/develop/articles/lower-numerical-precision-deep-learning-inference-and-training.html">Lower Numerical Precision Deep Learning Inference and Training</a> by <a href="https://community.intel.com/t5/user/viewprofilepage/user-id/134067">Andres Rodriguez</a> et al., January 19, 2018</li>
+</ul>
+<h3 id="compiler-support">Compiler Support</h3>
+<ul>
+<li><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#techs=AVX_512">Intel Intrinsics Guide - AVX-512</a></li>
+<li><a href="https://gcc.gnu.org/wiki/cauldron2014?action=AttachFile&amp;do=get&amp;target=Cauldron14_AVX-512_Vector_ISA_Kirill_Yukhin_20140711.pdf">Intel® Advanced Vector Extensions 2015/2016 Support in GNU Compiler Collection</a> (pdf) by <a href="https://www.linkedin.com/in/kirill-yukhin-1158374/">Kirill Yukhin</a>, July 2014</li>
+<li><a href="https://colfaxresearch.com/knl-avx512/">Guide to Automatic Vectorization with Intel AVX-512 Instructions in Knights Landing Processors - Colfax Research</a>, May 11, 2016</li>
+<li><a href="https://blogs.msdn.microsoft.com/vcblog/2017/07/11/microsoft-visual-studio-2017-supports-intel-avx-512/">Microsoft Visual Studio 2017 Supports Intel® AVX-512 | Visual C++ Team Blog</a> by Eric Battalio, July 11, 2017</li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/X86-64">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://en.wikipedia.org/wiki/AVX-512">AVX-512 from Wikipedia</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://software.intel.com/en-us/blogs/additional-avx-512-instructions">Additional AVX-512 instructions | Intel® Developer Zone</a> by <a href="https://software.intel.com/en-us/user/335550">James Reinders</a>, July 17, 2014<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://0x80.pl/articles/avx512-ternary-functions.html">AVX512: ternary functions evaluation</a> by <a href="/Wojciech_Muła">Wojciech Muła</a>, March 03, 2015<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://software.intel.com/sites/default/files/managed/c5/15/architecture-instruction-set-extensions-programming-reference.pdf">Intel® Architecture Instruction Set Extensions Programming Reference</a> (pdf) 5.3 TERNARY BIT VECTOR LOGIC TABLE<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="https://www.google.com/patents/US9372692">Patent US9372692 - Methods, apparatus, instructions, and logic to provide permute controls with leading zero count functionality - Google Patent Search</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="https://hjlebbink.github.io/x86doc/html/VPLZCNTD_Q.html">VPLZCNTD/Q—Count the Number of Leading Zero Bits for Packed Dword, Packed Qword Values</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="https://github.com/WojciechMula/sse-popcount/blob/master/popcnt-avx512-harley-seal.cpp">sse-popcount/popcnt-avx512-harley-seal.cpp at master · WojciechMula/sse-popcount · GitHub</a><a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="/Wojciech_Muła">Wojciech Muła</a>, <a href="http://dblp.uni-trier.de/pers/hd/k/Kurz:Nathan">Nathan Kurz</a>, <a href="https://github.com/lemire">Daniel Lemire</a> (<strong>2016</strong>). <em>Faster Population Counts Using AVX2 Instructions</em>. <a href="https://arxiv.org/abs/1611.07612">arXiv:1611.07612</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=VPOPCNTD&amp;expand=4368">Intel® Intrinsics Guide VPOPCNTD</a><a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#expand=2168,2201&amp;text=VPDPBUSD&amp;avx512techs=AVX512_VNNI">Intel® Intrinsics Guide VPDPBUSD</a><a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="https://software.intel.com/content/www/us/en/develop/articles/lower-numerical-precision-deep-learning-inference-and-training.html">Lower Numerical Precision Deep Learning Inference and Training</a> by <a href="https://community.intel.com/t5/user/viewprofilepage/user-id/134067">Andres Rodriguez</a> et al., January 19, 2018<a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/AVX-512">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chess - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Chess</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * Chess</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b0/Breaking_Point_1.png" alt="Chess 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Chess <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1">An <a href="https://commons.wikimedia.org/wiki/File:Breaking_Point_1.png">illustration</a> by <a href="https://en.wikipedia.org/wiki/Alex_Ebel">Ebel</a> for <a href="https://en.wikipedia.org/wiki/James_E._Gunn_(writer)">James E. Gunn's</a> Breaking Point, appeared in <a href="https://en.wikipedia.org/wiki/Space_Science_Fiction">Space Science Fiction</a>, March 1953<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Chess</strong>,<br />
+a <a href="https://en.wikipedia.org/wiki/Two-player_game">two-player</a> <a href="https://en.wikipedia.org/wiki/Zero-sum_%28game_theory%29">zero-sum</a> <a href="https://en.wikipedia.org/wiki/Abstract_strategy">abstract strategy</a> <a href="https://en.wikipedia.org/wiki/Board_game">board game</a> with <a href="https://en.wikipedia.org/wiki/Perfect_information">perfect information</a> as classified by <a href="/John_von_Neumann">John von Neumann</a>. Chess has an estimated <a href="https://en.wikipedia.org/wiki/Game_complexity#State-space_complexity">state-space complexity</a> of 10<span style="font-size: 80%; vertical-align: super;">46</span> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> , the estimated <a href="https://en.wikipedia.org/wiki/Game_complexity#Game-tree_complexity">game tree complexity</a> of 10<span style="font-size: 80%; vertical-align: super;">123</span> is based on an <a href="/Branching_Factor">average branching factor</a> of 35 and an average game length of 80 <a href="/Ply">ply</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> . This page is about the basic chess items, <a href="/Chessboard">chessboard</a>, <a href="/Pieces">pieces</a> and <a href="/Moves">moves</a>, and how they are considered or encoded inside a chess program, to either represent a <a href="/Chess_Position">chess position</a> inside its <a href="/Search">search</a> and to play the <a href="/Chess_Game">game of chess</a>. It sub-pages intersect with <a href="/Evaluation">evaluation</a>, <a href="/Board_Representation">board representation</a> and even <a href="/Search">search</a> topics.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#board-and-squares">Board and Squares</a></li>
+<li><a href="#pieces-and-moves">Pieces and Moves</a></li>
+<li><a href="#color-and-side">Color and Side</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#the-game-of-chess">The Game of Chess</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#during-the-game">During the Game</a></li>
+<li><a href="#the-end">The End</a></li>
+</ol>
+</details></li>
+<li><a href="#chess-variants">Chess Variants</a></li>
+<li><a href="#chess-problems">Chess Problems</a></li>
+<li><a href="#chess-and-mathematics">Chess and Mathematics</a></li>
+<li><a href="#chess-maxima">Chess Maxima</a></li>
+<li><a href="#chess-and-psychology">Chess and Psychology</a></li>
+<li><a href="#chess-and-philosophy">Chess and Philosophy</a></li>
+<li><a href="#chess-programs-called-chess">Chess Programs called Chess</a></li>
+<li><a href="#categories">Categories</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#publications">Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1949">1949</a></li>
+<li><a href="#1950-">1950 ...</a></li>
+<li><a href="#1955-">1955 ...</a></li>
+<li><a href="#1960-">1960 ...</a></li>
+<li><a href="#1965-">1965 ...</a></li>
+<li><a href="#1970-">1970 ...</a></li>
+<li><a href="#1975-">1975 ...</a></li>
+<li><a href="#1980-">1980 ...</a></li>
+<li><a href="#1985-">1985 ...</a></li>
+<li><a href="#1990-">1990 ...</a></li>
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1989">1989</a></li>
+<li><a href="#1990--1">1990 ...</a></li>
+<li><a href="#2000--1">2000 ...</a></li>
+<li><a href="#2010--1">2010 ...</a></li>
+<li><a href="#2015--1">2015 ...</a></li>
+<li><a href="#2020--1">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#wikipedia">Wikipedia</a></li>
+<li><a href="#chess">Chess</a></li>
+<li><a href="#chess-variants-1">Chess Variants</a></li>
+<li><a href="#misc">Misc</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="board-and-squares">Board and Squares</h2>
+<ul>
+<li><a href="/Chessboard">Chessboard</a></li>
+<li><a href="/Squares">Squares</a></li>
+<li><a href="/Ranks">Ranks</a></li>
+<li><a href="/Files">Files</a></li>
+<li><a href="/Diagonals">Diagonals</a></li>
+<li><a href="/Anti-Diagonals">Anti-Diagonals</a></li>
+<li><a href="/Rays">Rays</a> as subset of Lines</li>
+</ul>
+<h2 id="pieces-and-moves">Pieces and Moves</h2>
+<ul>
+<li><a href="/Moves">Moves</a></li>
+<li><a href="/Pieces">Pieces</a></li>
+<li><a href="/Trajectory">Trajectory</a></li>
+</ul>
+<h2 id="color-and-side">Color and Side</h2>
+<ul>
+<li><a href="/Color">Color</a></li>
+<li><a href="/Side_to_move">Side to move</a></li>
+</ul>
+<h2 id="the-game-of-chess">The Game of Chess</h2>
+<ul>
+<li><a href="/Chess_Game">Chess Game</a></li>
+<li><a href="/Chess_Position">Chess Position</a></li>
+<li><a href="/Chess_Server">Chess Server</a></li>
+<li><a href="/Game_Notation">Game Notation</a></li>
+<li><a href="/Match_Statistics">Match Statistics</a></li>
+<li><a href="/Playing_Strength">Playing Strength</a></li>
+<li><a href="/Rules_of_Chess">Rules of Chess</a></li>
+<li><a href="/Time_Management">Time Management</a></li>
+</ul>
+<h3 id="during-the-game">During the Game</h3>
+<ul>
+<li><a href="/Blockade">Blockade</a></li>
+<li><a href="/Check">Check</a></li>
+<li><a href="/Fortress">Fortress</a></li>
+<li><a href="/Strategy">Strategy</a></li>
+<li><a href="/Tactics">Tactics</a></li>
+<li><a href="/Tempo">Tempo</a></li>
+<li><a href="/Transposition">Transposition</a></li>
+</ul>
+<h3 id="the-end">The End</h3>
+<ul>
+<li><a href="/Checkmate">Checkmate</a></li>
+<li><a href="/Draw">Draw</a></li>
+</ul>
+<p><span id="Variants"></span></p>
+<h2 id="chess-variants">Chess Variants</h2>
+<ul>
+<li><a href="/Losing_Chess">Antichess</a> (Losing Chess)</li>
+<li><a href="/Atomic_Chess">Atomic Chess</a></li>
+<li>Capablanca Chess</li>
+<li><a href="/Chess960">Chess960</a> or Fischer Random Chess (FRC)</li>
+<li><a href="/Chinese_Chess">Chinese Chess</a></li>
+<li><a href="/Crazyhouse">Crazyhouse</a></li>
+<li>Gothic Chess</li>
+<li>Kinglet</li>
+<li><a href="/Knightmate_Chess">Knightmate Chess</a></li>
+<li><a href="/Losing_Chess">Losing Chess</a></li>
+<li>Nightrider Chess</li>
+<li>Seirawan Chess <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></li>
+<li><a href="/Shatranj">Shatranj</a></li>
+<li><a href="/Shogi">Shogi</a> (Japanese Chess)</li>
+<li>Shuffle Chess</li>
+<li><a href="/Losing_Chess">Suicide Chess</a> (Losing Chess)</li>
+</ul>
+<h2 id="chess-problems">Chess Problems</h2>
+<ul>
+<li><a href="/Chess_Problems,_Compositions_and_Studies">Chess Problems, Compositions and Studies</a></li>
+<li><a href="/Retrograde_Analysis">Retrograde Analysis</a></li>
+</ul>
+<p><span id="ChessAndMathematics"></span></p>
+<h2 id="chess-and-mathematics">Chess and Mathematics</h2>
+<ul>
+<li><a href="/Albrecht_Heeffer">Albrecht Heeffer</a></li>
+<li><a href="/Butterfly_Boards">Butterfly Boards</a></li>
+<li><a href="/De_Bruijn_Sequence">De Bruijn Sequence</a></li>
+<li><a href="/Flipping_Mirroring_and_Rotating">Flipping Mirroring and Rotating</a></li>
+<li><a href="/General_Setwise_Operations">General Setwise Operations</a></li>
+<li><a href="/Influence_Quantity_of_Pieces">Influence Quantity of Pieces</a></li>
+<li><a href="/Intersection_Squares">Intersection Squares</a></li>
+<li><a href="/Mathematician">Mathematician</a></li>
+<li><a href="/Traversing_Subsets_of_a_Set">Traversing Subsets of a Set</a></li>
+<li><a href="/Workshop_Chess_and_Mathematics">Workshop Chess and Mathematics</a></li>
+</ul>
+<p><span id="Maxima"></span></p>
+<h2 id="chess-maxima">Chess Maxima</h2>
+<ul>
+<li>In 1950 <a href="/Claude_Shannon">Claude Shannon</a> gave a conservative lower bound (<a href="https://en.wikipedia.org/wiki/Shannon_number">the Shannon number</a>) of the game-tree complexity of chess of 10^120 (possible games), and 10^43 for the amount of possible positions.<a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a></li>
+<li>In 1966, Eero Bonsdorff, <a href="https://en.wikipedia.org/wiki/Karl_Fabel">Karl Fabel</a>, and Olvai Riihimaa gave 5899 as the maximum number of <a href="/Moves">moves</a> in a chess game <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a></li>
+<li><a href="/Shirish_Chinchalkar">Shirish Chinchalkar</a> has determined a <a href="https://en.wikipedia.org/wiki/Game_complexity#State-space_complexity">state-space complexity</a> of 10<span style="font-size: 80%; vertical-align: super;">46.25</span> as upper bound for the number of reachable <a href="/Chess_Position">chess positions</a> <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a>, <a href="/John_Tromp">John Tromp</a> gives about 10^45.888 <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a> <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a></li>
+<li>The <a href="/Encoding_Moves">maximum number of moves</a> per <a href="/Chess_Position">chess position</a> seems 218 <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a> <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a></li>
+</ul>
+<div class="chess-fen" data-fen="R6R/3Q4/1Q4Q1/4Q3/2Q4Q/Q4Q2/pp1Q4/kBNN1KB1"><code>R6R/3Q4/1Q4Q1/4Q3/2Q4Q/Q4Q2/pp1Q4/kBNN1KB1</code></div>
+
+<p><code>R6R/3Q4/1Q4Q1/4Q3/2Q4Q/Q4Q2/pp1Q4/kBNN1KB1 w - - 0 1</code></p>
+<h2 id="chess-and-psychology">Chess and Psychology</h2>
+<ul>
+<li><a href="/Adriaan_de_Groot">Adriaan de Groot</a></li>
+<li><a href="/Alex_de_Voogt">Alex de Voogt</a></li>
+<li>Alexandre Linhares</li>
+<li><a href="/CHREST">CHREST</a></li>
+<li><a href="/Christopher_Chabris">Christopher Chabris</a></li>
+<li><a href="/Cognition">Cognition</a></li>
+<li>Eliot Hearst</li>
+<li>Eyal Reingold</li>
+<li><a href="/Herbert_Simon">Herbert Simon</a></li>
+<li><a href="/Ivan_Bratko">Ivan Bratko</a></li>
+<li>Jean Retschitzki</li>
+<li>Judith Spencer Olson</li>
+<li><a href="/Kevin_J._Gilmartin">Kevin J. Gilmartin</a></li>
+<li>Merim Bilalić</li>
+<li><a href="/Michael_Barenfeld">Michael Barenfeld</a></li>
+<li>Neil Charness</li>
+<li>Oleg K. Tichomirov</li>
+<li>Pertti Saariluoma</li>
+<li>Peter Lane</li>
+<li>Philippe Chassy</li>
+<li>Psychology</li>
+<li><a href="/Robert_I._Reynolds">Robert I. Reynolds</a></li>
+<li>Robert W. Howard</li>
+<li><a href="/Ruslan_Hajiev">Ruslan Hajiev</a></li>
+<li>Russell M. Church</li>
+<li>Sarah E. Goldin</li>
+<li><a href="/Simona_Tancig">Simona Tancig</a></li>
+<li>Tei Laine</li>
+<li><a href="/William_Chase">William Chase</a></li>
+</ul>
+<h2 id="chess-and-philosophy">Chess and Philosophy</h2>
+<p>Quote from <em>Philosophy Looks at Chess</em> <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a> :</p>
+<p><code>The game of chess has endured since at least the sixth century. Its earliest variant, the Indian game of </code><a href="https://en.wikipedia.org/wiki/Chaturanga"><code>Chaturanga</code></a><code>, was from the beginning a game for thinkers. Since its inception, scholars, statesmen, strategists, and warriors have been fascinated by the game and its variants. German </code><a href="https://en.wikipedia.org/wiki/Philosophy"><code>philosopher</code></a><code> </code><a href="/Mathematician"><code>Emanuel Lasker</code></a><code> and famed French artist </code><a href="/Arts"><code>Marcel Duchamp</code></a><code> were both Grandmasters at chess. </code><a href="https://en.wikipedia.org/wiki/Karl_Marx"><code>Karl Marx</code></a><code> played chess avidly, as did </code><a href="/Mathematician"><code>Sir Bertrand Russell</code></a><code>, </code><a href="https://en.wikipedia.org/wiki/Jean-Paul_Sartre"><code>Jean-Paul Sartre</code></a><code>, and the logical positivist </code><a href="https://en.wikipedia.org/wiki/Max_Black"><code>Max Black</code></a><code>. </code><a href="https://en.wikipedia.org/wiki/Jean-Jacques_Rousseau"><code>Jean-Jacques Rousseau</code></a><code> </code><a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a><code> mentions in his Confessions that, at the time, he "had another expedient, not less solid, in the game of chess, to which I regularly dedicated, at Maugis's, the evenings on which I did not go to the theater. I became acquainted with </code><a href="https://en.wikipedia.org/wiki/Legall_de_Kermeur"><code>M. de Légal</code></a><code>, M. Husson, </code><a href="https://en.wikipedia.org/wiki/Fran%C3%A7ois-Andr%C3%A9_Danican_Philidor"><code>Philidor</code></a><code>, and all the great chess players of the day, without making the least improvement in the game." More recently, philosopher </code><a href="https://en.wikipedia.org/wiki/Stuart_Rachels"><code>Stuart Rachels</code></a><code> reports that his father, the late philosopher and prominent </code><a href="https://en.wikipedia.org/wiki/Ethicist"><code>ethicist</code></a><code> </code><a href="https://en.wikipedia.org/wiki/James_Rachels"><code>James Rachels</code></a><code>, received a bribe from a Russian Grandmaster while he was the chair of the </code><a href="https://en.wikipedia.org/wiki/United_States_Chess_Federation"><code>U.S. Chess Federation's</code></a><code> Ethics committee. </code></p>
+<h2 id="chess-programs-called-chess">Chess Programs called Chess</h2>
+<ul>
+<li><a href="/Chess_%28Program%29">Chess</a> the <a href="/Northwestern_University">Northwestern University</a> Chess Program by <a href="/Larry_Atkin">Larry Atkin</a> and <a href="/David_Slate">David Slate</a></li>
+<li><a href="/Chess_0.5">Chess 0.5</a> by <a href="/Larry_Atkin">Larry Atkin</a> and <a href="/Peter_W._Frey">Peter W. Frey</a></li>
+<li><a href="/Chess_0.5X">Chess 0.5X</a> by <a href="/Wim_Elsenaar">Wim Elsenaar</a></li>
+<li><a href="/Chess_2001">Chess 2001</a>, <a href="/Dedicated_Chess_Computers">Dedicated Chess Computers</a></li>
+<li><a href="/Chess_2020">Chess 20xx</a> by <a href="/Filip_Höfer">Filip Höfer</a></li>
+<li><a href="/Chess-64">Chess-64</a> by <a href="/Fabien_Letouzey">Fabien Letouzey</a></li>
+<li><a href="/Chess_7.0">Chess 7.0</a> by <a href="/Larry_Atkin">Larry Atkin</a></li>
+</ul>
+<h2 id="categories">Categories</h2>
+<ul>
+<li><a href="/Category:Chess_Suffix">Category: Chess Suffix</a></li>
+<li><a href="/Category:CP_Suffix">Category: Chess Program (CP) Suffix</a></li>
+<li><a href="/Category:Chess_Legend">Category: Chess Legends</a></li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li>Anti-Computerchess</li>
+<li><a href="/Cartoons">Cartoons</a></li>
+<li><a href="/Databases">Chess Databases</a></li>
+<li><a href="/Engines">Chess Engines</a></li>
+<li><a href="/Morphy">Chess Fever (Shakhmatnaya goryachka)</a></li>
+<li><a href="/Chess_Query_Language">Chess Query Language</a></li>
+<li><a href="/Cognition">Cognition</a></li>
+<li><a href="/History">Computer Chess - A Movie</a></li>
+<li><a href="/Artificial_Intelligence">Computer Chess and AI</a></li>
+<li><a href="/Knowledge">Knowledge</a></li>
+<li><a href="/Learning">Learning</a></li>
+<li>Psychology</li>
+</ul>
+<h2 id="publications">Publications</h2>
+<h3 id="1949">1949</h3>
+<ul>
+<li><a href="/Claude_Shannon">Claude Shannon</a> (<strong>1949</strong>). <em><a href="http://www.pi.infn.it/%7Ecarosi/chess/shannon.txt">Programming a Computer for Playing Chess</a></em>. <a href="http://archive.computerhistory.org/projects/chess/related_materials/text/2-0%20and%202-1.Programming_a_computer_for_playing_chess.shannon/2-0%20and%202-1.Programming_a_computer_for_playing_chess.shannon.062303002.pdf">pdf</a> from <a href="/The_Computer_History_Museum">The Computer History Museum</a></li>
+</ul>
+<h3 id="1950-">1950 ...</h3>
+<ul>
+<li><a href="/Claude_Shannon">Claude Shannon</a> (<strong>1950</strong>). <em>A Chess-Playing Machine</em>. <a href="/Scientific_American">Scientific American</a>, Vol. 182 (No. 2, February 1950), pp. 48-51. Reprinted in <a href="https://www.amazon.com/World-Mathematics-Vol-4/dp/0486411524/ref=pd_sim_b_1">The World of Mathematics</a>, edited by <a href="https://en.wikipedia.org/wiki/James_R._Newman">James R. Newman</a>, <a href="https://en.wikipedia.org/wiki/Simon_&amp;_Schuster">Simon &amp; Schuster, NY</a>, Vol. 4, 1956, pp. 2124-2133. Included in Part B</li>
+<li><a href="/Mathematician">J. B. S. Haldane</a> (<strong>1952</strong>). <em><a href="http://bjps.oxfordjournals.org/content/III/10/189.full.pdf+html">The mechanical chess-player</a></em>. <a href="https://en.wikipedia.org/wiki/British_Journal_for_the_Philosophy_of_Science">British Journal of Philosophy of Science</a>, <a href="http://ftp.math.utah.edu/pub/tex/bib/toc/bjps.html#III%289%29:May:1952">Vol. 3, No. 10</a></li>
+<li><a href="/Alan_Turing">Alan Turing</a> (<strong>1953</strong>). <em><strong>Chess</strong></em>. part of the collection <em>Digital Computers Applied to Games</em>. in <a href="https://en.wikipedia.org/wiki/B._V._Bowden,_Baron_Bowden">Bertram Vivian Bowden</a> (editor), <em><a href="http://www.computinghistory.org.uk/cgi-bin/sitewise.pl?act=det&amp;p=10719">Faster Than Thought</a></em>, a symposium on digital computing machines, reprinted 1988 in <a href="/Computer_Chess_Compendium">Computer Chess Compendium</a>, reprinted 2004 in Chapter 16 of <em>The Essential Turing</em>.</li>
+</ul>
+<h3 id="1955-">1955 ...</h3>
+<ul>
+<li><a href="/Paul_Stein">Paul Stein</a>, <a href="/Stanislaw_Ulam">Stanislaw Ulam</a> (<strong>1957</strong>). <em>Experiments in chess on electronic computing machines</em>. Chess Review, 13 January 1957.</li>
+<li><a href="/James_Kister">James Kister</a>, <a href="/Paul_Stein">Paul Stein</a>, <a href="/Stanislaw_Ulam">Stanislaw Ulam</a>, <a href="/William_Walden">William Walden</a>, <a href="/Mark_Wells">Mark Wells</a> (<strong>1957</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=320868.320877&amp;coll=DL&amp;dl=GUIDE&amp;CFID=628969023&amp;CFTOKEN=30690604">Experiments in Chess</a></em>. <a href="/ACM">Journal of the ACM</a>, Vol. 4, No. 2</li>
+<li><a href="/Allen_Newell">Allen Newell</a>, <a href="/Cliff_Shaw">Cliff Shaw</a>, <a href="/Herbert_Simon">Herbert Simon</a> (<strong>1958</strong>). <em>Chess Playing Programs and the Problem of Complexity</em>. IBM Journal of Research and Development, Vol. 4, No. 2, pp. 320-335</li>
+<li><a href="/Alex_Bernstein">Alex Bernstein</a>, <a href="/Michael_de_V._Roberts">Michael de V. Roberts</a> (<strong>1958</strong>). <em><a href="http://www.computerhistory.org/chess/full_record.php?iid=doc-431614f690f16">Computer vs. Chess-Player</a></em>. <a href="/Scientific_American">Scientific American</a>, Vol. 198, pp. 96-105. <a href="http://archive.computerhistory.org/projects/chess/related_materials/text/2-2.Computer_V_ChessPlayer.Bernstein_Roberts.Scientific_American.June-1958/Computer_V_ChessPlayer.Bernstein_Roberts.Scientific_American.June-1958.062303059.sm.pdf">pdf</a> from <a href="/The_Computer_History_Museum">The Computer History Museum</a>, reprinted 1988 in <a href="/Computer_Chess_Compendium">Computer Chess Compendium</a></li>
+<li><a href="/Alex_Bernstein">Alex Bernstein</a>, <a href="/Michael_de_V._Roberts">Michael de V. Roberts</a>, <a href="/Timothy_Arbuckle">Timothy Arbuckle</a>, <a href="/Martin_Belsky">Martin Belsky</a> (<strong>1958</strong>). <em><a href="http://www.computerhistory.org/chess/full_record.php?iid=doc-431e18a41d415">A chess playing program for the IBM 704</a></em>. Proceedings of the 1958 Western Joint Computer Conference, pp. 157-159, Los Angeles, California. <a href="http://archive.computerhistory.org/projects/chess/related_materials/text/2-2.A_Chess_Playing_Program_for_the_IBM_704.Bernstein_Roberts_Arbuckle_Belsky/A_Chess_Playing_Program_for_the_IBM_704.Bernstein_Roberts_Arbuckle_Belsky.062303011.pdf">pdf</a> from <a href="/The_Computer_History_Museum">The Computer History Museum</a></li>
+</ul>
+<h3 id="1960-">1960 ...</h3>
+<ul>
+<li><a href="/Alan_Kotok">Alan Kotok</a> (<strong>1962</strong>). <em>A Chess Playing Program for the IBM 7090</em>, B.S. Thesis, MIT, AI Project Memo 41, Computation Center, Cambridge MA. <a href="http://www.kotok.org/AK-Thesis-1962.pdf">pdf</a></li>
+</ul>
+<h3 id="1965-">1965 ...</h3>
+<ul>
+<li><a href="/Jack_Good">Jack Good</a> (<strong>1968</strong>). <em>A Five-Year Plan for Automatic Chess</em>. <a href="http://www.doc.ic.ac.uk/~shm/MI/mi2.html">Machine Intelligence Vol. 2</a>, pp. 110-115</li>
+<li><a href="/Mikhail_Botvinnik">Mikhail Botvinnik</a> (<strong>1968</strong>). <em>Algoritm igry v shakhmaty</em>. (The algorithm of chess)</li>
+</ul>
+<h3 id="1970-">1970 ...</h3>
+<ul>
+<li><a href="/Georgy_Adelson-Velsky">Georgy Adelson-Velsky</a>, <a href="/Vladimir_Arlazarov">Vladimir Arlazarov</a>, <a href="/Alexander_Bitman">Alexander Bitman</a>, <a href="/Alexander_Zhivotovsky">Alexander Zhivotovsky</a>, <a href="/Anatoly_Uskov">Anatoly Uskov</a> (<strong>1970</strong>). <em><a href="http://iopscience.iop.org/0036-0279/25/2/R07">Programming a Computer to Play Chess</a></em>. <a href="http://iopscience.iop.org/0036-0279/25/2">Russian Mathematical Surveys, Vol. 25</a>, pp. 221-262.</li>
+</ul>
+<h3 id="1975-">1975 ...</h3>
+<ul>
+<li><a href="/Ron_Atkin">Ron Atkin</a>, <a href="/Ian_H._Witten">Ian H. Witten</a> (<strong>1975</strong>). <em><a href="http://www.bibsonomy.org/bibtex/2b91106ea980eb48aa505f6b54c130707/dblp">A Multi-Dimensional Approach to Positional Chess</a></em>. <a href="http://www.interaction-design.org/references/periodicals/international_journal_of_man-machine_studies_volume_7.html">International Journal of Man-Machine Studies, Vol. 7, No. 6</a></li>
+<li><a href="/Ron_Atkin">Ron Atkin</a>, <a href="https://en.wikipedia.org/wiki/William_Hartston">William Hartston</a>, <a href="/Ian_H._Witten">Ian H. Witten</a> (<strong>1976</strong>). <em><a href="http://www.sciencedirect.com/science/article/pii/S0020737376800181">Fred CHAMP, Positional-Chess Analyst</a></em>. <a href="http://www.interaction-design.org/references/periodicals/international_journal_of_man-machine_studies_volume_8.html">International Journal of Man-Machine Studies, Vol. 8, No. 5</a></li>
+<li><a href="/Donald_Michie">Donald Michie</a> (<strong>1976</strong>). <em>An Advice-Taking System for Computer Chess.</em> Computer Bulletin, Ser. 2, Vol. 10, pp. 12-14. ISSN 0010-4531.</li>
+</ul>
+<h3 id="1980-">1980 ...</h3>
+<ul>
+<li><a href="/Aviezri_Fraenkel">Aviezri Fraenkel</a>, <a href="http://www.informatik.uni-trier.de/~ley/db/indices/a-tree/l/Lichtenstein:David.html">David Lichtenstein</a> (<strong>1981</strong>). <em><a href="http://link.springer.com/chapter/10.1007/3-540-10843-2_23">Computing a Perfect Strategy for n x n Chess Requires Time Exponential in N</a></em>. <a href="http://www.informatik.uni-trier.de/~ley/db/journals/jct/jcta31.html#FraenkelL81">Journal of Combinatorial Theory, Ser. A, Vol. 31, No. 2</a></li>
+</ul>
+<h3 id="1985-">1985 ...</h3>
+<ul>
+<li><a href="/Ingo_Althöfer">Ingo Althöfer</a> (<strong>1985</strong>). <em>Das 3-Hirn - Entscheidungsteilung im Schach.</em> <a href="/Computerschach_und_Spiele">Computerschach und Spiele</a>, pp. 20-22 (German)</li>
+<li><a href="/Ingo_Althöfer">Ingo Althöfer</a> (<strong>1989</strong>). <em>A Survey of Some Results in Theoretical Game Tree Search and the 'Dreihirn'-experiment.</em> Proceedings Workshop on New Directions in Game-tree Search, pp. 16-32. Edmonton, Canada.</li>
+</ul>
+<h3 id="1990-">1990 ...</h3>
+<ul>
+<li><a href="/Ingo_Althöfer">Ingo Althöfer</a> (<strong>1991</strong>). <em>Selective trees and majority systems: two experiments with commercial chess computers</em>. <a href="/Advances_in_Computer_Chess_6">Advances in Computer Chess 6</a></li>
+<li><a href="/Robert_Levinson">Robert Levinson</a>, <a href="/Feng-hsiung_Hsu">Feng-hsiung Hsu</a>, <a href="/Tony_Marsland">Tony Marsland</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, <a href="/David_Wilkins">David Wilkins</a> (<strong>1991</strong>). <em>The Role of Chess in Artificial Intelligence Research</em>. <a href="http://dli.iiit.ac.in/ijcai/IJCAI-91-VOL1/CONTENT/content.htm">IJCAI 1991</a>, <a href="http://dli.iiit.ac.in/ijcai/IJCAI-91-VOL1/PDF/084.pdf">pdf</a>, also in <a href="/ICGA_Journal">ICCA Journal</a>, Vol. 14, No. 3, pp. 153-161, <a href="http://www.ai.sri.com/%7Ewilkins/papers/chess-panel.pdf">pdf</a></li>
+<li><a href="/Fernand_Gobet">Fernand Gobet</a>, <a href="/Peter_Jansen">Peter Jansen</a> (<strong>1994</strong>). <em><a href="http://people.brunel.ac.uk/~hsstffg/abstracts/chess_program.html">Towards a Chess Program Based on a Model of Human Memory</a>.</em> <a href="/Advances_in_Computer_Chess_7">Advances in Computer Chess 7</a></li>
+</ul>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li><a href="/Ingo_Althöfer">Ingo Althöfer</a> (<strong>1997</strong>). <em>A Symbiosis of Man and Machine Beats Grandmaster Timoshchenko.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 20, No. 1</a></li>
+<li><a href="/Ingo_Althöfer">Ingo Althöfer</a> (<strong>1997</strong>). <em>On the k-best Mode in Computer Chess: Measuring the Similarity of Move Proposals.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 20, No. 3</a></li>
+<li><a href="/Ingo_Althöfer">Ingo Althöfer</a> (<strong>1998</strong>). <em>LIST-3-HIRN vs. Grandmaster Yusupov. - A Report on a Very Experimental Match, Part I: The Games.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 21, No. 1</a></li>
+<li><a href="/Ingo_Althöfer">Ingo Althöfer</a> (<strong>1998</strong>). <em>13 Jahre 3-Hirn – Meine Schach-Experimente mit Mensch-Maschinen-Kombinationen.</em> ISBN 3-00-003100-6. (German)</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="/Ingo_Althöfer">Ingo Althöfer</a> (<strong>2001</strong>). <em>Grandmaster Chess with one-sided Computer Help.</em> <a href="/ICGA_Journal">ICGA Journal, Vol. 24, No.4</a></li>
+<li><a href="/Marek_Strejczek">Marek Strejczek</a> (<strong>2004</strong>). <em>Some aspects of chess programming</em>. M.Sc. thesis, <a href="/Technical_University_of_Łódź">Technical University of Łódź</a></li>
+<li><a href="/Henk_Mannen">Henk Mannen</a>, <a href="/Marco_Wiering">Marco Wiering</a> (<strong>2004</strong>). <em><a href="https://www.semanticscholar.org/paper/Learning-to-Play-Chess-using-TD(lambda)-learning-Mannen-Wiering/00a6f81c8ebe8408c147841f26ed27eb13fb07f3">Learning to play chess using TD(λ)-learning with database games</a></em>. Cognitive Artiﬁcial Intelligence, <a href="https://en.wikipedia.org/wiki/Utrecht_University">Utrecht University</a>, Benelearn’04, <a href="https://www.ai.rug.nl/~mwiering/GROUP/ARTICLES/learning-chess.pdf">pdf</a></li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="/Fernand_Gobet">Fernand Gobet</a>, <a href="/Peter_Jansen">Peter Jansen</a> (<strong>2005</strong>). <em>Training in Chess: A Scientific Approach</em>. <a href="http://www.brunel.ac.uk/~hsstffg/preprints/Training_in_chess.PDF">pdf</a></li>
+<li><a href="/Aviezri_Fraenkel">Aviezri Fraenkel</a> (<strong>2006</strong>). <em>Nim is Easy, Chess is Hard – But Why??</em> <a href="/ICGA_Journal">ICGA Journal, Vol. 29, No. 4</a>, <a href="http://www.wisdom.weizmann.ac.il/~fraenkel/Papers/ICGA.pdf">pdf</a></li>
+<li>Diego Rasskin-Gutman (<strong>2009</strong>). <em><a href="http://mitpress.mit.edu/catalog/item/default.asp?ttype=2&amp;tid=11847">Chess Metaphors - Artificial Intelligence and the Human Mind</a></em>. ISBN-13: 978-0-262-18267-6, translated by <a href="http://mitpress.mit.edu/catalog/author/default.asp?aid=36831">Deborah Klosky</a>, <a href="https://en.wikipedia.org/wiki/MIT_Press">MIT Press</a> <a href="#fn15" class="footnote-ref" id="fnref15" role="doc-noteref"><sup>15</sup></a></li>
+<li>Bernd Blasius, Ralf Tönjes (<strong>2009</strong>). <em><a href="http://journals.aps.org/prl/abstract/10.1103/PhysRevLett.103.218701">Zipf's Law in the Popularity Distribution of Chess Openings</a></em>. <a href="https://en.wikipedia.org/wiki/Physical_Review_Letters">Physical Review Letters</a>, 103, 218701, <a href="http://www.icbm.de/fileadmin/user_upload/icbm/ag/mathmod/download/BlasiusToenjes2009.pdf">pdf</a> <a href="#fn16" class="footnote-ref" id="fnref16" role="doc-noteref"><sup>16</sup></a></li>
+<li><a href="/Shay_Bushinsky">Shay Bushinsky</a> (<strong>2009</strong>). <em><a href="http://www.aaai.org/ojs/index.php/aimagazine/article/view/2255">Deus Ex Machina— A Higher Creative Species in the Game of Chess</a></em>. <a href="/AAAI">AI Magazine</a>, Vol. 30, No. 3 » <a href="/Artificial_Intelligence">Machine Creativity</a> <a href="#fn17" class="footnote-ref" id="fnref17" role="doc-noteref"><sup>17</sup></a></li>
+<li><a href="/Stephen_Muggleton">Stephen Muggleton</a>, Aline Paes, Vítor Santos Costa, Gerson Zaverucha (<strong>2009</strong>). <em><a href="https://link.springer.com/chapter/10.1007/978-3-642-13840-9_12">Chess Revision: Acquiring the Rules of Chess Variants through FOL Theory Revision from Examples</a></em>. <a href="https://dblp.uni-trier.de/db/conf/ilp/ilp2009.html">ILP 2009</a>, <a href="https://www.doc.ic.ac.uk/~shm/Papers/paeschess.pdf">pdf</a> <a href="#fn18" class="footnote-ref" id="fnref18" role="doc-noteref"><sup>18</sup></a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="/Christian_Hesse">Christian Hesse</a> (<strong>2011</strong>). <em><a href="http://www.newinchess.com/The_Joys_of_Chess-p-953.html">The Joys of Chess - Heroes, Battles &amp; Brilliancies</a></em>. ISBN: 978-90-5691-355-7, <a href="https://en.wikipedia.org/wiki/New_In_Chess">New In Chess</a> <a href="#fn19" class="footnote-ref" id="fnref19" role="doc-noteref"><sup>19</sup></a></li>
+<li><a href="/Frédéric_Prost">Frédéric Prost</a> (<strong>2012</strong>). <em>On the Impact of Information Technologies on Society: an Historical Perspective through the Game of Chess</em>. Turing-100. The <a href="/Alan_Turing">Alan Turing</a> Centenary, <a href="http://www.easychair.org/publications/?page=1900403647">EPiC Volume 10</a></li>
+<li><a href="/Matej_Guid">Matej Guid</a>, <a href="/Ivan_Bratko">Ivan Bratko</a> (<strong>2012</strong>). <em>Detecting Fortresses in Chess</em>. <a href="http://ev.fe.uni-lj.si/">Elektrotehniški vestnik</a>, Vol. 79, Nos. 1-2, <a href="https://ailab.si/matej/doc/Detecting_Fortresses_in_Chess.pdf">pdf</a> » <a href="/Rybka">Rybka</a>, <a href="/Houdini">Houdini</a> <a href="#fn20" class="footnote-ref" id="fnref20" role="doc-noteref"><sup>20</sup></a></li>
+<li>Kristian Spoerer, Toshihisa Okaneya, <a href="/Kokolo_Ikeda">Kokolo Ikeda</a>, <a href="/Hiroyuki_Iida">Hiroyuki Iida</a> (<strong>2013</strong>). <em>Further Investigations of 3-Member Simple Majority Voting for Chess</em>. <a href="/CG_2013">CG 2013</a></li>
+<li>Katja Grace (<strong>2013</strong>). <em>Algorithmic Progress in Six Domains</em>. Technical report 2013-3, <a href="https://en.wikipedia.org/wiki/Machine_Intelligence_Research_Institute">Machine Intelligence Research Institute</a>, <a href="https://en.wikipedia.org/wiki/Berkeley,_California">Berkeley, CA</a>, <a href="http://intelligence.org/files/AlgorithmicProgress.pdf">pdf</a>, 5 <a href="/Games">Game Playing</a>, 5.1 <a href="/Chess">Chess</a>, 5.2 <a href="/Go">Go</a>, 9 <a href="/Learning">Machine Learning</a></li>
+<li><a href="/Nick_Pelling">Nick Pelling</a> (<strong>2013</strong>). <em><a href="https://www.amazon.co.uk/Chess-Superminiatures-Nick-Pelling-ebook/dp/B00HEOZ8B6">Chess Superminiatures</a></em>. <a href="https://en.wikipedia.org/wiki/E-book">eBook</a>, <a href="https://en.wikipedia.org/wiki/Amazon_Kindle">Kindle edition</a>, <a href="https://en.wikipedia.org/wiki/Amazon.com">Amazon</a></li>
+<li><a href="/John_Nunn">John Nunn</a> (<strong>2014</strong>). <em>Maths and Chess</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 37, No. 4</a></li>
+<li><a href="/Kenneth_W._Regan">Kenneth W. Regan</a>, <a href="/Tamal_T._Biswas">Tamal T. Biswas</a>, Jason Zhou (<strong>2014</strong>). <em>Human and Computer Preferences at Chess</em>. <a href="http://www.cse.buffalo.edu/~regan/papers/pdf/RBZ14aaai.pdf">pdf</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="/Tamal_T._Biswas">Tamal T. Biswas</a>, <a href="/Kenneth_W._Regan">Kenneth W. Regan</a> (<strong>2015</strong>). <em>Measuring Level-K Reasoning, Satisficing, and Human Error in Game-Play Data</em>. <a href="/IEEE">IEEE</a> <a href="http://www.icmla-conference.org/icmla15/">ICMLA 2015</a>, <a href="http://www.cse.buffalo.edu/~regan/papers/pdf/BiRe15_ICMLA2015.pdf">pdf preprint</a></li>
+<li>Vito Janko, <a href="/Matej_Guid">Matej Guid</a> (<strong>2015</strong>). <em>Development of a Program for Playing Progressive Chess</em>. <a href="/Advances_in_Computer_Games_14">Advances in Computer Games 14</a> <a href="#fn21" class="footnote-ref" id="fnref21" role="doc-noteref"><sup>21</sup></a></li>
+<li><a href="/Guy_Haworth">Guy Haworth</a>, <a href="/Tamal_T._Biswas">Tamal T. Biswas</a>, <a href="/Kenneth_W._Regan">Kenneth W. Regan</a> (<strong>2015</strong>). <em><a href="http://centaur.reading.ac.uk/39431/">A Comparative Review of Skill Assessment: Performance, Prediction and Profiling</a></em>. <a href="/Advances_in_Computer_Games_14">Advances in Computer Games 14</a></li>
+<li>Muthuraman Chidambaram, Yanjun Qi (<strong>2017</strong>). <em>Style Transfer Generative Adversarial Networks: Learning to Play Chess Differently</em>. <a href="https://arxiv.org/abs/1702.06762v1">arXiv:1702.06762v1</a> <a href="#fn22" class="footnote-ref" id="fnref22" role="doc-noteref"><sup>22</sup></a> » <a href="/Neural_Networks">Neural Networks</a></li>
+<li><a href="/Lyudmil_Tsvetkov">Lyudmil Tsvetkov</a> (<strong>2017</strong>). <em><a href="http://www.secretofchess.com/">The Secret of Chess</a></em>. <a href="#fn23" class="footnote-ref" id="fnref23" role="doc-noteref"><sup>23</sup></a></li>
+<li><a href="/David_Silver">David Silver</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Marc_Lanctot">Marc Lanctot</a>, <a href="/Laurent_Sifre">Laurent Sifre</a>, <a href="/Dharshan_Kumaran">Dharshan Kumaran</a>, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, <a href="/Karen_Simonyan">Karen Simonyan</a>, <a href="/Demis_Hassabis">Demis Hassabis</a> (<strong>2017</strong>). <em>Mastering Chess and Shogi by Self-Play with a General Reinforcement Learning Algorithm</em>. <a href="https://arxiv.org/abs/1712.01815">arXiv:1712.01815</a> » <a href="/AlphaZero">AlphaZero</a></li>
+<li><a href="/David_Silver">David Silver</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Marc_Lanctot">Marc Lanctot</a>, <a href="/Laurent_Sifre">Laurent Sifre</a>, <a href="/Dharshan_Kumaran">Dharshan Kumaran</a>, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, <a href="/Karen_Simonyan">Karen Simonyan</a>, <a href="/Demis_Hassabis">Demis Hassabis</a> (<strong>2018</strong>). <em><a href="http://science.sciencemag.org/content/362/6419/1140">A general reinforcement learning algorithm that masters chess, shogi, and Go through self-play</a></em>. <a href="https://en.wikipedia.org/wiki/Science_(journal)">Science</a>, Vol. 362, No. 6419 <a href="#fn24" class="footnote-ref" id="fnref24" role="doc-noteref"><sup>24</sup></a></li>
+<li><a href="/Garry_Kasparov">Garry Kasparov</a> (<strong>2018</strong>). <em><a href="http://science.sciencemag.org/content/362/6419/1087">Chess, a Drosophila of reasoning</a></em>. <a href="https://en.wikipedia.org/wiki/Science_(journal)">Science</a>, Vol. 362, No. 6419</li>
+<li><a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2018</strong>). <em>Computer chess: From idea to DeepMind</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 40, No. 3</a></li>
+<li><a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Karen_Simonyan">Karen Simonyan</a>, <a href="/Laurent_Sifre">Laurent Sifre</a>, Simon Schmitt, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Edward_Lockhart">Edward Lockhart</a>, <a href="/Demis_Hassabis">Demis Hassabis</a>, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, <a href="/David_Silver">David Silver</a> (<strong>2019</strong>). <em>Mastering Atari, Go, Chess and Shogi by Planning with a Learned Model</em>. <a href="https://arxiv.org/abs/1911.08265">arXiv:1911.08265</a> <a href="#fn25" class="footnote-ref" id="fnref25" role="doc-noteref"><sup>25</sup></a></li>
+<li>Vladimir Vargas-Calderón (<strong>2019</strong>). <em>Are Armageddon chess games implemented fairly?</em> <a href="/ICGA_Journal">ICGA Journal, Vol. 41, No. 4</a> <a href="#fn26" class="footnote-ref" id="fnref26" role="doc-noteref"><sup>26</sup></a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="/Manuel_Cristóbal_López-Michelone">Manuel Cristóbal López-Michelone</a>, <a href="/Jorge_Luis_Ortega-Arjona">Jorge Luis Ortega-Arjona</a> (<strong>2020</strong>). <em>A description language for chess</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 42, No. 1</a></li>
+<li>Nenad Tomašev, Ulrich Paquet, <a href="/Demis_Hassabis">Demis Hassabis</a>, Vladimir Kramnik (<strong>2020</strong>). <em>Assessing Game Balance with AlphaZero: Exploring Alternative Rule Sets in Chess</em>. <a href="https://arxiv.org/abs/2009.04374">arXiv:2009.04374</a> » <a href="/AlphaZero">AlphaZero</a></li>
+<li><a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Karen_Simonyan">Karen Simonyan</a>, <a href="/Laurent_Sifre">Laurent Sifre</a>, Simon Schmitt, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Edward_Lockhart">Edward Lockhart</a>, <a href="/Demis_Hassabis">Demis Hassabis</a>, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, <a href="/David_Silver">David Silver</a> (<strong>2020</strong>). <em><a href="https://www.nature.com/articles/s41586-020-03051-4">Mastering Atari, Go, chess and shogi by planning with a learned model</a></em>. <a href="https://en.wikipedia.org/wiki/Nature_%28journal%29">Nature</a>, Vol. 588 <a href="#fn27" class="footnote-ref" id="fnref27" role="doc-noteref"><sup>27</sup></a></li>
+<li><a href="/Monroe_Newborn">Monty Newborn</a> (<strong>2021</strong>). <em>Mad Monty Chess</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 43, No. 1</a></li>
+<li>Maximilian Alexander Gehrke (<strong>2021</strong>). <em>Assessing Popular Chess Variants Using Deep Reinforcement Learning</em>. Master thesis, <a href="/Darmstadt_University_of_Technology">TU Darmstadt</a>, <a href="https://ml-research.github.io/papers/gehrke2021assessing.pdf">pdf</a> » <a href="/CrazyAra">CrazyAra</a></li>
+<li><a href="/Dominik_Klein">Dominik Klein</a> (<strong>2021</strong>). <em><a href="https://github.com/asdfjkl/neural_network_chess">Neural Networks For Chess</a></em>. <a href="https://github.com/asdfjkl/neural_network_chess/releases/tag/v1.1">Release Version 1.1 · GitHub</a> <a href="#fn28" class="footnote-ref" id="fnref28" role="doc-noteref"><sup>28</sup></a></li>
+<li><a href="/Guy_Haworth">Guy Haworth</a> (<strong>2021</strong>). <em>Chess without draws</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 43, No. 2</a></li>
+<li>Thomas McGrath, Andrei Kapishnikov, Nenad Tomašev, Adam Pearce, <a href="/Demis_Hassabis">Demis Hassabis</a>, Been Kim, Ulrich Paquet, Vladimir Kramnik (<strong>2021</strong>). <em>Acquisition of Chess Knowledge in AlphaZero</em>. <a href="https://arxiv.org/abs/2111.09259">arXiv:2111.09259</a> » <a href="/AlphaZero">AlphaZero</a> <a href="#fn29" class="footnote-ref" id="fnref29" role="doc-noteref"><sup>29</sup></a></li>
+<li>Miha Bizjak, <a href="/Matej_Guid">Matej Guid</a> (<strong>2021</strong>). <em>Automatic Recognition of Similar Chess Motifs</em>. <a href="/Advances_in_Computer_Games_17">Advances in Computer Games 17</a></li>
+<li>Nenad Tomašev, Ulrich Paquet, <a href="/Demis_Hassabis">Demis Hassabis</a>, Vladimir Kramnik (<strong>2022</strong>). <em><a href="https://cacm.acm.org/magazines/2022/2/258230-reimagining-chess-with-alphazero/fulltext">Reimagining Chess with AlphaZero</a></em>. <a href="/ACM">Communications of the ACM</a>, Vol. 65, No. 2 » <a href="/AlphaZero">AlphaZero</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1989">1989</h3>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess/wqAWR7ylU4w/PTvP5DbWadcJ">Can Chess Help Adapt to Life?</a> by <a href="/Michael_Valvo">Mike Valvo</a>, <a href="/Computer_Chess_Forums">rgc</a>, September 06, 1989</li>
+</ul>
+<h3 id="1990--1">1990 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess/dkvZ38gzk-8/TiJTI6c2A-IJ">Chess is not solvable</a> by Teri A. Meyers, <a href="/Computer_Chess_Forums">rgc</a>, September 23, 1992</li>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess/xE0LXST4cE0/pMHY9BYQbKMJ">Solvability</a> by Teri A. Meyers, <a href="/Computer_Chess_Forums">rgc</a>, September 30, 1992</li>
+<li><a href="https://groups.google.com/d/msg/rec.games.programmer/0Mctf2NWmr0/wv5AofD6T28J">Is chess in NP?</a> by Antti Juhani Ylikoski, <a href="/Computer_Chess_Forums">rec.games.programmer</a>, May 26, 1997</li>
+</ul>
+<h3 id="2000--1">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=272654">Does this position blow up your program?</a> by <a href="/Michael_Byrne">Mike Byrne</a>, <a href="/CCC">CCC</a>, December 23, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=424966">Subject: Maximum Number of Legal Moves</a> by <a href="/Andrew_Shapira">Andrew Shapira</a>, <a href="/CCC">CCC</a>, May 08, 2005</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=17338">Variants and Board Size</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, October 25, 2007</li>
+</ul>
+<h3 id="2010--1">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=39332">max amount of moves from a position?</a> by <a href="/Srdja_Matovic">Srdja Matovic</a>, <a href="/CCC">CCC</a>, June 10, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41388">Contest: Find Position with the most moves</a> by <a href="/Charles_Roberson">Charles Roberson</a>, <a href="/CCC">CCC</a>, December 09, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=43291">New chess variants</a> by <a href="/Ferdinand_Mosca">Ferdinand Mosca</a>, <a href="/CCC">CCC</a>, March 03, 2012 » <a href="/Games">Chess Variants</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46490">Chess and the "Golden Ratio"...</a> by <a href="/Steve_Maughan">Steve Maughan</a>, <a href="/CCC">CCC</a>, December 19, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50473">Chess with incomplete information</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, December 13, 2013</li>
+</ul>
+<p><strong>2014</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51744">Total possible chess positions?</a> by <a href="/Matthew_R._Brades">Matthew R. Brades</a>, <a href="/CCC">CCC</a>, March 26, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53734">for Chess-variant authors</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, September 17, 2014 » <a href="/Chess_Engine_Communication_Protocol">Chess Engine Communication Protocol</a>, <a href="/WinBoard">WinBoard</a>, <a href="/XBoard">XBoard</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54124">XBoard and chess variants</a> by <a href="/Evert_Glebbeek">Evert Glebbeek</a>, <a href="/CCC">CCC</a>, October 28, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54162">UCCI2WB</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, October 27, 2014 » <a href="/Chinese_Chess">Chinese Chess</a> (Universal Chinese Chess Interface, UCCI)</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54167">UCI protocol for chess variants</a> by <a href="/Evert_Glebbeek">Evert Glebbeek</a>, <a href="/CCC">CCC</a>, October 28, 2014 » <a href="/UCI">UCI</a></li>
+</ul>
+<h3 id="2015--1">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56007">Most common chess variant?</a> by <a href="/Stefano_Gemma">Stefano Gemma</a>, <a href="/CCC">CCC</a>, April 15, 2015 » <a href="/Games">Chess Variants</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57696">The future of chess and elo ratings</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, September 20, 2015 » <a href="/Match_Statistics">Match Statistics</a>, <a href="/Opening_Book">Opening Book</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58482">Winboard 4.8.0b and Amazon chess variant</a> by <a href="/Ferdinand_Mosca">Ferdinand Mosca</a>, <a href="/CCC">CCC</a>, December 05, 2015 » <a href="/WinBoard">WinBoard</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58518">Matibay an amazon chess variant engine</a> by <a href="/Ferdinand_Mosca">Ferdinand Mosca</a>, <a href="/CCC">CCC</a>, December 08, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58533">Masipag, a nightrider chess variant engine</a> by <a href="/Ferdinand_Mosca">Ferdinand Mosca</a>, <a href="/CCC">CCC</a>, December 09, 2015</li>
+</ul>
+<p><strong>2016</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58808">Grande Acedrex</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, January 04, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59080">Tamerlane Chess</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, January 28, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60387">New chess variant</a> by <a href="/Evert_Glebbeek">Evert Glebbeek</a>, <a href="/CCC">CCC</a>, June 06, 2016 » <a href="/Games">Chess Variants</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61792">Max moves in a position</a> by <a href="/Laurie_Tunnicliffe">Laurie Tunnicliffe</a>, <a href="/CCC">CCC</a>, October 22, 2016 » <a href="/Chess">Chess Maxima</a></li>
+</ul>
+<p><strong>2017</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63525">Winboard variants online</a> by <a href="/Erin_Dame">Erin Dame</a>, <a href="/CCC">CCC</a>, March 22, 2017 » <a href="/Games">Chess Variants</a>, <a href="/WinBoard">WinBoard</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65268">The Peace-Chess Challenge</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, September 24, 2017 » <a href="/Games">Chess Variants</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65292">Weakly vs strongly solving chess</a> by Greg Simpson, <a href="/CCC">CCC</a>, September 26, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65962">best board representation for variants (javascript) ?</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, December 10, 2017 » <a href="/Board_Representation">Board Representation</a>, <a href="/JavaScript">JavaScript</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=66003">One idea to solve chess?</a> by <a href="/Mario_Carbonell_Martinez">Mario Carbonell</a>, <a href="/CCC">CCC</a>, December 13, 2017</li>
+</ul>
+<p><strong>2018</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66298">Is modern chess software lossless or lossy?</a> by Meni Rosenfeld, <a href="/CCC">CCC</a>, January 10, 2018 » <a href="/Playing_Strength">Playing Strength</a>, <a href="/Selectivity">Selectivity</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66302">Is chess still 99% tactics?</a> by <a href="/Alvaro_Cardoso">Alvaro Cardoso</a>, <a href="/CCC">CCC</a>, January 11, 2018 » <a href="/Tactics">Tactics</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66364">A Chess variant with low draw rate</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, January 19, 2018 » <a href="/Games">Chess Variants</a></li>
+</ul>
+<p><strong>2019</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70723">The Plan-9 to finally solve chess :)</a> by <a href="/Sergei_Markoff">Sergei S. Markoff</a>, <a href="/CCC">CCC</a>, May 11, 2019</li>
+</ul>
+<h3 id="2020--1">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75606">Transhuman Chess with NN and RL...</a> by <a href="/Srdja_Matovic">Srdja Matovic</a>, <a href="/CCC">CCC</a>, October 30, 2020 » <a href="/Neural_Networks">NN</a>, <a href="/Reinforcement_Learning">RL</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75667">New PGN Tag: VariantFamily</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, November 03, 2020 » Chess Variants, <a href="/Portable_Game_Notation">PGN</a></li>
+</ul>
+<p><strong>2021</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76382">correspondence chess in the age of NNUE</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, January 21, 2021 » <a href="/NNUE">NNUE</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77685">On the number of chess positions</a> by <a href="/John_Tromp">John Tromp</a>, <a href="/CCC">CCC</a>, July 09, 2021 » <a href="/Chess_Position">Chess Position</a></li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=78464">Open Chess Game Database Standard (OCGDB)</a> by <a href="/Pham_Hong_Nguyen">Nguyen Pham</a>, <a href="/CCC">CCC</a>, October 20, 2021 » <a href="/Databases">Chess Databases</a></li>
+</ul>
+<p><strong>2022</strong></p>
+<ul>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77685&amp;start=34">Re: On the number of chess positions</a> by <a href="/John_Tromp">John Tromp</a>, <a href="/CCC">CCC</a>, April 02, 2022 » <a href="/Chess_Position">Chess Position</a></li>
+</ul>
+<p><strong>2023</strong></p>
+<ul>
+<li><a href="https://talkchess.com/forum3/viewtopic.php?f=2&amp;t=81858">The Next Big Thing in Computer Chess?</a> by <a href="/Srdja_Matovic">Srdja Matovic</a>, <a href="/CCC">CCC</a>, April 12, 2023 » <a href="/Artificial_Intelligence">Artificial Intelligence</a>, <a href="/Programming">Programming</a>, <a href="/Hardware">Hardware</a></li>
+</ul>
+<p><a href="https://talkchess.com/forum3/viewtopic.php?f=2&amp;t=81858&amp;start=100#p951488">Re: The Next Big Thing in Computer Chess?</a> by <a href="/Srdja_Matovic">Srdja Matovic</a>, <a href="/CCC">CCC</a>, August 20, 2023</p>
+<ul>
+<li><a href="https://talkchess.com/forum3/viewtopic.php?f=2&amp;t=82826">Is there any project coming to solve chess?</a> by Jouni, <a href="/CCC">CCC</a>, November 06, 2023</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<h3 id="wikipedia">Wikipedia</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Chess">Chess from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/Chess_theory">Chess theory from Wikipedia</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Computer_chess">Computer chess from Wikipedia</a></p>
+<p><a href="https://en.wikipedia.org/wiki/First-move_advantage_in_chess">First-move advantage in chess from Wikipedia</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Outline_of_chess">Outline of chess from Wikipedia</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Rules_of_chess">Rules of Chess from Wikipedia</a></p>
+<p><a href="https://en.wikipedia.org/wiki/School_of_chess">School of chess from Wikipedia</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Solving_chess">Solving chess from Wikipedia</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Chess_terminology">Glossary of chess from Wikipedia</a></p>
+<h3 id="chess">Chess</h3>
+<ul>
+<li><a href="https://en.wikibooks.org/wiki/Chess">Chess from Wikibooks</a></li>
+<li><a href="http://www.chess-museum.com/links.html">Welcome to the Chess Museum - Links</a></li>
+<li><a href="http://www.chesshistory.com/winter/extra/earliest.html">Earliest Occurrences of Chess Terms</a> by <a href="https://en.wikipedia.org/wiki/Edward_Winter_%28chess_historian%29">Edward Winter</a></li>
+<li><a href="http://www.chesshistory.com/">Chess History Center - Chess Notes</a> by <a href="https://en.wikipedia.org/wiki/Edward_Winter_%28chess_historian%29">Edward Winter</a></li>
+<li><a href="http://mathworld.wolfram.com/Chess.html">Chess</a> from <a href="https://en.wikipedia.org/wiki/MathWorld">MathWorld - A Wolfram Web Resource</a> by <a href="https://en.wikipedia.org/wiki/Eric_W._Weisstein">Eric W. Weisstein</a></li>
+</ul>
+<h3 id="chess-variants-1">Chess Variants</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Chess_variant">Chess variant from Wikipedia</a></li>
+<li><a href="http://www.chessvariants.org/">The Chess Variant Pages</a> by <a href="https://en.wikipedia.org/wiki/Hans_L._Bodlaender">Hans L. Bodlaender</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Fairy_chess">Fairy chess from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Fairy_chess_piece">Fairy chess piece from Wikipedia</a></li>
+<li><a href="http://www.gnu.org/software/xboard/Betza.html">Betza notation and XBoard</a> » <a href="/Moves">Moves</a>, <a href="/XBoard">XBoard</a></li>
+</ul>
+<h3 id="misc">Misc</h3>
+<ul>
+<li><a href="http://research.microsoft.com/en-us/projects/chess/">CHESS - Microsoft Research</a> a tool for finding and reproducing <a href="https://en.wikipedia.org/wiki/Unusual_software_bug">Heisenbugs</a> in concurrent programs.</li>
+<li><a href="https://en.wikipedia.org/wiki/Chess_%28musical%29">Chess (musical) from Wikipedia</a></li>
+<li><a href="http://www.bbc.co.uk/programmes/p009jfnh">BBC World Service Programmes - The Friday Documentary: Seeking The Endgame</a>, by Simon Terrington, with statements by <a href="/David_Levy">David Levy</a> et al. <a href="#fn30" class="footnote-ref" id="fnref30" role="doc-noteref"><sup>30</sup></a></li>
+<li><a href="http://www.bbc.com/future/story/20151201-the-cyborg-chess-players-that-cant-be-beaten">BBC - Future - The cyborg chess players that can’t be beaten</a> by <a href="http://www.chrisbaraniuk.com/">Chris Baraniuk</a>, December 04, 2015 » <a href="/David_Levy">David Levy</a>, Boris Alterman, <a href="/Shay_Bushinsky">Shay Bushinsky</a>, <a href="/Mark_Lefler">Mark Lefler</a></li>
+<li><a href="http://www.permutationpuzzles.org/chess/math_chess.html">Mathematics and Chess Page</a></li>
+<li><a href="http://www.sf-encyclopedia.com/entry/chess">SFE - The Science Fiction Encyclopedia - Chess</a></li>
+<li><a href="/Category:Anthony_Braxton">Anthony Braxton</a> Interview - Chess, Math &amp; Music, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/jgn1gdvgYQo" title="YouTube video jgn1gdvgYQo" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=jgn1gdvgYQo">Watch on YouTube</a></p>
+<ul>
+<li><a href="/Category:Marcel_Duchamp">Marcel Duchamp</a> on Chess, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/PIOyUEGBn-U" title="YouTube video PIOyUEGBn-U" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=PIOyUEGBn-U">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Main_Page">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Shirish_Chinchalkar">Shirish Chinchalkar</a> (<strong>1996</strong>). <em>An Upper Bound for the Number of Reachable Positions</em>. <a href="/ICGA_Journal">ICCA Journal</a>, Vol. 19, No. 3, pp. 181-183<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Victor_Allis">Victor Allis</a> (<strong>1994</strong>). <em>Searching for Solutions in Games and Artificial Intelligence</em>. Ph.D. Thesis, <a href="/Maastricht_University">University of Limburg</a>, <a href="http://fragrieu.free.fr/SearchingForSolutions.pdf">pdf</a>, 6.3.9 Chess pp. 171<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://en.wikipedia.org/wiki/Seirawan_chess">Seirawan chess from Wikipedia</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://www.computerhistory.org/chess/doc-431614f453dde/">Programming a Computer for Playing Chess. download pdf from The Computer History Museum</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p>Eero Bonsdorff, <a href="https://en.wikipedia.org/wiki/Karl_Fabel">Karl Fabel</a>, Olvai Riihimaa (<strong>1966</strong>) <em>Schach und Zahl - Unterhaltsame Schachmathematik</em>. Seite 11-13, Walter Rau Verlag, Düsseldorf (German)<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="https://de.wikipedia.org/wiki/50-Z%C3%BCge-Regel#Schachmathematik">50-Züge-Regel - Schachmathematik from Wikipedia.de</a> (German)<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="http://www.xs4all.nl/~timkr/chess2/honor.htm">Defending Humanity's Honor</a> by <a href="https://en.wikipedia.org/wiki/Tim_Krabb%C3%A9">Tim Krabbé</a>, see game <a href="/Rival">NewRival</a> - <a href="/Faile">Faile</a> with 493 moves, and playing 402 moves with bare kings!<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="/Shirish_Chinchalkar">Shirish Chinchalkar</a> (<strong>1996</strong>). <em>An Upper Bound for the Number of Reachable Positions</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 19, No. 3</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="http://tromp.github.io/chess/chess.html">John's Chess Playground - Number of chess diagrams and positions</a><a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=51744&amp;start=3">Re: Total possible chess positions?</a> by <a href="/Álvaro_Begué">Álvaro Begué</a>, <a href="/CCC">CCC</a>, March 26, 2014<a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="https://www.stmintz.com/ccc/index.php?id=272654">Does this position blow up your program?</a> by <a href="/Michael_Byrne">Mike Byrne</a>, <a href="/CCC">CCC</a>, December 23, 2002<a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="https://www.stmintz.com/ccc/index.php?id=424966">Subject: Maximum Number of Legal Moves</a> by <a href="/Andrew_Shapira">Andrew Shapira</a>, <a href="/CCC">CCC</a>, May 08, 2005<a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="http://www.opencourtbooks.com/books_n/philosophy_looks_at_chess.htm">Philosophy Looks at Chess</a> by <a href="http://www.practicalreason.com/">Benjamin Hale</a><a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p><a href="http://www.chesshistory.com/winter/extra/rousseau.html"><code>Jean-Jacques Rousseau and Chess</code></a><code>by</code><a href="https://en.wikipedia.org/wiki/Edward_Winter_%28chess_historian%29"><code>Edward Winter</code></a><a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn15"><p><a href="http://www.chessbase.com/newsdetail.asp?newsid=6097">Chess Metaphors – Artificial Intelligence and the Human Mind</a> by Diego Rasskin-Gutman, <a href="/ChessBase">ChessBase News</a>, January 28, 2010<a href="#fnref15" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn16"><p><a href="https://en.wikipedia.org/wiki/Zipf%27s_law">Zipf's law from WIkipedia</a><a href="#fnref16" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn17"><p><a href="http://en.chessbase.com/post/machine-creativity-what-it-is-and-what-it-isn-t">Machine creativity: what it is and what it isn't</a> by <a href="/Albert_Silver">Albert Silver</a>, <a href="/ChessBase">ChessBase News</a>, August 28, 2016<a href="#fnref17" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn18"><p><a href="https://en.wikipedia.org/wiki/First-order_logic">First-order logic from Wikipedia</a><a href="#fnref18" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn19"><p><a href="http://www.chessbase.com/newsdetail.asp?newsid=7775">The joys of chess – and the value of the pieces</a>, <a href="/ChessBase">ChessBase News</a>, December 21, 2011<a href="#fnref19" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn20"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=64306&amp;start=27">Re: Tony's positional test suite</a> by <a href="/Louis_Zulli">Louis Zulli</a>, <a href="/CCC">CCC</a>, August 01, 2017<a href="#fnref20" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn21"><p><a href="https://en.wikipedia.org/wiki/Progressive_chess">Progressive chess from Wikipedia</a><a href="#fnref21" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn22"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=63252">Using GAN to play chess</a> by Evgeniy Zheltonozhskiy, <a href="/CCC">CCC</a>, February 23, 2017<a href="#fnref22" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn23"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=64776">The Secret of Chess</a> by <a href="/Lyudmil_Tsvetkov">Lyudmil Tsvetkov</a>, <a href="/CCC">CCC</a>, August 01, 2017<a href="#fnref23" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn24"><p><a href="https://deepmind.com/blog/alphazero-shedding-new-light-grand-games-chess-shogi-and-go/">AlphaZero: Shedding new light on the grand games of chess, shogi and Go</a> by <a href="/David_Silver">David Silver</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a> and <a href="/Demis_Hassabis">Demis Hassabis</a>, DeepMind, December 03, 2018<a href="#fnref24" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn25"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=72381">New DeepMind paper</a> by GregNeto, <a href="/CCC">CCC</a>, November 21, 2019<a href="#fnref25" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn26"><p><a href="https://en.wikipedia.org/wiki/Fast_chess#Armageddon">Armageddon chess from Wikipedia</a><a href="#fnref26" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn27"><p><a href="https://deepmind.com/blog/article/muzero-mastering-go-chess-shogi-and-atari-without-rules?fbclid=IwAR3mSwrn1YXDKr9uuGm2GlFKh76wBilex7f8QvBiQecwiVmAvD6Bkyjx-rE">MuZero: Mastering Go, chess, shogi and Atari without rules</a><a href="#fnref27" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn28"><p><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=78283">Book about Neural Networks for Chess</a> by dkl, <a href="/CCC">CCC</a>, September 29, 2021<a href="#fnref28" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn29"><p><a href="https://en.chessbase.com/post/acquisition-of-chess-knowledge-in-alphazero">Acquisition of Chess Knowledge in AlphaZero</a>, <a href="/ChessBase">ChessBase News</a>, November 18, 2021<a href="#fnref29" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn30"><p><a href="http://hiarcs.net/forums/viewtopic.php?t=3674">BBC Computer Chess Radio Programme</a> by <a href="/Harvey_Williamson">Harvey Williamson</a>, <a href="/Computer_Chess_Forums">Hiarcs Forum</a>, September 11, 2010<a href="#fnref30" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Anthony_Braxton">Anthony Braxton</a> · <a href="/Category:Marcel_Duchamp">Marcel Duchamp</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Chess">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, Smatovic.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Search - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Search</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * Search</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="http://schachbilderwelten.tenners.de/html/auf_der_suche.html" target="_blank" rel="noopener noreferrer"><img src="/assets/AufderSuche.jpg" alt="Bernd Besser, Auf der Suche 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Bernd_Besser">Bernd Besser</a>, Auf der Suche <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://schachbilderwelten.tenners.de/html/galerie.html">Schach Bilder Welten - Bernd Besser - Galerie</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p>Because finding or guessing a <a href="/Best_Move">good move</a> in a <a href="/Chess_Position">chess position</a> is hard to achieve statically, <a href="/Engines">chess programs</a> rely on some type of <strong>Search</strong> in order to play reasonably. Searching involves looking ahead at different <a href="/Moves">move</a> sequences and evaluating the positions after <a href="/Make_Move">making the moves</a>. Formally, searching a two-player <a href="https://en.wikipedia.org/wiki/Zero-sum_%28game_theory%29">zero-sum</a> board game with <a href="https://en.wikipedia.org/wiki/Perfect_information">perfect information</a> implies <a href="https://en.wikipedia.org/wiki/Tree_traversal">traversing</a> and min-maxing a <a href="https://en.wikipedia.org/wiki/Tree_%28data_structure%29">tree-like data-structure</a> by various <a href="https://en.wikipedia.org/wiki/Search_algorithm">search algorithms</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#shannons-types">Shannon's Types</a></li>
+<li><a href="#the-search-tree">The Search Tree</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#search-algorithms">Search Algorithms</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#depth-first-search">Depth-First Search</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#alpha-beta-enhancements">Alpha-Beta Enhancements</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#obligatory">Obligatory</a></li>
+<li><a href="#selectivity">Selectivity</a></li>
+<li><a href="#scout-and-friends">Scout and Friends</a></li>
+<li><a href="#alpha-beta-goes-best-first">Alpha-Beta goes Best-First</a></li>
+</ol>
+</details></li>
+<li><a href="#best-first-search">Best-First Search</a></li>
+</ol>
+</details></li>
+<li><a href="#opponent-model">Opponent Model</a></li>
+<li><a href="#parallel-search">Parallel Search</a></li>
+<li><a href="#using-time">Using Time</a></li>
+<li><a href="#related-issues">Related Issues</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#publications">Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1960-">1960 ...</a></li>
+<li><a href="#1970-">1970 ...</a></li>
+<li><a href="#1980-">1980 ...</a></li>
+<li><a href="#1990-">1990 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1999">1999</a></li>
+<li><a href="#2000--1">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010--1">2010 ...</a></li>
+<li><a href="#2015--1">2015 ...</a></li>
+<li><a href="#2020--1">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="shannons-types">Shannon's Types</h2>
+<p><a href="/Claude_Shannon">Claude Shannon</a> categorized searches into two types <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> :</p>
+<ul>
+<li><a href="/Type_A_Strategy">Type A</a> - a <a href="/Brute-Force">brute-force search</a> looking at every variation to a given <a href="/Depth">depth</a></li>
+<li><a href="/Type_B_Strategy">Type B</a> - a <a href="/Selectivity">selective search</a> looking at "important" branches only</li>
+</ul>
+<p>Inspired by the experiments of <a href="/Adriaan_de_Groot">Adriaan de Groot</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> , Shannon and early programmers favored Type B strategy. Type B searches use some type of static heuristics in order to only look at branches that look important - with some risk to oversee some serious tactics not covered by the plausible move selector. Type B was most popular until the 1970's, when Type A programs had enough processing power and more efficient brute force algorithms to become stronger. Today most programs are closer to Type A, but have some characteristics of a Type B as mentioned in <a href="/Selectivity">selectivity</a>.</p>
+<h2 id="the-search-tree">The Search Tree</h2>
+<p>The <a href="/Search_Tree">search tree</a> as subset of the <a href="/Search_Space">search space</a> is a <a href="https://en.wikipedia.org/wiki/Graph_%28mathematics%29#Directed_graph">directed graph</a> of <a href="/Node">nodes</a>, the alternating white and black to move <a href="/Chess_Position">chess positions</a> - and edges connecting two nodes, representing the <a href="/Moves">moves</a> of either side. The <a href="/Root">root</a> of the search-tree is the position we like to evaluate to find the <a href="/Best_Move">best move</a>. Because of <a href="/Transposition">transpositions</a> due to different move sequences, nodes inside the tree may occur from various ancestors - even within a different number of moves. The search tree contains various cycles, since both sides may <a href="/Repetitions">repeat</a> a former position with the minimum of two reversible moves each, or four <a href="/Ply">plies</a>. Cycles are usually eliminated and not searched twice, which results in searching a <a href="https://en.wikipedia.org/wiki/Directed_acyclic_graph">directed acyclic graph</a> DAG.</p>
+<ul>
+<li><a href="/Search_Space">Search Space</a></li>
+<li><a href="/Search_Tree">Search Tree</a></li>
+<li><a href="/Root">Root</a></li>
+<li><a href="/Node">Node</a></li>
+<li><a href="/Conspiracy_Numbers">Conspiracy Numbers</a></li>
+<li><a href="/Move_List">Move List</a></li>
+<li><a href="/Principal_Variation">Principal Variation</a></li>
+<li><a href="/Graph_History_Interaction">Graph History Interaction</a></li>
+<li><a href="/Path-Dependency">Path-Dependency</a></li>
+<li><a href="/Repetitions">Repetitions</a></li>
+<li><a href="/Transposition">Transposition</a></li>
+<li><a href="/Score">Score</a></li>
+<li><a href="/Improving">Improving</a></li>
+</ul>
+<h2 id="search-algorithms">Search Algorithms</h2>
+<p>Most chess-programs use a variation of the <a href="/Alpha-Beta">alpha-beta</a> algorithm to search the tree in a <a href="/Depth-First">depth-first</a> manner to attain an order of magnitude performance improvement over a pure <a href="/Minimax">minimax</a> algorithm. Although <span style="font-size: 13px; line-height: 1.5;"><a href="/Move_Ordering">move ordering</a> doesnt affect the performance of a pure mini-max search (as all branches and nodes are searched) — it becomes crucial for the performance of alpha beta search and enhancements such as <a href="/Principal_Variation_Search">PVS</a>, <a href="/NegaScout">NegaScout</a> and <a href="/MTD%28f%29">MTD(f)</a>. <a href="/Hans_Berliner">Hans Berliner's</a> chess-program <a href="/HiTech">HiTech</a> and <a href="/Ulf_Lorenz">Ulf Lorenz's</a> program <a href="/P.ConNerS">P.ConNerS</a> used <a href="/Best-First">best-first</a> approaches quite successfully.</span></p>
+<h3 id="depth-first-search">Depth-First Search</h3>
+<p><a href="/Depth-First">Depth-First</a> search starts at the root and explores as far as possible along each branch before backtracking. Memory requirements are moderate, since only one path from the root to one leaf is kept in memory. The giga bytes of <a href="/Memory">RAM</a> in recent computers is utilized by a <a href="/Transposition_Table">transposition table</a>. Minimax and Negamax are mentioned for educational reasons as the prototypes for the more advanced algorithms. They otherwise have no practical relevance in software, except traversing a minimax tree inside a <a href="/Perft">perft</a> framework for <a href="/Engine_Testing">testing</a> the <a href="/Move_Generation">move generator</a>. Depth-first algorithms are generally embedded inside an <a href="/Iterative_Deepening">iterative deepening</a> framework for <a href="/Time_Management">time control</a> and <a href="/Move_Ordering">move ordering</a> issues.</p>
+<ul>
+<li><a href="/Minimax">Minimax</a></li>
+<li><a href="/Negamax">Negamax</a></li>
+<li><a href="/Alpha-Beta">Alpha-Beta</a></li>
+</ul>
+<h3 id="alpha-beta-enhancements">Alpha-Beta Enhancements</h3>
+<h4 id="obligatory">Obligatory</h4>
+<ul>
+<li><a href="/Transposition_Table">Transposition Table</a></li>
+<li><a href="/Iterative_Deepening">Iterative Deepening</a></li>
+<li><a href="/Aspiration_Windows">Aspiration Windows</a></li>
+</ul>
+<h4 id="selectivity">Selectivity</h4>
+<ul>
+<li><a href="/Quiescence_Search">Quiescence Search</a></li>
+<li><a href="/Selectivity">Selectivity</a></li>
+<li><a href="/Mate_Search">Mate Search</a></li>
+</ul>
+<h4 id="scout-and-friends">Scout and Friends</h4>
+<ul>
+<li><a href="/Scout">Scout</a></li>
+<li><a href="/NegaScout">NegaScout</a></li>
+<li><a href="/Principal_Variation_Search">Principal Variation Search</a></li>
+</ul>
+<h4 id="alpha-beta-goes-best-first">Alpha-Beta goes Best-First</h4>
+<ul>
+<li><a href="/NegaC%252A">NegaC*</a></li>
+<li><a href="/MTD%28f%29">MTD(f)</a></li>
+<li>Alpha-Beta Conspiracy Search</li>
+</ul>
+<h3 id="best-first-search">Best-First Search</h3>
+<p><a href="/Best-First">Best-First</a> approaches build a search-tree by visiting the most promising nodes first. They usually have huge memory requirements, since they keep an exponentially growing search space in memory.</p>
+<ul>
+<li><a href="/B%252A">B*</a> as used by <a href="/Hans_Berliner">Hans Berliner's</a> chess-program <a href="/HiTech">HiTech</a></li>
+<li><a href="/Best-First_Minimax_Search">Best-First Minimax Search</a></li>
+<li><a href="/Conspiracy_Number_Search">Conspiracy Number Search</a></li>
+<li><a href="/MCαβ">MCαβ</a></li>
+<li><a href="/Monte-Carlo_Tree_Search">Monte-Carlo Tree Search</a></li>
+<li><a href="/Proof-Number_Search">Proof-Number Search</a></li>
+<li><a href="/SSS%252A_and_Dual%252A">SSS* and Dual*</a></li>
+<li><a href="/UCT">UCT</a></li>
+</ul>
+<h2 id="opponent-model">Opponent Model</h2>
+<ul>
+<li><a href="/Opponent_Model_Search">Opponent Model Search</a></li>
+</ul>
+<h2 id="parallel-search">Parallel Search</h2>
+<ul>
+<li><a href="/Parallel_Search">Parallel Search</a></li>
+<li><a href="/Conspiracy_Number_Search">Parallel Controlled Conspiracy Number Search</a> as used by <a href="/Ulf_Lorenz">Ulf Lorenz's</a> program <a href="/P.ConNerS">P.ConNerS</a></li>
+</ul>
+<h2 id="using-time">Using Time</h2>
+<ul>
+<li><a href="/Pondering">Pondering</a></li>
+<li><a href="/Time_Management">Time Management</a></li>
+</ul>
+<h2 id="related-issues">Related Issues</h2>
+<ul>
+<li><a href="/Depth">Depth</a></li>
+<li><a href="/Horizon_Effect">Horizon Effect</a></li>
+<li><a href="/Iterative_Search">Iterative Search</a></li>
+<li><a href="/Move_Ordering">Move Ordering</a></li>
+<li><a href="/Search_Explosion">Search Explosion</a></li>
+<li><a href="/Search_Instability">Search Instability</a></li>
+<li><a href="/Search_Pathology">Search Pathology</a></li>
+<li><a href="/Search_Statistics">Search Statistics</a></li>
+<li><a href="/Search_with_Random_Leaf_Values">Search with Random Leaf Values</a></li>
+<li><a href="/James_R._Slagle">Theorem-Proving and M &amp; N procedure</a></li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Backtracking">Backtracking</a></li>
+<li><a href="/History">History of Computer Chess</a></li>
+<li><a href="/Knowledge">Knowledge</a></li>
+</ul>
+<p><a href="/Knowledge">Search versus Evaluation</a></p>
+<h2 id="publications">Publications</h2>
+<h3 id="1960-">1960 ...</h3>
+<ul>
+<li><a href="/Daniel_Edwards">Daniel Edwards</a>, <a href="/Timothy_Hart">Timothy Hart</a> (<strong>1961</strong>). <em>The Alpha-Beta Heuristic</em>, AIM-030, reprint available from <a href="http://dspace.mit.edu/handle/1721.1/6098">DSpace</a> at <a href="/Massachusetts_Institute_of_Technology">MIT</a></li>
+<li><a href="/Alexander_Brudno">Alexander Brudno</a> (<strong>1963</strong>). <em>Bounds and valuations for shortening the search of estimates</em>. Problemy Kibernetiki (10) 141–150 and Problems of Cybernetics (10) 225–241</li>
+<li><a href="/James_R._Slagle">James R. Slagle</a> (<strong>1963</strong>). <em>Game Trees, M &amp; N Minimaxing, and the M &amp; N alpha-beta procedure.</em> Artificial Intelligence Group Report 3, UCRL-4671, University of California</li>
+<li><a href="/Jim_Doran">Jim Doran</a>, <a href="/Donald_Michie">Donald Michie</a> (<strong>1966</strong>). <em><a href="https://royalsocietypublishing.org/doi/10.1098/rspa.1966.0205">Experiments with the Graph Traverser Program</a></em>. <a href="https://en.wikipedia.org/wiki/Proceedings_of_the_Royal_Society">Proceedings of the Royal Society</a>, Series A, Vol. 294, No. 1437, <a href="https://stacks.stanford.edu/file/druid:yf330xx7624/yf330xx7624.pdf">pdf</a></li>
+<li><a href="/James_R._Slagle">James R. Slagle</a>, <a href="/Philip_Bursky">Philip Bursky</a> (<strong>1968</strong>). <em><a href="http://portal.acm.org/citation.cfm?id=321444">Experiments With a Multipurpose, Theorem-Proving Heuristic Program</a></em>. <a href="/ACM">Journal of the ACM</a>, Vol. 15, No. 1</li>
+<li><a href="/James_R._Slagle">James R. Slagle</a>, <a href="/John_K._Dixon">John K. Dixon</a> (<strong>1969</strong>). <em><a href="http://portal.acm.org/citation.cfm?id=321510.321511">Experiments With Some Programs That Search Game Trees</a></em>. <a href="/ACM">Journal of the ACM</a>, Vol. 16, No. 2, <a href="http://wiki.cs.pdx.edu/cs542-spring2011/nfp/abmin.pdf">pdf</a>, <a href="http://wiki.cs.pdx.edu/wurzburg2009/nfp/abmin.pdf">pdf</a></li>
+</ul>
+<h3 id="1970-">1970 ...</h3>
+<ul>
+<li><a href="/James_R._Slagle">James R. Slagle</a>, <a href="/John_K._Dixon">John K. Dixon</a> (<strong>1970</strong>). <em><a href="http://portal.acm.org/citation.cfm?id=362052.362054">Experiments with the M &amp; N Tree-Searching Program</a></em>. <a href="/ACM">Communications of the ACM</a>, Vol. 13, No. 3, pp. 147-154.</li>
+<li><a href="/James_R._Slagle">James R. Slagle</a>, <a href="/Richard_C._T._Lee">Richard C. T. Lee</a> (<strong>1971</strong>). <em><a href="http://portal.acm.org/citation.cfm?id=362515.362562">Application of game tree searching techniques to sequential pattern recognition</a></em>. <a href="/ACM">Communications of the ACM</a>, Vol. 14, No. 2</li>
+<li><a href="/Larry_Harris">Larry Harris</a> (<strong>1973</strong>). <em>The bandwidth heuristic search</em>. <a href="http://dblp.uni-trier.de/db/conf/ijcai/ijcai73.html">3. IJCAI 1973</a>, <a href="http://www.ijcai.org/Past%20Proceedings/IJCAI-73/PDF/004.pdf">pdf</a></li>
+<li><a href="/Gerhard_Wolf">Gerhard Wolf</a> (<strong>1973</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=805704">Implementation of a dynamic tree searching algorithm in a chess programme</a></em>. <a href="http://dl.acm.org/citation.cfm?id=800192&amp;picked=prox">Proceedings of the ACM annual conference</a></li>
+<li><a href="/Larry_Harris">Larry Harris</a> (<strong>1974</strong>). <em>Heuristic Search under Conditions of Error</em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_(journal)">Artificial Intelligence</a>, Vol. 5, No. 3, also published (<strong>1977</strong>) under the title: <em>The heuristic search: An alternative to the alpha-beta minimax procedure.</em> <a href="/Chess_Skill_in_Man_and_Machine">Chess Skill in Man and Machine</a> (ed. <a href="/Peter_W._Frey">Peter W. Frey</a>)</li>
+<li><a href="/Larry_Harris">Larry Harris</a> (<strong>1975</strong>) <em>The Heuristic Search And The Game Of Chess - A Study Of Quiescence, Sacrifices, And Plan Oriented Play</em>. <a href="http://dblp.uni-trier.de/db/conf/ijcai/ijcai75.html">IJCAI 1975</a>, reprinted in <a href="/Computer_Chess_Compendium">Computer Chess Compendium</a></li>
+<li><a href="/Toshihide_Ibaraki">Toshihide Ibaraki</a> (<strong>1978</strong>). <em><a href="https://link.springer.com/article/10.1007/BF00991818">Depth-m search in branch-and-bound algorithms</a></em>. <a href="https://link.springer.com/journal/10766">International Journal of Parallel Programming</a>, Vol. 7, No. 4</li>
+<li><a href="/Georgy_Adelson-Velsky">Georgy Adelson-Velsky</a>, <a href="/Vladimir_Arlazarov">Vladimir Arlazarov</a>, <a href="/Mikhail_Donskoy">Mikhail Donskoy</a> (<strong>1979</strong>). <em>Algorithms of adaptive search</em>. <a href="http://www.doc.ic.ac.uk/~shm/MI/mi9.html">Machine Intelligence 9</a> (eds. <a href="/Jean_Hayes_Michie">Jean Hayes Michie</a>, <a href="/Donald_Michie">Donald Michie</a> and L.I. Mikulich), Ellis Horwood, Chichester.</li>
+<li><a href="/George_Stockman">George Stockman</a> (<strong>1979</strong>). <em>A Minimax Algorithm Better than Alpha-Beta?</em> <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_(journal)">Artificial Intelligence</a>, Vol. 12, No. 2</li>
+<li><a href="/John_Gaschnig">John Gaschnig</a> (<strong>1979</strong>). <em><a href="https://dl.acm.org/citation.cfm?id=909244">Performance Measurement and Analysis of Certain Search Algorithms</a></em>. Ph.D. thesis, <a href="/Carnegie_Mellon_University">Carnegie Mellon University</a>, <a href="http://reports-archive.adm.cs.cmu.edu/anon/scan/CMU-CS-79-124.pdf">pdf</a></li>
+</ul>
+<h3 id="1980-">1980 ...</h3>
+<ul>
+<li><a href="/Judea_Pearl">Judea Pearl</a> (<strong>1981</strong>). <em>Heuristic search theory: A survey of recent results</em>. <a href="http://www.informatik.uni-trier.de/%7Eley/db/conf/ijcai/ijcai81.html">IJCAI-81</a>, <a href="http://ijcai.org/Past%20Proceedings/IJCAI-81-VOL%201/PDF/100.pdf">pdf</a></li>
+<li><a href="/Judea_Pearl">Judea Pearl</a> (<strong>1982</strong>). <em><a href="http://portal.acm.org/citation.cfm?id=358616&amp;dl=ACM&amp;coll=DL&amp;CFID=27355608&amp;CFTOKEN=40935826">The Solution for the Branching Factor of the Alpha-Beta Pruning Algorithm and its Optimality</a></em>. <a href="/ACM">Communications of the ACM</a>, Vol. 25, No. 8</li>
+<li><a href="/Murray_Campbell">Murray Campbell</a>, <a href="/Tony_Marsland">Tony Marsland</a> (<strong>1983</strong>). <em>A Comparison of Minimax Tree Search Algorithms</em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 20, No. 4, <a href="http://webdocs.cs.ualberta.ca/~tony/OldPapers/TR82-3.pdf">pdf</a></li>
+<li>Andrew L. Reibman, Bruce W. Ballard (<strong>1983</strong>). <em><a href="http://www.aaai.org/Library/AAAI/1983/aaai83-084.php">Non-Minimax Search Strategies for Use against Fallible Opponents</a></em>. Proceedings of <a href="/AAAI">AAAI</a> 83</li>
+<li>Nanda Srimani (<strong>1985</strong>). <em>A New Algorithm (PS*) for Searching Game Trees</em>. Master's thesis, <a href="/University_of_Alberta">University of Alberta</a></li>
+<li><a href="/Toshihide_Ibaraki">Toshihide Ibaraki</a> (<strong>1986</strong>). <em>Generalization of Alpha-Beta and SSS* Search Procedures.</em> <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 29</li>
+<li><a href="/Tony_Marsland">Tony Marsland</a>, Nanda Srimani (<strong>1986</strong>). <em>Phased State Search</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/fjcc/fjcc86.html#MarslandS86">Fall Joint Computer Conference</a>, <a href="http://webdocs.cs.ualberta.ca/~tony/OldPapers/fjcc.1986.pdf">pdf</a></li>
+<li><a href="/Hermann_Kaindl">Hermann Kaindl</a>, <a href="/Helmut_Horacek">Helmut Horacek</a>, <a href="/Marcus_Wagner">Marcus Wagner</a> (<strong>1986</strong>). <em>Selective Search versus Brute Force.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 9, No. 3</a></li>
+<li><a href="/Ronald_L._Rivest">Ronald L. Rivest</a> (<strong>1987</strong>). <em>Game Tree Searching by Min/Max Approximation</em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_(journal)">Artificial Intelligence</a>, Vol. 34, No. 1, <a href="http://people.csail.mit.edu/rivest/Rivest-GameTreeSearchingByMinMaxApproximation.pdf">pdf 1995</a></li>
+<li><a href="/Bruce_Abramson">Bruce Abramson</a> (<strong>1989</strong>). <em>Control Strategies for Two-Player Games.</em> ACM Computing Surveys, Vol. 21, No. 2, <a href="http://www.theinformationist.com/pdf/constrat.pdf/">pdf</a></li>
+<li><a href="/Stuart_Russell">Stuart Russell</a>, <a href="/Eric_Wefald">Eric Wefald</a> (<strong>1989</strong>). <em><a href="http://portal.acm.org/citation.cfm?id=1623807">On optimal game-tree search using rational metareasoning</a>.</em> In Proceedings of the Eleventh International Joint Conference on Artificial Intelligence, Detroit, MI: Morgan Kaufmann, <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.79.9229&amp;rep=rep1&amp;type=pdf">pdf</a></li>
+<li><a href="/Liwu_Li">Liwu Li</a> (<strong>1989</strong>). <em><a href="https://doi.org/10.7939/R3VX06F26">Probabilistic Analysis of Search</a></em>. Ph.D. thesis, <a href="/University_of_Alberta">University of Alberta</a>, advisor <a href="/Tony_Marsland">Tony Marsland</a></li>
+<li>Wolfgang Nagl (<strong>1989</strong>). <em>Best-Move Proving: A Fast Game Tree Searching Program</em>. <a href="/1st_Computer_Olympiad">Heuristic Programming in AI 1</a></li>
+</ul>
+<h3 id="1990-">1990 ...</h3>
+<ul>
+<li><a href="/Toshihide_Ibaraki">Toshihide Ibaraki</a>, Naoki Katoh (<strong>1990</strong>). <em><a href="https://link.springer.com/article/10.1007/BF01531075">Searching Minimax Game Trees Under Memory Space Constraint</a></em>. <a href="https://link.springer.com/journal/10472">Annals of Mathematics and Artificial Intelligence</a>, Vol. 1, Nos. 1-4</li>
+<li><a href="/Victor_Allis">Victor Allis</a>, <a href="/Maarten_van_der_Meulen">Maarten van der Meulen</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>1991</strong>). <em>Proof-Number Search.</em> Technical Reports in Computer Science, CS 91-01. Department of Computer Science, <a href="/Maastricht_University">University of Limburg</a></li>
+<li><a href="/Tony_Marsland">Tony Marsland</a> (<strong>1992</strong>). <em>Computer Chess and Search.</em> Encyclopedia of Artificial Intelligence (2nd ed.) (ed. S.C. Shapiro) John Wiley &amp; Sons, Inc. <a href="http://webdocs.cs.ualberta.ca/~tony/RecentPapers/encyc.mac-1991.pdf">pdf</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a></li>
+<li><a href="/Eric_B._Baum">Eric B. Baum</a> (<strong>1992</strong>). <em>On Optimal Game Tree Propagation for Imperfect Players</em>. <a href="/AAAI">AAAI-92</a>, <a href="http://www.aaai.org/Papers/AAAI/1992/AAAI92-078.pdf">pdf</a></li>
+<li><a href="/Claude_G._Diderich">Claude G. Diderich</a> (<strong>1993</strong>). <em><a href="http://portal.acm.org/citation.cfm?id=165007">A Bibliography on Minimax Trees</a></em>. <a href="/ACM">ACM SIGACT News</a>, Vol. 24, No. 4</li>
+<li><a href="/Deniz_Yuret">Deniz Yuret</a> (<strong>1994</strong>). <em><a href="https://scholar.google.com/citations?view_op=view_citation&amp;hl=en&amp;user=EJurXJ4AAAAJ&amp;cstart=40&amp;citation_for_view=EJurXJ4AAAAJ:TQgYirikUcIC">The Principle of Pressure in Chess</a></em>. TAINN 1994</li>
+<li><a href="/Hans_Berliner">Hans Berliner</a>, <a href="/Chris_McConnell">Chris McConnell</a> (<strong>1995</strong>). <em>B* Probability Based Search.</em> <a href="/Carnegie_Mellon_University">Carnegie Mellon University</a> Computer Science research report, Pittsburgh, PA, <a href="http://www.cs.cmu.edu/afs/cs.cmu.edu/user/ccm/www/papers/BStar.ps">postscript</a></li>
+<li><a href="/Claude_G._Diderich">Claude G. Diderich</a>, Marc Gengler (<strong>1995</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-1-4613-3557-3_2">A Survey on Minimax Trees and Associated Algorithms</a></em>. <em><a href="http://link.springer.com/book/10.1007/978-1-4613-3557-3">Minimax and Its Applications</a></em>. <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Kluwer Academic Publishers</a></li>
+<li><a href="/Eric_B._Baum">Eric B. Baum</a>, <a href="/Warren_D._Smith">Warren D. Smith</a> (<strong>1995</strong>). <em>Best Play for Imperfect Players and Game Tree Search</em>. Part 1 - Theory</li>
+<li><a href="/Eric_B._Baum">Eric B. Baum</a>, <a href="/Warren_D._Smith">Warren D. Smith</a> (<strong>1995</strong>). <em>Best Play for Imperfect Players and Game Tree Search</em>. with pseudocode appendix by Charles Garrett, <a href="http://scorevoting.net/WarrenSmithPages/homepage/bpip1.ps">ps</a></li>
+<li><a href="/Warren_D._Smith">Warren D. Smith</a>, <a href="/Eric_B._Baum">Eric B. Baum</a>, Charles Garrett, Rico Tudor (<strong>1995</strong>). <em>Best Play for Imperfect Players and Game Tree Search</em>. Part 2 - Experiments, <a href="http://scorevoting.net/WarrenSmithPages/homepage/bpip2.ps">ps</a></li>
+<li><a href="/Andy_Walker">Andrew N. Walker</a> (<strong>1996</strong>). <em>Hybrid Heuristic Search</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 19, No. 1</a></li>
+<li><a href="/Ingo_Althöfer">Ingo Althöfer</a> (<strong>1997</strong>). <em>On the k-best Mode in Computer Chess: Measuring the Similarity of Move Proposals.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 20, No. 3</a></li>
+<li><a href="/Eric_B._Baum">Eric B. Baum</a>, <a href="/Warren_D._Smith">Warren D. Smith</a> (<strong>1997</strong>). <em>A Bayesian Approach to Relevance in Game Playing</em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 97, <a href="http://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.26.7961">CiteSeerX</a></li>
+<li><a href="/Donald_Knuth">Donald E. Knuth</a> (<strong>1998</strong>). <em><a href="http://www-cs-faculty.stanford.edu/%7Eknuth/taocp.html">The Art Of Computer Programming</a> Vol 3. Sorting and Searching, Second Edition</em>, Addison-Wesley</li>
+<li><a href="/Wim_Pijls">Wim Pijls</a>, <a href="/Arie_de_Bruin">Arie de Bruin</a> (<strong>1998</strong>). <em><a href="http://link.springer.com/chapter/10.1007/3-540-48957-6_12">Game Tree Algorithms and Solution Trees</a></em>. <a href="/CG_1998">CG 1998</a></li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="/Paul_E._Utgoff">Paul E. Utgoff</a>, <a href="/Richard_P._Cochran">Richard P. Cochran</a> (<strong>2000</strong>). <em><a href="http://link.springer.com/chapter/10.1007/3-540-45579-5_1">A Least-Certainty Heuristic for Selective Search</a></em>. <a href="/CG_2000">CG 2000</a>, <a href="http://people.cs.umass.edu/~utgoff/papers/springer-lcf.pdf">pdf</a> » <a href="/Richard_P._Cochran">LCF</a></li>
+<li>Thomas Thomsen (<strong>2000</strong>). <em><a href="http://link.springer.com/chapter/10.1007/3-540-45579-5_2">Lambda-Search in Game Trees - with Application to Go</a></em>. <a href="/CG_2000">CG 2000</a> also published in <a href="/ICGA_Journal">ICGA Journal, Vol. 23, No. 4</a>, winning the 2001 <a href="/ICGA_Journal">ICGA Journal Award</a>, <a href="http://www.t-t.dk/publications/lambda_icga.pdf">preprint as pdf</a> » Lambda-Search</li>
+<li><a href="/Todd_W._Neller">Todd W. Neller</a> (<strong>2000</strong>). <em>Simulation-Based Search for Hybrid System Control and Analysis</em>. Ph.D. thesis, <a href="/Stanford_University">Stanford University</a>, advisor <a href="/Richard_Fikes">Richard Fikes</a>, <a href="http://cs.gettysburg.edu/~tneller/papers/neller-dissertation.pdf">pdf</a></li>
+<li><a href="/Martin_Müller">Martin Müller</a> (<strong>2001, 2002</strong>). <em>Proof-Set Search</em>. Technical Report TR 01-09, <a href="/University_of_Alberta">University of Alberta</a>, <a href="/CG_2002">CG 2002</a>, <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.20.9972">CiteSeerX</a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a></li>
+<li><a href="/Thomas_Lincke">Thomas Lincke</a> (<strong>2002</strong>). <em>Exploring the Computational Limits of Large Exhaustive Search Problems</em>. Ph.D thesis, <a href="/ETH_Zurich">ETH Zurich</a>, <a href="http://e-collection.library.ethz.ch/eserv/eth:25905/eth-25905-02.pdf">pdf</a> » <a href="/Awari">Awari</a>, <a href="/Repetitions">Repetitions</a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a></li>
+<li>Steven Walczak (<strong>2003</strong>). <em><a href="http://portal.acm.org/citation.cfm?id=776752.776792&amp;coll=DL&amp;dl=GUIDE&amp;CFID=34101495&amp;CFTOKEN=18614940">Knowledge-Based Search in Competitive Domains</a></em>. IEEE Transactions on Knowledge and Data Engineering, Vol. 15, No. 3</li>
+<li><a href="/Arie_de_Bruin">Arie de Bruin</a>, <a href="/Wim_Pijls">Wim Pijls</a> (<strong>2003</strong>). <em><a href="https://repub.eur.nl/pub/459">Trends in game tree search</a></em>. <a href="https://en.wikipedia.org/wiki/Erasmus_University_Rotterdam">Erasmus University, Rotterdam</a></li>
+<li><a href="/David_Rasmussen">David Rasmussen</a> (<strong>2004</strong>). <em>Parallel Chess Searching and Bitboards.</em> Masters thesis, <a href="http://www2.imm.dtu.dk/pubdb/views/edoc_download.php/3267/ps/imm3267.ps">ps</a></li>
+<li><a href="/Yan_Radovilsky">Yan Radovilsky</a>, <a href="/Solomon_Eyal_Shimony">Solomon Eyal Shimony</a> (<strong>2004</strong>). <em>Generalized Model for Rational Game Tree Search</em>. <a href="https://dblp.uni-trier.de/db/conf/smc/smc2004-2.html">SMC 2004</a>, <a href="https://www.cs.bgu.ac.il/~yanr/Publications/smc04.pdf">pdf</a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a></li>
+<li><a href="/Markian_Hlynka">Markian Hlynka</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a> (<strong>2004</strong>). <em>Pre-Searching</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 27, No. 4</a></li>
+<li><a href="/Markian_Hlynka">Markian Hlynka</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a> (<strong>2005</strong>). <em><a href="http://link.springer.com/chapter/10.1007/11922155_3">Automatic Generation of Search Engines</a></em>. <a href="/Advances_in_Computer_Games_11">Advances in Computer Games 11</a></li>
+<li><a href="/Ulf_Lorenz">Ulf Lorenz</a> (<strong>2006</strong>). <em>A new Implementation of Error Analysis in Game Trees</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 29, No. 2</a></li>
+<li>Dmitry Batenkov (<strong>2006</strong>). <em>Modern developments of Shannon’s Chess</em>. <a href="http://www.wisdom.weizmann.ac.il/~dmitryb/writing/chess_report.pdf">pdf</a></li>
+<li>Pim Nijssen (<strong>2009</strong>). <em>Using Intelligent Search Techniques to Play the Game Khet</em>. Master's Thesis, <a href="/Maastricht_University">Maastricht University</a>, <a href="http://www.personeel.unimaas.nl/pim.nijssen/pub/msc.pdf">pdf</a> <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a></li>
+<li><a href="/Claude_G._Diderich">Claude G. Diderich</a>, Marc Gengler (<strong>2009</strong>). <em><a href="http://link.springer.com/referenceworkentry/10.1007%2F978-0-387-74759-0_370">Minimax Game Tree Searching</a></em>. <a href="http://link.springer.com/book/10.1007/978-0-387-74759-0">Encyclopedia of Optimization</a>, <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a></li>
+<li><a href="/David_Silver">David Silver</a> (<strong>2009</strong>). <em>Reinforcement Learning and Simulation-Based Search</em>. Ph.D. thesis, <a href="/University_of_Alberta">University of Alberta</a>, <a href="http://www0.cs.ucl.ac.uk/staff/D.Silver/web/Applications_files/thesis.pdf">pdf</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="/Junichi_Hashimoto">Junichi Hashimoto</a> (<strong>2011</strong>). <em>A Study on Game-Independent Heuristics in Game-Tree Search</em>. Ph.D. thesis, <a href="/JAIST">JAIST</a></li>
+<li><a href="/Hung-Jui_Chang">Hung-Jui Chang</a>, Meng-Tsung Tsai, <a href="/Tsan-sheng_Hsu">Tsan-sheng Hsu</a> (<strong>2011</strong>). <em>Game Tree Search with Adaptive Resolution</em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a>, <a href="https://www.conftool.net/acg13/index.php/Chang-Game_Tree_Search_with_Adaptive_Resolution-145.pdf?page=downloadPaper&amp;filename=Chang-Game_Tree_Search_with_Adaptive_Resolution-145.pdf&amp;form_id=145&amp;form_version=final">pdf</a></li>
+<li>Alexandru Godescu (<strong>2011</strong>). <em><a href="http://arxiv.org/abs/1112.2149">Information and search in computer chess</a></em>. <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a></li>
+<li>Pim Nijssen, <a href="/Mark_Winands">Mark Winands</a> (<strong>2012</strong>). <em>An Overview of Search Techniques in Multi-Player Games</em>. ECAI CGW 2012</li>
+<li><a href="/Abdallah_Saffidine">Abdallah Saffidine</a>, <a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2012</strong>). <em>A General Multi-Agent Modal Logic K Framework for Game Tree Search</em>. ECAI CGW 2012</li>
+<li><a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Mark_Winands">Mark Winands</a>, <a href="/Martin_Müller">Martin Müller</a>, <a href="/Jahn-Takeshi_Saito">Jahn-Takeshi Saito</a> (<strong>2012</strong>). <em>Game-Tree Search using Proof Numbers: The First Twenty Years</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 35, No. 3</a></li>
+<li><a href="/Kuo-Yuan_Kao">Kuo-Yuan Kao</a>, <a href="/I-Chen_Wu">I-Chen Wu</a>, <a href="/Yi-Chang_Shan">Yi-Chang Shan</a>, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a> (<strong>2012</strong>). <em>Selection Search for Mean and Temperature of Multi-branch Combinatorial Games</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 35, No. 3</a></li>
+<li><a href="/David_Silver">David Silver</a>, <a href="/Richard_Sutton">Richard Sutton</a>, <a href="/Martin_Müller">Martin Mueller</a> (<strong>2013</strong>). <em>Temporal-Difference Search in Computer Go</em>. Proceedings of the <a href="http://icaps13.icaps-conference.org/technical-program/workshop-program/planning-and-learning/">ICAPS-13 Workshop on Planning and Learning</a>, <a href="http://webdocs.cs.ualberta.ca/~sutton/papers/SSM-ICAPS-13.pdf">pdf</a></li>
+<li><a href="/Jeff_Rollason">Jeff Rollason</a> (<strong>2014</strong>). <em><a href="http://www.aifactory.co.uk/newsletter/2014_01_interest_minimax.htm">Interest Search - Another way to do Minimax</a></em>. <a href="/AI_Factory">AI Factory</a>, Summer 2014</li>
+<li>Tom Holden (<strong>2014</strong>). <em>Notes on an alternative approach to move choice in games such as Chess</em>. <a href="http://www.tholden.org/wp-content/uploads/2014/11/Notes-on-an-alternative-approach-to-move-choice-in-games-such-as-Chess.pdf">pdf</a> <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a></li>
+<li><a href="/Christopher_D._Rosin">Christopher D. Rosin</a> (<strong>2014</strong>). <em>Game playing</em>. <a href="https://en.wikipedia.org/wiki/Wiley_Interdisciplinary_Reviews:_Cognitive_Science">WIREs Cognitive Science</a>, Vol. 5, <a href="http://www.chrisrosin.com/Rosin-Game-Playing-submitted-ver.pdf">pdf preprint</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="/Jakub_Pawlewicz">Jakub Pawlewicz</a>, <a href="/Ryan_Hayward">Ryan Hayward</a> (<strong>2015</strong>). <em>Feature Strength and Parallelization of Sibling Conspiracy Number Search</em>. <a href="/Advances_in_Computer_Games_14">Advances in Computer Games 14</a></li>
+<li>Mohd Nor Akmal Khalid, Umi Kalsom Yusof, <a href="/Hiroyuki_Iida">Hiroyuki Iida</a>, Taichi Ishitobi (<strong>2015</strong>). <em><a href="https://www.researchgate.net/publication/281152992_Critical_Position_Identification_in_Games_and_Its_Application_to_Speculative_Play">Critical Position Identiﬁcation in Games and Its Application to Speculative Play</a></em>. <a href="http://www.scitepress.org/DigitalLibrary/ProceedingsDetails.aspx?ID=+mGlly8Sp00=&amp;t=1">ICAART 2015</a></li>
+<li>Mohd Nor Akmal Khalid, E. Mei Ang, Umi Kalsom Yusof, <a href="/Hiroyuki_Iida">Hiroyuki Iida</a>, Taichi Ishitobi (<strong>2015</strong>). <em><a href="http://link.springer.com/chapter/10.1007%2F978-3-319-27947-3_6">Identifying Critical Positions Based on Conspiracy Numbers</a></em>. <a href="http://link.springer.com/book/10.1007/978-3-319-27947-3">Agents and Artificial Intelligence</a>, <a href="http://dblp.uni-trier.de/db/conf/icaart/icaart2015s.html#KhalidAYII15">ICAART 2015 - Revised Selected Papers</a></li>
+<li><a href="/Ting-Han_Wei">Ting-Han Wei</a>, <a href="/Chao-Chin_Liang">Chao-Chin Liang</a>, <a href="/I-Chen_Wu">I-Chen Wu</a>, Lung-Pin Chen (<strong>2015</strong>). <em>Software Development Framework for Job-Level Algorithms</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 38, No. 3</a></li>
+<li><a href="/Tobias_Joppen">Tobias Joppen</a>, Miriam Moneke, Nils Schroder, Christian Wirth, <a href="/Johannes_Fürnkranz">Johannes Fürnkranz</a> (<strong>2017</strong>). <em><a href="http://ieeexplore.ieee.org/document/7970136/">Informed Hybrid Game Tree Search for General Video Game Playing</a></em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. PP, No. 99</li>
+<li>Michael Hartisch, <a href="/Ulf_Lorenz">Ulf Lorenz</a> (<strong>2019</strong>). <em>A Novel Application for Game Tree Search - Exploiting Pruning Mechanisms for Quantified Integer Programs</em>. <a href="/Advances_in_Computer_Games_16">Advances in Computer Games 16</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li>Quentin Cohen-Solal, <a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2020</strong>). <em>Minimax Strikes Back</em>. <a href="https://arxiv.org/abs/2012.10700">arXiv:2012.10700</a> » <a href="/Reinforcement_Learning">Reinforcement Learning</a></li>
+<li>Quentin Cohen-Solal (<strong>2021</strong>). <em>Completeness of Unbounded Best-First Game Algorithms</em>. <a href="https://arxiv.org/abs/2109.09468">arXiv:2109.09468</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1999">1999</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=47379">Some crazy ideas</a> by Gareth McCaughan, <a href="/CCC">CCC</a>, March 29, 1999</li>
+</ul>
+<h3 id="2000--1">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=112586">About search algorithms and heuristics</a> by <a href="/José_Carlos_Martínez_Galán">José Carlos</a>, <a href="/CCC">CCC</a>, May 26, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=172496">Search algorithms and effeciency</a> by Kim Roper Jensen, <a href="/CCC">CCC</a>, May 30, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=201686">Search algorithms in chess programs</a> by <a href="/Russell_Reagan">Russell Reagan</a>, <a href="/CCC">CCC</a>, December 12, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=325977">Search algorithms</a> by <a href="/Jan_Renze_Steenhuisen">Renze Steenhuisen</a>, <a href="/CCC">CCC</a>, November 06, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=343686">Game tree search algorithms</a> by <a href="/Russell_Reagan">Russell Reagan</a>, <a href="/CCC">CCC</a>, January 20, 2004</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=6665">Search questions</a> by <a href="/Sven_Schüle">Sven Schüle</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, July 17, 2007 » <a href="/Fail-Soft">Fail-Soft</a>, <a href="/Principal_Variation_Search">Principal Variation Search</a></li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=6666">Even more search questions</a> by <a href="/Sven_Schüle">Sven Schüle</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, July 17, 2007 » <a href="/Root">Root</a>, <a href="/Iterative_Deepening">Iterative Deepening</a></li>
+<li><a href="http://www.hiarcs.net/forums/viewtopic.php?t=402">Search or Evaluation?</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/Computer_Chess_Forums">Hiarcs Forum</a>, October 05, 2007 » <a href="/Knowledge">Search versus Evaluation</a>, <a href="/Evaluation">Evaluation</a></li>
+</ul>
+<p><a href="http://www.hiarcs.net/forums/viewtopic.php?p=2944">Re: Search or Evaluation?</a> by <a href="/Mark_Uniacke">Mark Uniacke</a>, <a href="/Computer_Chess_Forums">Hiarcs Forum</a>, October 14, 2007</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=17921">Efficient algorithm for k-best mode?</a> by <a href="/Gijsbert_Wiesenekker">Gijsbert Wiesenekker</a>, <a href="/CCC">CCC</a>, November 17, 2007</li>
+</ul>
+<h3 id="2010--1">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48733">Scaling at 2x nodes (or doubling time control).</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, July 23, 2013 » <a href="/Match_Statistics">Doubling TC</a>, <a href="/Depth">Diminishing Returns</a>, <a href="/Playing_Strength">Playing Strength</a>, <a href="/Houdini">Houdini</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48743">Is search irrelevant when computing ahead of very big trees?</a> by <a href="/Fermin_Serrano">Fermin Serrano</a>, <a href="/CCC">CCC</a>, July 24, 2013 » <a href="/Knowledge">Knowledge</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49190">Improve the search or the evaluation?</a> by <a href="/Jens_Bæk_Nielsen">Jens Bæk Nielsen</a>, <a href="/CCC">CCC</a>, August 31, 2013 » <a href="/Evaluation">Evaluation</a>, <a href="/Knowledge">Search versus Evaluation</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49906">Slow Searchers?</a> by Michael Neish, <a href="/CCC">CCC</a>, November 02, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54324">A new algorithm accounting for the uncertainty in eval funcs</a> by Tom Holden, <a href="/CCC">CCC</a>, November 12, 2014</li>
+</ul>
+<h3 id="2015--1">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55474">Search algorithm in it's simplest forum</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, February 25, 2015 » <a href="/Alpha-Beta">Alpha-Beta</a>, <a href="/Quiescence_Search">Quiescence Search</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57092">Time assignment to children</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, July 26, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57270">Some musings about search</a> by <a href="/Ed_Schroder">Ed Schroder</a>, <a href="/CCC">CCC</a>, August 14, 2015 » <a href="/Automated_Tuning">Automated Tuning</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60581">Search</a> by <a href="/Laurie_Tunnicliffe">Laurie Tunnicliffe</a>, <a href="/CCC">CCC</a>, June 24, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61348">Searching using slow eval with tactical verification</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, September 06, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61358">Root search</a> by <a href="/Laurie_Tunnicliffe">Laurie Tunnicliffe</a>, <a href="/CCC">CCC</a>, September 08, 2016 » <a href="/Root">Root</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61784">Doubling of time control</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, October 21, 2016 » <a href="/Match_Statistics">Doubling TC</a>, <a href="/Depth">Diminishing Returns</a>, <a href="/Playing_Strength">Playing Strength</a>, <a href="/Komodo">Komodo</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64390">search efficiency</a> by <a href="/Marco_Pampaloni">Marco Pampaloni</a>, <a href="/CCC">CCC</a>, June 23, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65403">comparing between search or evaluation</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, October 09, 2017 » <a href="/Evaluation">Evaluation</a></li>
+</ul>
+<h3 id="2020--1">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74170">Tactical search</a> by <a href="/Alvaro_Cardoso">Alvaro Cardoso</a>, <a href="/CCC">CCC</a>, June 13, 2020 » <a href="/Tactics">Tactics</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77189">Listening for GUI input when searching</a> by <a href="/Niels_Abildskov">Niels Abildskov</a>, <a href="/CCC">CCC</a>, April 27, 2021 » <a href="/GUI">GUI</a>, <a href="/Thread">Thread</a>, <a href="/UCI">UCI</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77202">On reaching maximum ply</a> by <a href="/Martin_Bryant">Martin Bryant</a>, <a href="/CCC">CCC</a>, April 29, 2021 » <a href="/Depth">Maximum Search Depth</a>, <a href="/Ply">Ply</a></li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=78505">Search</a> by <a href="/Vincent_Diepeveen">Vincent Diepeveen</a>, <a href="/CCC">CCC</a>, October 26, 2021</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79276">Strategies to unit testing the search</a> by Olexiy Svitashev, <a href="/CCC">CCC</a>, February 03, 2022 » <a href="/Engine_Testing">Engine Testing</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Search_algorithm">Search algorithm from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Combinatorial_search">Combinatorial search from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Depth-first_search">Depth-first search from Wikipedia</a></li>
+<li><a href="http://www.boost.org/doc/libs/1_42_0/libs/graph/doc/depth_first_search.html">Boost Graph Library: Depth-First Search</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Best-first_search">Best-first search from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/A*_search_algorithm">A* search algorithm from Wikipedia</a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Breadth-first_search">Breadth-first search from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm">Dijkstra's algorithm from Wikipedia</a></li>
+<li><a href="http://www.t-t.dk/go/cg2000/code20.html">Lambda-search Java-code (version 2.0)</a> by Thomas Thomsen</li>
+<li><a href="http://www.gamedev.net/page/resources/_/technical/artificial-intelligence/chess-programming-part-iv-basic-search-r1171">Chess Programming Part IV: Basic Search</a> by <a href="/François-Dominic_Laramée">François-Dominic Laramée</a>, <a href="https://en.wikipedia.org/wiki/GameDev.net">gamedev.net</a>, Ausgust 2000</li>
+<li><a href="http://www.gamedev.net/page/resources/_/technical/artificial-intelligence/chess-programming-part-v-advanced-search-r1197">Chess Programming Part V: Advanced Search</a> by <a href="/François-Dominic_Laramée">François-Dominic Laramée</a>, <a href="https://en.wikipedia.org/wiki/GameDev.net">gamedev.net</a>, September 2000</li>
+<li><a href="https://sites.google.com/site/hispanicchessengines/programs--interface---engines/engine">Engine - Hispanic Chess Engines | The search function</a> by <a href="/Pedro_Castro">Pedro Castro</a></li>
+<li><a href="http://hamedahmadi.com/gametree/">An Introduction to Game Tree Algorithms</a> by <a href="/Hamed_Ahmadi">Hamed Ahmadi</a></li>
+<li><a href="/Category:Miroslav_Vitouš">Miroslav Vitouš</a> - <a href="https://de.wikipedia.org/wiki/Infinite_Search">Infinite Search</a> (1969), <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p><a href="/Category:Jack_DeJohnette">Jack DeJohnette</a>, <a href="/Category:John_McLaughlin">John McLaughlin</a>, <a href="/Category:Herbie_Hancock">Herbie Hancock</a>, <a href="/Category:Joe_Henderson">Joe Henderson</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/-OdIEbFwQEs" title="YouTube video -OdIEbFwQEs" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=-OdIEbFwQEs">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Main_Page">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Claude_Shannon">Claude Shannon</a> (<strong>1949</strong>). <em><a href="http://www.pi.infn.it/%7Ecarosi/chess/shannon.txt">Programming a Computer for Playing Chess</a></em>. <a href="http://archive.computerhistory.org/projects/chess/related_materials/text/2-0%20and%202-1.Programming_a_computer_for_playing_chess.shannon/2-0%20and%202-1.Programming_a_computer_for_playing_chess.shannon.062303002.pdf">pdf</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Adriaan_de_Groot">Adriaan de Groot</a> (<strong>1946</strong>). <em>Het denken van den Schaker, een experimenteel-psychologische studie</em>. Ph.D. thesis, <a href="https://en.wikipedia.org/wiki/University_of_Amsterdam">University of Amsterdam</a>; N.V. Noord-Hollandse Uitgevers Maatschappij, <a href="https://en.wikipedia.org/wiki/Amsterdam">Amsterdam</a>. Translated with the help of <a href="/George_Baylor">George Baylor</a>, with additions (in <strong>1965</strong>) as <em>Thought and Choice in Chess</em>. Mouton Publishers, The Hague. ISBN 90-279-7914-6. (<a href="https://www.amazon.com/gp/reader/9027979146/ref=sib_dp_pt#reader-link">amazon</a>)<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/7df61a100528f201">Excellent Computer-Chess Overview Paper Found!</a> by <a href="/Ernst_A._Heinz">Ernst A. Heinz</a>, <a href="/Computer_Chess_Forums">rgcc</a>, March 6, 1997<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://www.stmintz.com/ccc/index.php?id=221364">Great article for people who wants to write a chess engine</a> by <a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a>, <a href="/CCC">CCC</a>, April 03, 2002<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="https://www.stmintz.com/ccc/index.php?id=233322">Re: A new(?) technique to recognize draws</a> by Dan Andersson, June 01, 2002<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2093#p17469">Re: Aquarium IDEA, repetitions, and minimax over cycles</a> by <a href="/Ronald_de_Man">syzygy</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, September 22, 2012<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=57560&amp;start=14">Re: Interesting ideas</a> by <a href="/Karlo_Balla">Karlo Bala Jr.</a>, <a href="/CCC">CCC</a>, September 09, 2015<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="https://en.wikipedia.org/wiki/Khet_%28game%29">Khet (game) from Wikipedia</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=1736">Information and search in computer chess (Godescu)</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, December 12, 2011<a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=54324">A new algorithm accounting for the uncertainty in eval funcs</a> by Tom Holden, <a href="/CCC">CCC</a>, November 12, 2014<a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Bernd_Besser">Bernd Besser</a> · <a href="/Category:Jack_DeJohnette">Jack DeJohnette</a> · <a href="/Category:Herbie_Hancock">Herbie Hancock</a> · <a href="/Category:Joe_Henderson">Joe Henderson</a> · <a href="/Category:John_McLaughlin">John McLaughlin</a> · <a href="/Category:Miroslav_Vitouš">Miroslav Vitouš</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Search">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, Smatovic, ShawnXu.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

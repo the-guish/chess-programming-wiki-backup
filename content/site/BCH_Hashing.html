@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BCH Hashing - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">BCH Hashing</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Search">Search</a> * <a href="/Transposition_Table">Transposition Table</a> * BCH Hashing</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="https://en.wikipedia.org/wiki/Metamorphosis_of_Narcissus" target="_blank" rel="noopener noreferrer"><img src="/assets/Metamorphosis_of_Narcissus.jpg" alt="Salvador Dalí - Metamorphosis of Narcissus, 1937 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Salvador_Dalí">Salvador Dalí</a> - <a href="https://en.wikipedia.org/wiki/Metamorphosis_of_Narcissus">Metamorphosis of Narcissus</a>, 1937 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://en.wikipedia.org/wiki/Metamorphosis_of_Narcissus">Metamorphosis of Narcissus from Wikipedia</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>BCH Hashing</strong>,<br />
+a fast <a href="/Incremental_Updates">incremental</a> <a href="https://en.wikipedia.org/wiki/Hash_function">Hash function</a> to transform a board <a href="/Chess_Position">position</a> into a number of a set length, quite similar to <a href="/Zobrist_Hashing">Zobrist Hashing</a>. It was proposed by <a href="/Tony_Warnock">Tony Warnock</a> and <a href="/Burton_Wendroff">Burton Wendroff</a> in 1988 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>, relying on <a href="https://en.wikipedia.org/wiki/BCH_code">BCH codes</a> invented by <a href="/Mathematician">Alexis Hocquenghem</a> in 1959 <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>, and independently by <a href="/Mathematician">Raj Chandra Bose</a> and <a href="/Mathematician">Dwijendra Kumar Ray-Chaudhuri</a> in 1960 <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>. They used a BCH signature length of 81 (or more) bits to protect 16 bits from the full position string of 749 (64*12 - 2*2*8 + 4 + 8 + 1) bits, which is sufficient to avoid <a href="/Transposition_Table">collisions</a> within an 8 ply search. They stored 63 bits of the BCH signature as "lock" inside the table, and used 18 (or more) lower bits as index. <a href="/Rainer_Feldmann">Rainer Feldmann</a> elaborates on BCH codes inside his thesis as well <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>, and refers <a href="/Elwyn_Berlekamp">Elwyn Berlekamp's</a> <em>Algebraic Coding Theory</em> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> .</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#quotes">Quotes</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#tony-warnock">Tony Warnock</a></li>
+<li><a href="#kathe-and-dan-spracklen">Kathe and Dan Spracklen</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><a href="#postings">Postings</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="quotes">Quotes</h2>
+<h3 id="tony-warnock"><a href="/Tony_Warnock">Tony Warnock</a></h3>
+<p>on <em>Search Tables in Computer Chess</em> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>:</p>
+<p><code>The following paper describes a method of generating the numbers for a hash table. By using </code><a href="https://en.wikipedia.org/wiki/Error_detection_and_correction"><code>error correcting codes</code></a><code>, we ensure that positions that are close on the board are not close in the hash space. Some experiments showed that we got an improvement in collision rate compared to using a </code><a href="/Pseudorandom_Number_Generator"><code>random set of numbers</code></a><code>.</code></p>
+<p><a href="/Mathematician"><code>MacWilliams</code></a><code> and </code><a href="/Mathematician"><code>Sloane's</code></a><code> book on error correcting codes </code><a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a><code> has the glory details about the theory and programming. </code></p>
+<h3 id="kathe-and-dan-spracklen"><a href="/Kathe_Spracklen">Kathe</a> and <a href="/Dan_Spracklen">Dan Spracklen</a></h3>
+<p>excerpt from their <em>Oral History</em> <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a> :</p>
+<p><code>Well, first explain what a hash table is... You want to spread your positions out over a large data area so you need random numbers that will distribute a Chess position over, you know, a lot of different, you know, memory maps or memory locations.</code></p>
+<p><code>So BCH random numbers were something that some people had developed at the </code><a href="https://en.wikipedia.org/wiki/University_of_New_Mexico"><code>University of New Mexico</code></a><code>. Those people had </code><a href="/Lachex"><code>a Chess program</code></a><code>. They wrote an article on it and ... I think it's three different people that developed it. Anyway, it's a coding scheme that gives the maximal distance between... Bit adjacent numbers so that you spread your positions over - more uniformly over the hash table area. They don't tend to bunch up as much that way. </code></p>
+<p><code>So, anyway, they wrote an article on how to do that and I had - in fact, I even got the book that they recommended and read it and figured it out how to do it because they didn't really tell you how to do it. They just said that they were using them and they were... So I tried it and, sure enough, they worked a lot better than the old method of getting random numbers. </code></p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Hash_Table">Hash Table</a></li>
+<li><a href="/Zobrist_Hashing">Zobrist Hashing</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Mathematician">Alexis Hocquenghem</a> (<strong>1959</strong>). <em>Codes correcteurs d'erreurs</em>. Chiffres, Paris 2, pp. 147–156 (French)</li>
+<li><a href="/Mathematician">Raj Chandra Bose</a>, <a href="/Mathematician">Dwijendra Kumar Ray-Chaudhuri</a> (<strong>1960</strong>). <em>On A Class of Error Correcting Binary Group Codes</em>. <a href="https://en.wikipedia.org/wiki/Information_and_Computation">Information and Control</a> Vol. 3, No. 1, pp. 68–79, ISSN 0890-5401, <a href="http://kom.aau.dk/~heb/kurser/NOTER/KOFA03.PDF">pdf</a></li>
+<li><a href="/Elwyn_Berlekamp">Elwyn Berlekamp</a> (<strong>1968</strong>). <em>Algebraic Coding Theory</em>. New York: McGraw-Hill. Revised ed., Aegean Park Press, (<strong>1984</strong>), ISBN 0894120638. <a href="https://www.amazon.com/Algebraic-Coding-Theory-Revised-M-6/dp/0894120638">amazon</a> <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a></li>
+<li><a href="/Mathematician">Jessie MacWilliams</a>, <a href="/Mathematician">Neil Sloane</a> (<strong>1981</strong>). <em><a href="http://www.sciencedirect.com/science/bookseries/09246509/16">The Theory of Error-Correcting Codes</a></em>. North-Holland Mathematical Library, <a href="https://www.amazon.com/Theory-Error-Correcting-North-Holland-Mathematical-Library/dp/0444851933">amazon</a></li>
+<li><a href="/Tony_Warnock">Tony Warnock</a>, <a href="/Burton_Wendroff">Burton Wendroff</a> (<strong>1988</strong>). <em>Search Tables in Computer Chess</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 11, No. 1</a></li>
+<li><a href="/Rainer_Feldmann">Rainer Feldmann</a> (<strong>1993</strong>). <em>Game Tree Search on Massively Parallel Systems</em>. Ph.D. Thesis</li>
+<li><a href="/Jean-Christophe_Weill">Jean-Christophe Weill</a> (<strong>1995</strong>). <em>Programmes d'Échecs de Championnat: Architecture Logicielle Synthèse de Fonctions d'Évaluations, Parallélisme de Recherche</em>. Ph.D. Thesis. <a href="/University_of_Paris">Université Paris 8</a>, Saint-Denis, <a href="http://www.recherche.enac.fr/%7Eweill/publications/phdJCW.ps.gz">zipped ps</a> (French) <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a></li>
+<li>J. P. Grossman, <a href="http://www.linkedin.com/in/ljakab">Levente Jakab</a> (<strong>2004</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/freeabs_all.jsp?arnumber=1405309">Using the BCH construction to generate robust linear hash functions</a></em>. <a href="http://ieeexplore.ieee.org/xpl/mostRecentIssue.jsp?punumber=9641">Information Theory Workshop, 2004. IEEE</a></li>
+</ul>
+<h2 id="postings">Postings</h2>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.chess/msg/2a4183cb654443dc?hl=en">Re: Hash tables----Clash!!!-What happens next?</a> by <a href="/Tony_Warnock">Tony Warnock</a>, <a href="/Computer_Chess_Forums">rgcc</a>, March 17, 1994</li>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/0sIKY_dfLUs/aMlLOXkDJJsJ">Re: Hash functions for use with a transition table</a> by <a href="/Ronald_de_Man">Ronald de Man</a>, <a href="/Computer_Chess_Forums">rgcc</a>, March 7, 1997</li>
+<li><a href="http://www.science-bbs.com/121-math/3da76fc0fd4785b9.htm#.UdMt06wXl8E">How gracefully do BCH codes degrade</a> by Eb Oesch, <a href="http://www.science-bbs.com/viewforum/121-math/1796.htm">Science Forum, math</a>, May 20, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=30008&amp;start=11">Re: Overlapped Zobrist keys array</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/CCC">CCC</a>, October 06, 2009</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/BCH_code">BCH codes from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Berlekamp%E2%80%93Massey_algorithm">Berlekamp–Massey algorithm from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Berlekamp%E2%80%93Welch_algorithm">Berlekamp–Welch algorithm from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Coding_theory">Coding theory from Wikipedia</a></li>
+<li><a href="https://www.youtube.com/course?list=EC5002EB7306694E7D">Coding Theory</a> by <a href="http://www.ee.iitm.ac.in/~andrew/">Andrew Thangaraj</a>, Department of Electronics &amp; Communication Engineering, <a href="https://en.wikipedia.org/wiki/Indian_Institute_of_Technology_Madras">Indian Institute of Technology Madras</a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Videos</li>
+<li><a href="https://en.wikipedia.org/wiki/Cyclic_code">Cyclic code from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Error_detection_and_correction">Error detection and correction from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Finite_field">Finite field from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/GF%282%29">GF(2) from Wikipedia</a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Forward_error_correction">Forward error correction from Wikipedia</a></li>
+<li><a href="http://mint.sbg.ac.at/desc_CCyclic-BCHBound.html">MinT - Cyclic Codes (BCH-Bound)</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Root_of_unity_modulo_n">Root of unity modulo n from Wikipedia</a></li>
+<li><a href="/Category:Hux_Flux">Hux Flux</a> - Calculus, <a href="https://en.wikipedia.org/wiki/Hux_Flux#Albums">Cryptic Crunch</a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/zqxOJptzkcQ" title="YouTube video zqxOJptzkcQ" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=zqxOJptzkcQ">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Transposition_Table">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Tony_Warnock">Tony Warnock</a>, <a href="/Burton_Wendroff">Burton Wendroff</a> (<strong>1988</strong>). <em>Search Tables in Computer Chess</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 11, No. 1</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Mathematician">Alexis Hocquenghem</a> (<strong>1959</strong>). <em>Codes correcteurs d'erreurs</em>. Chiffres, Paris 2, pp. 147–156 (French)<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="/Mathematician">Raj Chandra Bose</a>, <a href="/Mathematician">Dwijendra Kumar Ray-Chaudhuri</a> (<strong>1960</strong>). <em>On A Class of Error Correcting Binary Group Codes</em>. <a href="https://en.wikipedia.org/wiki/Information_and_Computation">Information and Control</a> Vol. 3, No. 1, pp. 68–79, ISSN 0890-5401, <a href="http://kom.aau.dk/~heb/kurser/NOTER/KOFA03.PDF">pdf</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="/Rainer_Feldmann">Rainer Feldmann</a> (<strong>1993</strong>). <em>Game Tree Search on Massively Parallel Systems</em>. Ph.D. Thesis, <a href="https://en.wikipedia.org/wiki/BCH_Code">BCH Codes</a> at page 22 and page 145 (Appendix A)<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="/Elwyn_Berlekamp">Elwyn Berlekamp</a> (<strong>1968</strong>). <em>Algebraic Coding Theory</em>. New York: McGraw-Hill. Revised ed., Aegean Park Press, (<strong>1984</strong>), ISBN 0894120638. <a href="https://www.amazon.com/Algebraic-Coding-Theory-Revised-M-6/dp/0894120638">amazon</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="https://groups.google.com/group/rec.games.chess/msg/2a4183cb654443dc?hl=en">Re: Hash tables----Clash!!!-What happens next?</a> by <a href="/Tony_Warnock">Tony Warnock</a>, <a href="/Computer_Chess_Forums">rgcc</a>, March 17, 1994<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="/Tony_Warnock">Tony Warnock</a>, <a href="/Burton_Wendroff">Burton Wendroff</a> (<strong>1988</strong>). <em>Search Tables in Computer Chess</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 11, No. 1</a><a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="/Mathematician"><code>Jessie MacWilliams</code></a><code>, </code><a href="/Mathematician"><code>Neil Sloane</code></a><code> (</code><strong><code>1981</code></strong><code>). </code><em><a href="http://www.sciencedirect.com/science/bookseries/09246509/16"><code>The Theory of Error-Correcting Codes</code></a></em><code>. North-Holland Mathematical Library, </code><a href="https://www.amazon.com/Theory-Error-Correcting-North-Holland-Mathematical-Library/dp/0444851933"><code>amazon</code></a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="http://www.computerhistory.org/trustee/gardner-hendrie">Gardner Hendrie</a> (<strong>2005</strong>). <em>Oral History of Kathe and Dan Spracklen</em>. <a href="http://archive.computerhistory.org/projects/chess/related_materials/oral-history/spacklen.oral_history.2005.102630821/spracklen.oral_history_transcript.2005.102630821.pdf">pdf</a> from <a href="/The_Computer_History_Museum">The Computer History Museum</a><a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="http://www.cse.buffalo.edu/~atri/courses/coding-theory/">CSE 545, Error Correcting Codes: Combinatorics, Algorithms and Applications</a> by <a href="http://www.cse.buffalo.edu/~atri/">Atri Rudra</a><a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=30008&amp;start=11">Re: Overlapped Zobrist keys array</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/CCC">CCC</a>, October 06, 2009<a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Quotes">Quotes</a> · <a href="/Category:Spracklen_Quotes">Spracklen Quotes</a> · <a href="/Category:Salvador_Dalí">Salvador Dalí</a> · <a href="/Category:Hux_Flux">Hux Flux</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/BCH_Hashing">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

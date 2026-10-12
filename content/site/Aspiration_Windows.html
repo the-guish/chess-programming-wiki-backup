@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aspiration Windows - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Aspiration Windows</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Search">Search</a> * <a href="/Alpha-Beta">Alpha-Beta</a> * Aspiration Windows</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="/assets/TheNon-EuclideanWindow.JPG" alt="The Non-Euclidean Window 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">The Non-Euclidean Window <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="/Category:Gerhard_Hoehme">Gerhard Hoehme</a> - The Non-Euclidean Window (1964), mixed technique / wood on canvas, <a href="/Category:Art_Museum_Bochum">Art Museum</a>, <a href="https://en.wikipedia.org/wiki/Bochum">Bochum</a>, <a href="https://en.wikipedia.org/wiki/North_Rhine-Westphalia">North Rhine-Westphalia</a>, <a href="https://en.wikipedia.org/wiki/Germany">Germany</a>, Photo by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, October 30, 2016<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Aspiration windows</strong> are a way to reduce the <a href="/Search_Space">search space</a> in an alpha-beta search. The technique is to use a guess of the expected value (usually from the last iteration in <a href="/Iterative_Deepening">iterative deepening</a>), and use a <a href="/Window">window</a> around this as the alpha-beta <a href="/Bound">bounds</a>. Because the window is narrower, more beta cutoffs are achieved, and the search takes a shorter time. The drawback is that if the true score is outside this window, then a costly re-search must be made. Typical window sizes are 1/2 to 1/4 of a pawn on either side of the guess.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#gradual-widening">Gradual Widening</a></li>
+<li><a href="#pvs-and-aspiration">PVS and Aspiration</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="gradual-widening">Gradual Widening</h2>
+<p>Some programs, such as <a href="/Crafty">Crafty</a>, also use a gradual widening on re-searches. For instance, if the window is, in pawns:</p>
+<p><code>[g - 1/4, g + 1/4]</code></p>
+<p>and the search fails high, the next search would be</p>
+<p><code>[g - 1/4, g + 1]</code></p>
+<p>It's important to note that the bound that didn't fail is unchanged. In a basic alpha-beta without <a href="/Search_Instability">search instability</a>, one could have done the next search on</p>
+<p><code>[g + 1/4, g + 1]</code></p>
+<p>instead. However, a fully fledged search is typically full of <a href="/Search_Instability">search instability</a>, and it will often happen that the above re-search will fail low! This is why it is best to only widen the bound that fails, and leave the other bound unchanged.</p>
+<p>Modern engines, like <a href="/RobboLito">RobboLito</a> or <a href="/Stockfish">Stockfish</a>, start with a rather small aspiration window, and increase the bound that fails in an exponential fashion.</p>
+<h2 id="pvs-and-aspiration">PVS and Aspiration</h2>
+<p>Using aspiration windows together with the <a href="/Principal_Variation_Search">principal variation search</a> (PVS) causes some additional complications.</p>
+<ul>
+<li><a href="/PVS_and_Aspiration">PVS and Aspiration</a></li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Null_Window">Null Window</a></li>
+<li><a href="/Ronald_de_Man">Scoring Root Moves</a></li>
+<li><a href="/Search_Instability">Search Instability</a></li>
+<li><a href="/Window">Window</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Hermann_Kaindl">Hermann Kaindl</a>, Reza Shams, <a href="/Helmut_Horacek">Helmut Horacek</a> (<strong>1991</strong>). <em><a href="http://portal.acm.org/citation.cfm?id=123034">Minimax Search Algorithms with and without Aspiration Windows</a>.</em> <a href="/IEEE">IEEE Transactions on Pattern Analysis and Machine Intelligence</a>, Vol. 13, No. 12</li>
+<li>Reza Shams, <a href="/Hermann_Kaindl">Hermann Kaindl</a>, <a href="/Helmut_Horacek">Helmut Horacek</a> (<strong>1991</strong>). <em>Using Aspiration Windows for Minimax Algorithms</em>. <a href="/Conferences">IJCAI 1991</a>, <a href="http://ijcai.org/Proceedings/91-1/Papers/031.pdf">pdf</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=24677">Question about aspiration window</a> by <a href="/Werner_Inmann">Werner Inmann</a>, <a href="/CCC">CCC</a>, August 14, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=34177">aspiration windows</a> by <a href="/James_Swafford">James Long</a>, <a href="/CCC">CCC</a>, November 27, 1998</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/8ad0cbc2b137dbf3">Aspiration Rules...</a> by Chris Pile, <a href="/Computer_Chess_Forums">rgcc</a>, February 5, 1999</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=49314">Aspiration search</a> by <a href="/James_Robertson">James Robertson</a>, <a href="/CCC">CCC</a>, April 20, 1999</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=64553">Aspiration search</a> by <a href="/Scott_Gasch">Scott Gasch</a>, <a href="/CCC">CCC</a>, August 13, 1999</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=208714">Aspiration window</a> by <a href="/Bas_Hamstra">Bas Hamstra</a>, <a href="/CCC">CCC</a>, January 20, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=243640">Exact value of second best move in AlphaBeta with aspiration Window</a> by <a href="/Martin_Bauer">Martin Bauer</a>, <a href="/CCC">CCC</a>, August 01, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=273558">Aspiration search, PVS</a> by <a href="/Russell_Reagan">Russell Reagan</a>, <a href="/CCC">CCC</a>, December 28, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=283426">Unstable aspiration search</a> by <a href="/Sune_Fischer">Sune Fischer</a>, <a href="/CCC">CCC</a>, February 10, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=356170">Question about aspiration search</a> by <a href="/Jaime_Benito_de_Valle_Ruiz">Jaime Benito de Valle Ruiz</a>, <a href="/CCC">CCC</a>, March 23, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=356826">What is a common Aspiration window?</a> by Joachim Rang, <a href="/CCC">CCC</a>, March 26, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=364869">aspiration search question</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, May 13, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=373537">Q. Aspiration, PVS, Fail-Soft</a> by <a href="/David_B._Weller">David B. Weller</a>, <a href="/CCC">CCC</a>, July 02, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=381004">PVS and aspiration windows</a> by <a href="/Tord_Romstad">Tord Romstad</a>, <a href="/CCC">CCC</a>, August 06, 2004</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=416677">Aspiration Window sizes</a> by <a href="/Jan_Renze_Steenhuisen">Renze Steenhuisen</a>, <a href="/CCC">CCC</a>, March 14, 2005</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=27040">Bounds for aspiration window re-search</a> by <a href="/Sven_Schüle">Sven Schüle</a>, <a href="/CCC">CCC</a>, March 17, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=29681">A way to improve PVS</a> by <a href="/Sergei_Markoff">Sergei S. Markoff</a>, <a href="/CCC">CCC</a>, September 07, 2009</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=33500">Apiration window</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, March 27, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=42224">A few general questions...</a> by <a href="/Bill_Henry">Bill Henry</a>, <a href="/CCC">CCC</a>, January 29, 2012 » <a href="/Root">Root</a>, <a href="/Exact_Score">Exact Score</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=42841">optimal aspiration window for stockfish question</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, March 12, 2012 » <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=44464">Aspiration Windows: Rubbish!</a> by <a href="/Matthew_R._Brades">Matthew R. Brades</a>, <a href="/CCC">CCC</a>, July 16, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46624">Aspiration window - effect? Issue with hashtables?!</a> by <a href="/Jens_Bæk_Nielsen">Jens Bæk Nielsen</a>, <a href="/CCC">CCC</a>, December 28, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46837">Aspiration Windows</a> by Jerry Donald, <a href="/CCC">CCC</a>, January 11, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47996">Aspiration windows</a> by <a href="/Marco_Pampaloni">Marco Pampaloni</a>, <a href="/CCC">CCC</a>, May 14, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53972">Your experience with PVS + Aspiration window</a> by <a href="/Fabio_Gobbato">Fabio Gobbato</a>, <a href="/CCC">CCC</a>, October 07, 2014 » <a href="/Principal_Variation_Search">Principal Variation Search</a>, <a href="/PVS_and_Aspiration">PVS and Aspiration</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54241">Solving a fail low situation at the root</a> by <a href="/Alberto_Sanjuan">Alberto Sanjuan</a>, <a href="/CCC">CCC</a>, November 03, 2014 » <a href="/Fail-Low">Fail-Low</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57113">Parallel aspiration windows</a> by <a href="/Giuseppe_Cannella">Giuseppe Cannella</a>, <a href="/CCC">CCC</a>, July 29, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58542">Restarting iterative deepening</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, December 09, 2015 » <a href="/Fail-Low">Fail-Low</a>, <a href="/Iterative_Deepening">Iterative Deepening</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60285">Dynamic aspiration window</a> by <a href="/Sergei_Markoff">Sergei S. Markoff</a>, <a href="/CCC">CCC</a>, May 26, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60402">Aspiration Windows on the root search -- Determining margin</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, June 08, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60916">Iterative Deepening Question</a> by David Cimbalista, <a href="/CCC">CCC</a>, July 23, 2016 » <a href="/Iterative_Deepening">Iterative Deepening</a></li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2995">Aspiration window with TT question</a> by sandermvdb, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, August 01, 2016 » <a href="/Transposition_Table">Transposition Table</a></li>
+</ul>
+<p><strong>2017 ...</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63706">Conceptual question on aspiration windows</a> by Jacob Wilkins, <a href="/CCC">CCC</a>, April 09, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64321">(I)ID and PV dropout</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, June 17, 2017 » <a href="/Fail-Low">Fail-Low</a>, <a href="/Internal_Iterative_Deepening">Internal Iterative Deepening</a>, <a href="/Iterative_Deepening">Iterative Deepening</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65589">Aspiration window problem</a> by Sander Maassen vd Brink, <a href="/CCC">CCC</a>, October 30, 2017</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=68278&amp;start=16">Re: Lazy SMP ideas</a> by <a href="/Folkert_van_Heusden">Folkert van Heusden</a>, <a href="/CCC">CCC</a>, October 03, 2018 » <a href="/Lazy_SMP">Lazy SMP</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69627">Impact of Aspiration on tree size</a> by Frank Kopp, <a href="/CCC">CCC</a>, January 16, 2019</li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76115">Are Aspiration Windows Worthless?</a> by <a href="/Erik_Madsen">Erik Madsen</a>, <a href="/CCC">CCC</a>, December 20, 2020 » <a href="/MadChess">MadChess</a></li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=78625">Number of aspiration "windows" before full-width search?</a> by <a href="/John_Merlino">John Merlino</a>, <a href="/CCC">CCC</a>, November 09, 2021</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=78910">Aspiration Window Instability?</a> by Gianni Casati, <a href="/CCC">CCC</a>, December 17, 2021</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="http://web.archive.org/web/20070705134903/www.seanet.com/%7Ebrucemo/topics/aspiration.htm">Aspiration Windows</a> from <a href="/Bruce_Moreland">Bruce Moreland's</a> <a href="/Bruce_Moreland">Programming Topics</a></li>
+<li><a href="https://www.ics.uci.edu/~eppstein/180a/990202b.html">Lecture notes for February 2, 1999 Variants of Alpha-Beta Search</a> by <a href="/David_Eppstein">David Eppstein</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Aspiration">Aspiration from Wikipedia</a></li>
+<li><a href="https://en.wiktionary.org/wiki/aspiration">aspiration - Wiktionary</a></li>
+<li><a href="https://en.wiktionary.org/wiki/aspire">aspire - Wiktionary</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Alpha-Beta">Up one level</a></strong></p>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Gerhard_Hoehme">Gerhard Hoehme</a> · <a href="/Category:Art_Museum_Bochum">Art Museum Bochum</a> · <a href="/Category:Industrial_Heritage_Trail">Industrial Heritage Trail</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Aspiration_Windows">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

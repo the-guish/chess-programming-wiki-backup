@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AVX2 - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">AVX2</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Hardware">Hardware</a> * <a href="/X86">x86</a> * AVX2</strong></p>
+<p><strong>Advanced Vector Extensions 2</strong> (AVX2) is an expansion of the <a href="/AVX">AVX</a> instruction set. Support for 256-bit expansions of the <a href="/SSE2">SSE2</a> 128-bit integer instructions will be added in AVX2, which was along with <a href="/BMI2">BMI2</a> part of <a href="/Intel">Intel's</a> <a href="https://en.wikipedia.org/wiki/Haswell_%28microarchitecture%29">Haswell</a> architecture in 2013, and since 2015, of <a href="/AMD">AMD's</a> <a href="https://en.wikipedia.org/wiki/Excavator_%28microarchitecture%29">Excavator</a> microarchitecture.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#features">Features</a></li>
+<li><a href="#individual-vector-shifts">Individual Vector Shifts</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#applications">Applications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#knight-attacks">Knight Attacks</a></li>
+<li><a href="#dumb7fill">Dumb7Fill</a></li>
+<li><a href="#bitboard-permutation">Bitboard Permutation</a></li>
+<li><a href="#vertical-nibble">Vertical Nibble</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#simd">SIMD</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><a href="#manuals">Manuals</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="features">Features</h2>
+<p>Beside expanding most integer AVX instructions to 256 bit, AVX2 has 3-operand general-purpose bit manipulation and multiply, <a href="/AVX2">vector shifts</a>, <a href="/Double_Word">Double</a>- and <a href="/Quad_Word">Quad Word</a>-granularity any-to-any permutes, and 3-operand <a href="https://en.wikipedia.org/wiki/FMA_instruction_set">fused multiply-accumulate</a> support. An important catch is that not all of the instructions are simply generalizations of their 128-bit equivalents: many work "in-lane", applying the same 128-bit operation to each 128-bit half of the register instead of a 256-bit generalization of the operation. For example:</p>
+<table>
+<thead>
+<tr>
+<th>Set</th>
+<th>Instruction</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AVX</td>
+<td><strong>vpunpckldq</strong> xmm0, ABCD, EFGH</td>
+<td>xmm1 := AEBF</td>
+</tr>
+<tr>
+<td>AVX2</td>
+<td><strong>vpunpckldq</strong> ymm0, ABCDEFGH, IJKLMNOP</td>
+<td>xmm1 := AIBJEMFN</td>
+</tr>
+</tbody>
+</table>
+<p>If vpunpckldq had been expanded in the more intuitive fashion, the result of the AVX2 operation would be AIBJCKDL. The reason for this design might be to allow AVX to be implemented more easily with two separate 128-bit arithmetic units.</p>
+<p>Some AVX2 instructions, such as type conversion instructions, take both xmm and ymm registers as arguments. For example:</p>
+<table>
+<thead>
+<tr>
+<th>Set</th>
+<th>Instruction</th>
+<th>Operation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AVX</td>
+<td><strong>vpmovzxbw</strong> xmm1, xmm2/m64</td>
+<td>xmm1 := Packed_Zero_Extend_Byte_To_Word(xmm2/m64)</td>
+</tr>
+<tr>
+<td>AVX2</td>
+<td><strong>vpmovzxbw</strong> ymm1, xmm2/m128</td>
+<td>ymm1 := Packed_Zero_Extend_Byte_To_Word(xmm2/m128)</td>
+</tr>
+</tbody>
+</table>
+<p><span id="IndividualShifts"></span></p>
+<h2 id="individual-vector-shifts">Individual Vector Shifts</h2>
+<p>With AVX2 each data element, such as a <a href="/Bitboards">bitboard</a> of a <a href="/Quad-Bitboards">quad-bitboard</a>, may be shifted left or right individually, as specified by the second source operand, with following <a href="/Assembly">Assembly</a> <a href="https://en.wikipedia.org/wiki/Assembly_language#Opcode_mnemonics_and_extended_mnemonics">mnemonics</a> and <a href="/C">C</a> intrinsic equivalents:</p>
+<table>
+<thead>
+<tr>
+<th>Instruction</th>
+<th>Description</th>
+<th>Intrinsic</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>VPSRLVQ</strong> ymm1, ymm2, ymm3/m256</td>
+<td>Variable Bit Shift Right Logical</td>
+<td>_m256i <a href="https://software.intel.com/en-us/node/695103">_mm256_srlv_epi64</a> (_m256i m, _m256i count)</td>
+</tr>
+<tr>
+<td><strong>VPSLLVQ</strong> ymm1, ymm2, ymm3/m256</td>
+<td>Variable Bit Shift Left Logical</td>
+<td>_m256i <a href="https://software.intel.com/en-us/node/695097">_mm256_sllv_epi64</a> (_m256i m, _m256i count)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="applications">Applications</h2>
+<p>With an appropriate <a href="/Quad-Bitboards">quad-bitboard</a> class, one may generate attacks of up to four different <a href="/Direction">directions</a> using <a href="/AVX2">individual shifts</a>, for instance <a href="/Knight_Pattern">knight attacks</a> or <a href="/Sliding_Piece_Attacks">sliding piece attacks</a> with <a href="/Dumb7Fill">Dumb7Fill</a> to generate all <a href="/On_an_empty_Board">positive</a> or <a href="/On_an_empty_Board">negative sliding ray attacks</a> passing two times orthogonal and diagonal sliding pieces.</p>
+<table>
+<tbody>
+<tr>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6" style="--wiki-img-w:220px"><a href="/Square_Mapping_Considerations"><img src="/assets/Cpwmappinghint.JPG" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></a></span></td>
+<td><p><em>Code samples and bitboard diagrams rely on <a href="/Square_Mapping_Considerations">Little endian file and rank mapping</a></em>.</p></td>
+</tr>
+</tbody>
+</table>
+
+<p><span id="KnightAttacks"></span></p>
+<h3 id="knight-attacks">Knight Attacks</h3>
+<pre><code>        noNoWe    noNoEa
+            +15  +17
+
+noWeWe  +6 __|     |__+10  noEaEa
+              \   /
+               &gt;0&lt;
+           __ /   \ __
+soWeWe -10   |     |   -6  soEaEa
+
+            -17  -15
+        soSoWe    soSoEa
+
+QBB noEaEa_noNoEa_noNoWe_noWeWe(U64 knights) {
+   const QBB qmask  (notAB, notA,notH,notGH);
+   const QBB qshift (10,17,15,6);
+   QBB qknights (knights);
+   return (qknights &lt;&lt; qshift) &amp; qmask;
+}
+
+QBB soWeWe_soSoWe_soSoEa_soEaEa(U64 knights) {
+   const QBB qmask  (notGH,notH,notA,notAB);
+   const QBB qshift (10,17,15,6);
+   QBB qknights (knights);
+   return (qknights &gt;&gt; qshift) &amp; qmask;
+}</code></pre>
+<p><span id="Dumb7Fill"></span></p>
+<h3 id="dumb7fill">Dumb7Fill</h3>
+<pre><code>  northwest    north   northeast
+  noWe         nort         noEa
+          +7    +8    +9
+              \  |  /
+  west    -1 &lt;-  0 -&gt; +1    east
+              /  |  \
+          -9    -8    -7
+  soWe         sout         soEa
+  southwest    south   southeast
+
+QBB east_nort_noWe_noEa_Attacks(QBB qsliders {rq,rq,bq,bq}, U64 empty) {
+   const QBB qmask  (notA,-1,notH,notA);
+   const QBB qshift (1,8,7,9);
+   QBB qflood (sliders);
+   QBB qempty  = QBB(empty) &amp; qmask;
+   qflood |= qsliders = (qsliders &lt;&lt; qshift) &amp; qempty;
+   qflood |= qsliders = (qsliders &lt;&lt; qshift) &amp; qempty;
+   qflood |= qsliders = (qsliders &lt;&lt; qshift) &amp; qempty;
+   qflood |= qsliders = (qsliders &lt;&lt; qshift) &amp; qempty;
+   qflood |= qsliders = (qsliders &lt;&lt; qshift) &amp; qempty;
+   qflood |=            (qsliders &lt;&lt; qshift) &amp; qempty;
+   return               (qflood   &lt;&lt; qshift) &amp; qmask  
+}
+
+QBB west_sout_soEa_soWe_Attacks(QBB qsliders {rq,rq,bq,bq}, U64 empty) {
+   const QBB qmask  (notH,-1, notA,notH);
+   const QBB qshift (1,8,7,9);
+   QBB qflood (sliders);
+   QBB qempty  = QBB(empty) &amp; qmask;
+   qflood |= qsliders = (qsliders &gt;&gt; qshift) &amp; qempty;
+   qflood |= qsliders = (qsliders &gt;&gt; qshift) &amp; qempty;
+   qflood |= qsliders = (qsliders &gt;&gt; qshift) &amp; qempty;
+   qflood |= qsliders = (qsliders &gt;&gt; qshift) &amp; qempty;
+   qflood |= qsliders = (qsliders &gt;&gt; qshift) &amp; qempty;
+   qflood |=            (qsliders &gt;&gt; qshift) &amp; qempty;
+   return               (qflood   &gt;&gt; qshift) &amp; qmask  
+}</code></pre>
+<p><span id="BitboardPermutation"></span></p>
+<h3 id="bitboard-permutation">Bitboard Permutation</h3>
+<p>For each <a href="/Bitboards">bitboard</a> in a destination <a href="/Quad-Bitboards">quad-bitboard</a>, the Qwords Element Permutation (<strong>VPERMQ</strong>) instruction <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> selects one bitboard of a source quad-bitboard. This permits a bitboard in the source operand to be copied to multiple locations in the destination.</p>
+<pre><code> destQBB.bb[0] = sourceQBB.bb[ (imm8 &gt;&gt; 0) &amp; 3 ]
+ destQBB.bb[1] = sourceQBB.bb[ (imm8 &gt;&gt; 2) &amp; 3 ]
+ destQBB.bb[2] = sourceQBB.bb[ (imm8 &gt;&gt; 4) &amp; 3 ]
+ destQBB.bb[3] = sourceQBB.bb[ (imm8 &gt;&gt; 6) &amp; 3 ]</code></pre>
+<p><span id="VerticalNibble"></span></p>
+<h3 id="vertical-nibble">Vertical Nibble</h3>
+<p>Following code extracts the <a href="/Pieces">piece-code</a> as "<a href="/Quad-Bitboards">vertical nibble</a>" from a <a href="/Quad-Bitboards">quad-bitboard</a> as <a href="/Board_Representation">board representation</a> inside a register, "indexed" by square. The idea is to shift the square bits to the leftmost bit, the <a href="https://en.wikipedia.org/wiki/Sign_bit">sign bit</a> of each bitboard, to perform the <em>VPMOVMSKB</em> instruction to get the sign bits of all 32 bytes into a general purpose register. Unfortunately, there is no <em>VPMOVMSKQ</em> to get only the signs of four bitboards, so some more masking and mapping is required to get the four-bit piece code ...</p>
+<pre><code>int getPiece (__m256i qbb, U64 sq) {
+   __m128i  shift = _mm_cvtsi32x_si128( sq ^ 63 ); /* left shift amount 63-sq */
+   qbb  =  _mm256_sll_epi64( qbb, shift ); /* squares to signs */
+   uint32   qbbsigns = _mm256_movemask_epi8( qbb );  /* get sign bits of 32 bytes */
+   return ((qbbsigns &amp; 0x80808080) * 0x00204081) &gt;&gt; 28; /* mask, nibble-map, shift */
+}</code></pre>
+<p>... using these intrinsics ...</p>
+<ul>
+<li><a href="http://msdn.microsoft.com/en-us/library/6xsd2b20%28v=vs.100%29.aspx">_mm_cvtsi64x_si128</a></li>
+<li><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm256_sll_epi64&amp;techs=AVX2">_mm256_sll_epi64</a></li>
+<li><a href="https://software.intel.com/en-us/node/695113">_mm256_movemask_epi8</a></li>
+</ul>
+<p>... with seven <a href="/Assembly">assembly</a> instructions intended, assuming the quad-bitboard passed in ymm0 and the square in rcx</p>
+<pre><code>  xor       rcx, 63          ; left shift amount 63-sq
+  movd      xmm6, rcx        ; shift amount via xmm
+  vpsllq    ymm6, ymm0, xmm6 ; squares to signs
+  vpmovmskb eax, ymm6        ; get sign bits of 32 bytes
+  and       eax, 0x80808080  ; mask the four bitboard sign bits
+  imul      eax, 0x00204081  ; map them to the upper nibble
+  shr       eax, 28          ; nibble as piece code</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/CFish">CFish - AVX2 Attacks</a></li>
+<li><a href="/DirGolem">DirGolem</a></li>
+<li><a href="/NNUE">NNUE</a></li>
+<li><a href="/Pigeon">Pigeon</a></li>
+<li><a href="/SIMD_and_SWAR_Techniques">SIMD and SWAR Techniques</a></li>
+</ul>
+<h2 id="simd">SIMD</h2>
+<ul>
+<li><a href="/AltiVec">AltiVec</a></li>
+<li><a href="/AVX">AVX</a></li>
+<li><a href="/AVX-512">AVX-512</a></li>
+<li><a href="/BMI2">BMI2</a></li>
+<li><a href="/MMX">MMX</a></li>
+<li><a href="/SSE">SSE</a></li>
+<li><a href="/SSE2">SSE2</a></li>
+<li><a href="/SSE3">SSE3</a></li>
+<li><a href="/SSSE3">SSSE3</a></li>
+<li><a href="/SSE4">SSE4</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Wojciech_Muła">Wojciech Muła</a>, <a href="http://dblp.uni-trier.de/pers/hd/k/Kurz:Nathan">Nathan Kurz</a>, <a href="https://github.com/lemire">Daniel Lemire</a> (<strong>2016</strong>). <em>Faster Population Counts Using AVX2 Instructions</em>. <a href="https://arxiv.org/abs/1611.07612">arXiv:1611.07612</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> » <a href="/AVX-512">AVX-512</a>, <a href="/Population_Count">Population Count</a></li>
+<li><a href="/Wojciech_Muła">Wojciech Muła</a>, <a href="https://github.com/lemire">Daniel Lemire</a> (<strong>2017</strong>). <em>Faster Base64 Encoding and Decoding Using AVX2 Instructions</em>. <a href="https://arxiv.org/abs/1704.00605">arXiv:1704.00605</a> » <a href="https://en.wikipedia.org/wiki/Base64">Base64</a></li>
+<li><a href="https://os.itec.kit.edu/21_3247.php">Mathias Gottschlag</a>, <a href="https://os.itec.kit.edu/21_31.php">Frank Bellosa</a> (<strong>2018</strong>). <em><a href="https://os.itec.kit.edu/21_3486.php">Mechanism to Mitigate AVX-Induced Frequency Reduction</a></em>. <a href="https://arxiv.org/abs/1901.04982">arXiv:1901.04982</a></li>
+<li><a href="https://os.itec.kit.edu/21_3247.php">Mathias Gottschlag</a>, <a href="https://os.itec.kit.edu/97_3742.php">Philipp Machauer</a>, <a href="https://os.itec.kit.edu/21_3571.php">Yussuf Khalil</a>, <a href="https://os.itec.kit.edu/21_31.php">Frank Bellosa</a> (<strong>2021</strong>). <em><a href="https://www.usenix.org/conference/atc21/presentation/gottschlag">Fair Scheduling for AVX2 and AVX-512 Workloads</a></em>. <a href="https://www.usenix.org/conference/atc21">USENIX ATC '21</a></li>
+</ul>
+<h2 id="manuals">Manuals</h2>
+<ul>
+<li><a href="https://software.intel.com/sites/default/files/managed/c5/15/architecture-instruction-set-extensions-programming-reference.pdf">Intel® Architecture Instruction Set Extensions Programming Reference</a> (pdf)</li>
+<li><a href="https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-optimization-manual.pdf">Intel® 64 and IA-32 Architectures Optimization Reference Manual</a> (pdf)</li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="https://stackoverflow.com/questions/30330013/does-hyperthreading-have-trouble-with-avx">Does Hyperthreading have trouble with AVX?</a> by cmylin, <a href="https://en.wikipedia.org/wiki/Stack_Overflow">Stack Overflow</a>, May 19, 2015 » <a href="/Thread">Thread</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?t=65466&amp;start=7">Re: Tapered Eval between 4 phases</a> by <a href="/Youri_Matiounine">Youri Matiounine</a>, <a href="/CCC">CCC</a>, October 16, 2017 » <a href="/Tapered_Eval">Tapered Eval</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=67432&amp;start=12">Re: Ryzen 2 and BMI2?</a> by <a href="/Joost_Buijs">Joost Buijs</a>, <a href="/CCC">CCC</a>, May 18, 2020 » <a href="/AMD">AMD</a>, <a href="/BMI2">BMI2</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75008">AVX2 optimized SF+NNUE and processor temperature</a> by corres, <a href="/CCC">CCC</a>, September 05, 2020 » <a href="/Stockfish_NNUE">Stockfish NNUE</a></li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=78588">Regarding AVX2</a> by <a href="/Ed_Schroder">Rebel</a>, <a href="/CCC">CCC</a>, November 03, 2021 » <a href="/NNUE">NNUE</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Advanced_Vector_Extensions#Advanced_Vector_Extensions_2">Advanced Vector Extensions 2 from Wikipedia</a></li>
+<li><a href="https://software.intel.com/en-us/node/523876">Overview: Intrinsics for Intel® Advanced Vector Extensions 2 (Intel® AVX2) Instructions | Intel® Software</a></li>
+<li><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#techs=AVX2">Intel Intrinsics Guide - AVX2</a></li>
+<li><a href="http://software.intel.com/en-us/articles/intel-software-development-emulator/">Intel Software Development Emulator</a>, which can be used to experiment with AVX and AVX2 on a CPU that doesn't support them.</li>
+<li><a href="http://www.agner.org/optimize/blog/read.php?i=25">Stop the instruction set war</a> by <a href="http://www.agner.org/">Agner Fog</a></li>
+<li><a href="https://software.intel.com/en-us/blogs/2013/05/17/processing-arrays-of-bits-with-intel-advanced-vector-extensions-2-intel-avx2">Processing Arrays of Bits with Intel® Advanced Vector Extensions 2 (Intel® AVX2) | Intel® Developer Zone</a> by <a href="https://software.intel.com/en-us/user/123920">Thomas Willhalm</a>, May 17, 2013</li>
+<li><a href="http://users.atw.hu/instlatx64/GenuineIntel00306C3_Haswell_InstLatX64.txt">Haswell Instructions Latency</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/X86">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p>_m256i <a href="https://software.intel.com/en-us/node/683670">_mm256_permute4x64_epi64</a>(_m256i val, const int control)<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://github.com/WojciechMula/sse-popcount/blob/master/popcnt-avx512-harley-seal.cpp">sse-popcount/popcnt-avx512-harley-seal.cpp at master · WojciechMula/sse-popcount · GitHub</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/AVX2">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

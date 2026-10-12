@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Engine Testing - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Engine Testing</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * Engine Testing</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="http://sanseverything.wordpress.com/2008/01/16/hope-springs-eternal/" target="_blank" rel="noopener noreferrer"><img src="/assets/WileECoyote.jpg" alt="The ever-optimistic Wile E. Coyote 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">The ever-optimistic <a href="https://en.wikipedia.org/wiki/Wile_E._Coyote_and_Road_Runner">Wile E. Coyote</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://sanseverything.wordpress.com/2008/01/16/hope-springs-eternal/">Hope Springs Eternal</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Engine Testing</strong>,<br />
+the process either to eliminate <a href="https://en.wikipedia.org/wiki/Software_bug">bugs</a> and to measure <a href="/Playing_Strength">performance</a> of a chess engine. New implementations of <a href="/Move_Generation">move generation</a> are tested with <a href="/Perft">Perft</a>, while new features and <a href="/Automated_Tuning">tuning</a> of <a href="/Search">search</a> and <a href="/Evaluation">evaluation</a> are verified via <a href="/Sequential_Probability_Ratio_Test">SPRT</a> testing, (historically) <a href="/Test-Positions">test-positions</a> and by playing <a href="/Match_Statistics">matches</a> against other engines.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#bug-hunting">Bug Hunting</a></li>
+<li><a href="#analyzing">Analyzing</a></li>
+<li><a href="#tuning">Tuning</a></li>
+<li><a href="#sprt">SPRT</a></li>
+<li><a href="#test-positions">Test-Positions</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#matches">Matches</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#time-controls">Time Controls</a></li>
+<li><a href="#opening">Opening</a></li>
+<li><a href="#tournament-manager">Tournament Manager</a></li>
+<li><a href="#frameworks">Frameworks</a></li>
+<li><a href="#chess-server">Chess Server</a></li>
+<li><a href="#statistics">Statistics</a></li>
+<li><a href="#ratings">Ratings</a></li>
+</ol>
+</details></li>
+<li><a href="#test-results">Test Results</a></li>
+<li><a href="#notable-bugs">Notable Bugs</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="bug-hunting">Bug Hunting</h2>
+<ul>
+<li><a href="/Perft">Perft</a> (<a href="/Perft_Results">Perft Results</a>)</li>
+<li><a href="/Debugging">Debugging</a></li>
+</ul>
+<h2 id="analyzing">Analyzing</h2>
+<ul>
+<li><a href="/Logging">Logging</a></li>
+<li>Profiling</li>
+<li><a href="/Search_Statistics">Search Statistics</a></li>
+</ul>
+<h2 id="tuning">Tuning</h2>
+<ul>
+<li><a href="/Automated_Tuning">Automated Tuning</a></li>
+<li><a href="/Engine_Similarity">Engine Similarity</a></li>
+</ul>
+<h2 id="sprt">SPRT</h2>
+<p>The modern, preferred method to test strength modifications.</p>
+<ul>
+<li><a href="/Sequential_Probability_Ratio_Test">Sequential Probability Ratio Test</a></li>
+</ul>
+<h2 id="test-positions">Test-Positions</h2>
+<p>Running sets of test-positions with number of solutions per fixed time-frame is useful to prove whether things are broken after program changes or to get hints about missing knowledge. But one should be careful to tune engines based on test-position results, since solving (possible tactical) test-positions does not necessarily correlate with practical <a href="/Playing_Strength">playing strength</a> in matches against other opponents.</p>
+<ul>
+<li><a href="/Test-Positions">Test-Positions</a></li>
+</ul>
+<p><span id="Matches"></span></p>
+<h2 id="matches">Matches</h2>
+<p>Most testing involves running different versions of a program in matches, and comparing results.</p>
+<h3 id="time-controls">Time Controls</h3>
+<p>Generally speaking, for testing changes that don't alter the search tree itself, but only affect performance (eg. <a href="/Move_Generation">move generation</a>) can be tested with given fixed nodes, fixed time or fixed depth. In all other cases the <a href="/Time_Management">time management</a> should be left to the engine to simulate real tournament conditions. On the other hand, <a href="/Debugging">debugging</a> is much easier under fixed conditions as the games become deterministic.</p>
+<p>A side from the type of <a href="/Time_Management">time control</a> one also has to decide on how much time should be spent per game, ie. what the average quality of the games should be like. While one can test more changes in the a certain time at short time controls, it is also relevant how a certain change scales to different strengths. So for example should one increase the <a href="/Depth_Reduction_R">R</a> in <a href="/Null_Move_Pruning">Null move pruning</a> to 3 in depths &gt; 7, this change may only be effectively tested on time controls where this new condition is triggered frequently enough, ie. where the average search depth is far greater than seven. It is hard to generalize, but on average changes of the search functions (<a href="/Late_Move_Reductions">LMR</a>, <a href="/Null_Move">nullmove</a>, <a href="/Futility_Pruning">futility</a> or similar <a href="/Pruning">pruning</a>, <a href="/Reductions">reductions</a> and <a href="/Extensions">extensions</a> ) tend to be more sensitive to the time control than the tuning of <a href="/Evaluation">evaluation</a> parameters.</p>
+<h3 id="opening">Opening</h3>
+<p>During testing the engines should ideally play the same style of openings they would play in a normal tournament, so not to optimize them for different types of positions. One option is to use the engines own <a href="/Opening_Book">opening book</a> or one can use <a href="/Test-Positions">opening suites</a>, a set of quiet test positions. In the latter case the same opening suit would be used for each tournament conducted and furthermore each position is played a second time with colors reversed. With these measures one can try to minimize the disparity between tests caused by different openings.</p>
+<h3 id="tournament-manager">Tournament Manager</h3>
+<p><a href="/User_Interface">User interfaces</a> or <a href="/CLI">command line tools</a> for <a href="/UCI">UCI</a> and <a href="/Chess_Engine_Communication_Protocol">Chess Engine Communication Protocol</a> compatible engines in engine-engine matches are mentioned under <a href="/Tournament_Manager">Tournament Manager</a>.</p>
+<h3 id="frameworks">Frameworks</h3>
+<ul>
+<li><a href="/Stockfish">Fishtest</a></li>
+<li><a href="/OpenBench">OpenBench</a></li>
+</ul>
+<p><span id="ChessServer"></span></p>
+<h3 id="chess-server">Chess Server</h3>
+<p>One can also test an engine's performance by comparing it to other programs on the various internet platforms <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> . In this case the different hardware and features like different <a href="/Endgame_Tablebases">Endgame Tablebases</a> or <a href="/Opening_Book">Opening Books</a> have to be considered.</p>
+<ul>
+<li><a href="/Chess_Server">Chess Server</a></li>
+<li><a href="/Tournaments_and_Matches">Tournaments</a></li>
+</ul>
+<h3 id="statistics">Statistics</h3>
+<p>The question whether certain results actually indicates a <a href="/Playing_Strength">strength</a> increase or not, can be answered with</p>
+<ul>
+<li><a href="/Match_Statistics">Match Statistics</a></li>
+<li><a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">Pawn Advantage, Win Percentage, and Elo</a></li>
+<li><a href="/LOS_Table">LOS Table</a></li>
+</ul>
+<p><span id="Ratings"></span></p>
+<h3 id="ratings">Ratings</h3>
+<ul>
+<li>Rating System</li>
+<li><a href="/Engine_Rating_Lists">Engine Rating Lists</a></li>
+</ul>
+<p><span id="TestResults"></span></p>
+<h2 id="test-results">Test Results</h2>
+<ul>
+<li><a href="/Null_Move_Pruning_Test_Results">Null Move Pruning Test Results</a></li>
+<li><a href="/Late_Move_Reduction_Test_Results">Late Move Reduction Test Results</a></li>
+</ul>
+<p><span id="bugs"></span></p>
+<h2 id="notable-bugs">Notable Bugs</h2>
+<ul>
+<li><a href="/Brute_Force_%28Program%29">Brute Force (Program)</a>, <a href="/En_passant">En passant bug</a>, <a href="/ACM_1977">ACM 1977</a> and <a href="/ACM_1978">ACM 1978</a></li>
+<li><a href="/Coko">Coko - Mate in One?</a>, <a href="/ACM_1971">ACM 1971</a></li>
+<li><a href="/4th_Computer_Olympiad">Chess 2175X vs. Genesis</a>, <a href="/Promotions">Promotion</a> bug, <a href="/4th_Computer_Olympiad">4th Computer Olympiad 1992</a></li>
+<li><a href="/WMCCC_1993">Nimzo's winning white-black bug</a>, <a href="/WMCCC_1993">WMCCC 1993</a></li>
+<li><a href="/Novag_Micro_Chess">Novag Micro Chess - Castling bug</a>, <a href="/CPWTIPC_1981">CPWTIPC 1981</a></li>
+<li><a href="/Proscha">Proscha</a> capturing its own king versus <a href="/Daja">Daja</a>, <a href="/First_GI_Computer_Chess_Tournament">First GI Computer Chess Tournament 1975</a></li>
+<li><a href="/WMCCC_1995">System Tal vs. XXXX</a>, <a href="/Promotions">Promotion</a> bug, <a href="/WMCCC_1995">WMCCC 1995</a></li>
+<li><a href="/XiniX">Xinix - Mate in One</a>, <a href="/DOCCC_2000">DOCCC 2000</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Tony_Marsland">Tony Marsland</a>, <a href="/Paul_Rushton">Paul Rushton</a> (<strong>1973</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=805703">Mechanisms for Comparing Chess Programs</a>.</em> <a href="/ACM_1973">ACM Annual Conference</a>, <a href="http://webdocs.cs.ualberta.ca/~tony/OldPapers/Marsland-Rushton-ACM73">pdf</a></li>
+<li><a href="/Tim_Breitkreutz">Tim Breitkreutz</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a> (<strong>1984</strong>). <em>Computer vs Computer via Computer</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 7, No. 4</a>, reprinted in <a href="/Computer_Chess_Reports">Computer Chess Reports 1985</a>, Vol. 3, No. 2 » <a href="/Phoenix">Phoenix</a>, <a href="/Super_Constellation">Super Constellation</a></li>
+<li><a href="/John_Stanback">John Stanback</a> (<strong>1990</strong>). <em>Supercomputing '90: Computer-Chess Testing and Programming Session</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 13, No. 4</a> » <a href="/ACM_1990">ACM 1990</a></li>
+<li><a href="/Larry_Kaufman">Larry Kaufman</a> (<strong>1993</strong>). <em>How Our PC Chess Programs Are Developed</em>. <a href="/Computer_Chess_Reports">Computer Chess Reports</a> 1992-93, Vol. 3, No. 2, pp. 12</li>
+<li><a href="/Thomas_Mally">Thomas Mally</a> (<strong>1993</strong>). <em>Matt in Wieviel?</em> <a href="/PC_Schach">PC Schach</a> 3/93 (German)</li>
+<li><a href="/Jeff_Rollason">Jeff Rollason</a> (<strong>2007</strong>). <em><a href="http://www.aifactory.co.uk/newsletter/2007_04_stat_minefields.htm">Statistical Minefields with Version Testing</a></em>. <a href="/AI_Factory">AI Factory</a>, Winter 2007 » <a href="/Match_Statistics">Match Statistics</a></li>
+<li><a href="/Jónheiður_Ísleifsdóttir">Jónheiður Ísleifsdóttir</a> (<strong>2007</strong>). <em>GTQL: A Query Language for Game Trees</em>. M.Sc. thesis, <a href="https://en.wikipedia.org/wiki/Reykjav%C3%ADk_University">Reykjavík University</a>, <a href="http://www.ru.is/lisalib/getfile.aspx?itemid=9655">pdf</a></li>
+<li><a href="/Jónheiður_Ísleifsdóttir">Jónheiður Ísleifsdóttir</a>, <a href="/Yngvi_Björnsson">Yngvi Björnsson</a>. (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_20">GTQ: A Language and Tool for Game-Tree Analysis</a></em>. <a href="/CG_2008">CG 2008</a>, <a href="http://www.ru.is/faculty/yngvi/pdf/IsleifsdottirB08.pdf">pdf</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/2aaa054105f1445e">Testing Chess Programs</a> by <a href="/Jan_Eric_Larsson">Jan Eric Larsson</a>, <a href="/Computer_Chess_Forums">rgcc</a>, February 09, 1996</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=13569">Self-test and others rating stuffs...</a> by <a href="/Christophe_Théron">Christophe Théron</a>, <a href="/CCC">CCC</a>, January 01, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=16851">Proposal: New testing methods for SSDF (1)</a> by <a href="/Jeroen_Noomen">Jeroen Noomen</a>, <a href="/CCC">CCC</a>, April 13, 1998</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=176716">Using 2 machines for matches (Linux)</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, June 24, 2001 » <a href="/XBoard">XBoard</a>, <a href="/Linux">Linux</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=189308">A proposed WAC replacement for testing</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, <a href="/CCC">CCC</a>, September 18, 2001 » <a href="/Win_at_Chess">Win at Chess</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=275347">Value of playing different versions of a program against each other</a> by <a href="/Tom_King">Tom King</a>, <a href="/CCC">CCC</a>, January 06, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=293815">testing of evaluation function</a> by Steven Chu, <a href="/CCC">CCC</a>, April 17, 2003 » <a href="/Evaluation">Evaluation</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=296689">Testing the reliability of forward pruning</a> by <a href="/Russell_Reagan">Russell Reagan</a>, <a href="/CCC">CCC</a>, May 15, 2003 » <a href="/Pruning">Pruning</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=334370">To programmers: Hints for testing after a partial rewrite</a> by <a href="/Federico_Andrés_Corigliano">Federico Corigliano</a>, <a href="/CCC">CCC</a>, December 08, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=400589">Is there a way?</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, December 13, 2004</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=484357">table for detecting significant difference between two engines</a> by Joseph Ciarrochi, <a href="/CCC">CCC</a>, February 03, 2006</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=5866">test methodology</a> by <a href="/Giuseppe_Cannella">Giuseppe Cannella</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, November 13, 2006</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=5955">Testing and debugging chess engines</a> by <a href="/Patrice_Duhamel">Patrice Duhamel</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, December 03, 2006</li>
+</ul>
+<p><strong>2007</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=13557">Programmer bug hunt challenge</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, May 04, 2007 » <a href="/Portable_Game_Notation">Portable Game Notation</a>, <a href="/En_passant">En passant</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=13800">a beat b,b beat c,c beat a question</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, May 16, 2007 » <a href="/Playing_Strength">Playing Strength</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=16412">An objective test process for the rest of us?</a> by <a href="/Nicolai_Czempin">Nicolai Czempin</a>, <a href="/CCC">CCC</a>, September 12, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=17947">My new testing scheme</a> by <a href="/Zach_Wegner">Zach Wegner</a>, <a href="/CCC">CCC</a>, November 20, 2007</li>
+</ul>
+<p><strong>2008</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=20082">Test you engine</a> by <a href="/Fermin_Serrano">Fermin Serrano</a>, <a href="/CCC">CCC</a>, March 10, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=22832">New testing thread</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, August 07, 2008</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=24590">Comparing two version of the same engine</a> by <a href="/Fermin_Serrano">Fermin Serrano</a>, <a href="/CCC">CCC</a>, October 26, 2008</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=25461">Debate: testing at fast time controls</a> by <a href="/Fermin_Serrano">Fermin Serrano</a>, <a href="/CCC">CCC</a>, December 15, 2008</li>
+</ul>
+<p><strong>2009</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=27024">Cutechess-cli: A command line tool for engine-engine matches</a>, by <a href="/Ilari_Pihlajisto">Ilari Pihlajisto</a>, <a href="/CCC">CCC</a>, March 16, 2009</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=28130">Testing procedure</a> by <a href="/Matt_Gingell">Matt Gingell</a>, <a href="/CCC">CCC</a>, May 27, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=293506&amp;t=27024">Cutechess-cli version 0.1.8 released</a> by <a href="/Ilari_Pihlajisto">Ilari Pihlajisto</a>, <a href="/CCC">CCC</a>, September 29, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=30513">A reason for testing at fixed number of nodes</a> by J. Wesley Cleveland, <a href="/CCC">CCC</a>, November 06, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=30550">different kinds of testing</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, November 09, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=30565">more on fixed nodes</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, November 10, 2009</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=32254">XBoard and epd tournament</a> by <a href="/Vlad_Stamate">Vlad Stamate</a>, <a href="/CCC">CCC</a>, January 31, 2010 » <a href="/Chess_Engine_Communication_Protocol">Chess Engine Communication Protocol</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=33685">Long game vs short game testing</a> by <a href="/Vlad_Stamate">Vlad Stamate</a>, <a href="/CCC">CCC</a>, April 08, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=35537">Pairings generation based on a big PGN file</a> by <a href="/Harun_Taner">Harun Taner</a>, <a href="/CCC">CCC</a>, July 22, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?p=358600">hiatus good for bug-finding</a> by <a href="/Stuart_Cracraft">Stuart Cracraft</a>, <a href="/CCC">CCC</a>, June 27, 2010</li>
+</ul>
+<p><strong>2011</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=39255">testing question</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, June 01, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=39390">Debugging regression tests</a> by <a href="/Onno_Garms">Onno Garms</a>, <a href="/CCC">CCC</a>, June 16, 2011 <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></li>
+</ul>
+<p><strong>2012</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41876">fast game testing</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, January 08, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=477389&amp;t=44706&amp;sid=8b10031146b44f86ac4c4a129debf451">Your best bug ?</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, August 06, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=45158">Yet Another Testing Question</a> by <a href="/Brian_Richardson">Brian Richardson</a>, <a href="/CCC">CCC</a>, September 15, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=45287">Another testing question</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, September 23, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46572">A word for casual testers</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, December 25, 2012</li>
+</ul>
+<p><strong>2013</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46759">A poor man's testing environment</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, January 04, 2013 <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> » <a href="/Match_Statistics">Match Statistics</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46948">engine-engine testing isues</a> by <a href="/Jens_Bæk_Nielsen">Jens Bæk Nielsen</a>, <a href="/CCC">CCC</a>, January 20, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47407">Beta for Stockfish distributed testing</a> by <a href="/Gary_Linscott">Gary</a>, <a href="/CCC">CCC</a>, March 05, 2013 » <a href="/Stockfish">Fishtest</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47885">Fishtest Distributed Testing Framework</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, May 01, 2013 » <a href="/Stockfish">Fishtest</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48626">cutechess-cli 0.6.0 released</a> by <a href="/Ilari_Pihlajisto">Ilari Pihlajisto</a>, <a href="/CCC">CCC</a>, July 12, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49054">fast testing NIT algorithm</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, August 22, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49103">OICS: Computers Only ICS based Chess server for anyone</a> by Joshua Shriver, <a href="/CCC">CCC</a>, August 26, 2013 » OICS</li>
+</ul>
+<p><strong>2014</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51383">testing procedure</a> by <a href="/Daniel_José_Queraltó">Daniel José Queraltó</a>, <a href="/CCC">CCC</a>, February 23, 2014</li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57437">Bullet vs regular time control, say 40/4m CCRL/CEGT</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, August 29, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58359">Static evaluation test posistions</a> by <a href="/Shawn_Chidester">Shawn Chidester</a>, <a href="/CCC">CCC</a>, November 25, 2015</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=58359&amp;start=2">Re: Static evaluation test posistions</a> by <a href="/Ferdinand_Mosca">Ferdinand Mosca</a>, <a href="/CCC">CCC</a>, November 26, 2015 » <a href="/Python">Python</a></p>
+<p><strong>2016</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59038">Ordo 1.0.9 (new features for testers)</a> by <a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a>, <a href="/CCC">CCC</a>, January 25, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59984">cluster versus single server</a> by <a href="/Folkert_van_Heusden">Folkert van Heusden</a>, <a href="/CCC">CCC</a>, April 28, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61422">Testing using many computers and architectures</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, September 14, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61988">command line engine match?</a> by <a href="/Erin_Dame">Erin Dame</a>, <a href="/CCC">CCC</a>, November 06, 2016 » <a href="/CLI">CLI</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=61991">Looking for an epd file for sanity checks...</a> by <a href="/Fermin_Serrano">Fermin Serrano</a>, <a href="/CCC">CCC</a>, November 06, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62576">Testing with different EPD suits for search vs eval changes</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/CCC">CCC</a>, December 23, 2016</li>
+</ul>
+<p><strong>2017</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62922">sprt tourney manager</a> by <a href="/Richard_Delorme">Richard Delorme</a>, <a href="/CCC">CCC</a>, January 24, 2017 » <a href="/Amoeba">Amoeba Tournament Manager</a>, <a href="/Match_Statistics">SPRT</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63001">how to properly test the changes to the engine ?</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, February 01, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63119">How to go about chasing a bug like this?</a> by <a href="/Colin_Jenkins">Colin Jenkins</a>, <a href="/CCC">CCC</a>, February 09, 2017 » <a href="/Debugging">Debugging</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63454">How to find SMP bugs ?</a> by Lucas Braesch, <a href="/CCC">CCC</a>, March 15, 2017 » <a href="/Debugging">Debugging</a>, <a href="/Lazy_SMP">Lazy SMP</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63555">Testing for Move Ordering Improvements</a> by Cheney Nattress, <a href="/CCC">CCC</a>, March 25, 2017 » <a href="/Move_Ordering">Move Ordering</a>, <a href="/Search_Statistics">Search Statistics</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64356">Testing endgame strength</a> by <a href="/Álvaro_Begué">Álvaro Begué</a>, <a href="/CCC">CCC</a>, June 21, 2017 » <a href="/Endgame">Endgame</a>, <a href="/RuyDos">RuyDos</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64358">Opening testing suites efficiency</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, June 21, 2017 » <a href="/Opening">Opening</a>, <a href="/Match_Statistics">Match Statistics</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64394">Testing A against B by playing a pool of others</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, June 24, 2017 » <a href="/Match_Statistics">Match Statistics</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64441">Core behaviour</a> by <a href="/Ed_Schroder">Ed Schroder</a>, <a href="/CCC">CCC</a>, June 28, 2017 » <a href="/Process">Process</a>, <a href="/Thread">Thread</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64519">Engine testing &amp; error margin ?</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, July 05, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65766">Engines for testing (Linux, fast time control)</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, November 18, 2017 » <a href="/Linux">Linux</a></li>
+</ul>
+<p><strong>2018</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=67485">Issue with self play testing</a> by <a href="/Charles_Roberson">Charles Roberson</a>, <a href="/CCC">CCC</a>, May 18, 2018</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=68531">Basic automated testing</a> by Josh Odom, <a href="/CCC">CCC</a>, September 28, 2018</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=68531&amp;start=6">Re:Basic automated testing</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, September 30, 2018 » <a href="/OpenBench">OpenBench</a></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69284">testing consistency</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, December 16, 2018</li>
+</ul>
+<p><strong>2019</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70383">Any testing framwork similair to Fishtest that can be run locally ?</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, April 02, 2019</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=71848">self test</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, September 18, 2019</li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73129">EPD destruction tests</a> by <a href="/Chris_Whittington">Chris Whittington</a>, <a href="/CCC">CCC</a>, February 19, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73208">EPD destruction tests, part 2</a> by <a href="/Chris_Whittington">Chris Whittington</a>, <a href="/CCC">CCC</a>, February 27, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74503">Looking for automatic Engine Testing Software</a> by <a href="/Oliver_Brausch">Oliver Brausch</a>, <a href="/CCC">CCC</a>, July 19, 2020</li>
+</ul>
+<p><strong>2021</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76225">Testing strategies for my engines playing strength</a> by Thomas Jahn, <a href="/CCC">CCC</a>, January 04, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76536">Effect of adjudication and TC on testing process</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, February 09, 2021 » <a href="/Minic">Minic</a></li>
+</ul>
+<p><strong>2022</strong></p>
+<ul>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79276">Strategies to unit testing the search</a> by Olexiy Svitashev, <a href="/CCC">CCC</a>, February 03, 2022 » <a href="/Search">Search</a></li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79280">How do you know you improved ?</a> by Philippe Chevalier, <a href="/CCC">CCC</a>, February 03, 2022</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="http://ajonsson.kapsi.fi/cutechess.html">Cute Chess</a></li>
+<li><a href="https://github.com/cutechess/cutechess">cutechess · GitHub</a></li>
+<li><a href="https://github.com/AndyGrant/OpenBench">GitHub - OpenBench a Distributed SPRT Testing Framework for Chess Engines</a> by <a href="/Andrew_Grant">Andrew Grant</a> » <a href="/OpenBench">OpenBench</a>, <a href="/Match_Statistics">SPRT</a></li>
+<li><a href="https://github.com/ChrisWhittington/Chess-EPDs">GitHub - ChrisWhittington/Chess-EPDs: Various EPD test suites</a> by <a href="/Chris_Whittington">Chris Whittington</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Regression_testing">Regression testing from Wikipedia</a></li>
+<li><a href="http://www.sp-cc.de/index.htm">SPCC</a> by Stefan Pohl</li>
+<li><a href="http://research.microsoft.com/en-us/projects/chess/">CHESS - Microsoft Research</a> a tool for finding and reproducing <a href="https://en.wikipedia.org/wiki/Unusual_software_bug">Heisenbugs</a> in concurrent programs.</li>
+<li><a href="https://en.wikipedia.org/wiki/Engine_test_stand">Engine test stand from Wikipedia</a></li>
+<li><a href="/Category:Terje_Rypdal">Terje Rypdal Group</a> feat. <a href="/Category:Palle_Mikkelborg">Palle Mikkelborg</a>, <a href="https://de.wikipedia.org/wiki/Haakon_Graf">Håkon Graf</a>, <a href="https://no.wikipedia.org/wiki/Sveinung_Hovensj%C3%B8">Sveinung Hovensjø</a> and <a href="/Category:Jon_Christensen">Jon Christensen</a> - <a href="https://no.wikipedia.org/wiki/Per_Ulv">Per Ulv</a>, 1978, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/B5HwFDVWzFs" title="YouTube video B5HwFDVWzFs" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=B5HwFDVWzFs">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Main_Page">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://en.wikipedia.org/wiki/Category:Internet_chess_servers">Internet chess servers from Wikipedia</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.xs4all.nl/~timkr/chess2/honor.htm">Defending Humanity's Honor</a> by <a href="https://en.wikipedia.org/wiki/Tim_Krabb%C3%A9">Tim Krabbé</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://en.wikipedia.org/wiki/Regression_testing">Regression testing from Wikipedia</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.top-5000.nl/tuning.htm">Testing a chess engine from the ground up</a> from <a href="http://www.top-5000.nl/">Home of the Dutch Rebel</a> by <a href="/Ed_Schroder">Ed Schröder</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Jon_Christensen">Jon Christensen</a> · <a href="/Category:Palle_Mikkelborg">Palle Mikkelborg</a> · <a href="/Category:Terje_Rypdal">Terje Rypdal</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Engine_Testing">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, ShawnXu.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

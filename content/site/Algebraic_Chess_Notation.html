@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Algebraic Chess Notation - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Algebraic Chess Notation</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Chess">Chess</a> * <a href="/Chess_Game">Game</a> * <a href="/Game_Notation">Notation</a> * Algebraic Chess Notation</strong></p>
+<p><strong>Algebraic Chess Notation</strong> is a chess notation to record and represent <a href="/Moves">moves</a> of a <a href="https://en.wikipedia.org/wiki/Human-readable_medium">human readable</a> <a href="/Game_Notation">game notation</a>. It is based on a system developed by <a href="https://en.wikipedia.org/wiki/Philipp_Stamma">Philipp Stamma</a> to notate the <a href="/Target_Square">target square</a> by <a href="/Squares">algebraic coordinates</a>, and various forms to represent the <a href="/Origin_Square">origin square</a> of the move, either by language dependent <a href="https://en.wikipedia.org/wiki/Algebraic_chess_notation#Naming_the_pieces_in_various_languages">piece initials</a> and/or <a href="/Files">file</a>, <a href="/Ranks">rank-</a> or <a href="/Squares">square</a> notation of the from- or origin square. <a href="/Promotions">Promotions</a> must be disambiguated by including the promoted piece type, and <a href="/Castling">castling</a> usually has their own symbol strings ('O-O', 'O-O-O'). Some format variations also specify a <a href="/Captures">captured</a> piece, if any, for the purpose to make the notation reversible, and to go backward as easy as forward while re-playing a game.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#sequence-of-moves">Sequence of Moves</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#pure-coordinate-notation">Pure coordinate notation</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#xboard">XBoard</a></li>
+<li><a href="#uci">UCI</a></li>
+<li><a href="#output-samples">Output Samples</a></li>
+<li><a href="#iccf-numeric-notation">ICCF numeric notation</a></li>
+</ol>
+</details></li>
+<li><a href="#smith-notation">Smith Notation</a></li>
+<li><a href="#long-algebraic-notation-lan">Long Algebraic Notation (LAN)</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#standard-algebraic-notation-san">Standard Algebraic Notation (SAN)</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#ambiguities">Ambiguities</a></li>
+<li><a href="#captures">Captures</a></li>
+<li><a href="#en-passant">En passant</a></li>
+<li><a href="#pawn-promotion">Pawn promotion</a></li>
+<li><a href="#castling">Castling</a></li>
+<li><a href="#converting-moves">Converting Moves</a></li>
+<li><a href="#xboard-2">XBoard 2</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#figurine-algebraic-notation-fan">Figurine Algebraic Notation (FAN)</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#vector-graphics">Vector Graphics</a></li>
+<li><a href="#latex">LaTeX</a></li>
+</ol>
+</details></li>
+<li><a href="#reading-chess">Reading Chess</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="sequence-of-moves">Sequence of Moves</h2>
+<p>Chess programs need to convert the <a href="/Move_List">list</a> of <a href="/Encoding_Moves">encoded moves</a> into a sequence of printable strings, or to render them inside a <a href="/GUI">notation window</a>. The move number of the game, starting by '1.' from the <a href="/Initial_Position">initial position</a>, is prefix of the white halfmove, followed by a the black reply, often in a second column of a grid view. If a move notation starts with Black, also after embedded comments or annotations, a trailing <a href="https://en.wikipedia.org/wiki/Ellipsis">ellipsis</a> is used instead of a single dot.</p>
+<pre><code>&lt;move&gt; ::= &lt;move number&gt;&lt;move descriptor&gt;
+&lt;move number&gt; ::= &lt;digit&gt;[&lt;digit&gt;...]{&#39;.&#39; | &#39;...&#39;}</code></pre>
+<p>Modern chess programs, and their <a href="/GUI">graphical user interface</a> often support various modes to represent all kinds of game and move notations. Regarding <a href="/Entering_Moves">input of moves</a> from a <a href="/User_Interface">user interface</a>, or reading moves from text files, programs needs to parse strings accordantly. <span id="PureCoordinateNotation"></span></p>
+<h2 id="pure-coordinate-notation">Pure coordinate notation</h2>
+<p>Considering the common From-To <a href="/Encoding_Moves">move encoding</a> inside a chess program, pure coordinate notation is a straight-forward chess notation to use only algebraic From- and To-coordinates. This notation omits any machine redundant piece letters for the moving and/or capturing pieces, and only has to specify the promoted piece as trailing <a href="https://en.wikipedia.org/wiki/Algebraic_chess_notation#Naming_the_pieces_in_various_languages">letter</a> in case of <a href="/Promotions">promotions</a>.</p>
+<pre><code>&lt;move descriptor&gt; ::= &lt;from square&gt;&lt;to square&gt;[&lt;promoted to&gt;]
+&lt;square&gt;        ::= &lt;file letter&gt;&lt;rank number&gt;
+&lt;file letter&gt;   ::= &#39;a&#39;|&#39;b&#39;|&#39;c&#39;|&#39;d&#39;|&#39;e&#39;|&#39;f&#39;|&#39;g&#39;|&#39;h&#39;
+&lt;rank number&gt;   ::= &#39;1&#39;|&#39;2&#39;|&#39;3&#39;|&#39;4&#39;|&#39;5&#39;|&#39;6&#39;|&#39;7&#39;|&#39;8&#39;
+&lt;promoted to&gt;   ::= &#39;q&#39;|&#39;r&#39;|&#39;b&#39;|&#39;n&#39;</code></pre>
+<p>Pure algebraic coordinate notation was often used in early microcomputer chess programs, sometimes even with capital file letters. Some programs used a hyphen or 'x' delimiter between the coordinate substrings to distinguish <a href="/Quiet_Moves">quiet moves</a> from <a href="/Captures">captures</a> in move outputs. While not common in human chess notation, pure coordinate notation has the advantage to avoid any ambiguity and is further easy convertible from a move list without the need of retrieving information from internal <a href="/Board_Representation">board representations</a>, (i.e. which <a href="/Pieces">pieces</a> occupy which squares). Even <a href="/Castling">castling</a> was often written as E1G1 or E1C1 instead of 'O-O' or 'O-O-O'.</p>
+<h3 id="xboard">XBoard</h3>
+<p>Per default, the <a href="/Chess_Engine_Communication_Protocol">Chess Engine Communication Protocol</a> requires pure algebraic coordinate notation without from-to delimiters as input and output move format <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> .</p>
+<h3 id="uci">UCI</h3>
+<p>The <a href="/UCI">UCI</a> communication protocol requires <em>pure algebraic coordinate notation</em> without from-to delimiters as well. Inside its specification the UCI move format is called "long algebraic notation" <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> , which might be considered slightly incorrect concerning leading piece character and dash or hyphen between from- and to coordinates, see LAN definition below.</p>
+<h3 id="output-samples">Output Samples</h3>
+<table>
+<tbody>
+<tr>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="/assets/8080Chess.JPG" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+<td></td>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><a href="http://www.spacious-mind.com/html/c64_emu_-_kempelen.html" target="_blank" rel="noopener noreferrer"><img src="/assets/C64_kempelen_emulator_scr2.gif" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></a></span></td>
+</tr>
+<tr>
+<td><p><a href="/8080_Chess">8080 Chess</a> Display <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p></td>
+<td></td>
+<td><p><a href="/Kempelen">Kempelen</a> <a href="/Move_List">move list</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></p></td>
+</tr>
+</tbody>
+</table>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><em>Processor Technology 8080 CHESS User's Manual</em>. <a href="http://www.sol20.org/manuals/chess.pdf">pdf</a>, <a href="http://www.imsai.net/support/processor_tech/chess.pdf">pdf</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+<li id="fn2"><a href="http://www.spacious-mind.com/html/c64_emu_-_kempelen.html">Kempelen Chess from Sierra Online</a> from <a href="/The_Spacious_Mind">The Spacious Mind</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<h3 id="iccf-numeric-notation">ICCF numeric notation</h3>
+<p>The language independent <a href="https://en.wikipedia.org/wiki/ICCF_numeric_notation">ICCF numeric notation</a> as used in <a href="https://en.wikipedia.org/wiki/Correspondence_chess">Correspondence chess</a> is a numerical pure coordinate notation, giving coordinates by two digits (File '1'-'8) rather than letters ('a'-'h') for the file. In case of promotions a fifth trailing digit is used: '1' for queen, '2' for rook, '3' for bishop and '4' for knight. <span id="Smith"></span></p>
+<h2 id="smith-notation">Smith Notation</h2>
+<p>The Smith notation designed by <a href="/Warren_D._Smith">Warren D. Smith</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>, as used in the Internet Chess Club chess server, encodes moves with from-square, to-square, and to make it reversible, so it is as easy to go backwards in a game as forwards, what piece was captured, if any ('E' for <a href="/En_passant">En passant</a>, the redundant 'c' and 'C' indicate king- or queen side <a href="/Castling">castling</a>):</p>
+<pre><code>&lt;Smith move descriptor&gt; ::= &lt;from square&gt;&lt;to square&gt;[&lt;capture indicator&gt;][&lt;promoted to&gt;]
+&lt;capture indicator&gt; ::=  &#39;p&#39; | &#39;n&#39; | &#39;b&#39; | &#39;r&#39; | &#39;q&#39; | &#39;k&#39; | &#39;E&#39; | &#39;c&#39; | &#39;C&#39;</code></pre>
+<p><span id="LAN"></span></p>
+<h2 id="long-algebraic-notation-lan">Long Algebraic Notation (LAN)</h2>
+<p>Beside the already sufficient and unambiguous pure origin- and target-coordinates, LAN uses a leading redundant, national dependent uppercase <a href="https://en.wikipedia.org/wiki/Algebraic_chess_notation#Naming_the_pieces_in_various_languages">piece letter</a> or figurine piece symbol of the moving piece usually other than a <a href="/Pawn">pawn</a>, to represent the move, which makes it more <a href="https://en.wikipedia.org/wiki/Human-readable_medium">human readable</a> and compatible with SAN and <a href="https://en.wikipedia.org/wiki/Descriptive_chess_notation">desciptive notation</a>. However, for chess programs using pure from-to move encoding, converting the move list to LAN already requires a board representation in sync with the leading moves already played, to lookup the piece on the board.</p>
+<pre><code>&lt;LAN move descriptor piece moves&gt; ::= &lt;Piece symbol&gt;&lt;from square&gt;[&#39;-&#39;|&#39;x&#39;]&lt;to square&gt;
+&lt;LAN move descriptor pawn moves&gt;  ::= &lt;from square&gt;[&#39;-&#39;|&#39;x&#39;]&lt;to square&gt;[&lt;promoted to&gt;]
+&lt;Piece symbol&gt; ::= &#39;N&#39; | &#39;B&#39; | &#39;R&#39; | &#39;Q&#39; | &#39;K&#39;</code></pre>
+<p><em>English symbols <a href="/Knight">Knight</a>, <a href="/Bishop">Bishop</a>, <a href="/Rook">Rook</a>, <a href="/Queen">Queen</a> and <a href="/King">King</a></em>.</p>
+<table>
+<tbody>
+<tr>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="/assets/ChessForAndroidv1.png" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+</tr>
+<tr>
+<td><p><a href="/Aart_Bik">Aart Bik's</a> <a href="/Chess_for_Android">Chess for Android</a>, G1 version with LAN representation <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p></td>
+</tr>
+</tbody>
+</table>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://www.aartbik.com/MISC/android.html">Aart's Android Page</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><span id="SAN"></span></p>
+<h2 id="standard-algebraic-notation-san">Standard Algebraic Notation (SAN)</h2>
+<p>Standard algebraic notation (SAN) is the official notation of the <a href="/FIDE">FIDE</a> which must be used in all recognized international competition involving human players <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> . Concerning computer chess, SAN is a representation standard for chess moves inside the <a href="/Portable_Game_Notation">Portable Game Notation</a> standard using the <a href="https://en.wikipedia.org/wiki/ASCII">ASCII</a> <a href="https://en.wikipedia.org/wiki/ISO/IEC_8859-1">Latin alphabet</a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>, and should be supported as default notation by all modern chess programs and their user interfaces <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>.</p>
+<table>
+<tbody>
+<tr>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="/assets/ChessForAndroid_a_chess.png" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+</tr>
+<tr>
+<td><p><a href="/Aart_Bik">Aart Bik's</a> <a href="/Chess_for_Android">Chess for Android</a>, latest version in SAN mode <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p></td>
+</tr>
+</tbody>
+</table>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://www.aartbik.com/MISC/android.html">Aart's Android Page</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p>While otherwise similar to LAN, SAN suppresses redundant information concerning the from-square, while keeping the descriptive letter or symbol of pieces other than a pawn. SAN further suppresses the from-to hyphen, and in some variations also the capture indicator 'x' (or ':').</p>
+<pre><code>&lt;SAN move descriptor piece moves&gt;   ::= &lt;Piece symbol&gt;[&lt;from file&gt;|&lt;from rank&gt;|&lt;from square&gt;][&#39;x&#39;]&lt;to square&gt;
+&lt;SAN move descriptor pawn captures&gt; ::= &lt;from file&gt;[&lt;from rank&gt;] &#39;x&#39; &lt;to square&gt;[&lt;promoted to&gt;]
+&lt;SAN move descriptor pawn push&gt;     ::= &lt;to square&gt;[&lt;promoted to&gt;]</code></pre>
+<h3 id="ambiguities">Ambiguities</h3>
+<p>If the piece is sufficient to unambiguously determine the origin square, the whole from square is omitted. Otherwise, if two (or more) pieces of the same kind can move to the same square, the piece's initial is followed by (in descending order of preference)</p>
+<ol type="1">
+<li>file of departure if different</li>
+<li>rank of departure if the files are the same but the ranks differ</li>
+<li>the complete origin square coordinate otherwise</li>
+</ol>
+<p><span id="Captures"></span></p>
+<h3 id="captures">Captures</h3>
+<p><a href="/Captures">Captures</a> are denoted by the lower case letter "x" immediately prior to the destination square. Pawn captures with the omitted piece symbol, include the file letter of the originating square of the capturing pawn prior to the "x" character, even if not required for unambiguousness. Some SAN variations in printed media even omit the target rank if unambiguous, like dxe, which might not be accepted as input format. <span id="Enpassant"></span></p>
+<h3 id="en-passant">En passant</h3>
+<p>The PGN-Standard does not require <a href="/En_passant">En passant</a> captures have any special notation, and is written as if the captured pawn were on the capturing pawn's destination square.<a href="/FIDE">FIDE</a> states the redundant move suffix "e.p." optional (after 1 July 2014) <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>.</p>
+<p>In the case of an ‘en passant’ capture, ‘e.p.’ may be appended to the notation. <span id="Promotions"></span></p>
+<h3 id="pawn-promotion">Pawn promotion</h3>
+<p>A <a href="/Promotions">pawn promotion</a> requires the information about the chosen piece, appended as trailing Piece letter behind the target square. The SAN PGN-Standard requires an equal sign ('=') immediately following the destination square. <span id="Castling"></span></p>
+<h3 id="castling">Castling</h3>
+<p><a href="/Castling">Castling</a> is indicated by the special notations, "O-O" for kingside castling and "O-O-O" for queenside castling. While the FIDE handbook <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> uses the digit zero, the SAN PGN-Standard requires the capital letter 'O' for its export format.</p>
+<h3 id="converting-moves">Converting Moves</h3>
+<p>Due to the most compact representation, considering ambiguities concerning the origin square, converting moves with pure from- and to-squares to SAN requires not only an underlying board representation to determine piece initials, but also <a href="/Move_Generation">legal move generation</a> for a subset of moves to the destination square. <a href="/Pseudo-Legal_Move">Pseudo legal</a>, but <a href="/Legal_Move">illegal moves</a> for instance with a <a href="/Pin">Pinned piece</a> must not be considered in ambiguous issues in an export format.</p>
+<h3 id="xboard-2">XBoard 2</h3>
+<p>With the <a href="/Chess_Engine_Communication_Protocol">Chess Engine Communication Protocol</a> version 2, one can use the feature command to select SAN as move format for both input and output <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a> . <span id="FAN"></span></p>
+<h2 id="figurine-algebraic-notation-fan">Figurine Algebraic Notation (FAN)</h2>
+<p>Figurine notation uses miniature piece icons instead of single letter piece abbreviations. This enables the moves to be read independent of the language. The <a href="https://en.wikipedia.org/wiki/Unicode">Unicode</a> <a href="https://en.wikipedia.org/wiki/Miscellaneous_Symbols_Unicode_block">Miscellaneous Symbols</a> set includes all of the <a href="https://en.wikipedia.org/wiki/Chess_symbols_in_Unicode">symbols</a> necessary for FAN if appropriate <a href="https://en.wikipedia.org/wiki/Font">fonts</a> were installed on the computer <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a> . <a href="/GUI">Chess GUIs</a> may alternatively use <a href="https://en.wikipedia.org/wiki/Scalable_Vector_Graphics">Scalable Vector Graphics</a> or other scalable 2D <a href="https://en.wikipedia.org/wiki/Vector_graphics">Vector Graphics</a> to render the symbols inside their views.</p>
+<h3 id="vector-graphics">Vector Graphics</h3>
+<table>
+<tbody>
+<tr>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="/assets/IsiChessFigurine.JPG" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+</tr>
+<tr>
+<td><p><a href="/IsiChess">IsiChess</a>, notation window with figurine LAN, using 2D <a href="https://en.wikipedia.org/wiki/Vector_graphics">Vector Graphics</a>, see <a href="/2D_Graphics_Board">sample code</a></p></td>
+</tr>
+</tbody>
+</table>
+
+<h3 id="latex">LaTeX</h3>
+<table>
+<tbody>
+<tr>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]" style="--wiki-img-w:785px"><img src="/assets/LaTeXChessNotation.JPG" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+</tr>
+<tr>
+<td><p>FAN in <a href="https://en.wikipedia.org/wiki/LaTeX">LaTeX</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p></td>
+</tr>
+</tbody>
+</table>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://goossens.web.cern.ch/goossens/">Michel Goossens</a>, <a href="http://www.informit.com/authors/bio.aspx?a=A2624A62-C2B4-40F9-B8ED-E99563F89A27">Frank Mittelbach</a>, <a href="http://users.ox.ac.uk/%7Erahtz/">Sebastian Rahtz</a>, <a href="http://www.loria.fr/%7Eroegel/">Denis Roegel</a>, <a href="http://www.uit.co.uk/Authors/HerbVoss">Herbert Voß</a> (<strong>2007</strong>). <em><a href="http://xml.web.cern.ch/XML/lgc2/">The LATEXGraphics Companion</a></em>. Second Edition, Addison-Wesley, ISBN-13: 978-0-321-50892-8, <a href="http://ptgmedia.pearsoncmg.com/images/9780321508928/samplepages/0321508920_Sample.pdf">sample pdf</a>, 10.1 Chess, 10.2 Xiangqi—Chinese Chess<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><span id="ReadingChess"></span></p>
+<h2 id="reading-chess">Reading Chess</h2>
+<p>In an attempt of <a href="https://en.wikipedia.org/wiki/Computer_vision">Computer vision</a>, <a href="/Mathematician">Henry S. Baird</a> and <a href="/Ken_Thompson">Ken Thompson</a> used <a href="https://en.wikipedia.org/wiki/Optical_character_recognition">optical character recognition</a> along with various heuristics and applying the rules of chess, to "read" the figurine notation from Informant's <a href="https://en.wikipedia.org/wiki/Encyclopaedia_of_Chess_Openings">Encyclopaedia of Chess Openings</a> with high accuracy and a success rate of 99.995% on approximately one million characters (2850 games, 945 pages) <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a> .</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/CPW-Engine_algebraic">CPW-Engine_algebraic</a></li>
+<li><a href="/Encoding_Moves">Encoding Moves</a></li>
+<li><a href="/Entering_Moves">Entering Moves</a></li>
+<li><a href="/Portable_Game_Notation">Portable Game Notation</a> (PGN)</li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Mathematician">Henry S. Baird</a>, <a href="/Ken_Thompson">Ken Thompson</a> (<strong>1990</strong>). <em><a href="http://doc.cat-v.org/bell_labs/reading_chess/">Reading Chess</a></em>. <a href="/IEEE">IEEE Transactions on Pattern Analysis and Machine Intelligence</a>, Vol. 12, No. 6, <a href="http://doc.cat-v.org/bell_labs/reading_chess/reading_chess.pdf">pdf</a></li>
+<li><a href="http://goossens.web.cern.ch/goossens/">Michel Goossens</a>, <a href="http://www.informit.com/authors/bio.aspx?a=A2624A62-C2B4-40F9-B8ED-E99563F89A27">Frank Mittelbach</a>, <a href="http://users.ox.ac.uk/%7Erahtz/">Sebastian Rahtz</a>, <a href="http://www.loria.fr/%7Eroegel/">Denis Roegel</a>, <a href="http://www.uit.co.uk/Authors/HerbVoss">Herbert Voß</a> (<strong>2007</strong>). <em><a href="http://xml.web.cern.ch/XML/lgc2/">The LATEXGraphics Companion</a></em>. Second Edition, Addison-Wesley, ISBN-13: 978-0-321-50892-8, <a href="http://ptgmedia.pearsoncmg.com/images/9780321508928/samplepages/0321508920_Sample.pdf">sample pdf</a>, 10.1 Chess, 10.2 Xiangqi—Chinese Chess <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=271760">correct SAN notation ?</a> by <a href="/Andreas_Herrmann">Andreas Herrmann</a>, <a href="/CCC">CCC</a>, December 19, 2002</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=337347">Crafty (under winboard) question</a> by <a href="/Andrei_Fortuna">Andrei Fortuna</a>, <a href="/CCC">CCC</a>, December 21, 2003 » <a href="/WinBoard">WinBoard</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=33764">SAN Move Disambiguation -- looking for test positition</a> by humble programmer, <a href="/CCC">CCC</a>, April 12, 2010 » <a href="/Portable_Game_Notation">PGN</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38318">Unicode values for chessmen</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, March 07, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41322">Determining From squares</a> by David Whitten, <a href="/CCC">CCC</a>, December 04, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53686">What world have I been in - castling notation?</a> by Lonnie Cook, <a href="/CCC">CCC</a>, September 13, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61393">SAN test position</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, September 11, 2016 » <a href="/Algebraic_Chess_Notation">SAN</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65193">WAC using coordinate notation?</a> by <a href="/Erin_Dame">Erin Dame</a>, <a href="/CCC">CCC</a>, September 17, 2017 » <a href="/Algebraic_Chess_Notation">Pure coordinate notation</a>, <a href="/Win_at_Chess">Win at Chess</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=78770">Optimised Algebraic Notation</a> by Dmitry Shechtman, <a href="/CCC">CCC</a>, November 29, 2021</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Algebraic_chess_notation">Algebraic chess notation from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Descriptive_chess_notation">Desciptive notation from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Punctuation_%28chess%29">Punctuation (chess) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Chess_symbols_in_Unicode">Chess symbols in Unicode from Wikipedia</a></li>
+<li><a href="http://www.thechessdrum.net/PGN_Reference.txt">Standard: Portable Game Notation Specification and Implementation Guide</a> by <a href="/Steven_Edwards">Steven Edwards</a> - 8.2.3: Movetext SAN (Standard Algebraic Notation)</li>
+<li><a href="http://www.cs.cmu.edu/afs/cs/project/ai-repository/ai/areas/games/chess/san/">SAN Kit: Implemented Standards for Chess Move Notation</a> by <a href="/Steven_Edwards">Steven Edwards</a></li>
+<li><a href="http://www.fide.com/component/handbook/?id=171&amp;view=article">FIDE handbook, Laws of Chess - Appendix C. Algebraic notation</a></li>
+<li><a href="https://web.archive.org/web/20160117212352/https://www.chessclub.com/chessviewer/smith.html">Smith notation</a> (<a href="https://en.wikipedia.org/wiki/Wayback_Machine">Wayback Machine</a>)</li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Game_Notation">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://home.hccnet.nl/h.g.muller/engine-intf.html#8">Chess Engine Communication Protocol: 8. Commands from xboard to the engine</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.shredderchess.com/chess-info/features/uci-universal-chess-interface.html">The UCI Specification</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://web.archive.org/web/20160117212352/https://www.chessclub.com/chessviewer/smith.html">Smith notation</a> (<a href="https://en.wikipedia.org/wiki/Wayback_Machine">Wayback Machine</a>)<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.fide.com/component/handbook/?id=171&amp;view=article">FIDE handbook, Laws of Chess - Appendix C. Algebraic notation</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://www.thechessdrum.net/PGN_Reference.txt">Standard: Portable Game Notation Specification and Implementation Guide</a> by <a href="/Steven_Edwards">Steven Edwards</a> - 8.2.3: Movetext SAN (Standard Algebraic Notation)<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="http://www.cs.cmu.edu/afs/cs/project/ai-repository/ai/areas/games/chess/san/">SAN Kit: Implemented Standards for Chess Move Notation</a> by <a href="/Steven_Edwards">Steven Edwards</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="http://www.fide.com/component/handbook/?id=171&amp;view=article">FIDE handbook, Laws of Chess - Appendix C. Algebraic notation, C-9</a><a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="http://www.fide.com/component/handbook/?id=171&amp;view=article">FIDE handbook, Laws of Chess - Appendix C. Algebraic notation - C.13 Abbreviations</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="http://home.hccnet.nl/h.g.muller/engine-intf.html#9">Chess Engine Communication Protocol: 9. Commands from the engine to xboard</a><a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=38318">Unicode values for chessmen</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, March 07, 2011<a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="/Mathematician">Henry S. Baird</a>, <a href="/Ken_Thompson">Ken Thompson</a> (<strong>1990</strong>). <em><a href="http://doc.cat-v.org/bell_labs/reading_chess/">Reading Chess</a></em>. <a href="/IEEE">IEEE Transactions on Pattern Analysis and Machine Intelligence</a>, Vol. 12, No. 6, <a href="http://doc.cat-v.org/bell_labs/reading_chess/reading_chess.pdf">pdf</a><a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="https://en.wikipedia.org/wiki/LaTeX">LaTeX from Wikipedia</a><a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Algebraic_Chess_Notation">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, AartBik.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

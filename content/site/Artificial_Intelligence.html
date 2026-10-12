@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Artificial Intelligence - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Artificial Intelligence</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * Artificial Intelligence</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="http://www.schaakkunst.nl/Schaakkunst_besser.htm?id=GK&amp;id2=GA&amp;id3=IN" target="_blank" rel="noopener noreferrer"><img src="/assets/Computerzeitalter.jpg" alt="Bernd Besser, computerzeitalter 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Bernd_Besser">Bernd Besser</a>, computerzeitalter <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://www.schaakkunst.nl/Schaakkunst_besser.htm?id=GK&amp;id2=GA&amp;id3=IN">Schaakkunst Bernd Besser</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Artificial Intelligence</strong>, (AI)<br />
+the <a href="https://en.wikipedia.org/wiki/Intelligence">intelligence</a> of machines and the branch of computer science that aims to create it. While 'machine intelligence' was already mentioned by <a href="/Alan_Turing">Alan Turing</a> in the 1940s during his research at <a href="https://en.wikipedia.org/wiki/Bletchley_Park">Bletchley Park</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> , the term 'artificial intelligence' was coined by <a href="/John_McCarthy">John McCarthy</a> in the proposal for the 1956 <a href="https://en.wikipedia.org/wiki/Dartmouth_Conferences">Dartmouth Conference</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> . In its beginning, Computer Chess was called the <a href="https://en.wikipedia.org/wiki/Drosophila">Drosophila</a> of <a href="https://en.wikipedia.org/wiki/Artificial_intelligence">Artificial Intelligence</a>. In the 70s, when <a href="/Brute-Force">brute-force</a> programs started to dominate, and competitive and commercial aspects have taken precedence over using chess as a scientific domain, the AI community more and more lost interest in chess <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> . In disagreement with the AI establishment in the 80s, <a href="/Peter_W._Frey">Peter W. Frey</a> concluded, that the AI community should follow computer chess methods rather than the other way around <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> .</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#drosophila-of-ai">Drosophila of AI</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#donald-michie">Donald Michie</a></li>
+<li><a href="#john-mccarthy">John McCarthy</a></li>
+<li><a href="#anthony-cozzie">Anthony Cozzie</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#heuristic-programming">Heuristic Programming</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#remembering-kronrod">Remembering Kronrod</a></li>
+<li><a href="#intellectual-foundations">Intellectual Foundations</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#the-12th-ijcai">The 12th IJCAI</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#jonathan-schaeffer">Jonathan Schaeffer</a></li>
+<li><a href="#tony-marsland">Tony Marsland</a></li>
+<li><a href="#robert-levinson">Robert Levinson</a></li>
+<li><a href="#david-wilkins">David Wilkins</a></li>
+</ol>
+</details></li>
+<li><a href="#ai-as-sport">AI as Sport</a></li>
+<li><a href="#making-computer-chess-scientific">Making Computer Chess Scientific</a></li>
+<li><a href="#go-the-new-drosophila-of-ai">Go, the new Drosophila of AI</a></li>
+<li><a href="#poker-the-next-challenge">Poker, the next Challenge</a></li>
+<li><a href="#subfields">Subfields</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#selected-publications">Selected Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1945-">1945 ...</a></li>
+<li><a href="#1950-">1950 ...</a></li>
+<li><a href="#1955-">1955 ...</a></li>
+<li><a href="#1960-">1960 ...</a></li>
+<li><a href="#1965-">1965 ...</a></li>
+<li><a href="#1970-">1970 ...</a></li>
+<li><a href="#1975-">1975 ...</a></li>
+<li><a href="#1980-">1980 ...</a></li>
+<li><a href="#1985-">1985 ...</a></li>
+<li><a href="#1990-">1990 ...</a></li>
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+<li><a href="#ai-game-programming-wisdom">AI Game Programming Wisdom</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1994-">1994 ...</a></li>
+<li><a href="#2000--1">2000 ...</a></li>
+<li><a href="#2010--1">2010 ...</a></li>
+<li><a href="#2020--1">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#pedia">Pedia</a></li>
+<li><a href="#ai-in-media">AI in Media</a></li>
+<li><a href="#famous-ai-programs">Famous AI Programs</a></li>
+<li><a href="#machine-creativity">Machine Creativity</a></li>
+<li><a href="#associations">Associations</a></li>
+<li><a href="#journals">Journals</a></li>
+<li><a href="#online-courses">Online Courses</a></li>
+<li><a href="#misc">Misc</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="drosophila-of-ai">Drosophila of AI</h2>
+<h3 id="donald-michie"><a href="/Donald_Michie">Donald Michie</a></h3>
+<p>Quote from <em>I remember Donald Michie</em> by <a href="/Maarten_van_Emden">Maarten van Emden</a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> :</p>
+<p><code>In the 1970s DM was fond of proclaiming “Chess, the </code><a href="https://en.wikipedia.org/wiki/Drosophila_melanogaster"><code>Drosophila Melanogaster</code></a><code> of Artificial Intelligence”. A public pronouncement of his point of view can be found in an interview with </code><a href="/Jaap_van_den_Herik"><code>H.J. van den Herik</code></a><code> held in 1981 (“Computerschaak, schaakwereld en kunstmatige intelligentie” by H.J. van den Herik, Academic Service, 1983) </code><a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a><code> . It is a long interview, from which I quote DM’s answer to the question: “What do you think about the applicability of the research done in computer chess?” </code><br />
+<code>The applicability is I think enormous and quite critical. Scientific study of computer chess, which includes the technological work, but goes far beyond that, is the most important scientific study that is going in the world at present. In the same sense, if I were asked what was the most important study in process during the first world war, I would say the genetic breeding experiments on the drosophila fruit fly by </code><a href="https://en.wikipedia.org/wiki/Thomas_Hunt_Morgan"><code>Morgan</code></a><code> and his colleagues. The analogy is very good. The final impact of the early work in laying down the basic theoretical framework for the subject was just enormous, unimaginable. We see now the industrial take-off of </code><a href="https://en.wikipedia.org/wiki/Genetic_engineering"><code>genetic engineering</code></a><code> which is the delayed final outcome for human society of the fly-breeding work. The use of chess now as a preliminary to the knowledge engineering and cognitive engineering of the future is exactly similar, in my opinion, to the work on drosophila. It should be encouraged in a very intense way, for these reasons. </code></p>
+<p><span id="McCarthy"></span></p>
+<h3 id="john-mccarthy">John McCarthy</h3>
+<p><a href="/Template:Quote_McCarthy_on_AI">Quote</a> by <a href="/John_McCarthy">John McCarthy</a> from <em>What is Artificial Intelligence</em>? <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a>:</p>
+<p><a href="/Alexander_Kronrod"><code>Alexander Kronrod</code></a><code>, a Russian AI researcher, said '</code><a href="/Chess"><code>Chess</code></a><code> is the </code><a href="https://en.wikipedia.org/wiki/Drosophila"><code>Drosophila</code></a><code> of </code><a href="/Artificial_Intelligence"><code>AI</code></a><code>.' He was making an analogy with geneticists' use of that fruit fly to study inheritance. Playing chess requires certain intellectual mechanisms and not others. Chess programs now play at grandmaster level, but they do it with limited intellectual mechanisms compared to those used by a human chess player, substituting large amounts of computation for understanding. Once we understand these mechanisms better, we can build human-level chess programs that do far less computation than do present programs. Unfortunately, the competitive and commercial aspects of making computers play chess have taken precedence over using chess as a scientific domain. It is as if the geneticists after 1910 had organized fruit fly races and concentrated their efforts on breeding fruit flies that could win these races.</code></p>
+<h3 id="anthony-cozzie">Anthony Cozzie</h3>
+<p><a href="/Anthony_Cozzie">Anthony Cozzie</a> in a forum discussion about McCarthy's statement <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a> <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a> :</p>
+<p><code>First, the author of this quote is simple WRONG. The generally accepted theory of how humans play chess is that the brain does fuzzy matching on a database of several hundred thousand positions. The amount of computation needed to do that is FAR greater than the amount expended by a "conventional" AB searcher, and yet the computer plays MUCH better than the average human. The simple fact of the matter, which you refuse to recognize, is that AB-search with reasonable heuristics is the most efficient way to play chess with Von Neuman machines.</code></p>
+<p><code>Secondly, the existence of current amateur and commercial programs does nothing to prevent you from writing whatever kind of chess playing agent you want. If you want to experiment, no one is stopping you or him from applying to NSF for research money and giving it a shot. The existence of "fruit fly races" - and his fruit fly analogy is totally flawed. A better analogy would be that a geneticist decided to make a fruit fly that could run faster than a human - does nothing to prevent casual study of one's own fruit flies. </code></p>
+<h2 id="heuristic-programming">Heuristic Programming</h2>
+<h3 id="remembering-kronrod">Remembering Kronrod</h3>
+<p><a href="/Template:Remembering_A.S._Kronrod">Quote</a> from <em>Remembering A.S. Kronrod</em> by <a href="/Mathematician">Evgenii Landis</a> and <a href="/Mathematician">Isaak Yaglom</a> <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a>:</p>
+<p><code>Only in 1955 did a real opportunity arise for </code><a href="/Alexander_Kronrod"><code>A.S. Kronrod</code></a><code> to work with an electronic computer. It was the </code><a href="/M-2"><code>M­2 computer</code></a><code> constructed by </code><a href="http://www.computer-museum.ru/english/galglory_en/Bruk.htm"><code>I.S. Bruk</code></a><code>, </code><a href="http://www.computer-museum.ru/english/galglory_en/kartsev.htm"><code>M.A. Kartsev</code></a><code>, and </code><a href="http://www.computer-museum.ru/english/galglory_en/Matyukhin.htm"><code>N.Ya. Matyukhin</code></a><code> in the laboratory of the Institute of Energy named after </code><a href="https://en.wikipedia.org/wiki/Gleb_Krzhizhanovsky"><code>Krzhizhanovsky</code></a><code> and directed by I.S. Bruk. This laboratory later became the to Institute for Electronic Control Machines. The mathematics/machine interface was developed by </code><a href="/Alexander_Brudno"><code>A.L. Brudno</code></a><code>, a great personal and like­minded friend of A.S. Kronrod.</code></p>
+<p><code>When he started with enthusiasm to program the M­2 machine, A.S. Kronrod quickly came to the conclusion that computing is not the main application of computers. The main goal is to teach the computer to think, i.e., what is now called "</code><a href="/Artificial_Intelligence"><code>artificial intelligence</code></a><code>" and in those days "heuristic programming".</code></p>
+<p><code>A.S. Kronrod captivated a large group of mathematicians and physicists (</code><a href="/Georgy_Adelson-Velsky"><code>G.M. Adelson ­Velsky</code></a><code>, A.L. Brudno, </code><a href="https://en.wikipedia.org/wiki/Bongard_problem"><code>M.M. Bongard</code></a><code>, </code><a href="/Mathematician"><code>E.M. Landis</code></a><code>, </code><a href="https://en.wikipedia.org/wiki/Nikolay_Konstantinov"><code>N.N. Konstantinov</code></a><code>, and others). Although some of them had arrived at this kind of problems on their own, they unconditionally accepted his leadership. In the room next to the one housing the M­2 machine the work of the new Kronrod seminar started. At the gatherings there were heated discussions on </code><a href="/Pattern_Recognition"><code>pattern recognition</code></a><code> problems (this work was led by M.M. Bongard; versions of his program "Kora" are still functioning), transportation problems (the problem was introduced to the seminar and actively worked on by A.L. Brudno), problems of automata theory, and many other problems.</code></p>
+<h3 id="intellectual-foundations">Intellectual Foundations</h3>
+<p><a href="/Template:Quote_Yershov">Quote</a> from <em>Biography AS Kronrod</em> by Alexander Yershov <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a></p>
+<p><code>In 1958, </code><a href="/Alexander_Kronrod"><code>Kronrod</code></a><code>, </code><a href="/Georgy_Adelson-Velsky"><code>Adelson-Velsky</code></a><code>, and </code><a href="/Mathematician"><code>Landis</code></a><code> selected "</code><a href="https://en.wikipedia.org/wiki/Slapjack"><code>Snap</code></a><code>" ("подкидного дурака") as the intellectual foundations for the development of the game heuristic programming </code><a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a><code>. The program itself was a fiasco - but the basic principles (board games, </code><a href="/Search"><code>search techniques</code></a><code> and </code><a href="/Depth"><code>limited depth</code></a><code>) were formulated. Further research laboratories in the field of game theory culminated in the first ever chess duel between the </code><a href="/ITEP_Chess_Program"><code>program</code></a><code> of the </code><a href="/Institute_of_Theoretical_and_Experimental_Physics"><code>Institute</code></a><code> of Soviet and American </code><a href="/Kotok-McCarthy-Program"><code>best program</code></a><code> developed at </code><a href="/Stanford_University"><code>Stanford University</code></a><code> under the direction of </code><a href="/John_McCarthy"><code>J. McCarthy</code></a><code>. By </code><a href="/Stanford-ITEP_Match"><code>telegraph match</code></a><code> was played in four games ended 3-1 in favor of our institute. At the time, chess became a </code><a href="https://en.wikipedia.org/wiki/Guinea_pig_%28disambiguation%29"><code>guinea pig</code></a><code> for all programmers interested in </code><a href="/Artificial_Intelligence"><code>artificial intelligence</code></a><code>.</code></p>
+<h2 id="the-12th-ijcai">The 12th IJCAI</h2>
+<p>In a panel discussion at the <a href="/Conferences">12th International Joint Conference on Artificial Intelligence</a>, <a href="/Robert_Levinson">Robert Levinson</a>, <a href="/Feng-hsiung_Hsu">Feng-hsiung Hsu</a>, <a href="/Tony_Marsland">Tony Marsland</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, and <a href="/David_Wilkins">David Wilkins</a> commented on the relationship between computer chess and AI research <a href="#fn15" class="footnote-ref" id="fnref15" role="doc-noteref"><sup>15</sup></a> . As pointed out by <a href="/Peter_W._Frey">Peter W. Frey</a>, many emphasized the discrepancy between both domains and seemed to lament the inferiour status of the work of computer chess - some excerpts quoted by Frey in his <em>Computer Chess vs. AI</em> paper <a href="#fn16" class="footnote-ref" id="fnref16" role="doc-noteref"><sup>16</sup></a> .</p>
+<h3 id="jonathan-schaeffer"><a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a></h3>
+<p><code> Sadly, most of the work currently being done on computer chess programs is engineering, not science. For example, the engineering of special-purpose VLSI chips to increase the speed of a chess program only underlines the importance chess programmers attach to speed. In my opinion, conventional computer-chess methods will yield little of further interest to the AI community. </code></p>
+<h3 id="tony-marsland"><a href="/Tony_Marsland">Tony Marsland</a></h3>
+<p><code> Pruning by analogy is a powerful general-purpose tool and if developed satisfactorily for a perfect information game like chess would almost certainly be applicable to related decision-tree searches...</code></p>
+<p><code>It is remarkable that no significant improvement has been made to that method, despite the passage of 15 years. Not even attempts to implement simple forms of the idea in serious chess programs. </code></p>
+<h3 id="robert-levinson"><a href="/Robert_Levinson">Robert Levinson</a></h3>
+<p><code>Psychological evidence indicates that human chess players search very few positions, and base their positional assessments on structural/perceptual patterns learned through experience.</code></p>
+<p><code>The main objectives of the project are to demonstrate capacity of the system to learn, to deepen our understanding of the interaction of knowledge and search, and to build bridges in this area between AI and cognitive science. </code></p>
+<h3 id="david-wilkins"><a href="/David_Wilkins">David Wilkins</a></h3>
+<p><code>Hardware advances have made chess a less fertile ground for addressing the basic issues of AI. The game is small enough that brute-force search techniques have dominated competitive computer chess, and I see little AI interest in squeezing out the last few hundred points on the chess ratings. </code></p>
+<h2 id="ai-as-sport">AI as Sport</h2>
+<p><a href="/John_McCarthy">John McCarthy</a> from <em>AI as Sport</em>, 1997 <a href="#fn17" class="footnote-ref" id="fnref17" role="doc-noteref"><sup>17</sup></a> , in a review of <a href="/Monroe_Newborn">Monty Newborn's</a> <em><a href="/Kasparov_versus_Deep_Blue_1997">Deep Blue vs. Kasparov</a></em> <a href="#fn18" class="footnote-ref" id="fnref18" role="doc-noteref"><sup>18</sup></a> :</p>
+<p><code>Now that computers have reached world-champion level, it is time for chess to become a Drosophila again. Champion-level play is possible with enormously less computation than </code><a href="/Deep_Blue"><code>Deep Blue</code></a><code> and its recent competitors use. Tournaments should admit programs only with severe limits on computation. This would concentrate attention on scientific advances. Perhaps a personal computer manufacturer would sponsor a tournament with one second allowed per move on a machine of a single design. Tournaments in which players use computers to check out lines of play would be man-machine collaboration rather than just competition.</code></p>
+<p><code>Besides AI work aimed at tournament play, particular aspects of the game have illuminated the intellectual mechanisms involved. </code><a href="/Barbara_Liskov"><code>Barbara Liskov</code></a><code> demonstrated that what chess books teach about how to win certain endgames is not a program but more like a predicate comparing two positions to see if one is an improvement on the other. Such qualitative comparisons are an important feature of human intelligence and are needed for AI. </code><a href="/Donald_Michie"><code>Donald Michie</code></a><code>, </code><a href="/Ivan_Bratko"><code>Ivan Bratko</code></a><code>, </code><a href="/Alen_Shapiro"><code>Alen Shapiro</code></a><code>, </code><a href="/David_Wilkins"><code>David Wilkins</code></a><code>, and others have also used chess as a Drosophila to study intelligence. </code><a href="/Monroe_Newborn"><code>Newborn</code></a><code> ignores this work, because it is not oriented to tournament play. </code></p>
+<h2 id="making-computer-chess-scientific">Making Computer Chess Scientific</h2>
+<p>A further note by <a href="/John_McCarthy">John McCarthy</a> from <em>Making Computer Chess Scientific</em> <a href="#fn19" class="footnote-ref" id="fnref19" role="doc-noteref"><sup>19</sup></a> :</p>
+<p><code>AI has two tools for tackling problems. One is to use methods observed in humans, often observed only by introspection, and the other is to invent methods using ideas of computer science without worrying about whether humans do it this way. Chess programming employs both. Introspection is an unreliable way of determining how humans think, but introspectively suggested methods are valid as AI if they work.</code></p>
+<p><code>Much of the mental computation done by chess players is invisible to the player and to outside observers. Patterns in the position suggest what lines of play to look at, and the pattern recognition processes in the human mind seem to be invisible to that mind. However, the parts of the move tree that are examined are consciously accessible.</code></p>
+<p><code>It is an important advantage of chess as a Drosophila for AI that so much of the thought that goes into human chess play is visible to the player and even to spectators. When chess players argue about what is the right move in a position, they follow out lines of play, i.e. argue explicitly about parts of the move tree. Moreover, when a player is found to have made a mistake, it is almost always a failure to follow out a certain line of play rather than a misevaluation of a final position. </code></p>
+<p><span id="GoTheNewDrosophila"></span></p>
+<h2 id="go-the-new-drosophila-of-ai">Go, the new Drosophila of AI</h2>
+<p>A quote by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a> on AI in <a href="/Go">Go</a> and Chess <a href="#fn20" class="footnote-ref" id="fnref20" role="doc-noteref"><sup>20</sup></a> :</p>
+<p><code>There is no significant difference between an </code><a href="/Alpha-Beta"><code>alpha-beta search</code></a><code> with heavy </code><a href="/Late_Move_Reductions"><code>LMR</code></a><code> and a </code><a href="/Evaluation"><code>static evaluator</code></a><code> (current state of the art in chess) and an </code><a href="/UCT"><code>UCT</code></a><code> searcher with a small exploration constant that does playouts (state of the art in go).</code></p>
+<p><code>The shape of the </code><a href="/Search_Tree"><code>tree</code></a><code> they search is very similar. The main breakthrough in Go the last few years was how to backup an uncertain Monte Carlo score. This was solved. For chess this same problem was solved around the time </code><a href="/Quiescence_Search"><code>quiescent search</code></a><code> was developed.</code></p>
+<p><code>Both are producing strong programs and we've proven for both the methods that they scale in strength as hardware speed goes up.</code></p>
+<p><code>So I would say that we've successfully adopted the simple, brute force methods for chess to Go and they already work without increases in computer speed. The increases will make them progressively stronger though, and with further software tweaks they will eventually surpass humans. </code></p>
+<h2 id="poker-the-next-challenge">Poker, the next Challenge</h2>
+<p><a href="/Graham_Kendall">Graham Kendall</a> and <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a> on <a href="http://ilk.uvt.nl/icga/games/Poker/">Poker</a> <a href="#fn21" class="footnote-ref" id="fnref21" role="doc-noteref"><sup>21</sup></a> :</p>
+<p>For many years Chess (and perhaps more recently Go) has served as the Drosophila of AI research. Decades of research culminated in the defeat of Garry Kasparov by DEEP BLUE in May 1997. There is still an active research community that uses Chess as a test-bed for AI research (as seen in this journal), but the game is limited in the types of challenges that it can offer to the AI researcher. Being a game of perfect information (both players know the full state of the game at any given point) with a relatively small branching factor, researchers have reduced the challenge of building a strong AI for Chess to merely one of deep brute-force search. The research challenges are to create a good evaluation function, and to design an effective search algorithm. This “solution” to Chess is unappealing to many AI purists. Nevertheless, alternative AI approaches have been largely ineffective.</p>
+<p>Poker, as an experimental test-bed for exploring AI, is a much richer domain than Chess (and Go).</p>
+<ol type="1">
+<li>Imperfect information. Parts of the game state (opponent hands) are not known.</li>
+<li>Multiple players. Many popular poker variants can be played with up to 10 players.</li>
+<li>Stochastic. The dealing of the cards adds a random element to the game.</li>
+<li>Deception. Predictable play can be exploited by an opponent. Hence, deceptive play is an essential ingredient of strong play (e.g., bluffing).</li>
+<li>Opponent modelling. Observing your opponent(s) and adjusting your play to exploit (perceived) opponent tendencies is necessary to maximize poker winnings.</li>
+<li>Information sparsity. Many poker hands end in the players not revealing their cards. This limits the amount of data available to learn from.</li>
+</ol>
+<h2 id="subfields">Subfields</h2>
+<ul>
+<li><a href="/Genetic_Programming">Genetic Programming</a></li>
+<li><a href="/Learning">Learning</a></li>
+</ul>
+<p><a href="/Deep_Learning">Deep Learning</a></p>
+<ul>
+<li><a href="/Neural_Networks">Neural Networks</a></li>
+<li><a href="/Planning">Planning</a></li>
+<li><a href="/Robots">Robots</a></li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Cognition">Cognition</a></li>
+<li><a href="/Knowledge">Knowledge</a></li>
+<li>Psychology</li>
+<li><a href="/Search">Search</a></li>
+<li><a href="/Alan_Turing">Turing Test</a></li>
+</ul>
+<h2 id="selected-publications">Selected Publications</h2>
+<h3 id="1945-">1945 ...</h3>
+<ul>
+<li><a href="/Mathematician">Vannevar Bush</a> (<strong>1945</strong>). <em><a href="https://en.wikipedia.org/wiki/As_We_May_Think">As We May Think</a></em>. <a href="https://en.wikipedia.org/wiki/The_Atlantic">The Atlantic Monthly</a>, July 1945, <a href="http://archive.computerhistory.org/projects/chess/related_materials/text/2-0.As_we_may_think.Bush-Vannevar/2-0.As_we_may_think.Bush-Vannevar.1945.ATLANTIC_MONTHLY.062303004.pdf">pdf</a> from <a href="/The_Computer_History_Museum">The Computer History Museum</a></li>
+<li><a href="/Claude_Shannon">Claude Shannon</a> (<strong>1949</strong>). <em><a href="http://www.pi.infn.it/%7Ecarosi/chess/shannon.txt">Programming a Computer for Playing Chess</a></em>. <a href="http://archive.computerhistory.org/projects/chess/related_materials/text/2-0%20and%202-1.Programming_a_computer_for_playing_chess.shannon/2-0%20and%202-1.Programming_a_computer_for_playing_chess.shannon.062303002.pdf">pdf</a> from <a href="/The_Computer_History_Museum">The Computer History Museum</a></li>
+</ul>
+<h3 id="1950-">1950 ...</h3>
+<ul>
+<li><a href="/Alan_Turing">Alan Turing</a> (<strong>1950</strong>). <em><a href="http://loebner.net/Prizef/TuringArticle.html">Computing Machinery and Intelligence</a></em>. Mind, 59, 433-460. <a href="http://archive.computerhistory.org/projects/chess/related_materials/text/2-0%20and%202-1.Computing_machinery_and_intelligence.turing/2-0%20and%202-1.Computing_machinery_and_intelligence.turing-alan.mind-59.1950.062303001.pdf">pdf</a> from <a href="/The_Computer_History_Museum">The Computer History Museum</a></li>
+<li><a href="http://adsabs.harvard.edu/cgi-bin/nph-abs_connect?return_req=no_params&amp;author=Richards,%20Paul%20I.&amp;db_key=GEN">Paul I. Richards</a> (<strong>1951</strong>). <em>Machines which can learn</em>. <a href="https://en.wikipedia.org/wiki/American_Scientist">American Scientist</a>, 39:711-716</li>
+<li><a href="http://adsabs.harvard.edu/cgi-bin/nph-abs_connect?return_req=no_params&amp;author=Richards,%20Paul%20I.&amp;db_key=GEN">Paul I. Richards</a> (<strong>1952</strong>). <em>On Game Learning Machines</em>. <a href="https://en.wikipedia.org/wiki/The_Scientific_Monthly">The Scientific Monthly</a>, Vol. 74, No. 4, April 1952</li>
+<li><a href="/Marvin_Minsky">Marvin Minsky</a> (<strong>1954</strong>). <em>Neural Nets and the Brain Model Problem</em>. Ph.D. dissertation, <a href="https://en.wikipedia.org/wiki/Princeton_University">Princeton University</a></li>
+</ul>
+<h3 id="1955-">1955 ...</h3>
+<ul>
+<li><a href="/John_McCarthy">John McCarthy</a>, <a href="/Marvin_Minsky">Marvin Minsky</a>, <a href="/Nathaniel_Rochester">Nathaniel Rochester</a>, <a href="/Claude_Shannon">Claude Shannon</a> (<strong>1955</strong>). <em><a href="http://www-formal.stanford.edu/jmc/history/dartmouth/dartmouth.html">A Proposal for the Dartmouth Summer Research Project on Artificial Intelligence</a></em>.</li>
+<li><a href="/Allen_Newell">Allen Newell</a> (<strong>1955</strong>). <em>The Chess Machine: An Example of Dealing with a Complex Task by Adaptation</em>. Proceedings Western Joint Computer Conference, pp. 101-108. Reprinted (<strong>1988</strong>) in <a href="/Computer_Chess_Compendium">Computer Chess Compendium</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Frank_Rosenblatt">Frank Rosenblatt</a> (<strong>1957</strong>). <em>The Perceptron - a Perceiving and Recognizing Automaton</em>. Report 85-460-1, <a href="https://en.wikipedia.org/wiki/Calspan#History">Cornell Aeronautical Laboratory</a> <a href="#fn22" class="footnote-ref" id="fnref22" role="doc-noteref"><sup>22</sup></a></li>
+<li><a href="/Allen_Newell">Allen Newell</a>, <a href="/Cliff_Shaw">Cliff Shaw</a>, <a href="/Herbert_Simon">Herbert Simon</a> (<strong>1958</strong>). <em>Chess Playing Programs and the Problem of Complexity</em>. IBM Journal of Research and Development, Vol. 4, No. 2, pp. 320-335. Reprinted (1963) in <a href="http://mitpress.mit.edu/catalog/item/default.asp?ttype=2&amp;tid=6685">Computers and Thought</a> (eds. <a href="/Edward_Feigenbaum">Edward A. Feigenbaum</a> and <a href="/Mathematician">Julian Feldman</a>), pp. 39-70. McGraw-Hill, New York, N.Y. <a href="http://www.research.ibm.com/journal/rd/024/ibmrd0204I.pdf">pdf</a></li>
+<li><a href="/John_McCarthy">John McCarthy</a> (<strong>1959</strong>). <em><a href="http://www-formal.stanford.edu/jmc/mcc59/mcc59.html">Programs with Common Sense</a></em>, <a href="http://www-formal.stanford.edu/jmc/mcc59.pdf">pdf</a></li>
+<li><a href="/Allen_Newell">Allen Newell</a>, <a href="/Cliff_Shaw">Cliff Shaw</a>, <a href="/Herbert_Simon">Herbert Simon</a> (<strong>1959</strong>). <em>Report on a general problem-solving program</em>. Proceedings of the International Conference on Information Processing, pp. 256-264 <a href="#fn23" class="footnote-ref" id="fnref23" role="doc-noteref"><sup>23</sup></a></li>
+<li><a href="/Woodrow_W._Bledsoe">Woodrow W. Bledsoe</a>, <a href="https://en.wikipedia.org/wiki/Iben_Browning">Iben Browning</a> (<strong>1959</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=1460326">Pattern Recognition and Reading by Machine</a></em>. In Proceedings of the Eastern Joint Computer Conference</li>
+</ul>
+<h3 id="1960-">1960 ...</h3>
+<ul>
+<li><a href="http://www.rand.org/pubs/classics/building.html">John D. Williams</a> (<strong>1960</strong>). <em>Toward Intelligent Machines</em>. <a href="https://en.wikipedia.org/wiki/RAND_Corporation">RAND Corporation</a>, P-2170, 29 December 1960</li>
+<li><a href="https://en.wikipedia.org/wiki/Mortimer_Taube">Mortimer Taube</a> (<strong>1961</strong>). <em>Computers and Common Sense: The Myth of Thinking Machines</em>. <a href="https://en.wikipedia.org/wiki/Columbia_University_Press">Columbia University Press</a></li>
+<li><a href="/Marvin_Minsky">Marvin Minsky</a> (<strong>1961</strong>). <em>Steps Toward Artificial Intelligence</em>. Proc IRE, 49, pp. 8-30. Reprinted (1963) in <a href="http://mitpress.mit.edu/catalog/item/default.asp?ttype=2&amp;tid=6685">Computers and Thought</a> (eds. <a href="/Edward_Feigenbaum">Edward A. Feigenbaum</a> and <a href="/Mathematician">Julian Feldman</a>), <a href="http://courses.csail.mit.edu/6.803/pdf/steps.pdf">pdf</a></li>
+<li><a href="/John_Maynard_Smith">John Maynard Smith</a>, <a href="/Donald_Michie">Donald Michie</a> (<strong>1961</strong>). <em>Machines that play games</em>. New Scientist, 12, 367-9. <a href="#fn24" class="footnote-ref" id="fnref24" role="doc-noteref"><sup>24</sup></a></li>
+<li><a href="https://en.wikipedia.org/wiki/Frank_Rosenblatt">Frank Rosenblatt</a> (<strong>1962</strong>). <em><a href="http://catalog.hathitrust.org/Record/000203591">Principles of Neurodynamics: Perceptrons and the Theory of Brain Mechanisms</a></em>. Spartan Books</li>
+<li><a href="/Edward_Feigenbaum">Edward Feigenbaum</a>, <a href="/Mathematician">Julian Feldman</a> (eds.) (<strong>1963</strong>). <em><a href="http://mitpress.mit.edu/catalog/item/default.asp?ttype=2&amp;tid=6685">Computers and Thought</a></em>. <a href="https://en.wikipedia.org/wiki/McGraw-Hill">McGraw-Hill</a>, New York, N.Y.</li>
+<li><a href="http://www.openminds.tv/nsa-practices-deciphering-et-signals-668/">Howard H. Campaigne</a> (<strong>1964</strong>). <em>Time Is - Time Was - Time Is Past. Computers for Intelligence</em>. <a href="http://www.nsa.gov/public_info/_files/tech_journals/time_is.pdf">pdf</a> from the <a href="https://en.wikipedia.org/wiki/National_Security_Agency">National Security Agency</a></li>
+</ul>
+<h3 id="1965-">1965 ...</h3>
+<ul>
+<li><a href="/Mathematician">Hubert L. Dreyfus</a> (<strong>1965</strong>). <em><a href="http://www.computerhistory.org/chess/full_record.php?iid=doc-431614f691d6d">Alchemy and Artificial Intelligence</a></em>. <a href="https://en.wikipedia.org/wiki/RAND">Rand</a> Paper.</li>
+<li><a href="/Jack_Good">Jack Good</a> (<strong>1965</strong>). <em><a href="http://www.acceleratingfuture.com/pages/ultraintelligentmachine.html">Speculations Concerning the First Ultraintelligent Machine</a></em>. <a href="http://www.informatik.uni-trier.de/%7Eley/db/journals/ac/ac6.html">Advances in Computers, Vol. 6</a>, <a href="http://www.stat.vt.edu/tech_reports/2005/GoodTechReport.pdf">pdf</a>, <a href="http://commonsenseatheism.com/wp-content/uploads/2011/02/Good-Speculations-Concerning-the-First-Ultraintelligent-Machine.pdf">pdf</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Ray_Solomonoff">Ray Solomonoff</a> (<strong>1966</strong>). <em>Some Recent Work in Artificial Intelligence</em>. Proc. of the <a href="/IEEE">IEEE</a>, <a href="http://world.std.com/%7Erjs/Some%20Recent%20Work%20in%20Artificial%20Intelligence.pdf">pdf</a></li>
+<li><a href="/Marvin_Minsky">Marvin Minsky</a>, <a href="/Mathematician">Seymour Papert</a> (<strong>1969</strong>). <em><a href="https://en.wikipedia.org/wiki/Perceptrons_%28book%29">Perceptrons</a></em>. <a href="#fn25" class="footnote-ref" id="fnref25" role="doc-noteref"><sup>25</sup></a> <a href="#fn26" class="footnote-ref" id="fnref26" role="doc-noteref"><sup>26</sup></a></li>
+<li><a href="/Herbert_Simon">Herbert Simon</a> (<strong>1969</strong>). <em>The Sciences of the Artificial</em>. <a href="https://en.wikipedia.org/wiki/MIT_Press">The MIT Press</a>, 1st Edition</li>
+</ul>
+<h3 id="1970-">1970 ...</h3>
+<ul>
+<li><a href="/Mikhail_Botvinnik">Mikhail Botvinnik</a> (<strong>1970</strong>). <em>Computers, Chess and Long-Range Planning</em>. Springer-Verlag, New York.</li>
+<li><a href="/James_R._Slagle">James R. Slagle</a> (<strong>1971</strong>). <em>Artificial Intelligence: The Heuristic Programming Approach</em>. <a href="https://en.wikipedia.org/wiki/McGraw-Hill">McGraw-Hill</a></li>
+<li><a href="/Mathematician">Nils J. Nilsson</a> (<strong>1971</strong>). <em>Problem Solving Methods in Artificial Intelligence</em>. <a href="https://en.wikipedia.org/wiki/McGraw-Hill">McGraw-Hill</a></li>
+<li><a href="/Mathematician">Nicholas V. Findler</a>, <a href="/Mathematician">Bernard Meltzer</a> (eds.) (<strong>1971</strong>). <em>Artificial Intelligence and Heuristic Programming</em>. <a href="https://en.wikipedia.org/wiki/Edinburgh_University_Press">Edinburgh University Press</a>, ISBN 0-85224-199-2</li>
+<li><a href="/Marvin_Minsky">Marvin Minsky</a>, <a href="/Mathematician">Seymour Papert</a> (<strong>1972</strong>). <em><a href="https://en.wikipedia.org/wiki/Perceptrons_%28book%29">Perceptrons: An Introduction to Computational Geometry</a></em>. <a href="https://en.wikipedia.org/wiki/MIT_Press">The MIT Press</a>, 2nd edition with corrections</li>
+<li><a href="/Mathematician">Hubert L. Dreyfus</a> (<strong>1972, 1979, 1991</strong>). <em><a href="https://en.wikipedia.org/wiki/What_Computers_Can%27t_Do">What Computers Can't Do</a></em>.</li>
+<li><a href="http://www.ai.sri.com/people/firschein">Oscar Firschein</a>, <a href="http://www.ai.sri.com/people/fischler">Martin A. Fischler</a>, <a href="/L._Stephen_Coles">L. Stephen Coles</a>, <a href="http://commerce.net/board-member/dr-jay-m-tenenbaum/">Jay M. Tenenbaum</a> (<strong>1973</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=1624789">Forecasting and Assessing the Impact of Artificial Intelligence on Society</a></em>. <a href="/Conferences">3. IJCAI</a>, <a href="https://en.wikipedia.org/wiki/Stanford,_California">Stanford, California</a></li>
+<li><a href="/Donald_Michie">Donald Michie</a> (<strong>1974</strong>). <em>On Machine Intelligence</em>. Edinburgh: University Press, <a href="http://www.abebooks.com/servlet/SearchResults?isbn=085224262X">abebooks.com</a>, <a href="http://www.alibris.com/search/books/qwork/4836304/used/On%20machine%20intelligence">alibris.com</a>, <a href="http://www.biblio.com/isbn/9780852242629.html">biblio.com</a></li>
+</ul>
+<h3 id="1975-">1975 ...</h3>
+<ul>
+<li><a href="/Mathematician">John H. Holland</a> (<strong>1975</strong>). <em>Adaptation in Natural and Artificial Systems: An Introductory Analysis with Applications to Biology, Control, and Artificial Intelligence</em>. <a href="https://www.amazon.com/Adaptation-Natural-Artificial-Systems-Introductory/dp/0262581116">amazon.com</a></li>
+<li><a href="/A._Harry_Klopf">A. Harry Klopf</a> (<strong>1975</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=1045237">A Comparison of Natural and Artificial Intelligence</a></em>. <a href="/ACM">ACM SIGART Bulletin</a>, No. 52</li>
+<li><a href="/Allen_Newell">Allen Newell</a>, <a href="/Herbert_Simon">Herbert Simon</a> (<strong>1976</strong>). <em><a href="http://www.computerhistory.org/chess/full_record.php?iid=doc-431614f691642">Computer Science as Empirical Inquiry: Symbols and Search</a></em>. <a href="/ACM">Communications of the ACM</a>, Vol. 19, No. 3, ACM Turing Award Lecture, <a href="http://archive.computerhistory.org/projects/chess/related_materials/text/2-3.Computer_science_as_empirical_inquiry/2-3.Computer_science_as_empirical_inquiry.newell_simon.1975.ACM.062303007.pdf">pdf</a> from <a href="/The_Computer_History_Museum">The Computer History Museum</a> <a href="#fn27" class="footnote-ref" id="fnref27" role="doc-noteref"><sup>27</sup></a></li>
+<li><a href="/Donald_Michie">Donald Michie</a> (<strong>1976</strong>). <em><a href="http://portal.acm.org/citation.cfm?id=1045272">AL1: a package for generating strategies from tables</a></em>. <a href="/ACM">ACM SIGART Bulletin</a>, No. 59</li>
+<li><a href="/Donald_Michie">Donald Michie</a> (<strong>1976</strong>). <em>An Advice-Taking System for Computer Chess.</em> Computer Bulletin, Ser. 2, Vol. 10, pp. 12-14. ISSN 0010-4531.</li>
+<li><a href="/Mathematician">Azriel Rosenfeld</a>, <a href="/Mathematician">Jerome A. Feldman</a>, <a href="/Laveen_Kanal">Laveen N. Kanal</a>, <a href="/Patrick_Winston">Patrick H. Winston</a> (<strong>1977</strong>). <em>AI and Pattern Recognition</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/ijcai/ijcai77.html#RosenfeldFKW77">IJCAI 1977</a></li>
+<li><a href="/Ivan_Bratko">Ivan Bratko</a> (<strong>1979</strong>). <em>Implementing Search Heuristics using the AL1 Advice-Taking System</em>. Proc. Sixth Int. Joint Conf. on Art. Intell., pp. 95-97.</li>
+<li><a href="/Alan_H._Bond">Alan H. Bond</a> (<strong>1979</strong>). <em>An Approach to Artificial Intelligence</em>. <a href="http://www.exso.com/position/approc.pdf">pdf</a></li>
+<li><span id="MachinesWhoThink1"></span><a href="https://en.wikipedia.org/wiki/Pamela_McCorduck">Pamela McCorduck</a> (<strong>1979</strong>). <em>Machines Who Think</em>. <a href="https://en.wikipedia.org/wiki/W._H._Freeman_and_Company">W. H. Freeman</a> » 25th anniversary edition</li>
+</ul>
+<h3 id="1980-">1980 ...</h3>
+<ul>
+<li><a href="/Allen_Newell">Allen Newell</a> (<strong>1980</strong>). <em>Physical Symbol Systems</em>. <a href="http://cognitivesciencesociety.org/journal_csj.html">Cognitive Science</a>, Vol. 4, No. 2</li>
+<li><a href="/Mikhail_Botvinnik">Mikhail Botvinnik</a>, <a href="/Boris_Stilman">Boris Stilman</a>, <a href="/Alexander_Yudin">Alexander Yudin</a>, <a href="/Alexander_Reznitskiy">Alexander Reznitskiy</a>, <a href="/Michael_Tsfasman">Michael Tsfasman</a> (<strong>1980</strong>). <em>Thinking of Man and Computer</em>, Proc. of the Second International Meeting on Artificial Intelligence, pp. 1-9, Repino, Leningrad, Russia</li>
+<li><a href="/David_Wilkins">David Wilkins</a> (<strong>1980</strong>). <em>Using patterns and plans in chess</em>. Artificial Intelligence, vol. 14, pp. 165-203. Reprinted (<strong>1988</strong>) in <a href="/Computer_Chess_Compendium">Computer Chess Compendium</a></li>
+<li><a href="/Marvin_Minsky">Marvin Minsky</a> (<strong>1980</strong>). <em>K-Lines: A Theory of Memory</em>. Cognitive Science 4, 117-133, <a href="http://csjarchive.cogsci.rpi.edu/1980v04/i02/p0117p0133/MAIN.PDF">pdf</a> <a href="#fn28" class="footnote-ref" id="fnref28" role="doc-noteref"><sup>28</sup></a></li>
+<li><a href="/Mathematician">Terry Winograd</a> (<strong>1980</strong>). <em>What Does it Mean to Understand Language?</em> <a href="https://en.wikipedia.org/wiki/Cognitive_Science_(journal)">Cognitive Science</a>, Vol. 4, No. 3</li>
+<li><a href="/Hans_Berliner">Hans Berliner</a> (<strong>1981</strong>). <em>An Examination of Brute Force Intelligence.</em> Proceedings of <a href="http://www.informatik.uni-trier.de/%7Eley/db/conf/ijcai/ijcai81.html">IJCAI 81</a>, Vancouver, pp. 581-587, Vancouver. <a href="http://ijcai.org/Past%20Proceedings/IJCAI-81-VOL%201/PDF/105.pdf">pdf</a></li>
+<li><a href="http://www.linkedin.com/in/avronbarr">Avron Barr</a>, <a href="/Edward_Feigenbaum">Edward Feigenbaum</a> (eds.) (<strong>1981</strong>). <em><a href="http://archive.org/details/handbookofartific01barr">The Handbook of Artificial Intelligence</a></em>. Vol. 1, HeurisTech Press</li>
+<li><a href="http://www.linkedin.com/in/avronbarr">Avron Barr</a>, <a href="/Edward_Feigenbaum">Edward Feigenbaum</a> (eds). (<strong>1982</strong>). <em><a href="http://archive.org/details/handbookofartific02barr">The Handbook of Artificial Intelligence</a></em>. Vol. 2, HeurisTech Press</li>
+<li><a href="http://w3.sista.arizona.edu/~cohen/">Paul Cohen</a>, <a href="/Edward_Feigenbaum">Edward Feigenbaum</a> (eds.) (<strong>1982</strong>). <em><a href="http://archive.org/details/handbookofartific03cohe">The Handbook of Artificial Intelligence</a></em>. Vol. 3, HeurisTech Press</li>
+<li><a href="/Donald_Michie">Donald Michie</a> (<strong>1982</strong>). <em>Chess with computers. Machine Intelligence and Related Topics</em>. Gordon and Breach Science</li>
+<li><a href="/Dana_S._Nau">Dana S. Nau</a>, Vipin Kumar, <a href="/Laveen_Kanal">Laveen N. Kanal</a> (<strong>1982</strong>). <em>A General Paradigm for A.I. Search Procedures</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/aaai/aaai82.html#NauKK82">AAAI 1982</a></li>
+<li><a href="http://web.cecs.pdx.edu/~mperkows/index.html">Marek Perkowski</a>, <a href="https://pl.wikipedia.org/wiki/Andrzej_G%C3%B3ralski">Andrzej Goralski</a>, <a href="/Gerard_Zieliński">Gerard Zieliński</a> (<strong>1982</strong>). <em>Elements of Artificial Intelligence</em>. Institute of Automatic Control, <a href="https://en.wikipedia.org/wiki/Warsaw_University_of_Technology">Warsaw University of Technology</a></li>
+<li><a href="/A._Harry_Klopf">A. Harry Klopf</a> (<strong>1982</strong>). <em>The Hedonistic Neuron: A Theory of Memory, Learning, and Intelligence</em>. Hemisphere Publishing Corporation, <a href="/University_of_Michigan">University of Michigan</a></li>
+<li><a href="/Danny_Kopec">Danny Kopec</a>, <a href="/Donald_Michie">Donald Michie</a> (<strong>1983</strong>). <em>Mismatch between machine representations and human concepts: dangers and remedies.</em> FAST series No. 9 report. European Community, Brussels.</li>
+<li><a href="/Ryszard_Michalski">Ryszard Michalski</a>, <a href="/Jaime_Carbonell">Jaime Carbonell</a>, <a href="/Tom_Mitchell">Tom Mitchell</a> (<strong>1983</strong>). <em>Machine Learning: An Artificial Intelligence Approach</em>. Tioga Publishing Company, <a href="https://books.google.com/books?id=KlNQAAAAMAAJ&amp;q=isbn:0935382054&amp;dq=isbn:0935382054&amp;hl=de&amp;ei=JE4-TtymDInUsgbmm_kG&amp;sa=X&amp;oi=book_result&amp;ct=result&amp;resnum=1&amp;ved=0CCkQ6AEwAA">google books</a></li>
+<li><a href="/Mathematician">Terry Winograd</a> (<strong>1983</strong>). <em><a href="https://dl.acm.org/citation.cfm?id=1098647">Language as a cognitive process 1: Syntax</a></em>. <a href="https://en.wikipedia.org/wiki/Addison-Wesley">Addison-Wesley</a></li>
+</ul>
+<h3 id="1985-">1985 ...</h3>
+<ul>
+<li><a href="/Ryszard_Michalski">Ryszard Michalski</a>, <a href="/Jaime_Carbonell">Jaime Carbonell</a>, <a href="/Tom_Mitchell">Tom Mitchell</a> (<strong>1985</strong>). <em>Machine Learning: An Artificial Intelligence Approach</em>. Morgan Kaufmann, <a href="https://books.google.com/books?id=TWzuUd5gsnkC&amp;dq=isbn%3A0935382054&amp;hl=de&amp;source=gbs_book_other_versions">google books</a></li>
+<li><a href="/Hermann_Kaindl">Hermann Kaindl</a> (<strong>1985</strong>). <em><a href="http://portal.acm.org/citation.cfm?id=645759.666297">What Happened with AI's Drosophila</a></em>? <a href="http://www.informatik.uni-trier.de/%7Eley/db/conf/ogai/ogai1985.html">ÖGAI 1985</a>: 194-203</li>
+<li><a href="/Chin-Liang_Chang">Chin-Liang Chang</a> (<strong>1985</strong>). <em>Introduction to Artificial Intelligence Techniques</em>. JMA Press, <a href="http://openlibrary.org/works/OL4956559W/Introduction_to_artificial_intelligence_techniques">Open Library</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Judith_Grabiner">Judith V. Grabiner</a> (<strong>1986</strong>). <em>Computers and the Nature of Man: A Historian's Perspective of Controversies about Artificial Intelligence</em>. <a href="https://en.wikipedia.org/wiki/Bulletin_of_the_American_Mathematical_Society">Bulletin of the American Mathematical Society</a>, Vol. 15, No. 2, <a href="http://www.ams.org/journals/bull/1986-15-02/S0273-0979-1986-15461-3/S0273-0979-1986-15461-3.pdf">pdf</a></li>
+<li><a href="/Ryszard_Michalski">Ryszard Michalski</a>, <a href="/Jaime_Carbonell">Jaime Carbonell</a>, <a href="/Tom_Mitchell">Tom Mitchell</a> (<strong>1986</strong>). <em>Machine Learning: An Artificial Intelligence Approach, Volume II</em>. Morgan Kaufmann, <a href="https://books.google.com/books?id=f9RylgKpHZsC&amp;dq=isbn%3A0935382054&amp;hl=de&amp;source=gbs_book_other_versions">google books</a></li>
+<li><a href="/Herbert_Simon">Herbert Simon</a> (<strong>1986</strong>). <em><a href="http://www.computer.org/csdl/trans/ts/1986/07/06312974-abs.html">Whether Software Engineering Needs to Be Artificially Intelligent</a></em>. <a href="/IEEE">IEEE Transactions on Software Engineering</a>, Vol. 12, No. 7</li>
+<li><a href="/Michael_Genesereth">Michael Genesereth</a>, <a href="/Mathematician">Nils J. Nilsson</a> (<strong>1987</strong>). <em><a href="https://www.sciencedirect.com/book/9780934613316/logical-foundations-of-artificial-intelligence">Logical Foundations of Artificial Intelligence</a></em>. <a href="https://en.wikipedia.org/wiki/Morgan_Kaufmann_Publishers">Morgan Kaufmann</a></li>
+<li><a href="/Mathematician">Terry Winograd</a>, <a href="https://en.wikipedia.org/wiki/Fernando_Flores">Fernando Flores</a> (<strong>1987</strong>). <em><a href="https://dl.acm.org/citation.cfm?id=576359">Understanding computers and cognition - a new foundation for design</a></em>. <a href="https://en.wikipedia.org/wiki/Addison-Wesley">Addison-Wesley</a></li>
+<li><a href="/Mathematician">John E. Laird</a>, <a href="/Allen_Newell">Allen Newell</a>, Paul S. Rosenbloom (<strong>1987</strong>). <em>SOAR: An Architecture for General Intelligence</em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_(journal)">Artificial Intelligence</a>, Vol. 33, No. 1</li>
+<li><a href="/Christopher_Chabris">Christopher Chabris</a> (<strong>1987</strong>). <em>Artificial Intelligence and Turbo Pascal - Book and Disk</em>. Irwin Professional Pub, <a href="https://www.amazon.com/Artificial-Intelligence-Turbo-Pascal-Book/dp/0870949632/ref=sr_1_10?s=books&amp;ie=UTF8&amp;qid=1352556486&amp;sr=1-10">amazon.com</a> » <a href="/Pascal">Turbo Pascal</a></li>
+<li><a href="/Marvin_Minsky">Marvin Minsky</a> (<strong>1988</strong>). <em><a href="http://web.media.mit.edu/~minsky/papers/ComputersCantThink.txt">Why People Think Computers Can't</a></em>. <a href="/Massachusetts_Institute_of_Technology">MIT</a></li>
+<li><a href="/Marvin_Minsky">Marvin Minsky</a> (<strong>1988</strong>). <em><a href="https://en.wikipedia.org/wiki/Society_of_Mind">Society of Mind</a></em>. <a href="https://en.wikipedia.org/wiki/Simon_%26_Schuster">Simon &amp; Schuster</a></li>
+<li><a href="/David_E._Goldberg">David E. Goldberg</a> (<strong>1989</strong>). <em>Genetic algorithms in search, optimization, and machine learning</em>. <a href="https://en.wikipedia.org/wiki/Addison-Wesley">Addison-Wesley</a>, from <a href="https://www.amazon.com/Genetic-Algorithms-Optimization-Machine-Learning/dp/0201157675">amazon.com</a></li>
+<li><a href="/Mikhail_Donskoy">Mikhail Donskoy</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a> (<strong>1989</strong>). <em>Perspectives on Falling from Grace</em>. <a href="/WCCC_1989">Workshop on New Directions in Game-Tree Search</a>, <a href="http://webdocs.cs.ualberta.ca/~jonathan/publications/ai_publications/grace.pdf">pdf</a>, revised version published (<strong>1990</strong>). in <a href="/Computers,_Chess,_and_Cognition">Computers, Chess, and Cognition</a></li>
+</ul>
+<h3 id="1990-">1990 ...</h3>
+<ul>
+<li><a href="/John_McCarthy">John McCarthy</a> (<strong>1990</strong>). <em>Chess as the Drosophila of AI.</em> <a href="/Computers,_Chess,_and_Cognition">Computers, Chess, and Cognition</a>, pp. 227-237 <a href="#fn29" class="footnote-ref" id="fnref29" role="doc-noteref"><sup>29</sup></a></li>
+<li><a href="/Mikhail_Donskoy">Mikhail Donskoy</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a> (<strong>1990</strong>). <em>Perspectives on Falling from Grace.</em> <a href="/Computers,_Chess,_and_Cognition">Computers, Chess, and Cognition</a></li>
+<li>Yves Kodratoff, <a href="/Ryszard_Michalski">Ryszard Michalski</a> (<strong>1990, 2014</strong>). <em><a href="https://www.elsevier.com/books/machine-learning/kodratoff/978-0-08-051055-2">Machine Learning : An Artificial Intelligence Approach, Volume III</a></em>. <a href="https://en.wikipedia.org/wiki/Morgan_Kaufmann_Publishers">Morgan Kaufmann</a></li>
+<li><a href="/Richard_Fikes">Richard Fikes</a> (<strong>1990</strong>). <em>AI and Software Engineering - Managing Exploratory Programming</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/aaai/aaai90.html#Fikes90">AAAI 1990</a></li>
+<li><a href="/Mathematician">Nicholas V. Findler</a> (<strong>1990</strong>). <em><a href="http://link.springer.com/book/10.1007/978-3-642-75736-5">Contributions to a Computer-Based Theory of Strategies</a></em>. <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Ray_Kurzweil">Ray Kurzweil</a> (<strong>1990</strong>). <em><a href="https://en.wikipedia.org/wiki/The_Age_of_Intelligent_Machines">The Age of Intelligent Machines</a></em>. <a href="https://en.wikipedia.org/wiki/MIT_Press">MIT Press</a></li>
+</ul>
+<p><strong>1991</strong></p>
+<ul>
+<li><a href="/Herbert_Simon">Herbert Simon</a> (<strong>1991</strong>). <em>Artificial Intelligence: Where Has It Been, Where is it Going</em>? <a href="/IEEE">IEEE Transactions on Knowledge and Data Engineering</a>, Vol. 3, No. 2</li>
+<li><a href="/Robert_Levinson">Robert Levinson</a>, <a href="/Feng-hsiung_Hsu">Feng-hsiung Hsu</a>, <a href="/Tony_Marsland">Tony Marsland</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, <a href="/David_Wilkins">David Wilkins</a> (<strong>1991</strong>). <em>The Role of Chess in Artificial Intelligence Research</em>. <a href="http://dli.iiit.ac.in/ijcai/IJCAI-91-VOL1/CONTENT/content.htm">IJCAI 1991</a>, <a href="http://dli.iiit.ac.in/ijcai/IJCAI-91-VOL1/PDF/084.pdf">pdf</a>, also in <a href="/ICGA_Journal">ICCA Journal, Vol. 14, No. 3</a>, <a href="http://www.ai.sri.com/%7Ewilkins/papers/chess-panel.pdf">pdf</a></li>
+<li><a href="/Peter_W._Frey">Peter W. Frey</a> (<strong>1991</strong>). <em>Memory-Based Expertise: Computer Chess vs. AI</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 14, No. 4</a></li>
+<li>Dinesh Gadwal, <a href="http://www.cs.usask.ca/faculty/greer/">Jim Greer</a>, <a href="https://en.wikipedia.org/wiki/Gordon_McCalla">Gordon McCalla</a> (<strong>1991</strong>). <em>UMRAO: A Chess Endgame Tutor.</em> ARIES Laboratory, Department of Computational Science, <a href="https://en.wikipedia.org/wiki/University_of_Saskatchewan">University of Saskatchewan</a>, <a href="http://dblp.uni-trier.de/db/conf/ijcai/ijcai91.html">IJCAI-91</a>, <a href="http://ijcai.org/Past%20Proceedings/IJCAI-91-VOL2/PDF/069.pdf">pdf</a></li>
+<li>Robert W. Howard (<strong>1991</strong>). <em>All about Intelligence: Human, Animal, and Artificial</em>. New South Wales University Press Ltd, <a href="https://www.amazon.com/All-About-Intelligence-Animal-Artificial/dp/0868402524">amazon.com</a></li>
+<li><a href="/Rajjan_Shinghal">Rajjan Shinghal</a> (<strong>1991</strong>). <em>Formal Concepts in Artificial Intelligence: Fundamentals</em>. <a href="https://en.wikipedia.org/wiki/Chapman_%26_Hall">Chapman &amp; Hall</a>, <a href="https://www.amazon.com/Formal-Concepts-Artificial-Intelligence-Fundamentals/dp/0412407906">amazon.com</a></li>
+</ul>
+<p><strong>1992</strong></p>
+<ul>
+<li><a href="/Patrick_Winston">Patrick Winston</a> (<strong>1992</strong>) <em><a href="http://people.csail.mit.edu/phw/Books/AIBACK.HTML">Artificial Intelligence</a>.</em> (third Edition)</li>
+<li><a href="/Peter_Norvig">Peter Norvig</a> (<strong>1992</strong>). <em><a href="http://norvig.com/paip.html">Paradigms of Artificial Intelligence Programming: Case Studies in Common Lisp</a></em>. <a href="http://mkp.com/">Morgan Kaufmann</a></li>
+</ul>
+<p><strong>1993</strong></p>
+<ul>
+<li><a href="/Helmut_Horacek">Helmut Horacek</a> (<strong>1993</strong>). <em>Computer Chess, its Impact on Artificial Intelligence.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 16, No. 1</a> » <a href="/WCCC_1992">WCCC 1992 - Workshop</a></li>
+<li><a href="/Matthew_L._Ginsberg">Matthew L. Ginsberg</a> (<strong>1993</strong>). <em><a href="http://searchworks.stanford.edu/view/2746445">Essentials of artificial intelligence</a></em>. <a href="https://en.wikipedia.org/wiki/Morgan_Kaufmann_Publishers">Morgan Kaufmann Publishers</a></li>
+<li>Paul S. Rosenbloom, <a href="/Mathematician">John E. Laird</a>, <a href="/Allen_Newell">Allen Newell</a> (<strong>1993</strong>). <em>The SOAR Papers: Research on Integrated Intelligence</em>. <a href="https://en.wikipedia.org/wiki/MIT_Press">MIT Press</a>, <a href="https://www.amazon.co.uk/Soar-Papers-Integrated-Intelligence-Artificial/dp/0262680718">amazon</a></li>
+</ul>
+<p><strong>1994</strong></p>
+<ul>
+<li><a href="/Victor_Allis">Victor Allis</a> (<strong>1994</strong>). <em>Searching for Solutions in Games and Artificial Intelligence</em>. Ph.D. Thesis, <a href="/Maastricht_University">University of Limburg</a>, <a href="http://fragrieu.free.fr/SearchingForSolutions.pdf">pdf</a></li>
+<li><a href="/Boris_Stilman">Boris Stilman</a> (<strong>1994</strong>). <em>A Linguistic Geometry for Space Applications</em>, Proc. of the 1994 Goddard Conference on Space Applications of Artificial Intelligence, pp. 87-101, NASA Goddard Space Flight Center, Greenbelt, MD, USA.</li>
+<li><a href="/Ryszard_Michalski">Ryszard Michalski</a>, George Tecuci (<strong>1994</strong>). <em>Machine Learning: A Multistrategy Approach, Volume IV</em>. Morgan Kaufmann, <a href="https://books.google.com/books?id=sQJ1PMEOOY0C&amp;dq=isbn%3A0935382054&amp;hl=de&amp;source=gbs_book_other_versions">google books</a></li>
+<li><a href="/L._Stephen_Coles">L. Stephen Coles</a> (<strong>1994</strong>). <em>Computer Chess: The Drosophila of AI</em>. AI Expert, Vol. 9, No. 4, [<a href="https://en.wikipedia.org/wiki/Miller_Freeman,_Inc">https://en.wikipedia.org/wiki/Miller_Freeman,_Inc</a>. Miller Freeman, Inc.], <a href="http://www.drdobbs.com/high-performance-computing/184405171">posted October 30, 2002</a> in <a href="https://en.wikipedia.org/wiki/Dr._Dobb%27s_Journal">Dr. Dobbs</a></li>
+</ul>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li><a href="/Herbert_Simon">Herbert Simon</a> (<strong>1995</strong>). <em>Explaining the Ineffable: AI on the Topics of Intuition, Insight and Inspiration</em>. <a href="/Conferences">IJCAI 1995</a>, <a href="http://www.ijcai.org/Past%20Proceedings/IJCAI-95-VOL%201/pdf/121.pdf">pdf</a></li>
+<li><a href="/Herbert_Simon">Herbert Simon</a> (<strong>1995</strong>). <em><a href="http://www.sciencedirect.com/science/article/pii/000437029500039H">Artificial Intelligence: An Empirical Science</a></em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 77, No. 1</li>
+<li><a href="/Jacques_Pitrat">Jacques Pitrat</a> (<strong>1995</strong>). <em><a href="http://portal.acm.org/citation.cfm?id=212124">AI Systems Are Dumb Because AI Researchers Are Too Clever</a></em>. <a href="/ACM">ACM Computing Surveys</a>, <a href="http://www.informatik.uni-trier.de/%7Eley/db/journals/csur/csur27.html#Pitrat95">Vol. 27, No. 3</a></li>
+<li><a href="/Edward_Feigenbaum">Edward Feigenbaum</a>, <a href="/Mathematician">Julian Feldman</a> (eds.) (<strong>1995</strong>). <em><a href="http://mitpress.mit.edu/catalog/item/default.asp?ttype=2&amp;tid=6685">Computers and Thought</a></em>. <a href="https://en.wikipedia.org/wiki/MIT_Press">MIT Press</a></li>
+<li>Jay Burmeister, Janet Wiles (<strong>1995</strong>). <em>The Challenge of Go as a Domain for AI Research: A Comparison Between Go and Chess</em>. In Proceedings of the Third Australian and New Zealand Conference on Intelligent Information Systems, <a href="http://ewh.ieee.org/r10/w_australia/">IEEE Western Australia Section</a>, <a href="http://staff.itee.uq.edu.au/janetw/Computer%20Go/go-vs-chess.pdf">pdf</a></li>
+<li><a href="/Matjaž_Gams">Matjaž Gams</a> (<strong>1995</strong>). <em>Strong vs. Weak AI</em>. <a href="https://dblp.uni-trier.de/db/journals/informaticaSI/informaticaSI19.html">Informatica (Slovenia), Vol. 19</a>, No. 4</li>
+</ul>
+<p><strong>1996</strong></p>
+<ul>
+<li><a href="/Herbert_Simon">Herbert Simon</a> (<strong>1996</strong>). <em>The Sciences of the Artificial</em>. <a href="http://mitpress.mit.edu/catalog/item/default.asp?ttype=2&amp;tid=7688">MIT Press, 3rd Edition 1996</a>, <a href="https://www.amazon.com/Sciences-Artificial-Herbert-Simon/dp/0262691914">amazon</a></li>
+<li><a href="/Edward_Feigenbaum">Edward A. Feigenbaum</a> (<strong>1996</strong>) <em>How the “What“ Becomes the “How“</em>. <a href="/ACM">Communications of the ACM</a>, Vol. 39, No. 5, <a href="http://archive.computerhistory.org/projects/chess/related_materials/text/2-1.How_the_what_becomes_the_how.Feigenbaum/2-1.How_the_what_becomes_the_how.Feigenbaum-Ed.1994.ACM.062303006.pdf">pdf</a> hosted by <a href="/The_Computer_History_Museum">The Computer History Museum</a></li>
+</ul>
+<p><strong>1997</strong></p>
+<ul>
+<li><a href="/Tony_Marsland">Tony Marsland</a>, <a href="/Yngvi_Björnsson">Yngvi Björnsson</a>. (<strong>1997</strong>). <em>From MiniMax to Manhattan</em>. In Deep Blue Versus Kasparov: The Significance for Artificial Intelligence. AAAI Workshop, pp. 31–36, 1997. <a href="http://www.ru.is/faculty/yngvi/pdf/MarslandB97.pdf">pdf</a></li>
+<li><a href="/John_McCarthy">John McCarthy</a> (<strong>1997</strong>). <em>Chess as the Drosophila of AI</em>. Computer Science Department, <a href="/Stanford_University">Stanford University</a>, condensed version of the 1990 paper, <a href="http://innovation.it.uts.edu.au/projectjmc/articles/drosophila/drosophila.pdf">pdf</a></li>
+<li><a href="/Richard_Korf">Richard Korf</a> (<strong>1997</strong>). <em>Does DEEP BLUE use Artificial Intelligence?</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 20, No. 4</a> <a href="#fn30" class="footnote-ref" id="fnref30" role="doc-noteref"><sup>30</sup></a></li>
+<li><a href="/John_McCarthy">John McCarthy</a> (<strong>1997</strong>). <em><a href="http://www-formal.stanford.edu/jmc/newborn/newborn.html">AI as Sport</a>.</em> Science, Vol. 276</li>
+<li>Santos Gerardo Lazzeri, Rachelle Heller (<strong>1997</strong>). <em>Application of Fuzzy Logic and Case-Based Reasoning to the Generation of High-Level Advice in Chess</em>. <a href="/Advances_in_Computer_Chess_8">Advances in Computer Chess 8</a></li>
+<li><a href="/Matjaž_Gams">Matjaž Gams</a>, <a href="/Mathematician">Marcin Paprzycki</a>, <a href="http://www.ucs.louisiana.edu/~xxw8007/">Xindong Wu</a> (eds.) (<strong>1997</strong>). <em><a href="https://www.iospress.nl/book/mind-versus-computer/">Mind Versus Computer: Were Dreyfus and Winograd Right?</a></em> <a href="https://www.iospress.nl/bookserie/frontiers-in-artificial-intelligence-and-applications/">Frontiers in Artificial Intelligence and Applications</a>, Vol. 43, <a href="https://en.wikipedia.org/wiki/IOS_Press">IOS Press</a> <a href="#fn31" class="footnote-ref" id="fnref31" role="doc-noteref"><sup>31</sup></a> <a href="#fn32" class="footnote-ref" id="fnref32" role="doc-noteref"><sup>32</sup></a></li>
+</ul>
+<p><strong>1998</strong></p>
+<ul>
+<li><a href="/Franz-Günter_Winkler">Franz-Günter Winkler</a>, <a href="/Johannes_Fürnkranz">Johannes Fürnkranz</a> (<strong>1998</strong>). <em>A Hypothesis on the Divergence of AI Research.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 21, No. 1</a>, <a href="http://members.aon.at/fgwinkler/PAPER/AI_chess.pdf">pdf</a></li>
+<li><span id="FundamentalsNAI1st"></span><a href="/Toshinori_Munakata">Toshinori Munakata</a> (<strong>1998</strong>). <em><a href="http://cis.csuohio.edu/~munakata/publs/book/sp.html">Fundamentals of the New Artificial Intelligence: Beyond Traditional Paradigms</a></em>. 1st edition, <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a>, <a href="/Artificial_Intelligence">2nd edition 2008</a></li>
+</ul>
+<p><strong>1999</strong></p>
+<ul>
+<li><a href="/Mathematician">Christian Jongeneel</a> <a href="#fn33" class="footnote-ref" id="fnref33" role="doc-noteref"><sup>33</sup></a>, <a href="/Henk_Koppelaar">Henk Koppelaar</a> (<strong>1999</strong>). <em><a href="http://www.christianjongeneel.nl/gepubliceerde-boeken/goedel-pro-and-contra-ai-dismissal-of-the-case/">Gödel pro and contra AI: dismissal of the case</a></em>. <a href="http://www.journals.elsevier.com/engineering-applications-of-artificial-intelligence/">Engineering Applications of Artificial Intelligence</a>, Vol. 12, No. 5</li>
+<li><a href="https://en.wikipedia.org/wiki/Ray_Kurzweil">Ray Kurzweil</a> (<strong>1999</strong>). <em><a href="https://en.wikipedia.org/wiki/The_Age_of_Spiritual_Machines">The Age of Spiritual Machines</a></em>. <a href="https://en.wikipedia.org/wiki/Viking_Press">Viking Press</a></li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="/Bart_Selman">Bart Selman</a> (<strong>2000</strong>). <em>Compute-intensive Methods in Artificial Intelligence</em>. <a href="http://dblp.uni-trier.de/db/journals/amai/amai28.html#Selman00">Annals of Mathematics and Artificial Intelligence, Vol. 28, Nos. 1-4</a>, <a href="http://www.cs.cornell.edu/selman/papers/pdf/00.mathai.compute.pdf">pdf</a></li>
+<li><a href="/Ivan_Bratko">Ivan Bratko</a> (<strong>2001,2010</strong>). <em><a href="http://www.worldcat.org/search?qt=wikipedia&amp;q=isbn%3A0201403757">Prolog programming for artificial intelligence</a></em>. Harlow England, <a href="https://en.wikipedia.org/wiki/Addison-Wesley">Addison Wesley</a></li>
+<li><a href="/Monroe_Newborn">Monroe Newborn</a> (<strong>2002</strong>). <em><a href="https://www.amazon.com/exec/obidos/tg/detail/-/0387954619/qid=1092079555/sr=1-3/ref=sr_1_3/103-5426465-5223053?v=glance&amp;s=books">Deep Blue: An Artificial Intelligence Milestone</a></em>. <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a></li>
+<li><a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2002</strong>). <em>Games, computers, and artificial intelligence</em>. Artificial Intelligence 134, <a href="http://www.acso.uneb.br/marcosimoes/Arquivos/IA/sdarticle_games.pdf">pdf</a></li>
+<li><a href="/Jürgen_Schmidhuber">Jürgen Schmidhuber</a> (<strong>2003</strong>). <em><a href="http://www.idsia.ch/%7Ejuergen/newai/newai.html">The New AI:General &amp; Sound &amp; Relevant for Physics</a></em>. Technical Report IDSIA-04-03</li>
+<li><a href="/Eric_B._Baum">Eric B. Baum</a> (<strong>2004</strong>). <em><a href="http://www.whatisthought.com/">What is Thought?</a></em> Bradford Book</li>
+<li><a href="/Mathematician">Kevin Warwick</a> (<strong>2004</strong>). <em><a href="https://en.wikipedia.org/wiki/March_of_the_Machines">March of the Machines: The Breakthrough in Artificial Intelligence</a></em>. <a href="https://en.wikipedia.org/wiki/University_of_Illinois_Press">University of Illinois Press</a></li>
+<li><a href="/Mathematician">Kevin Warwick</a> (<strong>2004</strong>). <em><a href="http://kevinwarwick.coventry.ac.uk/I-Cyborg/">I, Cyborg</a></em>. <a href="https://en.wikipedia.org/wiki/University_of_Illinois_Press">University of Illinois Press</a></li>
+<li><span id="MachinesWhoThink"></span><a href="https://en.wikipedia.org/wiki/Pamela_McCorduck">Pamela McCorduck</a> (<strong>2004</strong>). <em><a href="https://www.semanticscholar.org/paper/Machines-Who-Think%3A-A-Personal-Inquiry-Into-the-and-McCorduck/965b39ad83c545849d473ce30cfc3d569f6e3828">Machines Who Think: A Personal Inquiry into the History and Prospects of Artificial Intelligence</a></em>. <a href="https://en.wikipedia.org/wiki/A_K_Peters">A. K. Peters</a> (25th anniversary edition) » 1st edition</li>
+</ul>
+<p>Interviews with <a href="https://dblp.uni-trier.de/pers/hd/a/Armer:Paul">Paul Armer</a>, <a href="/Alex_Bernstein">Alex Bernstein</a>, <a href="/Woodrow_W._Bledsoe">W. W. Bledsoe</a>, <a href="http://www.ai.sri.com/people/abrain/">Ted Brain</a>, <span style="background-color: #ffffac;"><a href="/Mathematician">Bruce Buchanan</a></span>, <a href="https://genealogy.math.ndsu.nodak.edu/id.php?id=137710">Max Clowes</a>, <a href="/L._Stephen_Coles">L. Stephen Coles</a>, <span style="background-color: #ffffac;"><a href="/Mathematician">Hubert Dreyfus</a></span>, <a href="/Edward_Feigenbaum">Edward Feigenbaum</a>, <span style="background-color: #ffffac;"><a href="/Mathematician">Julian Feldman</a></span>, <a href="/Edward_Fredkin">Edward Fredkin</a>, <span style="background-color: #ffffac;"><a href="/Mathematician">Herbert Gelernter</a></span>, <a href="/Jack_Good">I. J. Good</a>, <a href="https://en.wikipedia.org/wiki/Leon_Harmon">Leon Harmon</a>, <a href="/John_McCarthy">John McCarthy</a>, <a href="https://en.wikipedia.org/wiki/Donald_MacCrimmon_MacKay">Donald MacKay</a>, <a href="/Donald_Michie">Donald Michie</a>, <a href="/Marvin_Minsky">Marvin Minsky</a>, <span style="background-color: #ffffac;"><a href="/Mathematician">Joel Moses</a></span>, <a href="/Allen_Newell">Allen Newell</a>, <span style="background-color: #ffffac;"><a href="/Mathematician">Nils Nilsson</a></span>, <span style="background-color: #ffffac;"><a href="/Mathematician">Seymour Papert</a></span>, <span style="background-color: #ffffac;"><a href="/Mathematician">Bertram Raphael</a></span>, <span style="background-color: #ffffac;"><a href="/Mathematician">Raj Reddy</a></span>, <a href="/Nathaniel_Rochester">Nathaniel Rochester</a>, <a href="https://en.wikipedia.org/wiki/Charles_Rosen_(scientist)">Charles Rosen</a>, <a href="/Arthur_Samuel">Arthur Samuel</a>, <a href="https://en.wikipedia.org/wiki/Oliver_Selfridge">Oliver Selfridge</a>, <a href="/Claude_Shannon">Claude Shannon</a>, <a href="/Cliff_Shaw">J. C. Shaw</a>, <a href="/Herbert_Simon">Herbert A. Simon</a>, <a href="/James_R._Slagle">James Slagle</a>, <a href="https://en.wikipedia.org/wiki/Ray_Solomonoff">Ray Solomonoff</a>, <a href="https://genealogy.math.ndsu.nodak.edu/id.php?id=135611">Fred Tonge</a>, <a href="https://en.wikipedia.org/wiki/Joseph_Weizenbaum">Joseph Weizenbaum</a>, and <span style="background-color: #ffffac;"><a href="/Mathematician">Lotfi Zadeh</a></span>.</p>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="/Dap_Hartmann">Dap Hartmann</a> (<strong>2005</strong>). <em>The True Holy Grail of Artificial Intelligence</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 28, No. 1</a></li>
+<li><a href="/David_Levy">David Levy</a> (<strong>2005</strong>). <em><a href="http://www.akpeters.com/robotsunlimited/">Robots Unlimited: Life in a Virtual Age</a></em>. AK Peters</li>
+<li><a href="/Marcus_Hutter">Marcus Hutter</a> (<strong>2005</strong>). <em><a href="http://www.hutter1.net/ai/uaibook.htm">Universal Artificial Intelligence</a></em>. Sequential Decisions based on Algorithmic Probability, <a href="http://www.springer.com/computer/ai/book/978-3-540-22139-5">Springer</a></li>
+<li><a href="/Pieter_Spronck">Pieter Spronck</a> (<strong>2005</strong>). <em>Adaptive Game AI</em>. Ph.D. thesis, <a href="/Maastricht_University">Maastricht University</a>, <a href="http://ticc.uvt.nl/~pspronck/pubs/ThesisSpronck.pdf">pdf</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Ray_Kurzweil">Ray Kurzweil</a> (<strong>2005</strong>). <em><a href="https://en.wikipedia.org/wiki/The_Singularity_Is_Near">The Singularity Is Near</a></em>. <a href="https://en.wikipedia.org/wiki/Viking_Press">Viking</a></li>
+</ul>
+<p><strong>2006</strong></p>
+<ul>
+<li><a href="/Azlan_Iqbal">Azlan Iqbal</a> (<strong>2006</strong>). <em>Is Aesthetics Computable?</em> <a href="/ICGA_Journal">ICGA Journal, Vol. 29, No. 1</a>, <a href="http://metalab.uniten.edu.my/%7Eazlan/Research/pdfs/iac_azlan.pdf">pdf</a></li>
+<li><a href="/Max_Bramer">Max Bramer</a> (ed.) (<strong>2006</strong>). <em><a href="https://link.springer.com/book/10.1007%2F978-0-387-34747-9">Artificial Intelligence in Theory and Practice</a></em>. <a href="/Conferences">IFIP 19th World Computer Congress</a>. Proceedings. <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a></li>
+</ul>
+<p><strong>2007</strong></p>
+<ul>
+<li><a href="/Edward_Feigenbaum">Edward Feigenbaum</a> (<strong>2007</strong>). <em><a href="https://www.aaai.org/ojs/index.php/aimagazine/article/view/1905">Happy Silver Anniversary, AI!</a></em> <a href="/AAAI">AI Magazine</a>, Vol. 27, No. 4</li>
+<li><a href="/Marvin_Minsky">Marvin Minsky</a> (<strong>2007</strong>). <em><a href="https://en.wikipedia.org/wiki/The_Emotion_Machine">The Emotion Machine: Commonsense Thinking, Artificial Intelligence, and the Future of the Human Mind</a></em>. <a href="https://en.wikipedia.org/wiki/Simon_%26_Schuster">Simon &amp; Schuster</a> <a href="#fn34" class="footnote-ref" id="fnref34" role="doc-noteref"><sup>34</sup></a></li>
+<li><a href="/David_Levy">David Levy</a> (<strong>2007</strong>). <em>Love and Sex With Robots: The Evolution of Human-Robot Relationships</em>. Harper Collins, <a href="https://www.amazon.com/Love-Sex-Robots-Human-Robot-Relationships/dp/0061359750">amazon.com</a></li>
+<li><a href="/Jürgen_Schmidhuber">Jürgen Schmidhuber</a> (<strong>2007</strong>). <em>2006: Celebrating 75 years of AI - History and Outlook: the Next 25 Years</em>. <a href="https://arxiv.org/abs/0708.4311">arXiv:0708.4311</a></li>
+</ul>
+<p><strong>2008</strong></p>
+<ul>
+<li><a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, Sander Bakkes, <a href="/István_Szita">István Szita</a>, <a href="/Pieter_Spronck">Pieter Spronck</a> (<strong>2008</strong>). <em>Monte-Carlo Tree Search: A New Framework for Game AI</em>. <a href="http://sander.landofsand.com/publications/AIIDE08_Chaslot.pdf">pdf</a></li>
+<li><a href="/István_Szita">István Szita</a>, Marc Ponsen, <a href="/Pieter_Spronck">Pieter Spronck</a> (<strong>2008</strong>). <em>Keeping Adaptive Game AI interesting</em>. <a href="http://www.cgamesusa.com/08/">CGames 2008</a>, <a href="http://web.eotvos.elte.hu/szityu/papers/SzitaPonsenSpronck08Interesting.pdf">pdf draft</a>, <a href="http://ticc.uvt.nl/~pspronck/pubs/CGAMES08Szita.pdf">pdf</a></li>
+<li>Brian Schwab (<strong>2008</strong>). <em><a href="http://search.barnesandnoble.com/Ai-Game-Engine-Programming/Brian-Schwab/e/9781584505723">AI Game Engine Programming</a></em>. Second Edition, <a href="https://www.amazon.com/dp/1584505729">amazon</a> » <a href="/Faile">Faile</a></li>
+<li><a href="/Mark_Watson">Mark Watson</a> (<strong>2008</strong>). <em>Practical Artificial Intelligence Programming With Java</em>. Third Edition, <a href="http://www.markwatson.com/opencontent_data/JavaAI3rd.pdf">pdf</a> <a href="#fn35" class="footnote-ref" id="fnref35" role="doc-noteref"><sup>35</sup></a> » <a href="/Java">Java</a></li>
+<li><a href="/Michael_Thielscher">Michael Thielscher</a> (<strong>2008</strong>). <em>Artificial Intelligence and General Game Playing</em>. <a href="/Workshop_Chess_and_Mathematics">Workshop Chess and Mathematics</a> » <a href="/General_Game_Playing">General Game Playing</a></li>
+<li><span id="FundamentalsNAI2nd"></span><a href="/Toshinori_Munakata">Toshinori Munakata</a> (<strong>2008</strong>). <em><a href="http://link.springer.com/book/10.1007/978-1-84628-839-5">Fundamentals of the New Artificial Intelligence: Neural, Evolutionary, Fuzzy and More</a></em>. 2nd edition, <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a>, <a href="/Artificial_Intelligence">1st edition 1998</a></li>
+<li><a href="http://www.lancaster.ac.uk/lums/people/brian-bloomfield">Brian Bloomfield</a>, <a href="http://www.lancaster.ac.uk/lums/people/theodore-vurdubakis">Theodore Vurdubakis</a> (<strong>2008</strong>). <em><a href="http://www.tandfonline.com/doi/abs/10.1080/01972240701883922">IBM's Chess Players: On AI and Its Supplements</a></em>. <a href="https://en.wikipedia.org/wiki/The_Information_Society">The Information Society</a>, Vol. 24, No. 2 » <a href="/Deep_Blue">Deep Blue</a></li>
+<li><a href="/Max_Bramer">Max Bramer</a> (ed.) (<strong>2008</strong>). <em><a href="https://link.springer.com/book/10.1007%2F978-0-387-09695-7">Artificial Intelligence in Theory and Practice II</a></em>. <a href="/Conferences">IFIP 20th World Computer Congress</a>. Proceedings. <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a></li>
+</ul>
+<p><strong>2009</strong></p>
+<ul>
+<li><a href="/Stuart_Russell">Stuart Russell</a>, <a href="/Peter_Norvig">Peter Norvig</a> (<strong>2009</strong>). <em><a href="http://aima.cs.berkeley.edu/">Artificial Intelligence: A Modern Approach</a></em>. 3rd edition <a href="#fn36" class="footnote-ref" id="fnref36" role="doc-noteref"><sup>36</sup></a></li>
+<li><a href="/Jacques_Pitrat">Jacques Pitrat</a> (<strong>2009</strong>). <em><a href="http://www.iste.co.uk/index.php?f=a&amp;ACTION=View&amp;id=257">Artificial Beings: The Conscience of a Conscious Machine</a></em>. Wiley</li>
+<li>Diego Rasskin-Gutman (<strong>2009</strong>). <em><a href="http://mitpress.mit.edu/catalog/item/default.asp?ttype=2&amp;tid=11847">Chess Metaphors - Artificial Intelligence and the Human Mind</a></em>. translated by <a href="http://mitpress.mit.edu/catalog/author/default.asp?aid=36831">Deborah Klosky</a>, <a href="https://en.wikipedia.org/wiki/MIT_Press">MIT Press</a> <a href="#fn37" class="footnote-ref" id="fnref37" role="doc-noteref"><sup>37</sup></a></li>
+<li><a href="/Mathematician">Nils J. Nilsson</a> (<strong>2009</strong>). <em><a href="http://www.cambridge.org/us/academic/subjects/computer-science/artificial-intelligence-and-natural-language-processing/quest-artificial-intelligence">The Quest for Artificial Intelligence: A History of Ideas and Achievements</a></em>. <a href="https://en.wikipedia.org/wiki/Cambridge_University_Press">Cambridge University Press</a></li>
+<li>Zongmin Ma (<strong>2009</strong>). <em><a href="http://www.igi-global.com/book/artificial-intelligence-maximizing-content-based/87">Artificial Intelligence for Maximizing Content Based Image Retrieval</a></em>. <a href="https://en.wikipedia.org/wiki/Northeastern_University_%28China%29">Northeastern University, China</a></li>
+<li><a href="/Shay_Bushinsky">Shay Bushinsky</a> (<strong>2009</strong>). <em><a href="http://www.aaai.org/ojs/index.php/aimagazine/article/view/2255">Deus Ex Machina— A Higher Creative Species in the Game of Chess</a></em>. <a href="/AAAI">AI Magazine</a>, Vol. 30, No. 3 » <a href="/Artificial_Intelligence">Machine Creativity</a></li>
+<li><a href="/Max_Bramer">Max Bramer</a> (ed.) (<strong>2009</strong>). <em><a href="https://link.springer.com/book/10.1007%2F978-3-642-03226-4">Artificial Intelligence: An International Perspective</a></em>. <a href="https://en.wikipedia.org/wiki/Lecture_Notes_in_Computer_Science">LNCS</a>, Vol. 5640, <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li>Sander Bakkes (<strong>2010</strong>). <em>Rapid Adaptation of Video Game AI</em>. Ph.D. thesis, <a href="/Tilburg_University">Tilburg University</a>, <a href="http://sander.landofsand.com/phdthesis/Sander_Bakkes_-_PhD_Thesis_Camera_Ready_Copy.pdf">pdf</a> <a href="#fn38" class="footnote-ref" id="fnref38" role="doc-noteref"><sup>38</sup></a></li>
+<li><a href="/Pieter_Spronck">Pieter Spronck</a> (<strong>2010</strong>). <em>Adaptive Game AI</em>. <a href="/Tilburg_University">Tilburg University</a>, <a href="http://www.computingscience.nl/docs/vakken/mgmag/Adaptive%20Game%20AI%202010.pdf">pdf</a></li>
+<li>Paul S. Rosenbloom (<strong>2010</strong>). <em>An Architectural Approach to Statistical Relational AI</em>. <a href="http://dblp.uni-trier.de/db/conf/aaai/stat2010.html#Rosenbloom10">Statistical Relational Artificial Intelligence 2010</a></li>
+<li><a href="/Max_Bramer">Max Bramer</a> (ed.) (<strong>2010</strong>). <em><a href="https://link.springer.com/book/10.1007%2F978-3-642-15286-3">Artificial Intelligence in Theory and Practice III</a></em>. <a href="/Conferences">Third IFIP International Conference on Artificial Intelligence</a>. Proceedings. <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a></li>
+</ul>
+<p><strong>2011</strong></p>
+<ul>
+<li><a href="/Joel_Veness">Joel Veness</a> (<strong>2011</strong>). <em>Approximate Universal Artificial Intelligence and Self-Play Learning for Games</em>. Ph.D. thesis, <a href="https://en.wikipedia.org/wiki/University_of_New_South_Wales">University of New South Wales</a>, supervisors: Kee Siong Ng, <a href="/Marcus_Hutter">Marcus Hutter</a>, <a href="/Alan_Blair">Alan Blair</a>, <a href="/William_Uther">William Uther</a>, John Lloyd; <a href="http://jveness.info/publications/veness_phd_thesis_final.pdf">pdf</a></li>
+<li><a href="http://www-cs.ccny.cuny.edu/~cssjl/">Stephen Lucci</a>, <a href="/Danny_Kopec">Danny Kopec</a> (<strong>2011</strong>). <em><a href="https://www.facebook.com/permalink.php?id=148704398520615&amp;story_fbid=177479219065436">Artificial Intelligence in the 21st Century</a></em>. Mercury Learning and Information</li>
+<li><a href="/Mathematician">Kevin Warwick</a> (<strong>2011</strong>). <em><a href="https://books.google.com/books?id=yLW7bwAACAAJ">Artificial Intelligence: The Basics</a></em>. <a href="https://en.wikipedia.org/wiki/Taylor_%26_Francis">Taylor &amp; Francis</a></li>
+</ul>
+<p><strong>2012</strong></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Ray_Kurzweil">Ray Kurzweil</a> (<strong>2012</strong>). <em><a href="https://en.wikipedia.org/wiki/How_to_Create_a_Mind">How to Create a Mind</a></em>. <a href="https://en.wikipedia.org/wiki/Viking_Press">Viking Penguin</a></li>
+</ul>
+<p><strong>2013</strong></p>
+<ul>
+<li><a href="/Kieran_Greer">Kieran Greer</a> (<strong>2013</strong>). <em>Is Intelligence Artificial?</em> <a href="http://arxiv.org/abs/1403.1076">arXiv:1403.1076</a></li>
+</ul>
+<p><strong>2014</strong></p>
+<ul>
+<li><a href="/Kieran_Greer">Kieran Greer</a> (<strong>2014</strong>). <em>Turing: Then, Now and Still Key</em>. <a href="http://arxiv.org/abs/1403.2541">arXiv:1403.2541</a> » <a href="/Alan_Turing">Alan Turing</a></li>
+<li><a href="/Danny_Kopec">Danny Kopec</a>, Shweta Shetty, <a href="https://www.linkedin.com/in/pileggichristopher">Christopher Pileggi</a> (<strong>2014</strong>). <em><a href="http://www.merclearning.com/titles/Artificial-Intelligence-Problems-and-Their-Solutions.html">Artificial Intelligence Problems and Their Solutions</a></em>. Mercury Learning and Information</li>
+<li><a href="/Cameron_Browne">Cameron Browne</a> (<strong>2014</strong>). <em>What Can Game AI Teach Us</em>? <a href="/ICGA_Journal">ICGA Journal, Vol. 37, No. 3</a></li>
+<li>Héctor Muñoz-Avila, David J. Stracuzzi (<strong>2014</strong>). <em><a href="http://www.aaai.org/ojs/index.php/aimagazine/article/view/2498">Innovative Applications of Artificial Intelligence 2013</a></em>. <a href="/AAAI">AI Magazine</a>, Vol. 35, No. 1</li>
+<li><a href="/Stuart_Russell">Stuart Russell</a> (<strong>2014</strong>). <em>Unifying Logic and Probability: A New Dawn for AI</em>? <a href="https://dblp.uni-trier.de/db/conf/ipmu/ipmu2014-1.html">IPMU 2014</a>, <a href="https://people.eecs.berkeley.edu/~russell/papers/ipmu14-oupm.pdf">pdf</a></li>
+<li><a href="/Stephen_Muggleton">Stephen Muggleton</a> (<strong>2014</strong>). <em>Alan Turing and the development of Artificial Intelligence</em>. <a href="https://dblp.uni-trier.de/db/journals/aicom/aicom27.html">AI Communications, Vol. 27</a>, No. 1, <a href="http://www.doc.ic.ac.uk/~shm/Papers/TuringAI_1.pdf">pdf</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="/Susan_L._Epstein">Susan L. Epstein</a> (<strong>2015</strong>). <em><a href="http://www.sciencedirect.com/science/article/pii/S0004370214001568">Wanted: Collaborative Intelligence</a></em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 221</li>
+<li><a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2015</strong>). <em>Computers and Intuition</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 38, No. 4</a></li>
+<li><a href="/Azlan_Iqbal">Azlan Iqbal</a>, <a href="/Matej_Guid">Matej Guid</a>, Simon Colton, <a href="/Jana_Krivec">Jana Krivec</a>, Shazril Azman, Boshra Haghighi (<strong>2015</strong>). <em>The Digital Synaptic Neural Substrate: A New Approach to Computational Creativity</em>. <a href="https://arxiv.org/abs/1507.07058">arXiv:1507.07058</a> » <a href="/Artificial_Intelligence">Machine Creativity</a></li>
+</ul>
+<p><strong>2016</strong></p>
+<ul>
+<li><a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2016</strong>). <em><a href="https://www.universiteitleiden.nl/en/news/2016/01/jaap-van-den-herik-intuition-is-programmable">Intuition is Programmable</a></em>. <a href="https://en.wikipedia.org/wiki/Valedictorian">Valedictory Address</a> from <a href="/Tilburg_University">Tilburg University</a></li>
+<li><a href="/Mathematician">Luc De Raedt</a>, <a href="/Kristian_Kersting">Kristian Kersting</a>, <a href="/Mathematician">Sriraam Natarajan</a>, <a href="/Mathematician">David Poole</a> (<strong>2016</strong>). <em><a href="https://www.morganclaypool.com/doi/10.2200/S00692ED1V01Y201601AIM032">Statistical Relational Artificial Intelligence: Logic, Probability, and Computation</a></em>. Synthesis Lectures on Artificial Intelligence and Machine Learning, <a href="https://www.morganclaypool.com/">Morgan &amp; Claypool Publishers</a></li>
+</ul>
+<p><strong>2017</strong></p>
+<ul>
+<li><a href="/Garry_Kasparov">Garry Kasparov</a> (<strong>2017</strong>). <em>Don’t Fear Intelligent Machines: Work with Them</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 39, No. 2</a> <a href="#fn39" class="footnote-ref" id="fnref39" role="doc-noteref"><sup>39</sup></a></li>
+</ul>
+<p><strong>2018</strong></p>
+<ul>
+<li><a href="/Kai-Fu_Lee">Kai-Fu Lee</a> (<strong>2018</strong>). <em><a href="https://en.wikipedia.org/wiki/AI_Superpowers">AI Superpowers</a></em>. <a href="https://en.wikipedia.org/wiki/Houghton_Mifflin_Harcourt">Houghton Mifflin Harcourt</a></li>
+<li><a href="/Kristian_Kersting">Kristian Kersting</a> (<strong>2018</strong>). <em><a href="https://link.springer.com/article/10.1007/s13218-018-0562-8">Making AI Smarter</a></em>. <a href="https://www.springer.com/journal/13218">Künstliche Intelligenz</a>, Vol. 32, No. 4</li>
+<li><a href="/Kristian_Kersting">Kristian Kersting</a> (<strong>2018</strong>). <em><a href="https://www.frontiersin.org/articles/10.3389/fdata.2018.00006/full">Machine Learning and Artificial Intelligence: Two Fellow Travelers on the Quest for Intelligent Behavior in Machines</a></em>. <a href="https://www.frontiersin.org/journals/big-data#">Frontiers in Big Data</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="/Kristian_Kersting">Kristian Kersting</a> (<strong>2020</strong>). <em><a href="https://link.springer.com/article/10.1007/s13218-020-00692-5">Rethinking Computer Science Through AI</a></em>. <a href="https://www.springer.com/journal/13218">Künstliche Intelligenz</a>, Vol. 34, No. 4</li>
+</ul>
+<h3 id="ai-game-programming-wisdom">AI Game Programming Wisdom</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Steve_Rabin">Steve Rabin</a> (editor) (<strong>2002</strong>). <em><a href="http://www.aiwisdom.com/resource_aiwisdom.html">AI Game Programming Wisdom</a></em>. Charles River Media</li>
+<li><a href="https://en.wikipedia.org/wiki/Steve_Rabin">Steve Rabin</a> (editor) (<strong>2003</strong>). <em><a href="http://www.aiwisdom.com/resource_aiwisdom2.html">AI Game Programming Wisdom 2</a></em>. Charles River Media</li>
+<li><a href="https://en.wikipedia.org/wiki/Steve_Rabin">Steve Rabin</a> (editor) (<strong>2006</strong>). <em><a href="http://www.aiwisdom.com/resource_aiwisdom3.html">AI Game Programming Wisdom 3</a></em>. Charles River Media</li>
+<li><a href="https://en.wikipedia.org/wiki/Steve_Rabin">Steve Rabin</a> (editor) (<strong>2008</strong>). <em><a href="http://www.aiwisdom.com/resource_aiwisdom4.html">AI Game Programming Wisdom 4</a></em>. Charles River Media</li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1994-">1994 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess/R-AxfAZ95gY/kmBYccNriNkJ">chess and AI</a> by David Deininger, <a href="/Computer_Chess_Forums">rgc</a>, April 11, 1994</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/92e542466e76432b">Artificial Intelligence</a> by <a href="/Fernando_Villegas">Fernando Villegas Darroui</a>, <a href="/Computer_Chess_Forums">rgcc</a>, May 13, 1997</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=14685">Artificial Intelligence</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, January 126, 1998</li>
+</ul>
+<h3 id="2000--1">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=357095">Artificial Intelligence in Computer Chess</a> by <a href="/Artem_Petakov">Artem Pyatakov</a>, <a href="/CCC">CCC</a>, March 28, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=357112">Re: Artificial Intelligence in Computer Chess - *DETAILS* as promised</a> by <a href="/Artem_Petakov">Artem Pyatakov</a>, <a href="/CCC">CCC</a>, March 28, 2004 » <a href="/History_Heuristic">History Heuristic</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=419893">Fruit fly races</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, April 06, 2005</li>
+</ul>
+<h3 id="2010--1">2010 ...</h3>
+<ul>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2539">what constitutes AI?</a> by stackOVERFLOW, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, December 14, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64158">Scientific American article on Computer Chess</a> by <a href="/Mark_Lefler">Mark Lefler</a>, <a href="/CCC">CCC</a>, June 03, 2017 <a href="#fn40" class="footnote-ref" id="fnref40" role="doc-noteref"><sup>40</sup></a> » <a href="/Kasparov_versus_Deep_Blue_1997">Kasparov versus Deep Blue 1997</a></li>
+</ul>
+<h3 id="2020--1">2020 ...</h3>
+<ul>
+<li><a href="https://talkchess.com/forum3/viewtopic.php?f=2&amp;t=81858">The Next Big Thing in Computer Chess?</a> by <a href="/Srdja_Matovic">Srdja Matovic</a>, <a href="/CCC">CCC</a>, April 12, 2023 &gt;&gt; <a href="/Chess">Chess</a>, <a href="/Programming">Programming</a>, <a href="/Hardware">Hardware</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<h3 id="pedia">Pedia</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Artificial_intelligence">Artificial intelligence from Wikipedia</a></li>
+<li><a href="http://www.daviddarling.info/encyclopedia/A/artificial_intelligence.html">Artificial intelligence</a>, <a href="http://www.daviddarling.info/encyclopedia/ETEmain.html">The Encyclopedia of Science</a> by David Darling</li>
+<li><span id="distributed"></span><a href="https://en.wikipedia.org/wiki/Distributed_artificial_intelligence">Distributed artificial intelligence from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Strong_AI">Strong AI from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Weak_AI">Weak AI from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/History_of_artificial_intelligence">History of artificial intelligence from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/AI_winter">AI winter from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/AI_winter#The_abandonment_of_connectionism_in_1969">The abandonment of connectionism in 1969</a> <a href="#fn41" class="footnote-ref" id="fnref41" role="doc-noteref"><sup>41</sup></a> <a href="#fn42" class="footnote-ref" id="fnref42" role="doc-noteref"><sup>42</sup></a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Ethics_of_artificial_intelligence">Ethics of artificial intelligence from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Philosophy_of_artificial_intelligence">Philosophy of artificial intelligence from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/Physical_symbol_system">Physical symbol system from Wikipedia</a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Timeline_of_artificial_intelligence">Timeline of artificial intelligence from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Computational_intelligence">Computational intelligence from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Collaborative_intelligence">Collaborative intelligence from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Collective_intelligence">Collective intelligence from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Superintelligence">Superintelligence from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Technological_singularity">Technological singularity from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Singularity_Institute_for_Artificial_Intelligence">Singularity Institute for Artificial Intelligence from Wikipedia</a></li>
+<li><a href="http://www.scholarpedia.org/article/Encyclopedia_of_computational_intelligence">Encyclopedia of computational intelligence - Scholarpedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Artificial_life">Artificial life from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/Digital_organism">Digital organism from Wikipedia</a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Virtual_reality">Virtual reality from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/Virtual_world">Virtual world from Wikipedia</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Second_Life">Second Life from Wikipedia</a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Evolutionary_computation">Evolutionary computation from Wikipedia</a></li>
+</ul>
+<h3 id="ai-in-media">AI in Media</h3>
+<ul>
+<li><a href="http://www.bbc.com/future/tags/artificialintelligence">BBC - Future - Artificial intelligence</a></li>
+</ul>
+<p><a href="http://www.bbc.com/future/story/20151201-the-cyborg-chess-players-that-cant-be-beaten">BBC - Future - The cyborg chess players that can’t be beaten</a> by <a href="http://www.chrisbaraniuk.com/">Chris Baraniuk</a>, December 04, 2015 » <a href="/David_Levy">David Levy</a>, Boris Alterman, <a href="/Shay_Bushinsky">Shay Bushinsky</a>, <a href="/Mark_Lefler">Mark Lefler</a></p>
+<h3 id="famous-ai-programs">Famous AI Programs</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Logic_Theorist">Logic Theorist</a> by <a href="/Allen_Newell">Allen Newell</a>, <a href="/Herbert_Simon">Herbert Simon</a> and <a href="/Cliff_Shaw">Cliff Shaw</a></li>
+<li><a href="https://en.wikipedia.org/wiki/General_Problem_Solver">General Problem Solver</a> by <a href="/Herbert_Simon">Herbert Simon</a>, <a href="/Cliff_Shaw">Cliff Shaw</a> and <a href="/Allen_Newell">Allen Newell</a></li>
+<li><a href="https://en.wikipedia.org/wiki/ELIZA">Eliza</a> by <a href="https://en.wikipedia.org/wiki/Joseph_Weizenbaum">Joseph Weizenbaum</a></li>
+</ul>
+<p><span id="MachineCreativity"></span></p>
+<h3 id="machine-creativity">Machine Creativity</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Computational_creativity">Computational creativity from Wikipedia</a></li>
+<li><a href="http://en.chessbase.com/post/machine-creativity-what-it-is-and-what-it-isn-t">Machine creativity: what it is and what it isn't</a> by <a href="/Albert_Silver">Albert Silver</a>, <a href="/ChessBase">ChessBase News</a>, August 28, 2016 » AlphaGo</li>
+<li><a href="http://en.chessbase.com/post/creativity-why-it-cannot-be-a-machine-property">Creativity: Why it cannot be a machine property</a> by Ofer Shamai, <a href="/ChessBase">ChessBase News</a>, October 01, 2016</li>
+</ul>
+<h3 id="associations">Associations</h3>
+<ul>
+<li><a href="http://www.aaai.org/home.html">Association for the Advancement of Artificial Intelligence</a> (AAAI) (formerly the American Association for Artificial Intelligence)</li>
+</ul>
+<p><a href="http://www.aaai.org/aitopics/pmwiki/pmwiki.php/AITopics/HomePage">AITopics / HomePage</a></p>
+<p><a href="http://www.aaai.org/aitopics/pmwiki/pmwiki.php/AITopics/AINews">AITopics / AINews</a></p>
+<ul>
+<li><a href="http://www.ijcai.org/">International Joint Conferences on Artificial Intelligence</a> (IJCAI), <a href="/Conferences">IJCAI Conferences</a></li>
+<li><a href="http://www.aisb.org.uk/">Society for the Study of Artificial Intelligence and Simulation of Behaviour</a> (SSAISB)</li>
+</ul>
+<p><span id="Journals"></span></p>
+<h3 id="journals">Journals</h3>
+<ul>
+<li><a href="http://www.elsevier.com/wps/find/journaldescription.cws_home/505601/description#description">Artificial Intelligence - Elsevier</a></li>
+</ul>
+<p><a href="http://www.sciencedirect.com/science/journal/00043702">ScienceDirect - Artificial Intelligence - Online Access</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence (journal) from Wikipedia</a></p>
+<ul>
+<li><a href="http://www.aaai.org/Library/Magazine/magazine-library.php">AAAI Digital Library — AI Magazine</a></li>
+<li><a href="http://www.aaai.org/Publications/Journals/sponsored-journals.php">AAAI Sponsored Journals</a></li>
+<li><a href="http://www.aaai.org/Press/press.php">AAAI Press</a></li>
+<li><a href="http://www.jair.org/">Journal of Artificial Intelligence Research (JAIR)</a></li>
+<li><a href="http://www.computer.org/portal/web/tpami/">IEEE Transactions on Pattern Analysis and Machine Intelligence (PAMI)</a></li>
+<li><a href="http://www.doc.ic.ac.uk/%7Eshm/MI/mi.html">Machine Intelligence series</a>, <a href="/Donald_Michie">Donald Michie</a>, <a href="/Stephen_Muggleton">Stephen Muggleton</a></li>
+</ul>
+<h3 id="online-courses">Online Courses</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/MIT_OpenCourseWare">MIT OpenCourseWare</a> tries to put as much <a href="/Massachusetts_Institute_of_Technology">MIT</a> course material online as possible. Here are two courses on Artificial Intelligence:</li>
+</ul>
+<p><a href="http://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-034-artificial-intelligence-spring-2005/">6,034 Artificial Intelligence, Spring 2005</a></p>
+<p><a href="http://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-034-artificial-intelligence-fall-2010/">6.034 Artificial Intelligence, Fall 2010</a>, <a href="/Patrick_Winston">Video Lectures</a> by <a href="/Patrick_Winston">Patrick Winston</a></p>
+<ul>
+<li><span id="UdacityAICourse"></span><a href="https://www.udacity.com/course/cs271">Intro to Artificial Intelligence Course Overview</a> by <a href="/Sebastian_Thrun">Sebastian Thrun</a> (<a href="https://en.wikipedia.org/wiki/Udacity">Udacity</a>) and <a href="/Peter_Norvig">Peter Norvig</a></li>
+<li>Joint <a href="https://en.wikipedia.org/wiki/Royal_Television_Society">RTS</a>/<a href="https://en.wikipedia.org/wiki/Institution_of_Engineering_and_Technology_%28professional_society%29">IET</a> <a href="http://www.theiet.org/events/2015/224630.cfm">Public Lecture</a> with Google DeepMind's <a href="/Demis_Hassabis">Demis Hassabis</a>, <a href="https://en.wikipedia.org/wiki/British_Museum">British Museum</a>, <a href="https://en.wikipedia.org/wiki/London">London</a>, November 04, 2015, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/0X-NdPtFKq0" title="YouTube video 0X-NdPtFKq0" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=0X-NdPtFKq0">Watch on YouTube</a></p>
+<h3 id="misc">Misc</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Watson_%28artificial_intelligence_software%29">Watson (artificial intelligence software) from Wikipedia</a></li>
+<li><a href="http://www.drdobbs.com/high-performance-computing/184405171">Computer Chess: The Drosophila of AI</a> by <a href="/L._Stephen_Coles">L. Stephen Coles</a>, October 30, 2002, <a href="https://en.wikipedia.org/wiki/Dr._Dobb%27s_Journal">Dr. Dobbs</a>, republished 1994 article</li>
+<li><a href="http://aima.cs.berkeley.edu/">Artificial Intelligence: A Modern Approach</a> by <a href="/Stuart_Russell">Stuart Russell</a> and <a href="/Peter_Norvig">Peter Norvig</a></li>
+</ul>
+<p><a href="http://aima.cs.berkeley.edu/ai.html">AI on the Web</a></p>
+<ul>
+<li><a href="http://intelligence.worldofcomputing.net/">Articles On Artificial Intelligence</a></li>
+<li><a href="http://www.cs.cf.ac.uk/Dave/AI2/AI_notes.html">Artificial Intelligence II</a> by <a href="http://blogs.gartner.com/nikos_drakos/">Nikos Drakos</a>, Computer Based Learning Unit, <a href="https://en.wikipedia.org/wiki/University_of_Leeds">University of Leeds</a></li>
+<li><a href="http://www.idsia.ch/%7Ejuergen/ai.html">Artificial Intelligence</a> by <a href="/Jürgen_Schmidhuber">Jürgen Schmidhuber</a></li>
+<li><a href="http://www.cs.cmu.edu/afs/cs.cmu.edu/project/ai-repository/ai/0.html">Artificial Intelligence Repository</a> from <a href="/Carnegie_Mellon_University">Carnegie Mellon University</a></li>
+<li><a href="http://www.inf.ed.ac.uk/about/AIhistory.html">Artificial Intelligence at Edinburgh University: a Perspective</a> by <a href="http://www.inf.ed.ac.uk/student-services/teaching-organisation/for-taught-students/information-about-our-sponsors/jim-howe">Jim Howe</a>, <a href="/University_of_Edinburgh">University of Edinburgh</a></li>
+<li><a href="http://www.aiai.ed.ac.uk/events/ccs2002/">Artificial Intelligence - Recollections of the Pioneers</a></li>
+<li><a href="http://bootstrappingartificialintelligence.fr/WordPress3/">My view on Artificial Intelligence | Just another WordPress site</a> by <a href="/Jacques_Pitrat">Jacques Pitrat</a></li>
+<li><a href="http://www.macalester.edu/psychology/whathap/ubnrp/intelligence05/MMhistory.html">The “Modern” History of Artificial Intelligence and Programs</a> from <a href="http://www.macalester.edu/academics/psychology/whathap/ubnrp/intelligence05/index.html">Neuroscience Of Intelligence</a></li>
+<li><a href="http://members.aon.at/fgwinkler/cognition.html">Cognitive Science and Artificial Intelligence</a> by <a href="/Franz-Günter_Winkler">Franz-Günter Winkler</a></li>
+<li><a href="http://www.scienceclarified.com/scitech/Artificial-Intelligence/index.html">Science Clarified » Artificial Intelligence</a></li>
+<li><a href="http://ai-contest.com/rankings.php">Google AI Challenge</a> Organized by the <a href="/University_of_Waterloo">University of Waterloo</a> <a href="http://csclub.uwaterloo.ca/">Computer Science Club</a> and sponsored by <a href="https://en.wikipedia.org/wiki/Google">Google</a></li>
+<li><a href="https://en.wikipedia.org/wiki/A.I._Artificial_Intelligence">A.I. Artificial Intelligence (film) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Teachings_from_the_Electronic_Brain">Teachings from the Electronic Brain</a> from <a href="https://en.wikipedia.org/wiki/Main_Page">Wikipedia</a></li>
+<li><a href="http://wdstalks.blogspot.de/2013/03/the-future-of-computers-ai-artificial.html">The Future of Computers, AI (artificial intelligence), etc -- aka, You're gonna die, sucker</a> by <a href="/Warren_D._Smith">Warren D. Smith</a>, March 07, 2013</li>
+<li><a href="https://en.wikipedia.org/wiki/Robert_Fludd">Fludd's</a> description of <a href="https://en.wikipedia.org/wiki/Perception">perception</a>, 1619 <a href="#fn43" class="footnote-ref" id="fnref43" role="doc-noteref"><sup>43</sup></a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Main_Page">Home</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.turing.org.uk/turing/scrapbook/ai.html">Alan Turing Scrapbook - the Origins of Artificial Intelligence</a> by <a href="/Mathematician">Andrew Hodges</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://en.wikipedia.org/wiki/Jack_Copeland">B. Jack Copeland</a>, <a href="http://www.canterbury.ac.nz/ucresearchprofile/researcher.aspx?researcherid=84367">Diane Proudfoot</a> (<strong>2011-2012</strong>). <em><a href="http://www.rutherfordjournal.org/article040101.html">Turing, Father of the Modern Computer</a></em>. <a href="http://www.rutherfordjournal.org/index.html">The Rutherford Journal - The New Zealand Journal for the History and Philosophy of Science and Technology</a>, Vol. 4 » with photos of <a href="/Alan_Turing">Alan Turing</a>, <a href="/John_von_Neumann">John von Neumann</a>, <a href="/Dietrich_Prinz">Dietrich Prinz</a>, <a href="/Christopher_Strachey">Christopher Strachey</a>, <a href="/Jack_Good">Jack Good</a>, <a href="/Arthur_Samuel">Arthur Samuel</a>, <a href="/Herbert_Simon">Herbert Simon</a>, <a href="/Allen_Newell">Allen Newell</a>, ...<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="/John_McCarthy">John McCarthy</a>, <a href="/Marvin_Minsky">Marvin Minsky</a>, <a href="/Nathaniel_Rochester">Nathaniel Rochester</a>, <a href="/Claude_Shannon">Claude Shannon</a> (<strong>1955</strong>). <em><a href="http://www-formal.stanford.edu/jmc/history/dartmouth/dartmouth.html">A Proposal for the Dartmouth Summer Research Project on Artificial Intelligence</a></em>.<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="/Hermann_Kaindl">Hermann Kaindl</a> (<strong>1985</strong>). <em><a href="http://portal.acm.org/citation.cfm?id=645759.666297">What Happened with AI's Drosophila</a></em>? <a href="http://www.informatik.uni-trier.de/%7Eley/db/conf/ogai/ogai1985.html">ÖGAI 1985</a>: 194-203<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="/Peter_W._Frey">Peter W. Frey</a> (<strong>1991</strong>). <em>Memory-Based Expertise: Computer Chess vs. AI</em>, <a href="/ICGA_Journal">ICCA Journal, Vol. 14, No. 4</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="http://vanemden.wordpress.com/2009/06/12/i-remember-donald-michie-1923-2007/">I remember Donald Michie (1923 – 2007) « A Programmers Place</a> by <a href="/Maarten_van_Emden">Maarten van Emden</a>, June 12, 2009<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="/Jaap_van_den_Herik"><code>Jaap van den Herik</code></a><code> (</code><strong><code>1981</code></strong><code>). </code><em><code>Computer Chess Today and Tomorrow: An Interview with </code><a href="/Donald_Michie"><code>Donald Michie</code></a></em><code>. </code><a href="/Computer_Chess_Reports"><code>Computer Chess Digest Annual 1984</code></a><a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="/John_McCarthy">John McCarthy</a> (<strong>1989</strong>). <em>The Fruitfly on the Fly</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 12, No. 4</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="/John_McCarthy">John McCarthy</a> (<strong>1990</strong>). <em>Chess as the Drosophila of AI</em>. <a href="/Computers,_Chess,_and_Cognition">Computers, Chess, and Cognition</a>, pp. 227-237<a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="http://www.stmintz.com/ccc/index.php?id=419893">Fruit fly races</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, April 06, 2005<a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="http://www.stmintz.com/ccc/index.php?id=419900">Re: Fruit fly races</a> by <a href="/Anthony_Cozzie">Anthony Cozzie</a>, <a href="/CCC">CCC</a>, April 06, 2005<a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="/Mathematician">Evgenii Landis</a>, <a href="/Mathematician">Isaak Yaglom</a> (<strong>1987</strong>). <em>Remembering A.S. Kronrod</em>. (<strong>2002</strong>). Translation by <a href="http://www.translatorscafe.com/cafe/member16949.htm">Viola Brudno</a>, Edited by <a href="/Mathematician">Walter Gautschi</a>, <a href="https://www.cs.purdue.edu/homes/wxg/Kronrod.ps">ps</a><a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="http://vikont.50webs.com/art_kronrod.html">Биография А.С. Кронрода</a> (Biography AS Kronrod) by Alexander Yershov<a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p><a href="https://7i.7iskusstv.com/y2020/nomer7/bpoljak/"><code>Boris Polyak. Memories.</code></a><a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn15"><p><a href="/Robert_Levinson">Robert Levinson</a>, <a href="/Feng-hsiung_Hsu">Feng-hsiung Hsu</a>, <a href="/Tony_Marsland">Tony Marsland</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, <a href="/David_Wilkins">David Wilkins</a> (<strong>1991</strong>). <em>The Role of Chess in Artificial Intelligence Research</em>. <a href="http://dli.iiit.ac.in/ijcai/IJCAI-91-VOL1/CONTENT/content.htm">IJCAI 1991</a>, <a href="http://dli.iiit.ac.in/ijcai/IJCAI-91-VOL1/PDF/084.pdf">pdf</a>, also in <a href="/ICGA_Journal">ICCA Journal, Vol. 14, No. 3</a>, <a href="http://www.ai.sri.com/%7Ewilkins/papers/chess-panel.pdf">pdf</a><a href="#fnref15" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn16"><p><a href="/Peter_W._Frey">Peter W. Frey</a> (<strong>1991</strong>). <em>Memory-Based Expertise: Computer Chess vs. AI</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 14, No. 4</a><a href="#fnref16" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn17"><p><a href="/John_McCarthy">John McCarthy</a> (<strong>1997</strong>). <em><a href="http://www-formal.stanford.edu/jmc/newborn/newborn.html">AI as Sport</a>.</em> Science, Vol. 276<a href="#fnref17" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn18"><p><a href="/Monroe_Newborn">Monroe Newborn</a> (<strong>1997</strong>). <em>Kasparov versus DEEP BLUE: Computer Chess Comes of Age.</em> Springer<a href="#fnref18" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn19"><p><a href="http://www-formal.stanford.edu/jmc/chess.html">Making Computer Chess Scientific</a> by <a href="/John_McCarthy">John McCarthy</a><a href="#fnref19" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn20"><p><a href="http://computer-go.org/pipermail/computer-go/2010-June/000376.html">Re: Chess vs Go // AI vs IA</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, June 02, 2010<a href="#fnref20" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn21"><p><a href="/Graham_Kendall">Graham Kendall</a>, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a> (<strong>2006</strong>). <em><a href="http://ilk.uvt.nl/icga/games/Poker/">Poker</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 29, No. 3</a><a href="#fnref21" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn22"><p><a href="http://csis.pace.edu/~ctappert/srd2011/rosenblatt-contributions.htm">Rosenblatt's Contributions</a><a href="#fnref22" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn23"><p><a href="https://en.wikipedia.org/wiki/General_Problem_Solver">General Problem Solver from Wikipedia</a><a href="#fnref23" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn24"><p><a href="http://www.lifesci.sussex.ac.uk/CSE/members/jms/JMSpublications.pdf">Publications of John Maynard Smith</a> (pdf)<a href="#fnref24" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn25"><p><a href="https://en.wikipedia.org/wiki/AI_winter#The_abandonment_of_connectionism_in_1969">The abandonment of connectionism in 1969 - Wikipedia</a><a href="#fnref25" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn26"><p><a href="https://en.wikipedia.org/wiki/Frank_Rosenblatt">Frank Rosenblatt</a> (<strong>1962</strong>). <em><a href="http://catalog.hathitrust.org/Record/000203591">Principles of Neurodynamics: Perceptrons and the Theory of Brain Mechanisms</a></em>. Spartan Books<a href="#fnref26" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn27"><p><a href="https://en.wikipedia.org/wiki/Physical_symbol_system">Physical symbol system from Wikipedia</a><a href="#fnref27" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn28"><p><a href="https://en.wikipedia.org/wiki/K-line_%28artificial_intelligence%29">K-line (artificial intelligence) from Wikipedia</a><a href="#fnref28" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn29"><p><a href="/John_McCarthy">John McCarthy</a> (<strong>1997</strong>). <em>Chess as the Drosophila of AI</em>. Computer Science Department, <a href="/Stanford_University">Stanford University</a>, condensed version of the 1990 paper, <a href="http://innovation.it.uts.edu.au/projectjmc/articles/drosophila/drosophila.pdf">pdf</a><a href="#fnref29" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn30"><p><a href="https://www.stmintz.com/ccc/index.php?id=14647">Re: ICCA Journal Sinks To A New Low</a> by <a href="/Amir_Ban">Amir Ban</a>, <a href="/CCC">CCC</a>, January 25, 1998<a href="#fnref30" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn31"><p><a href="https://www.biblio.com/dunlop-charles-e-m/author/1216693">Charles E. M. Dunlop</a> (<strong>2000</strong>). <em>Book Review 'Mind Versus Computer'</em>. <a href="https://link.springer.com/journal/11023">Minds and Machines</a>, Vol. 10, No. 2<a href="#fnref31" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn32"><p><a href="/Matjaž_Gams">Matjaž Gams</a> (<strong>2002</strong>). <em><a href="https://link.springer.com/article/10.1023%2FA%3A1013746105950">The Turing machine may not be the universal machine</a></em>. <a href="https://link.springer.com/journal/11023">Minds and Machines</a>, Vol. 12, No. 1<a href="#fnref32" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn33"><p><a href="/Mathematician">Christian Jongeneel</a> (<strong>1996</strong>). <em><a href="http://repository.tudelft.nl/view/ir/uuid%3A384c7d0f-1869-4262-b8dd-e263637cb035/">The informatical worldview, an inquiry into the methodology of computer science</a></em>. Ph.D. thesis, <a href="/Delft_University_of_Technology">Delft University of Technology</a>, advisor <a href="/Henk_Koppelaar">Henk Koppelaar</a>, <a href="http://www.christianjongeneel.nl/gepubliceerde-boeken/de-programmeur-en-de-kangoeroedans/the-evolution-of-information-in-man-and-machine/">The evolution of information in man and machine | Christian Jongeneel</a><a href="#fnref33" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn34"><p><a href="http://www.terasemjournals.org/PCJournal/PC0303/mm1.html">Terasem Journal of Personal Cyberconsciousness - Marvin Lee Minsky discussing his book, The Emotion Machine</a><a href="#fnref34" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn35"><p><a href="https://github.com/mark-watson">Mark Watson · GitHub</a><a href="#fnref35" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn36"><p><a href="/Java">Java</a> <a href="https://code.google.com/p/aima-java/">implementation of algorithms</a> from <a href="/Peter_Norvig">Norvig</a> and <a href="/Stuart_Russell">Russell's</a> <em><a href="http://aima.cs.berkeley.edu/">Artificial Intelligence: A Modern Approach</a></em>. 3rd edition<a href="#fnref36" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn37"><p><a href="http://www.chessbase.com/newsdetail.asp?newsid=6097">Chess Metaphors – Artificial Intelligence and the Human Mind</a> by Diego Rasskin-Gutman, <a href="/ChessBase">ChessBase News</a>, January 28, 2010<a href="#fnref37" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn38"><p><a href="/Dap_Hartmann">Dap Hartmann</a> (<strong>2010</strong>). <em>Sander Bakkes: Rapid Adaptation of Video Game AI</em>. Review, <a href="/ICGA_Journal">ICGA Journal, Vol. 34, No. 1</a><a href="#fnref38" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn39"><p><a href="https://www.ted.com/talks/garry_kasparov_don_t_fear_intelligent_machines_work_with_them/transcript">Transcript</a> of <a href="https://www.ted.com/speakers/garry_kasparov">Kasparov’s TED talk</a>, May 2017<a href="#fnref39" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn40"><p><a href="https://www.scientificamerican.com/article/20-years-after-deep-blue-how-ai-has-advanced-since-conquering-chess/">20 Years after Deep Blue: How AI Has Advanced Since Conquering Chess</a> by <a href="https://www.crunchbase.com/person/larry-greenemeier">Larry Greenemeier</a>, <a href="/Scientific_American">Scientific American</a>, June 2, 2017<a href="#fnref40" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn41"><p><a href="https://en.wikipedia.org/wiki/Connectionism">Connectionism from Wikipedia</a><a href="#fnref41" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn42"><p><a href="/Marvin_Minsky">Marvin Minsky</a>, <a href="/Mathematician">Seymour Papert</a> (<strong>1969</strong>). <em><a href="https://en.wikipedia.org/wiki/Perceptrons_%28book%29">Perceptrons</a></em>.<a href="#fnref42" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn43"><p><a href="https://en.wikipedia.org/wiki/Intelligence">Intelligence from Wikipedia</a><a href="#fnref43" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Bernd_Besser">Bernd Besser</a> · <a href="/Category:Videos">Videos</a> · <a href="/Category:Cozzie_Quotes">Cozzie Quotes</a> · <a href="/Category:McCarthy_Quotes">McCarthy Quotes</a> · <a href="/Category:Schaeffer_Quotes">Schaeffer Quotes</a> · <a href="/Category:Quotes">Quotes</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Artificial_Intelligence">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, Smatovic.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Board Representation - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Board Representation</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * Board Representation</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:240px"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6c/Paul_Klee_Ueberschach.jpg" alt="Paul Klee - Überschach, 1937" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Paul Klee - Überschach, 1937</span></span> A chess program needs an internal <strong>board representation</strong> to maintain <a href="/Chess_Position">chess positions</a> for its <a href="/Search">search</a>, <a href="/Evaluation">evaluation</a> and <a href="/Chess_Game">game-play</a>. Beside modelizing the <a href="/Chessboard">chessboard</a> with its <a href="/Pieces">piece</a>-placement, some additional information is required to fully specify a chess position, such as <a href="/Side_to_move">side to move</a>, <a href="/Castling_Rights">castling rights</a>, possible <a href="/En_passant">en passant</a> target square and the number of <a href="/Reversible_Moves">reversible moves</a> to keep track on the <a href="/Fifty-move_Rule">fifty-move rule</a>.</p>
+<p>To begin with, we further elaborate on the pure data structures to represent the board and its piece-placement. There are piece centric and square centric representations as well as hybrid solutions.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#piece-centric">Piece Centric</a></li>
+<li><a href="#square-centric">Square Centric</a></li>
+<li><a href="#hybrid-solutions">Hybrid Solutions</a></li>
+<li><a href="#move-generation">Move Generation</a></li>
+<li><a href="#make-and-unmake">Make and Unmake</a></li>
+<li><a href="#see-also">See Also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1999">1999</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="piece-centric"><span id="PieceCentric"></span>Piece Centric</h2>
+<p>A <strong>piece centric</strong> representation keeps <a href="/Linked_List">lists</a>, <a href="/Array">arrays</a> or sets of all <a href="/Pieces">pieces</a> still on the board - with the associated information which <a href="/Squares">square</a> they occupy. A popular piece centric representative is the set-wise <a href="/Bitboards">bitboard-approach</a>. One 64-bit word for each piece type, where one-bits associate their <a href="/Occupancy">occupancy</a>.</p>
+<ul>
+<li><a href="/Piece-Lists">Piece-Lists</a></li>
+<li><a href="/Piece-Sets">Piece-Sets</a></li>
+<li><a href="/Bitboards">Bitboards</a></li>
+</ul>
+<h2 id="square-centric"><span id="SquareCentric"></span>Square Centric</h2>
+<p>The <strong>square centric</strong> representation implements the inverse association - is a <a href="/Squares">square</a> empty or is it <a href="/Occupancy">occupied</a> by a particular <a href="/Pieces">piece</a>? The most popular square centric representations, <a href="/Mailbox">mailbox</a> or it's <a href="/0x88">0x88</a>-enhancements - are basically <a href="/Array">arrays</a> of direct <a href="/Pieces">piece-codes</a> including the empty square and probably out of board codes. Hybrid solutions may further refer piece-list entries.</p>
+<ul>
+<li><a href="/Mailbox">Mailbox</a>
+<ul>
+<li><a href="/8x8_Board">8x8 Board</a></li>
+<li><a href="/10x12_Board">10x12 Board</a></li>
+<li><a href="/Vector_Attacks">Vector Attacks</a></li>
+</ul></li>
+</ul>
+<p><a href="/0x88">0x88</a></p>
+<h2 id="hybrid-solutions">Hybrid Solutions</h2>
+<p>While different algorithms and tasks inside a chess program might prefer one of these associations, it is quite common to use redundant board representations with elements of both. Bitboard approaches often keep a 8x8 board to determine a piece by square, while square centric board array approaches typically keep <a href="/Piece-Lists">piece-lists</a> and/or <a href="/Piece-Sets">piece-sets</a> to avoid scanning the board for <a href="/Move_Generation">move generation</a> purposes.</p>
+<h2 id="move-generation">Move Generation</h2>
+<p>With a board representation, one big consideration is the generation of <a href="/Moves">moves</a>. This is essential to the <a href="/Chess_Game">game playing</a> aspect of a chess program, and it must be completely correct. Writing a good move generator is often the first basic step of creating a chess program.</p>
+<ul>
+<li><a href="/Move_Generation">Move Generation</a></li>
+<li><a href="/Perft">Perft</a></li>
+</ul>
+<h2 id="make-and-unmake">Make and Unmake</h2>
+<ul>
+<li><a href="/Incremental_Updates">Incremental Updates</a></li>
+<li><a href="/Copy-Make">Copy-Make</a></li>
+<li><a href="/Make_Move">Make Move</a></li>
+<li><a href="/Unmake_Move">Unmake Move</a></li>
+<li><a href="/General_Setwise_Operations">Bitboard Update By Move</a></li>
+</ul>
+<h2 id="see-also">See Also</h2>
+<ul>
+<li><a href="/Nibble">Array of Nibbles</a></li>
+<li><a href="/Attack_and_Defend_Maps">Attack and Defend Maps</a></li>
+<li><a href="/Chess_Position">Chess Position</a>
+<ul>
+<li><a href="/Extended_Position_Description">Extended Position Description</a> (EPD)</li>
+<li><a href="/Forsyth-Edwards_Notation">Forsyth-Edwards Notation</a> (FEN)</li>
+</ul></li>
+<li><a href="/Chinese_Chess_Board_Representation">Chinese Chess Board Representation</a></li>
+<li><a href="/Graphics_Programming">Graphics Programming</a></li>
+<li><a href="/Quad-Bitboards">Quad-Bitboards</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Claude_Shannon">Claude Shannon</a> (<strong>1949</strong>). <em><a href="http://www.pi.infn.it/%7Ecarosi/chess/shannon.txt">Programming a Computer for Playing Chess</a></em>. <a href="http://archive.computerhistory.org/projects/chess/related_materials/text/2-0%20and%202-1.Programming_a_computer_for_playing_chess.shannon/2-0%20and%202-1.Programming_a_computer_for_playing_chess.shannon.062303002.pdf">pdf</a> from <a href="/The_Computer_History_Museum">The Computer History Museum</a></li>
+<li><a href="/Alex_Bell">Alex Bell</a> (<strong>1972</strong>). <em><a href="http://www.chilton-computing.org.uk/acl/literature/books/gamesplaying/overview.htm">Games Playing with Computers</a></em>. <a href="https://en.wikipedia.org/wiki/Allen_%26_Unwin">Allen &amp; Unwin</a>, ISBN-13: 978-0080212227</li>
+<li><a href="/Dan_Spracklen">Dan Spracklen</a>, <a href="/Kathe_Spracklen">Kathe Spracklen</a> (<strong>1978</strong>). <em>First Steps in Computer Chess Programming</em>. <a href="/Byte_Magazine">BYTE, Vol. 3, No. 10</a>, <a href="http://archive.computerhistory.org/projects/chess/related_materials/text/4-4.First_Steps.Byte_Magazine/First_Steps_in_Computer_Chess_Programing.Spracklen-Dan_Kathe.Byte_Magazine.Oct-1978.062303035.sm.pdf">pdf</a> from <a href="/The_Computer_History_Museum">The Computer History Museum</a></li>
+<li><a href="/Vladan_Vučković">Vladan Vučković</a> (<strong>2008</strong>). <em>The Compact Chessboard Representation</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 31, No. 3</a> » <a href="/Nibble">Array of Nibbles</a></li>
+<li><a href="/Vladan_Vučković">Vladan Vučković</a> (<strong>2012</strong>). <em>An Alternative Efficient Chessboard Representation based on 4-Bit Piece Coding</em>. <a href="http://www.doiserbia.nb.rs/issue.aspx?issueid=1761">Yugoslav Journal of Operations Research, Vol. 22, No. 1</a>, <a href="http://www.doiserbia.nb.rs/img/doi/0354-0243/2012/0354-02431200011V.pdf">pdf</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1999">1999</h3>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/2ffae88f631ac20d">Datastructures in computer chess</a> by Gustav Grundin, <a href="/Computer_Chess_Forums">rgcc</a>, May 11, 1999</li>
+<li><a href="http://www.stmintz.com/ccc/index.php?id=69942">How do you represent chess boards in your chess programms</a> by Brian Nielsen, <a href="/CCC">CCC</a>, September 22, 1999</li>
+<li><a href="http://www.stmintz.com/ccc/index.php?id=71016">Re: How do you represent chess boards in your chess programms</a> by <a href="/Sven_Reichard">Sven Reichard</a>, <a href="/CCC">CCC</a>, September 29, 1999</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="http://www.stmintz.com/ccc/index.php?id=265915">Differences between 0x88 ,10x12 and Bitboards!?</a> by Axel Grüttner, <a href="/CCC">CCC</a>, November 19, 2002</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=2407&amp;p=11195">Fruit's Board Representation?</a> by <a href="/Steve_Maughan">Steve Maughan</a>, <a href="/Computer_Chess_Forums">Winboard Programming Forum</a>, April 27, 2005</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=4442">Board representation : 0x88 or 10x12 ?</a> by Philippe, <a href="/Computer_Chess_Forums">Winboard Forum</a>, March 02, 2006</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=5623">Yet another new bitboard move generation method</a> by <a href="/Zach_Wegner">Zach Wegner</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, September 22, 2006 » <a href="/Titboards">Titboards</a></li>
+</ul>
+<p><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=5623&amp;start=6">Re: Yet another new bitboard move generation method</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, October 01, 2006 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=22023">Board Types in '08</a> by Joshua Shriver, <a href="/CCC">CCC</a>, June 28, 2008</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47615">I'm Puzzled - Storing Piece Info &amp; Magic Move Gen...</a> by <a href="/Steve_Maughan">Steve Maughan</a>, <a href="/CCC">CCC</a>, March 27, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48324">Table-less bitboards (bitrays?)</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, June 18, 2013</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=52878">Best Board Representation for 32bit CPUs</a> by net, <a href="/Computer_Chess_Forums">Winboard Forum</a>, July 14, 2013</li>
+<li><a href="http://talkchess.com/forum/viewtopic.php?t=59691">Some questions from a beginner</a> by Tim Hagen, <a href="/CCC">CCC</a>, March 30, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65962">best board representation for variants (javascript) ?</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, December 10, 2017 » <a href="/JavaScript">JavaScript</a>, <a href="/Games">Chess Variants</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69046">CCR board representation</a> by <a href="/Maksim_Korzh">Maksim Korzh</a>, <a href="/CCC">CCC</a>, November 25, 2018 » <a href="/Nibble">Array of Nibbles</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Board_representation_%28chess%29">Board representation (chess) from Wikipedia</a></li>
+<li><a href="http://www.chilton-computing.org.uk/acl/literature/books/gamesplaying/p003.htm">Chapter 3: Board Games - 3.1 CHESS</a> from <a href="/Alex_Bell">Alex Bell</a> (<strong>1972</strong>). <em><a href="http://www.chilton-computing.org.uk/acl/literature/books/gamesplaying/overview.htm">Games Playing with Computers</a></em>. <a href="https://en.wikipedia.org/wiki/Allen_%26_Unwin">Allen &amp; Unwin</a>, ISBN-13: 978-0080212227</li>
+<li><a href="http://www.craftychess.com/hyatt/boardrep.html">Chess board representations</a> by <a href="/Robert_Hyatt">Robert Hyatt</a></li>
+<li><a href="http://www.ics.uci.edu/~eppstein/180a/970408.html">Board representations | Lecture notes</a> by <a href="/David_Eppstein">David Eppstein</a>, April 8, 1997</li>
+<li><a href="http://www.fam-petzke.de/cp_board_en.shtml">Chess Programming - The Chess Board</a> by <a href="/Thomas_Petzke">Thomas Petzke</a></li>
+<li><a href="http://labraj.uni-mb.si/en/Representation_of_Chess_Game">Representation of Chess Game - Computer Architecture and Languages Laboratory</a>, <a href="/University_of_Maribor">University of Maribor</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Main_Page">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=52861&amp;start=8">Re: multi-dimensional piece/square tables</a> by Tony P., <a href="/CCC">CCC</a>, January 28, 2020<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Paul_Klee">Paul Klee</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Board_Representation">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

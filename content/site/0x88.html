@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>0x88 - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">0x88</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Mailbox">Mailbox</a> * <a href="/Vector_Attacks">Vector Attacks</a> * 0x88</strong></p>
+<p><strong>0x88</strong>,</p>
+<p>a square centric board representation. It uses one <a href="/Nibble">nibble</a> for both <a href="/Ranks">rank</a> and <a href="/Files">file</a> each, to index the <a href="/Pieces">piece- or empty square codes</a>. While the doubled <a href="/Array">array</a> size is negligible, the redundancy of the bit-gaps pays off for several applications. 0x88 is <a href="/C">C</a>-syntax and the <a href="https://en.wikipedia.org/wiki/Hexadecimal">hexadecimal</a> value of a mask of bits need to be zero for valid square coordinates (136 decimal, 210 <a href="https://en.wikipedia.org/wiki/Octal">octal</a>, 10001000B).</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#layout">Layout</a></li>
+<li><a href="#coordinate-transformation">Coordinate Transformation</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#applications">Applications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#off-the-board">Off the Board</a></li>
+<li><a href="#square-relations">Square Relations</a></li>
+<li><a href="#attack-lookup">Attack Lookup</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#history">History</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#hyatt">Hyatt</a></li>
+<li><a href="#kuipers">Kuipers</a></li>
+<li><a href="#wiereyn">Wiereyn</a></li>
+<li><a href="#kittinger">Kittinger</a></li>
+</ol>
+</details></li>
+<li><a href="#conclusion">Conclusion</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="layout">Layout</h2>
+<p>In the 0x88 board-representation an 128 <a href="/Byte">byte</a> <a href="/Array">array</a> is used. Only the half of the board-array are valid squares representing the position. The second half is almost garbage as usually not addressed. The <a href="/Little-endian">little-endian</a> layout of an 0x88 array, valid indices bold:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>A</th>
+<th>B</th>
+<th>C</th>
+<th>D</th>
+<th>E</th>
+<th>F</th>
+<th>G</th>
+<th>H</th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>8</td>
+<td><strong>70</strong></td>
+<td><strong>71</strong></td>
+<td><strong>72</strong></td>
+<td><strong>73</strong></td>
+<td><strong>74</strong></td>
+<td><strong>75</strong></td>
+<td><strong>76</strong></td>
+<td><strong>77</strong></td>
+<td>78</td>
+<td>79</td>
+<td>7A</td>
+<td>7B</td>
+<td>7C</td>
+<td>7D</td>
+<td>7E</td>
+<td>7F</td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>60</strong></td>
+<td><strong>61</strong></td>
+<td><strong>62</strong></td>
+<td><strong>63</strong></td>
+<td><strong>64</strong></td>
+<td><strong>65</strong></td>
+<td><strong>66</strong></td>
+<td><strong>67</strong></td>
+<td>68</td>
+<td>69</td>
+<td>6A</td>
+<td>6B</td>
+<td>6C</td>
+<td>6D</td>
+<td>6E</td>
+<td>6F</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>50</strong></td>
+<td><strong>51</strong></td>
+<td><strong>52</strong></td>
+<td><strong>53</strong></td>
+<td><strong>54</strong></td>
+<td><strong>55</strong></td>
+<td><strong>56</strong></td>
+<td><strong>57</strong></td>
+<td>58</td>
+<td>59</td>
+<td>5A</td>
+<td>5B</td>
+<td>5C</td>
+<td>5D</td>
+<td>5E</td>
+<td>5F</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>40</strong></td>
+<td><strong>41</strong></td>
+<td><strong>42</strong></td>
+<td><strong>43</strong></td>
+<td><strong>44</strong></td>
+<td><strong>45</strong></td>
+<td><strong>46</strong></td>
+<td><strong>47</strong></td>
+<td>48</td>
+<td>49</td>
+<td>4A</td>
+<td>4B</td>
+<td>4C</td>
+<td>4D</td>
+<td>4E</td>
+<td>4F</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>30</strong></td>
+<td><strong>31</strong></td>
+<td><strong>32</strong></td>
+<td><strong>33</strong></td>
+<td><strong>34</strong></td>
+<td><strong>35</strong></td>
+<td><strong>36</strong></td>
+<td><strong>37</strong></td>
+<td>38</td>
+<td>39</td>
+<td>3A</td>
+<td>3B</td>
+<td>3C</td>
+<td>3D</td>
+<td>3E</td>
+<td>3F</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>20</strong></td>
+<td><strong>21</strong></td>
+<td><strong>22</strong></td>
+<td><strong>23</strong></td>
+<td><strong>24</strong></td>
+<td><strong>25</strong></td>
+<td><strong>26</strong></td>
+<td><strong>27</strong></td>
+<td>28</td>
+<td>29</td>
+<td>2A</td>
+<td>2B</td>
+<td>2C</td>
+<td>2D</td>
+<td>2E</td>
+<td>2F</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>10</strong></td>
+<td><strong>11</strong></td>
+<td><strong>12</strong></td>
+<td><strong>13</strong></td>
+<td><strong>14</strong></td>
+<td><strong>15</strong></td>
+<td><strong>16</strong></td>
+<td><strong>17</strong></td>
+<td>18</td>
+<td>19</td>
+<td>1A</td>
+<td>1B</td>
+<td>1C</td>
+<td>1D</td>
+<td>1E</td>
+<td>1F</td>
+</tr>
+<tr>
+<td>1</td>
+<td><strong>00</strong></td>
+<td><strong>01</strong></td>
+<td><strong>02</strong></td>
+<td><strong>03</strong></td>
+<td><strong>04</strong></td>
+<td><strong>05</strong></td>
+<td><strong>06</strong></td>
+<td><strong>07</strong></td>
+<td>08</td>
+<td>09</td>
+<td>0A</td>
+<td>0B</td>
+<td>0C</td>
+<td>0D</td>
+<td>0E</td>
+<td>0F</td>
+</tr>
+<tr>
+<td></td>
+<td>A</td>
+<td>B</td>
+<td>C</td>
+<td>D</td>
+<td>E</td>
+<td>F</td>
+<td>G</td>
+<td>H</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="coordinate-transformation">Coordinate Transformation</h2>
+<p>Square index by file and rank and vice versa:</p>
+<pre><code>sq0x88 = 16 * rank07 + file07;
+file07 = sq0x88 &amp; 7;
+rank07 = sq0x88 &gt;&gt; 4; // sq0x88 / 16</code></pre>
+<p>0x88 index by a 0..63 8x8 square index needs to add the three upper rank bits:</p>
+<pre><code>sq0x88 = sq8x8 + (sq8x8 &amp; ~7);</code></pre>
+<p>The other way around, 8x8 square index by 0x88 coordinates, takes three operations, and adds the three lower bits with possible overflow into empty bit 3, finally shifting right one: <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
+<pre><code>sq8x8 = (sq0x88 + (sq0x88 &amp; 7)) &gt;&gt; 1;</code></pre>
+<p>Of course, both calculations might be replaced by small lookup tables.</p>
+<h2 id="applications">Applications</h2>
+<h3 id="off-the-board">Off the Board</h3>
+<p>'Off the board' detection in <a href="/Move_Generation">move generation</a> becomes cheaper and faster. Both nibbles, rank and file, utilize the redundant upper bit to indicate invalid squares. While adding certain offsets to a <a href="/Origin_Square">from square</a>, to determine a <a href="/Target_Square">destination square</a> - a cheap 'and' by 0x88 is appropriate for an 'off the board' test:</p>
+<pre><code>if ( destination &amp; 0x88) goto invalid square</code></pre>
+<p>That is the trick with 0x88 - but it gains by an additional property.</p>
+<h3 id="square-relations"><span id="SquareRelations"></span>Square Relations</h3>
+<p>The difference of valid 0x88 coordinates A and B is uniquely with respect to <a href="/Distance">distance</a> and <a href="/Direction">direction</a>, which is not true for classical packed three bit rank and file coordinates (for instance -+7 may occur on <a href="/Ranks">ranks</a>, <a href="/Anti-Diagonals">anti-diagonals</a>). That makes lookups for <a href="/Distance">distance</a>, <a href="/Manhattan-Distance">Manhattan-distance</a>, possible piece attacks and that like, much more resource friendly. While classical square coordinates in the 0..63 range require 4K (64*64) sized tables, the 0x88 difference takes 1/16 or 256 sized tables - or even 16 less.</p>
+<p>An offset of 119 (0x77 as max valid square index) is added, to make +-119 a 0..238 range (size of 240 for alignment reasons).</p>
+<pre><code>0x88Diff = 0x77 + A - B</code></pre>
+<h3 id="attack-lookup">Attack Lookup</h3>
+<p>Looking up pre-calculated tables of 240 elements by 0x88diff of from- and to-squares is useful in determining possible attacks of certain piece-types. For a most dense tables, each piece-type might be represented set-wise by a certain bit-position. Distant squares of <a href="/Sliding_Pieces">sliding pieces</a> need to check whether squares are obstructed, though.</p>
+<h2 id="history">History</h2>
+<h3 id="hyatt">Hyatt</h3>
+<p>In a reply to <a href="/Valavan_Manohararajah">Valavan Manohararajah</a> in 1996, <a href="/Robert_Hyatt">Robert Hyatt</a> mentioned he used 0x88 in <a href="/Cray_Blitz">Cray Blitz</a>, and changed to <a href="/Bitboards">bitboards</a> in the 1982-83 time-frame <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> . He further said in a 1999 <a href="/CCC">CCC</a> post, the algorithm has been around basically forever and he first saw it in another chess program written around 1970 (<a href="/Coko">Coko</a>) <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>.</p>
+<h3 id="kuipers">Kuipers</h3>
+<p><a href="/Tiny_Chess_86">Tiny Chess 86</a> by <a href="/Jan_Kuipers">Jan Kuipers</a> used 88H for off the board test, as published in a June 1981 <em>Databus</em> article with some <a href="/8086">8086</a> <a href="/Assembly">assembly</a> code snippets <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> :</p>
+<pre><code>0634 03FA         109            ADD    DI,DX           ;CALC. SQ. MOVING TO
+0636 F7C78800     110            TEST   DI,88H          ;OFF BOARD?
+063A 750C         111            JNZ    G4              ;YES</code></pre>
+<h3 id="wiereyn">Wiereyn</h3>
+<p>In his 1985 paper <em>Inventive Problem Solving</em> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> , <a href="/Paul_Wiereyn">Paul Wiereyn</a> described coordinates with nibbles for ranks and files inside a <a href="/Byte">byte</a>, and used such square differences (mod 256) as table-index to determine <a href="/Pin">pinned pieces</a> and <a href="/Discovered_Check">discovered checks</a> in his problem solving program:</p>
+<p>It is obvious to chess-players that a piece when pinned should not be allowed to move out of the direction in which it is pinned. Hence, as a preliminary, we calculate, in one byte, the difference between the coordinates of the piece about to be moved and one's own King, e.g.</p>
+<pre><code>Rd5 - Kf5 &lt;=&gt; 45 - 65 = E0, hexadecimals and reduction modulo 256
+being implied throughout.</code></pre>
+<p>The difference, E0 say, serves to enter a table T. The tabular value T[E0] so found, when zero, indicates non-collinearity (the pieces are not on the same rank, file or (co-)diagonal). If not zero, the value codes the direction of collinearity, i.e., the pinning direction. In our example the value T[E0] = F0, stands for due West.</p>
+<h3 id="kittinger">Kittinger</h3>
+<p>About its origin <a href="/Bruce_Moreland">Bruce Moreland</a> wrote <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> :</p>
+<p><code>When I was at the Hong Kong </code><a href="/WCCC_1995"><code>WCCC in 1995</code></a><code>, I had some conversations with </code><a href="/David_Kittinger"><code>David Kittinger</code></a><code>. He told me about a </code><a href="/Move_Generation"><code>move generation scheme</code></a><code>, whose name I promptly forgot. When I came back home, I explained this scheme online many times. Since I didn't know the name, I couldn't give it the proper name, and it kind of acquired a name. The name that seems to have stuck is "0x88", which is means </code><a href="https://en.wikipedia.org/wiki/Hexadecimal"><code>hexadecimal</code></a><code> 88. The reason it's called 0x88 is that this constant is critical in the implementation of the scheme.</code></p>
+<p><a href="/David_Kittinger">David Kittinger</a> further in 2012 <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a></p>
+<p><code>I was told this technique at I believe the </code><a href="/WMCCC_1981"><code>Travemunde world championship</code></a><code>. It just involved using 0rrr0ccc encoding. The advantage was that (sq + offset) &amp; 0x88 would tell you if off board. Many of the devices I programmed on took longer to read ram than test a register result. Also, immediate test for &lt; 0 (byte value) could test for off board, so faster off board test than accessing a 'collar' of off board values. The fellow who told me this attributed it to </code><a href="/Mikhail_Botvinnik"><code>Michael Botvinnik</code></a><code> (Former USSR World Champion) as something used in a version of </code><a href="/Kaissa"><code>Kaissa</code></a><code> </code><a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a><code>. However, when I was riding an elevator w/Mr. Botvinnik and asked him about this to confirm the derivation, one of his handlers asked that I not ask Mr. Botvinnik any questions.</code></p>
+<p><code>... and on the utilization of </code><a href="/Memory"><code>Memory</code></a><code> </code><a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a></p>
+<p><code>Another advantage of the 0rrr0ccc was that I put the 'ioboard' at 0rrr1ccc so basically used 1/2 a page of ram efficiently for both boards. I would then have the piece table at 1000wwww and 1000bbbb for the white and black pieces respectively just to pack things in.</code></p>
+<p><code>... and the difference of 0x88 coordinates </code><a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a></p>
+<p><code>The whole 0x88 is pretty obvious. In fact, another big benefit is that you could take the difference of two sqs and use that to look into a table to see the legal piece types that could be attackers. Having bit 3 cleared prevented wrap around on this look up. Hence, for most my programs the basic capture routine iterated from </code><a href="/MVV-LVA"><code>largest to smallest captured piece</code></a><code>, using smallest to largest capturing piece, taking the difference of the sqs, looking up in att_table and seeing if nz, if nz, then if &amp; with attacker type bit nz then just had to check if </code><a href="/Sliding_Pieces"><code>slider</code></a><code> and had </code><a href="/Square_Attacked_By"><code>path clear</code></a><code>. Of course, w and b pawns had different </code><a href="/Pieces"><code>type</code></a><code> bits. Made for a decently fast and ordered </code><a href="/Quiescence_Search"><code>capture search</code></a><code>.</code></p>
+<h2 id="conclusion">Conclusion</h2>
+<p>A combination of 0x88 and <a href="/10x12_Board">10x12 Board</a> with surrounded ranks, that is 16x12 or even 16x16 for a symmetric treatment of files and ranks (or 15x12, 15x15) seems slightly more efficient than pure 0x88 aka 16x8, making the "off the board" index condition almost redundant, since it can be combined with the coding of the guard or sentinal squares <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a> <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a> <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a> <a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a> .</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Rajah">0x88 in Rajah</a></li>
+<li><a href="/Square_Attacked_By">0x88 meets Bitboards</a></li>
+<li><a href="/CPW-Engine">CPW-Engine</a>, the didactical 0x88 chess engine</li>
+</ul>
+<p><a href="/CPW-Engine_0x88_math">CPW-Engine_0x88_math</a></p>
+<p><a href="/CPW-Engine_board%280x88%29">CPW-Engine_board(0x88)</a></p>
+<p><a href="/CPW-Engine_move%280x88%29">CPW-Engine_move(0x88)</a></p>
+<p><a href="/CPW-Engine_movegen%280x88%29">CPW-Engine_movegen(0x88)</a></p>
+<ul>
+<li><a href="/Intersection_Squares">Intersection Squares</a> as application of 0x88 coordinates</li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Jan_Kuipers">Jan Kuipers</a> (<strong>1981</strong>). <em>Tiny Chess 86 - Een schaakprogramma voor de 8088/8086</em>. <a href="http://home.kpn.nl/a.dikker1/museum/databus.html">Databus</a> 06-81, <a href="http://www.schaakcomputers.nl/hein_veldhuis/database/files/06-1981,%20Databus,%20Jan%20Kuipers,%20Tiny%20Chess%2086.pdf">pdf</a> hosted by <a href="/Hein_Veldhuis">Hein Veldhuis</a></li>
+<li><a href="/Paul_Wiereyn">Paul Wiereyn</a> (<strong>1985</strong>). <em>Inventive Problem Solving</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 8, No. 4</a></li>
+<li><a href="/Valavan_Manohararajah">Valavan Manohararajah</a> (<strong>1997</strong>) <em>Rajah: The Design of a Chess Program.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 20, No. 2</a> » <a href="/Rajah">Rajah</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/b-LPW2cvbSU/X7c__HhVXh8J">0x88?</a> by <a href="/Jan_Eric_Larsson">Jan Eric Larsson</a>, <a href="/Computer_Chess_Forums">rgcc</a>, August 31, 1995</li>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/MrZsomJL5wU/wvw97iD-PncJ">What is X88 in computing chess ?</a> by Guido Stepken, <a href="/Computer_Chess_Forums">rgcc</a>, April 07, 1996</li>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/qzs01XFt_6I/yyX6rwauT8UJ">X88 board representations</a> by <a href="/Valavan_Manohararajah">Valavan Manohararajah</a>, <a href="/Computer_Chess_Forums">rgcc</a>, April 17, 1996</li>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/NgHWjDZ43H8/iSJ-WR8BtLYJ">Sane numbers</a> by <a href="/Martin_Borriss">Martin Borriss</a>, <a href="/Computer_Chess_Forums">rgcc</a>, June 29, 1996</li>
+</ul>
+<p><a href="https://groups.google.com/d/msg/rec.games.chess.computer/NgHWjDZ43H8/FUl1b9ZjCMIJ">Re: Sane numbers</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Computer_Chess_Forums">rgcc</a>, June 29, 1996</p>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/1WniS0H_7UY/ObJXK3HKgjEJ">Help with x88</a> by John Stoneham, <a href="/Computer_Chess_Forums">rgcc</a>, June 30, 1996</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=39080">0x88</a> by Daniel Clausen, <a href="/CCC">CCC</a>, January 11, 1999</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=114377">Re: Question:1.hashtable 2.board 3.C</a> by <a href="/Christophe_Théron">Christophe Théron</a>, <a href="/CCC">CCC</a>, June 13, 2000</li>
+</ul>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=114385">Re: Question:1.hashtable 2.board 3.C</a> by <a href="/Eugene_Nalimov">Eugene Nalimov</a>, <a href="/CCC">CCC</a>, June 13, 2000</p>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=114438">0x88 is not so smart</a> by <a href="/Christophe_Théron">Christophe Théron</a>, <a href="/Computer_Chess_Forums">CCC</a>, June 13, 2000</p>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=178465">Fastest Conversion from 0x88 board to 8x8 board representation</a> by <a href="/Artem_Petakov">Artem Pyatakov</a>, <a href="/CCC">CCC</a>, July 06, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=262916">0x88 revisited</a> by <a href="/Tony_van_Roon-Werten">Tony Werten</a>, <a href="/CCC">CCC</a>, November 01, 2002</li>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/fVq45InKdyc/SZMHX1Efa20J">0x88 and mailbox</a> by Jean-François Gazet, <a href="/Computer_Chess_Forums">rgcc</a>, December 03, 2003</li>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/1FaB4tZT0l4/z9ZHuyq0Gg4J">Board representation 0x88 or bitboard</a> by Rohit, <a href="/Computer_Chess_Forums">rgcc</a>, October 03, 2004</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=2407&amp;p=11195#p11109">Re: Fruit's Board Representation?</a> by <a href="/Fabien_Letouzey">Fabien Letouzey</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, April 28, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=481916">Simple 0x88 move generation source code</a> by <a href="/Federico_Andrés_Corigliano">Federico Corigliano</a>, <a href="/CCC">CCC</a>, January 24, 2006</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=488440">0x88 findings</a> by Sean Mintz, <a href="/CCC">CCC</a>, February 21, 2006</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=4442">Board representation : 0x88 or 10x12 ?</a> by Philippe, <a href="/Computer_Chess_Forums">Winboard Forum</a>, March 02, 2006 » <a href="/10x12_Board">10x12 Board</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=17361">is there a 10x8 equivalent of 0x88</a> by <a href="/Pawel_Koziol">Pawel Koziol</a>, <a href="/CCC">CCC</a>, October 26, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=22316">O88 chess</a> by <a href="/William_H._Rogers">William H. Rogers</a>, <a href="/CCC">CCC</a>, July 12, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=24466">0x88 board representation : basic question from beginner</a> by Von_Dingle, <a href="/CCC">CCC</a>, October 18, 2008</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=50635">0x88 FRC castle questions</a> by <a href="/Daniel_Uranga">Daniel Uranga</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, December 12, 2009 » <a href="/Chess960">Chess960</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=33276">0x88 move generation</a> by Jorma Nieminen, <a href="/CCC">CCC</a>, March 15, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=34708">Problem with Move Gen in 0x88</a> by Suji, <a href="/CCC">CCC</a>, June 04, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=462693&amp;t=43447">Re: Hello all</a> by <a href="/David_Kittinger">Dave Kittinger</a>, <a href="/CCC">CCC</a>, April 26, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48173">0x88 with pointers</a> by <a href="/Robert_Pope">Robert Pope</a>, <a href="/CCC">CCC</a>, June 01, 2013</li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62279">Recommended board representation for a rookie</a> by Fred Hamilton, <a href="/CCC">CCC</a>, November 26, 2016</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=62279&amp;start=6">Re: Recommended board representation for a rookie</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, November 26, 2016</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62657">What're advantages of board 16x12?</a> by <a href="/Pham_Hong_Nguyen">Nguyen Pham</a>, <a href="/CCC">CCC</a>, December 30, 2016</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Board_representation_%28chess%29#0x88_method">0x88 method, Board representation (chess) from Wikipedia</a></li>
+<li><a href="http://web.archive.org/web/20070716111804/www.brucemo.com/compchess/programming/0x88.htm">0x88 Move Generation</a> by <a href="/Bruce_Moreland">Bruce Moreland</a></li>
+<li><a href="http://www.craftychess.com/hyatt/boardrep.html">Chess board representations</a> by <a href="/Robert_Hyatt">Robert Hyatt</a></li>
+<li><a href="http://john.stanback.net/zarkov/zarkov_methods.html">How Zarkov Plays Chess</a> by <a href="/John_Stanback">John Stanback</a></li>
+<li><a href="https://wannabe.guru.org/scott/hobbies/chess/">Monsoon/Typhoon Homepage</a> by <a href="/Scott_Gasch">Scott Gasch</a></li>
+<li><a href="https://mediocrechess.blogspot.com/2006/12/0x88-representation.html">The 0x88 representation</a> from <a href="http://mediocrechess.varten.org/index.html">Mediocre Chess</a> by <a href="/Jonatan_Pettersson">Jonatan Pettersson</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Vector_Attacks">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://www.stmintz.com/ccc/index.php?id=178502">Re: Fastest Conversion from 0x88 board to 8x8 board representation</a> by Ricardo Gibert, <a href="/CCC">CCC</a>, July 06, 2001<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://groups.google.com/d/msg/rec.games.chess.computer/qzs01XFt_6I/Usj8w4SnPjMJ">Re: X88 board representations</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Computer_Chess_Forums">rgcc</a>, April 17, 1996<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://www.stmintz.com/ccc/index.php?id=39085">Re: 0x88</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, January 11, 1999<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="/Jan_Kuipers">Jan Kuipers</a> (<strong>1981</strong>). <em>Tiny Chess 86 - Een schaakprogramma voor de 8088/8086</em>. <a href="http://home.kpn.nl/a.dikker1/museum/databus.html">Databus</a> 06-81, <a href="http://www.schaakcomputers.nl/hein_veldhuis/database/files/06-1981,%20Databus,%20Jan%20Kuipers,%20Tiny%20Chess%2086.pdf">pdf</a> hosted by <a href="/Hein_Veldhuis">Hein Veldhuis</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="/Paul_Wiereyn">Paul Wiereyn</a> (<strong>1985</strong>). <em>Inventive Problem Solving</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 8, No. 4</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="http://web.archive.org/web/20070716111804/www.brucemo.com/compchess/programming/0x88.htm">0x88 Move Generation</a> by <a href="/Bruce_Moreland">Bruce Moreland</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=462693&amp;t=43447">Re: Hello all</a> by <a href="/David_Kittinger">Dave Kittinger</a>, <a href="/CCC">CCC</a>, April 26, 2012<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><code>presumably in </code><a href="/Pioneer"><code>Pioneer</code></a><code>, see also </code><a href="/Boris_Stilman"><code>Boris Stilman</code></a><code> (</code><strong><code>1994</code></strong><code>). </code><em><code>A Linguistic Geometry of the Chess Model</code></em><code>. </code><a href="/Advances_in_Computer_Chess_7"><code>Advances in Computer Chess 7</code></a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=462700&amp;t=43447"><code>Re: Hello all</code></a><code>by</code><a href="/David_Kittinger"><code>Dave Kittinger</code></a><code>, </code><a href="/CCC"><code>CCC</code></a><code>, April 26, 2012</code><a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=462734&amp;t=43447"><code>Re: Hello all</code></a><code>by</code><a href="/David_Kittinger"><code>Dave Kittinger</code></a><code>, </code><a href="/CCC"><code>CCC</code></a><code>, April 27, 2012</code><a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="https://www.stmintz.com/ccc/index.php?id=114377">Re: Question:1.hashtable 2.board 3.C</a> by <a href="/Christophe_Théron">Christophe Théron</a>, <a href="/Computer_Chess_Forums">CCC</a>, June 13, 2000<a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=2407&amp;p=11195#p11109">Re: Fruit's Board Representation?</a> by <a href="/Fabien_Letouzey">Fabien Letouzey</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, April 28, 2005<a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="/Fritz_Reul">Fritz Reul</a> (<strong>2009</strong>). <em>New Architectures in Computer Chess</em>. Ph.D. Thesis, 2.2.1 <em>Computer Chessboard Representation</em><a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=62279&amp;start=6">Re: Recommended board representation for a rookie</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, November 26, 2016<a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Kittinger_Quotes">Kittinger Quotes</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/0x88">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,912 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stockfish - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Stockfish</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Engines">Engines</a> * Stockfish</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="/assets/Stockfish-logo.png" alt="Stockfish logo" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Stockfish logo <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span> <span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="https://stockfishchess.org/" target="_blank" rel="noopener noreferrer"><img src="/assets/Stockfish12-logo.png" alt="Stockfish 12 logo" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Stockfish 12 logo <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></span></span></p>
+<p><strong>Stockfish</strong>,<br />
+an <a href="/UCI">UCI</a> compatible <a href="/Category:Open_Source">open source</a> chess engine developed by <a href="/Tord_Romstad">Tord Romstad</a>, <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/Joona_Kiiski">Joona Kiiski</a> and <a href="/Gary_Linscott">Gary Linscott</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>, licensed under the <a href="/Free_Software_Foundation">GPL v3.0</a>. Marco forked the project from version 2.1 of Tord's engine <a href="/Glaurung">Glaurung</a>, first announced by Marco in November 8, 2008 <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>, and in early 2009 Joona's <a href="/Smaug">Smaug</a>, a further Glaurung 2.2 derivative, was incorporated <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>. Starting among the top twenty engines, Stockfish has quickly climbed in <a href="/Playing_Strength">strength</a> to become the world strongest chess entity as of 2018 - at least concerning the <a href="/AlphaZero">AlphaZero</a> hype <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>, public available chess entity. The name "Stockfish" reflects the ancestry of the engine. Tord is Norwegian and Marco Italian, and there is a long history of <a href="https://en.wikipedia.org/wiki/Stockfish">stockfish</a> trade from Norway to Italy (to Marco's home town of <a href="https://en.wikipedia.org/wiki/Vicenza">Vicenza</a>, in fact). Stockfish is also referred to as another famous "little fish", the then strongest chess engine <a href="/Rybka">Rybka</a>. In 2011, Marco Costalba and Joona Kiiski stepped down as Stockfish maintainers <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>. From that, the project is being developed and maintained by the <a href="/Category:Stockfish_Contributor">Stockfish community</a>.</p>
+<p>A synergy effect with the <a href="/Shogi">Shogi</a> community led to the promising branch of <a href="/Stockfish_NNUE">Stockfish NNUE</a>, courtesy of <a href="/Hisayori_Noda">Nodchip</a>, who introduced <a href="/NNUE">NNUE</a> to Stockfish in 2019 <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a>. On September 02, 2020, <strong>Stockfish 12</strong> was released with a huge jump in <a href="/Playing_Strength">playing strength</a> due to NNUE and further <a href="/Automated_Tuning">tuning</a> of the engine <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a>. The release of <strong>Stockfish 13</strong> on February 19, 2021, has been triggered by the start of sales of the <a href="/Fat_Fritz">Fat Fritz 2</a> engine by <a href="/ChessBase">ChessBase</a>, based on a recent development version of Stockfish with minor modifications <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a>. <strong>Stockfish 14</strong>, released on July 02, 2021, further improved due to efforts by <a href="/Tomasz_Sobczyk">Tomasz Sobczyk</a> and <a href="/Gary_Linscott">Gary Linscott</a> in designing a new <a href="/Stockfish_NNUE">NNUE architecture</a> in conjunction with a <a href="/GPU">GPU</a> accelerated trainer written in <a href="https://en.wikipedia.org/wiki/PyTorch">PyTorch</a>. Further, the collaboration with the <a href="/Leela_Chess_Zero">Leela Chess Zero</a> team payed off, in providing billions of positions to train the new NNUE <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a>.</p>
+<p><strong>Stockfish 16</strong>, released June 30, 2023, removes the classical <a href="/Evaluation">evaluation</a> from the engine and focuses on <a href="/NNUE">NNUE</a> neural networks.<a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#platforms">Platforms</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#command-line-interface">Command Line Interface</a></li>
+<li><a href="#stockfish-with-built-in-graphical-user-interface">Stockfish with built-in Graphical User Interface</a></li>
+</ol>
+</details></li>
+<li><a href="#fishtest">Fishtest</a></li>
+<li><a href="#evaluation-guide">Evaluation Guide</a></li>
+<li><a href="#tournament-play">Tournament Play</a></li>
+<li><a href="#gmrybka-vs-stockfish">GM+Rybka vs. Stockfish</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#selected-features">Selected Features</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#board-representation">Board Representation</a></li>
+<li><a href="#search">Search</a></li>
+<li><a href="#evaluation">Evaluation</a></li>
+<li><a href="#classical-evaluation">Classical Evaluation</a></li>
+<li><a href="#misc">Misc</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#release-dates">Release Dates</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2008">2008</a></li>
+<li><a href="#2009">2009</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+<li><a href="#2025-">2025 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#ports">Ports</a></li>
+<li><a href="#derivatives">Derivatives</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#authors">Authors</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#founders-of-the-stockfish-project-and-fishtest-infrastructure">Founders of the Stockfish project and Fishtest infrastructure</a></li>
+<li><a href="#authors-and-inventors-of-nnue-training-nnue-port">Authors and inventors of NNUE, training, NNUE port</a></li>
+<li><a href="#all-other-authors-of-the-code">All other authors of the code</a></li>
+</ol>
+</details></li>
+<li><a href="#elo-progress">Elo Progress</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2008-">2008 ...</a></li>
+<li><a href="#2010--1">2010 ...</a></li>
+<li><a href="#2015--1">2015 ...</a></li>
+<li><a href="#2020--1">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#blog-posts">Blog Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2014">2014</a></li>
+<li><a href="#2015--2">2015 ...</a></li>
+<li><a href="#2020--2">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#chess-engine">Chess Engine</a></li>
+<li><a href="#issues">Issues</a></li>
+<li><a href="#pull-requests">Pull Requests</a></li>
+<li><a href="#testing">Testing</a></li>
+<li><a href="#rating-lists">Rating Lists</a></li>
+<li><a href="#matches">Matches</a></li>
+<li><a href="#interviews">Interviews</a></li>
+<li><a href="#videos">Videos</a></li>
+<li><a href="#misc-1">Misc</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="platforms">Platforms</h2>
+<p>Since Stockfish is written in <a href="/Cpp">C++</a>, it may be compiled and built for various processors and operating systems. The main source code of Stockfish could be compiled directly into <a href="/CLI">Command Line Interface</a> program. Some programmers have added code to change it into a <a href="/GUI">Graphical User Interface</a> one, which may be compulsory to run on some platforms such as iOS.</p>
+<h3 id="command-line-interface"><a href="/CLI">Command Line Interface</a></h3>
+<ul>
+<li>Stockfish for <a href="/Android">Android</a>, <a href="/Linux">Linux</a>, <a href="/Mac_OS">macOS</a>, and <a href="/Windows">Windows</a> was officially built by the developer team and published on both <a href="https://stockfishchess.org/">Stockfish website</a> and <a href="https://github.com/official-stockfish/Stockfish">Stockfish GitHub</a></li>
+</ul>
+<h3 id="stockfish-with-built-in-graphical-user-interface">Stockfish with built-in <a href="/GUI">Graphical User Interface</a></h3>
+<p>We list only some programs that are popular and license-compliant (released with source code):</p>
+<ul>
+<li>Stockfish for <a href="/Mac_OS">macOS</a> was also built and published on Mac App Store by <a href="/Daylen_Yang">Daylen Yang</a>, who is also responsible for the Stockfish website</li>
+<li>Stockfish for iOS was built by Tord Romstad <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a>.</li>
+</ul>
+<p><span id="TestingFramework"></span><span id="Fishtest"></span></p>
+<ul>
+<li>Stockfish for iOS and watchOS was built with the app BanksiaGUI for iOS by <a href="/Pham_Hong_Nguyen">Nguyen Pham</a></li>
+<li>Stockfish for <a href="/Android">Android</a> was built with the app Droidfish by <a href="/Peter_Österlund">Peter Österlund</a></li>
+</ul>
+<h2 id="fishtest">Fishtest</h2>
+<p>The Stockfish Testing Framework dubbed <strong>Fishtest</strong> <a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a> is a <a href="https://en.wikipedia.org/wiki/Web_application">web application</a> written by <a href="/Gary_Linscott">Gary Linscott</a> <a href="#fn15" class="footnote-ref" id="fnref15" role="doc-noteref"><sup>15</sup></a> <a href="#fn16" class="footnote-ref" id="fnref16" role="doc-noteref"><sup>16</sup></a>, based on a <a href="https://en.wikipedia.org/wiki/SETI@home">SETI@home</a> kind of <a href="https://en.wikipedia.org/wiki/Volunteer_computing">volunteer computing</a>. Fishtest is mainly written in <a href="/Python">Python</a> under the <em>Pyramid Application Development Framework</em> <a href="#fn17" class="footnote-ref" id="fnref17" role="doc-noteref"><sup>17</sup></a>, and distributes games across different machines to reduce the test latency and increase throughput. Started in early 2013 with Stockfish 3.0, Fishtest has hundreds of contributors, as of July 2024, 2226 testers and 363 developers <a href="#fn18" class="footnote-ref" id="fnref18" role="doc-noteref"><sup>18</sup></a> active in testing ideas and tweaks <a href="#fn19" class="footnote-ref" id="fnref19" role="doc-noteref"><sup>19</sup></a>, to make Stockfish the strongest chess entity of the world <a href="#fn20" class="footnote-ref" id="fnref20" role="doc-noteref"><sup>20</sup></a>. <span id="EvaluationGuide"></span></p>
+<h2 id="evaluation-guide">Evaluation Guide</h2>
+<p>Since April 2017 the interactive <strong>Stockfish Evaluation Guide</strong> is available to explore Stockfish's <a href="/Evaluation">evaluation</a> with a <a href="/JavaScript">JavaScript</a> implementation running in a <a href="https://en.wikipedia.org/wiki/Web_browser">browser</a> <a href="#fn21" class="footnote-ref" id="fnref21" role="doc-noteref"><sup>21</sup></a>. One may enter a <a href="/Forsyth-Edwards_Notation">FEN</a> string of a <a href="/Chess_Position">position</a>, to get the resulting <a href="/Score">score</a> of the main evaluation term considering the <a href="/Game_Phases">game phases</a> within its <a href="/Tapered_Eval">tapered evaluation</a>, and may navigate through the tree of subterms and features with its particular characteristics for the given position <a href="#fn22" class="footnote-ref" id="fnref22" role="doc-noteref"><sup>22</sup></a>, also supporting <a href="/Stockfish_NNUE">Stockfish NNUE</a> nets <a href="#fn23" class="footnote-ref" id="fnref23" role="doc-noteref"><sup>23</sup></a>.</p>
+<h2 id="tournament-play">Tournament Play</h2>
+<p>Stockfish is top contender of the prestigious <a href="/TCEC">Top Chess Engines Competition (TCEC)</a>, reaching the superfinals since <a href="/TCEC_Season_4">season 4</a>, and established its world number one status in winning TCECs, leaving its commercial rivals <a href="/Komodo">Komodo</a> and <a href="/Houdini">Houdini</a> behind. Since <a href="/TCEC_Season_14">season 14</a> in early 2019, Stockfish competes with the <a href="/Deep_Learning">deep learning</a> <a href="/Leela_Chess_Zero">Leela Chess Zero</a> engines, whose <a href="/Playing_Strength">playing strength</a> triggered a motivation boost in the developing community to improve Stockfish further. <span id="Matches"></span></p>
+<h2 id="gmrybka-vs-stockfish">GM+Rybka vs. Stockfish</h2>
+<p>On July 19, 2014, Stockfish 5 played a four-game match versus <a href="https://en.wikipedia.org/wiki/Daniel_Naroditsky">Daniel Naroditsky</a> plus <a href="/Rybka">Rybka 3</a> (2008), 45 minutes plus 30-second increment. Stockfish won 3½ - ½ <a href="#fn24" class="footnote-ref" id="fnref24" role="doc-noteref"><sup>24</sup></a> <a href="#fn25" class="footnote-ref" id="fnref25" role="doc-noteref"><sup>25</sup></a> . A few weeks later the experiment continued with <a href="https://en.wikipedia.org/wiki/Hikaru_Nakamura">Hikaru Nakamura</a> in <a href="https://en.wikipedia.org/wiki/Burlingame,_California">Burlingame, California</a> <a href="#fn26" class="footnote-ref" id="fnref26" role="doc-noteref"><sup>26</sup></a> . Supported two games by Rybka 3, Nakamura lost ½ - 1½, two games with pawn odds (Stockfish both Black without h- and b-pawn) ended ½ - 1½ in favour of Stockfish 5 as well. It played the latest development build compiled for <a href="/Mac_OS">OS X</a> running on a 3 GHz 8-Core <a href="/Macintosh">Mac Pro</a> <a href="#fn27" class="footnote-ref" id="fnref27" role="doc-noteref"><sup>27</sup></a> .</p>
+<h2 id="selected-features">Selected Features</h2>
+<p><a href="#fn28" class="footnote-ref" id="fnref28" role="doc-noteref"><sup>28</sup></a></p>
+<h3 id="board-representation"><a href="/Board_Representation">Board Representation</a></h3>
+<ul>
+<li><a href="/8x8_Board">8x8 Board</a></li>
+<li><a href="/Bitboards">Bitboards</a> with <a href="/Square_Mapping_Considerations">Little-Endian Rank-File Mapping (LERF)</a></li>
+<li><a href="/Magic_Bitboards">Magic Bitboards</a></li>
+</ul>
+<p><a href="/BMI2">BMI2 - PEXT Bitboards</a> (not recommend for <a href="/AMD">AMD</a> <a href="https://en.wikipedia.org/wiki/Ryzen">Ryzen</a> <a href="#fn29" class="footnote-ref" id="fnref29" role="doc-noteref"><sup>29</sup></a> prior to <a href="https://en.wikipedia.org/wiki/Zen_3">Zen 3</a>)</p>
+<ul>
+<li><a href="/Piece-Lists">Piece-Lists</a> until Stockfish 12 <a href="#fn30" class="footnote-ref" id="fnref30" role="doc-noteref"><sup>30</sup></a> <a href="#fn31" class="footnote-ref" id="fnref31" role="doc-noteref"><sup>31</sup></a> <a href="#fn32" class="footnote-ref" id="fnref32" role="doc-noteref"><sup>32</sup></a></li>
+</ul>
+<h3 id="search"><a href="/Search">Search</a></h3>
+<ul>
+<li><a href="/Iterative_Deepening">Iterative Deepening</a></li>
+<li><a href="/Aspiration_Windows">Aspiration Windows</a></li>
+<li><a href="/Improving">Improving Heuristic</a></li>
+<li><a href="/Parallel_Search">Parallel Search</a> using <a href="/Thread">Threads</a>
+<ul>
+<li><a href="/Young_Brothers_Wait_Concept">YBWC</a> prior to Stockfish 7</li>
+<li><a href="/Lazy_SMP">Lazy SMP</a> since Stockfish 7, January 2016</li>
+</ul></li>
+<li><a href="/Principal_Variation_Search">Principal Variation Search</a></li>
+<li><a href="/Transposition_Table">Transposition Table</a>
+<ul>
+<li><a href="/Shared_Hash_Table">Shared Hash Table</a></li>
+<li>10 <a href="/Byte">Bytes</a> per <a href="/Transposition_Table">Entry</a>, 3 Entries per <a href="/Transposition_Table">Cluster</a></li>
+<li><a href="/Transposition_Table">Depth-preferred Replacement Strategy</a></li>
+<li>No <a href="/Node_Types">PV-Node</a> probing</li>
+<li><a href="/Memory">Prefetch</a></li>
+</ul></li>
+<li><a href="/Move_Ordering">Move Ordering</a>
+<ul>
+<li><a href="/History_Heuristic">Continuation History</a>
+<ul>
+<li><a href="/History_Heuristic">Counter Moves History</a> since Stockfish 7, January 2016 <a href="#fn33" class="footnote-ref" id="fnref33" role="doc-noteref"><sup>33</sup></a></li>
+</ul></li>
+<li><a href="/History_Heuristic">Capture History</a></li>
+<li><a href="/History_Heuristic">History Heuristic</a></li>
+<li><a href="/MVV-LVA">MVV/LVA</a></li>
+<li><a href="/Static_Exchange_Evaluation">SEE</a></li>
+</ul></li>
+<li><a href="/Selectivity">Selectivity</a>
+<ul>
+<li><a href="/Extensions">Extensions</a>
+<ul>
+<li><a href="/Singular_Extensions">Restricted Singular Extensions</a></li>
+<li><a href="/Capture_Extensions">Capture Extensions</a></li>
+</ul></li>
+<li><a href="/Pruning">Pruning</a>
+<ul>
+<li><a href="/Futility_Pruning">Futility Pruning</a></li>
+<li><a href="/Futility_Pruning">Move Count Based Pruning</a></li>
+<li><a href="/Null_Move_Pruning">Null Move Pruning</a>
+<ul>
+<li><a href="/Depth_Reduction_R">Dynamic Depth Reduction</a> based on <a href="/Depth">depth</a> and <a href="/Score">value</a></li>
+<li><a href="/Reverse_Futility_Pruning">Static Null Move Pruning</a></li>
+<li><a href="/Null_Move_Pruning">Verification search</a> at high depths</li>
+</ul></li>
+<li><a href="/ProbCut">ProbCut</a></li>
+<li><a href="/Static_Exchange_Evaluation">SEE Pruning</a></li>
+</ul></li>
+<li><a href="/Reductions">Reductions</a>
+<ul>
+<li><a href="/Late_Move_Reductions">Late Move Reductions</a></li>
+<li><a href="/Internal_Iterative_Reductions">Internal Iterative Reductions</a></li>
+<li><a href="/Razoring">Razoring</a></li>
+</ul></li>
+<li><a href="/Quiescence_Search">Quiescence Search</a></li>
+</ul></li>
+</ul>
+<h3 id="evaluation"><a href="/Evaluation">Evaluation</a></h3>
+<ul>
+<li><a href="/NNUE">NNUE</a>
+<ul>
+<li><a href="https://github.com/official-stockfish/nnue-pytorch/blob/master/docs/nnue.md#sfnnv1-architecture">SFNNv1</a> (Introduced 2020-08-06)</li>
+<li><a href="https://github.com/official-stockfish/nnue-pytorch/blob/master/docs/nnue.md#sfnnv2-architecture">SFNNv2</a> (Introduced 2021-05-18)</li>
+<li><a href="https://github.com/official-stockfish/nnue-pytorch/blob/master/docs/nnue.md#sfnnv3-architecture">SFNNv3</a> (Introduced 2021-08-15)</li>
+<li><a href="https://github.com/official-stockfish/nnue-pytorch/blob/master/docs/nnue.md#sfnnv4-architecture">SFNNv4</a> (Introduced 2022-02-10)</li>
+<li><a href="https://github.com/official-stockfish/nnue-pytorch/blob/master/docs/nnue.md#sfnnv5-architecture">SFNNv5</a> (Introduced 2022-05-14)</li>
+<li><a href="https://github.com/official-stockfish/nnue-pytorch/blob/master/docs/nnue.md#sfnnv6-architecture">SFNNv6</a> (Introduced 2023-05-31)</li>
+<li><a href="https://github.com/official-stockfish/nnue-pytorch/blob/master/docs/nnue.md#sfnnv7-architecture">SFNNv7</a> (Introduced 2023-07-01)</li>
+<li><a href="https://github.com/official-stockfish/nnue-pytorch/blob/master/docs/nnue.md#sfnnv8-architecture">SFNNv8</a> (Introduced 2023-09-22)</li>
+</ul></li>
+</ul>
+<p><em>See also</em> <a href="/Evaluation_Philosophy">Evaluation Philosophy</a> <a href="#fn34" class="footnote-ref" id="fnref34" role="doc-noteref"><sup>34</sup></a> <a href="#fn35" class="footnote-ref" id="fnref35" role="doc-noteref"><sup>35</sup></a></p>
+<h3 id="classical-evaluation">Classical <a href="/Evaluation">Evaluation</a></h3>
+<p>Classical Evaluation (traditional hand-crafted evaluation) has been removed since version 16.</p>
+<ul>
+<li><a href="/Tapered_Eval">Tapered Eval</a></li>
+<li><a href="/Score">Score Grain</a>: ~1/256 of a <a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">pawn unit</a></li>
+<li><a href="/Material">Material</a>
+<ul>
+<li><a href="/Point_Value">Point Values</a>
+<ul>
+<li><a href="/Middlegame">Midgame</a>: 198, 817, 836, 1270, 2521</li>
+<li><a href="/Endgame">Endgame</a>: 258, 846, 857, 1278, 2558</li>
+</ul></li>
+<li><a href="/Bishop_Pair">Bishop Pair</a></li>
+<li><a href="/Material_Tables">Imbalance Tables</a></li>
+<li><a href="/Material_Hash_Table">Material Hash Table</a></li>
+</ul></li>
+<li><a href="/Piece-Square_Tables">Piece-Square Tables</a></li>
+<li><a href="/Space">Space</a></li>
+<li><a href="/Mobility">Mobility</a>
+<ul>
+<li><a href="/Trapped_Pieces">Trapped Pieces</a></li>
+<li><a href="/Rook_on_Open_File">Rooks on (Semi) Open Files</a></li>
+</ul></li>
+<li><a href="/Outposts">Outposts</a></li>
+<li><a href="/Pawn_Structure">Pawn Structure</a>
+<ul>
+<li><a href="/Pawn_Hash_Table">Pawn Hash Table</a></li>
+<li><a href="/Backward_Pawn">Backward Pawn</a></li>
+<li><a href="/Doubled_Pawn">Doubled Pawn</a></li>
+<li><a href="/Isolated_Pawn">Isolated Pawn</a></li>
+<li><a href="/Duo_Trio_Quart_%28Bitboards%29">Phalanx</a></li>
+<li><a href="/Connected_Pawns">Connected Pawns</a></li>
+<li><a href="/Passed_Pawn">Passed Pawn</a></li>
+</ul></li>
+<li><a href="/King_Safety">King Safety</a>
+<ul>
+<li><a href="/King_Safety">Attacking King Zone</a></li>
+<li><a href="/King_Safety">Pawn Shelter</a></li>
+<li><a href="/King_Safety">Pawn Storm</a></li>
+<li><a href="/King_Safety">Square Control</a></li>
+</ul></li>
+<li><a href="/Evaluation_Patterns">Evaluation Patterns</a></li>
+</ul>
+<h3 id="misc">Misc</h3>
+<ul>
+<li><a href="/Chess960">Chess960</a></li>
+<li>Stockfish's Tuning Method</li>
+</ul>
+<p><a href="/SPSA">SPSA</a></p>
+<ul>
+<li><a href="/Syzygy_Bases">Syzygy Bases</a></li>
+</ul>
+<h2 id="release-dates">Release Dates</h2>
+<h3 id="2008">2008</h3>
+<ul>
+<li>Stockfish 1.0 - November 02, 2008</li>
+<li>Stockfish 1.01 - November 03, 2008</li>
+<li>Stockfish 1.1 - December 06, 2008</li>
+<li>Stockfish 1.1a - December 08, 2008</li>
+<li>Stockfish 1.2 - December 29, 2008</li>
+</ul>
+<h3 id="2009">2009</h3>
+<ul>
+<li>Stockfish 1.3 - May 02, 2009</li>
+<li>Stockfish 1.3.1 - May 03, 2009</li>
+<li>Stockfish 1.4 - July 05, 2009</li>
+<li>Stockfish 1.5 - October 04, 2009</li>
+<li>Stockfish 1.5.1 - October 11, 2009</li>
+<li>Stockfish 1.6 - December 25, 2009</li>
+<li>Stockfish 1.6.1 - December 25, 2009</li>
+<li>Stockfish 1.6.2 - December 31, 2009</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li>Stockfish 1.6.3 - February 02, 2010</li>
+<li>Stockfish 1.7 - April 08, 2010</li>
+<li>Stockfish 1.7.1 - April 10, 2010</li>
+<li>Stockfish 1.8 - July 02, 2010</li>
+<li>Stockfish 1.9 - October 02, 2010</li>
+<li>Stockfish 1.9.1 - October 05, 2010</li>
+</ul>
+<p><strong>2011</strong></p>
+<ul>
+<li>Stockfish 2.0 - January 01, 2011</li>
+<li>Stockfish 2.0.1 - January 04, 2011</li>
+<li>Stockfish 2.1 - May 04, 2011</li>
+<li>Stockfish 2.1.1 - May 08, 2011</li>
+<li>Stockfish 2.2 - December 29, 2011</li>
+</ul>
+<p><strong>2012</strong></p>
+<ul>
+<li>Stockfish 2.2.1 - January 06, 2012</li>
+<li>Stockfish 2.2.2 - January 14, 2012</li>
+<li>Stockfish 2.3 - September 15, 2012</li>
+<li>Stockfish 2.3.1 - September 22, 2012</li>
+</ul>
+<p><strong>2013</strong></p>
+<ul>
+<li>Stockfish 3 - April 30, 2013</li>
+<li>Stockfish 4 - August 20, 2013</li>
+<li>Stockfish DD - November 29, 2013</li>
+<li>Stockfish 5 - May 31, 2014</li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li>Stockfish 6 - January 27, 2015</li>
+<li>Stockfish 7 - January 02, 2016</li>
+<li>Stockfish 8 - November 01, 2016</li>
+<li>Stockfish 9 - February 01, 2018</li>
+<li>Stockfish 10 - November 29, 2018</li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li>Stockfish 11 - January 18, 2020</li>
+<li><a href="/Stockfish_NNUE">Stockfish 12</a> - September 02, 2020</li>
+<li>Stockfish 13 - February 19, 2021</li>
+<li>Stockfish 14 - July 02, 2021</li>
+<li>Stockfish 15 - April 18, 2022</li>
+<li>Stockfish 15.1 - December 04, 2022</li>
+<li>Stockfish 16 - June 30, 2023</li>
+<li>Stockfish 16.1 - February 24, 2024</li>
+<li>Stockfish 17 - September 06, 2024</li>
+</ul>
+<h3 id="2025-">2025 ...</h3>
+<ul>
+<li>Stockfish 17.1 - March 30, 2025</li>
+</ul>
+<p><span id="ports"></span></p>
+<ul>
+<li>Stockfish 18 - January 31, 2026</li>
+</ul>
+<h2 id="ports">Ports</h2>
+<ul>
+<li><a href="/AsmFish">asmFish</a></li>
+<li><a href="/CFish">CFish</a></li>
+<li><a href="/DroidFish">DroidFish</a></li>
+<li><a href="/Fat_Titz">Fat Titz</a></li>
+<li><a href="/Portfish">Portfish</a></li>
+<li><a href="/Rustfish">Rustfish</a></li>
+<li><a href="/Stockfish-js">Stockfish-js</a> <a href="#fn36" class="footnote-ref" id="fnref36" role="doc-noteref"><sup>36</sup></a></li>
+</ul>
+<p><span id="Derivatives"></span></p>
+<h2 id="derivatives">Derivatives</h2>
+<ul>
+<li><a href="/Brainfish">Brainfish</a></li>
+<li><a href="/Crystal">Crystal</a></li>
+<li><a href="/DON">DON</a></li>
+<li><a href="/Eman">Eman</a></li>
+<li><a href="/Fat_Fritz">Fat Fritz 2.0</a></li>
+<li><a href="/Houdini">Houdini</a></li>
+<li>McBrain</li>
+<li><a href="/ShashChess">ShashChess</a></li>
+<li>Sting</li>
+<li><a href="/SugaR">SugaR</a></li>
+</ul>
+<h2 id="authors">Authors</h2>
+<h3 id="founders-of-the-stockfish-project-and-fishtest-infrastructure">Founders of the Stockfish project and Fishtest infrastructure</h3>
+<ul>
+<li><a href="/Marco_Costalba">Marco Costalba</a></li>
+<li><a href="/Joona_Kiiski">Joona Kiiski</a></li>
+<li><a href="/Gary_Linscott">Gary Linscott</a></li>
+<li><a href="/Tord_Romstad">Tord Romstad</a></li>
+</ul>
+<h3 id="authors-and-inventors-of-nnue-training-nnue-port">Authors and inventors of NNUE, training, NNUE port</h3>
+<ul>
+<li><a href="/Yu_Nasu">Yu Nasu</a></li>
+<li><a href="/Motohiro_Isozaki">Motohiro Isozaki</a></li>
+<li><a href="/Hisayori_Noda">Hisayori Noda</a></li>
+</ul>
+<h3 id="all-other-authors-of-the-code">All other authors of the code</h3>
+<p>There are 196 authors, counted to version 15.1.</p>
+<ul>
+<li><a href="/Category:Stockfish_Contributor">Contributors</a></li>
+</ul>
+<h2 id="elo-progress">Elo Progress</h2>
+<p>of Stockfish in first 10 years <a href="#fn37" class="footnote-ref" id="fnref37" role="doc-noteref"><sup>37</sup></a> <span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="/assets/SfElo.png" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Evaluation_Philosophy">Evaluation Philosophy</a></li>
+<li><a href="/Glaurung">Glaurung</a></li>
+<li><a href="/Leela_Chess_Zero">Leela Chess Zero</a></li>
+<li><a href="/Raspberry_Turk">Raspberry Turk</a></li>
+<li><a href="/NNUE">NNUE</a></li>
+<li><a href="/Stockfish_NNUE">Stockfish NNUE</a>
+<ul>
+<li><a href="/Stockfish_NNUE">HalfKP</a> (Stockfish 12)</li>
+<li><a href="/Stockfish_NNUE">HalfKAv2</a> (Stockfish 14)</li>
+</ul></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Arno_Nickel">Arno Nickel</a> (<strong>2012</strong>). <em><a href="http://www.edition-marco-shop.de/epages/64079634.sf/de_DE/?ObjectPath=/Shops/64079634/Categories/Schachgeschehen/Computerschach">Die schöne neue Welt der Schachengines</a></em>. <a href="http://www.zeitschriftschach.de/">SCHACH</a> 2,3,5,6 2012, <a href="http://www.edition-marco-shop.de/WebRoot/Store14/Shops/64079634/5177/F0A3/C389/D0DD/3A71/C0A8/2935/25F6/Die_schoene_neue_Welt_der_Schachengines.pdf">pdf</a> (German) <a href="#fn38" class="footnote-ref" id="fnref38" role="doc-noteref"><sup>38</sup></a></li>
+<li>Oleg Arenz (<strong>2012</strong>). <em>Monte Carlo Chess</em>. B.Sc. thesis, <a href="/Darmstadt_University_of_Technology">Darmstadt University of Technology</a>, advisor <a href="/Johannes_Fürnkranz">Johannes Fürnkranz</a>, <a href="http://www.ke.tu-darmstadt.de/lehre/arbeiten/bachelor/2012/Arenz_Oleg.pdf">pdf</a> » <a href="/Monte-Carlo_Tree_Search">Monte-Carlo Tree Search</a></li>
+<li><a href="/Tamal_T._Biswas">Tamal T. Biswas</a>, <a href="/Kenneth_W._Regan">Kenneth W. Regan</a> (<strong>2015</strong>). <em>Quantifying Depth and Complexity of Thinking and Knowledge</em>. <a href="http://www.icaart.org/EuropeanProjectSpace.aspx?y=2015">ICAART 2015</a>, <a href="http://www.cse.buffalo.edu/~regan/papers/pdf/BiReICAART15CR.pdf">pdf</a></li>
+<li><a href="/Tamal_T._Biswas">Tamal T. Biswas</a>, <a href="/Kenneth_W._Regan">Kenneth W. Regan</a> (<strong>2015</strong>). <em>Measuring Level-K Reasoning, Satisficing, and Human Error in Game-Play Data</em>. <a href="/IEEE">IEEE</a> <a href="http://www.icmla-conference.org/icmla15/">ICMLA 2015</a>, <a href="http://www.cse.buffalo.edu/~regan/papers/pdf/BiRe15_ICMLA2015.pdf">pdf preprint</a></li>
+<li><a href="/Shu_Yokoyama">Shu Yokoyama</a>, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a>, <a href="/Tetsuro_Tanaka">Tetsuro Tanaka</a> (<strong>2015</strong>). <em>Parameter-Free Tree Style Pipeline in Asynchronous Parallel Game-Tree Search</em>. <a href="/Advances_in_Computer_Games_14">Advances in Computer Games 14</a> , <a href="http://www.graco.c.u-tokyo.ac.jp/~kaneko/papers/acg2015-yokoyama.pdf">pdf</a> » <a href="/Shu_Yokoyama">P-GPP</a></li>
+<li><a href="/Jean-Marc_Alliot">Jean-Marc Alliot</a> (<strong>2017</strong>). <em>Who is the Master</em>? <a href="/ICGA_Journal">ICGA Journal, Vol. 39, No. 1</a>, <a href="http://www.alliot.fr/CHESS/draft-icga-39-1.pdf">draft as pdf</a> <a href="#fn39" class="footnote-ref" id="fnref39" role="doc-noteref"><sup>39</sup></a></li>
+<li><a href="/Bill_Jordan">Bill Jordan</a> (<strong>2020</strong>). <em>Calculation versus Intuition: Stockfish versus Leela</em>. <a href="https://www.amazon.com/Calculation-versus-Intuition-Stockfish-Leela-ebook/dp/B08LYBQDMB/">amazon</a> » <a href="/TCEC">TCEC</a>, <a href="/Leela_Chess_Zero">Leela Chess Zero</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2008-">2008 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=24675">Stockfish 1.0</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, November 02, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=24771">Please drop Stockfish</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, November 07, 2008</li>
+</ul>
+<p><strong>2009</strong></p>
+<ul>
+<li><a href="http://wbec-ridderkerk.forumotion.com/wbec-ridderkerk-news-info-f1/stockfish-glaurung-t402.htm">Re: Stockfish - Glaurung</a> by <a href="/Tord_Romstad">Tord Romstad</a>, <a href="http://wbec-ridderkerk.forumotion.com/forum.htm">WBEC-Ridderkerk forum</a>, September 05, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=30051">Stockfish 1.5.1</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, October 08, 2009</li>
+</ul>
+<h3 id="2010--1">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=33677">Stockfish 1.7</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, April 08, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=33705">Stockfish-1.7.0 Hyper-threading Detection</a> by <a href="/Louis_Zulli">Louis Zulli</a>, <a href="/CCC">CCC</a>, April 09, 2010 » <a href="/Thread">Thread</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=33779">stockfish fail high fail low</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, April 13, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=33813">MTD experiment with stockfish 1.7.1</a> by Vratko Polák, <a href="/CCC">CCC</a>, April 15, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=33842">about stockfish and logic</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, April 17, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=34159">Stockfish - material balance/imbalance evaluation</a> by Ralph Stoesser, <a href="/CCC">CCC</a>, May 05, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=34286">Qsearch of Stockfish 1.7.1</a> by <a href="/Ferdinand_Mosca">Ferdinand Mosca</a>, <a href="/CCC">CCC</a>, May 13, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=34670">Stockfish do_move + undo_move</a> by Matthew Purland, <a href="/CCC">CCC</a>, June 02, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=34909">static null move pruning is stockfish</a> by <a href="/Tom_King">Tom King</a>, <a href="/CCC">CCC</a>, June 13, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=35186">Stockfish - single evasion extensions</a> by Ralph Stoesser, <a href="/CCC">CCC</a>, June 27, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=35246">Stockfish 1.8 JA available</a> by <a href="/Jim_Ablett">Jim Ablett</a>, <a href="/CCC">CCC</a>, July 02, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=35284">stockfish 1.8 - Eval hash gone?</a> by Edward Yu, <a href="/CCC">CCC</a>, July 04, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=35419">Stockfish Singular Extension, does it make sense?</a> by <a href="/Volker_Böhm">Volker Böhm</a>, <a href="/CCC">CCC</a>, July 08, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=35355">Stockfish 1.8 tweaks</a> by Vratko Polák, <a href="/CCC">CCC</a>, July 09, 2010</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=3&amp;t=423">Stockfish question</a> by <a href="/Ed_Schroder">Rebel</a>, <a href="/Computer_Chess_Forums">OpenChess Programming Forum</a>, July 10, 2010</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=434">Taken from CCC (Stockfish &amp; mainlines)</a> by <a href="/Ed_Schroder">Rebel</a>, <a href="/Computer_Chess_Forums">OpenChess Programming Forum</a>, July 12, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=35459">backward pawns in Stockfish</a> by Marek Kwiatkowski, <a href="/CCC">CCC</a>, July 16, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=35455">Questions for the Stockfish team</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/CCC">CCC</a>, July 16, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=35496">Stockfish 1.8 - eval cache</a> by Ralph Stoesser, <a href="/CCC">CCC</a>, July 18, 2010 » <a href="/Evaluation_Hash_Table">Evaluation Hash Table</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=35543">Stockfish null move pre-condition</a> by <a href="/Rein_Halbersma">Rein Halbersma</a>, <a href="/CCC">CCC</a>, July 22, 2010 » <a href="/Null_Move_Pruning">Null Move Pruning</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=35901">Stockfish for 39 dollars</a> by <a href="/Matthias_Gemuh">Matthias Gemuh</a>, <a href="/CCC">CCC</a>, August 26, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=36239">Stockfish 1.9 JA update available</a> by <a href="/Jim_Ablett">Jim Ablett</a>, <a href="/CCC">CCC</a>, October 02, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=36307">mobility evaluation of stockfish</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, October 09, 2010</li>
+</ul>
+<p><strong>2011</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=37399">Stockfish 2.0 Available</a> by <a href="/Jim_Ablett">Jim Ablett</a>, <a href="/CCC">CCC</a>, January 01, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=37450">Stockfish 2.0.0 tests</a> by <a href="/Harun_Taner">Harun Taner</a>, <a href="/CCC">CCC</a>, January 04, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=37468">Stockfish "Use Sleeping Threads" Test</a> by <a href="/Louis_Zulli">Louis Zulli</a>, <a href="/CCC">CCC</a>, January 05, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=37573">StockFish engine</a> by Andriy Dzyben, <a href="/CCC">CCC</a>, January 11, 2011</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=1042">Designing an analysis friendly Stockfish?</a> by Uly, <a href="/Computer_Chess_Forums">Open Chess Programming Forum</a>, January 28, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38198">Why are the Ippo derivative stronger than Stockfish?</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, 24 February, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38740">Transposition Table updates in Stockfish</a> by <a href="/Onno_Garms">Onno Garms</a>, <a href="/CCC">CCC</a>, April 12, 2011 » <a href="/Transposition_Table">Transposition Table</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38760">Stockfish random generator (rkiss.h)</a> by <a href="/Martin_Sedlak">Martin Sedlak</a>, <a href="/CCC">CCC</a>, Apr 15, 2011 » <a href="/Bob_Jenkins">Bob Jenkins</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=39169">futility pruning in stockfish</a> by <a href="/Engin_Üstün">Engin Üstün</a>, <a href="/CCC">CCC</a>, May 25, 2011 » <a href="/Futility_Pruning">Futility Pruning</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=39214">Stockfish clones in the AppStore: it's becoming a plague...</a> by <a href="/Julien_Marcel">Julien Marcel</a>, <a href="/CCC">CCC</a>, May 28, 2011 » <a href="/Category:Clone">Clones</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=39346">Root node search in Stockfish</a> by <a href="/Onno_Garms">Onno Garms</a>, <a href="/CCC">CCC</a>, June 12, 2011 » <a href="/Move_Ordering">Move Ordering</a>, <a href="/Root">Root</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40562">Grandmaster prefers Stockfish evals</a> by <a href="/Albert_Silver">Albert Silver</a>, <a href="/CCC">CCC</a>, September 29, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40610">Stockfish on github</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, October 02, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40662">Stockfish's tuning method</a> by <a href="/Joona_Kiiski">Joona Kiiski</a>, <a href="/CCC">CCC</a>, October 07, 2011 » Stockfish's Tuning Method</li>
+</ul>
+<p><strong>2012</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41732">StockFish LS with LimitStrength feature</a> by Alexander Schmidt, <a href="/CCC">CCC</a>, January 01, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41916">Stockfish Code ( Piece Value's)</a> by Nolan Denson, <a href="/CCC">CCC</a>, January 10, 2012 » <a href="/Point_Value">Point Value</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41917">Stockfish hash implementation</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, January 10, 2012 » <a href="/Transposition_Table">Transposition Table</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41999">Stockfish 2.2.2 JA update available</a> by <a href="/Jim_Ablett">Jim Ablett</a>, <a href="/CCC">CCC</a>, January 14, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?p=454327">CLOP on Stockfish</a> by <a href="/Gary_Linscott">Gary</a>, <a href="/CCC">CCC</a>, March 10, 2012 » <a href="/CLOP">CLOP</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=42841">optimal aspiration window for stockfish question</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, March 12, 2012 » <a href="/Aspiration_Windows">Aspiration Windows</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=44901">Raspberry Pi / Stockfish dedicated chess computer/board</a> by <a href="/Jean-Francois_Romang">Jean-Francois Romang</a>, <a href="/CCC">CCC</a>, August 26, 2012 » <a href="/Raspberry_Pi">Raspberry Pi</a>, <a href="/Dedicated_Chess_Computers">Dedicated Chess Computers</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=45163">Stockfish 2.3 update available</a> by <a href="/Jim_Ablett">Jim Ablett</a>, <a href="/CCC">CCC</a>, September 15, 2012</li>
+</ul>
+<p><strong>2013</strong></p>
+<ul>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=26392">10 Lessons to be Learned from todays Top Engines</a> by Josef, <a href="/Computer_Chess_Forums">Rybka Forum</a>, January 03, 2013 » <a href="/Houdini">Houdini</a>, <a href="/Komodo">Komodo</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47881">Stockfish 3 Official JA Windows/Linux builds available</a> by <a href="/Jim_Ablett">Jim Ablett</a>, <a href="/CCC">CCC</a>, April 30, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47885">Fishtest Distributed Testing Framework</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, May 01, 2013 » <a href="/Stockfish">Fishtest</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47953&amp;start=10">Re: History pruning / move ordering question</a> by <a href="/Joona_Kiiski">Joona Kiiski</a>, <a href="/CCC">CCC</a>, May 12, 2013 » <a href="/Countermove_Heuristic">Countermove Heuristic</a></li>
+<li><a href="http://open-chess.org/viewtopic.php?f=7&amp;t=2322">Stockfish 3 PA_GTB</a> by <a href="/Jeremy_Bernstein">Jeremy Bernstein</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, May 15, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?p=518426">Probcut</a> by <a href="/Gary_Linscott">Gary</a>, <a href="/CCC">CCC</a>, May 24, 2013 » <a href="/ProbCut">ProbCut</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48149">Stockfish bug</a> by <a href="/Steven_Atkinson">Steven Atkinson</a>, <a href="/CCC">CCC</a>, May 30, 2013 » <a href="/Repetitions">Repetitions</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48602">The Ultimate Stockfish!</a> by Mike Scheidl, <a href="/CCC">CCC</a>, July 09, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48612">use sleeping threads</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, July 10, 2013 » <a href="/Parallel_Search">Parallel Search</a>, <a href="/Thread">Thread</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49035">Stockfish 4</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, August 20, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49283">18 days from SF4 release and about ~30+ ELO gain!</a> by Alexandre Meirelles Souza, <a href="/CCC">CCC</a>, September 08, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49375">How much of Stockfish code is still from Tord Romstad?</a> by <a href="/Jouni_Uski">Jouni Uski</a>, <a href="/CCC">CCC</a>, September 16, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49439">Syzygy tablebases, work in Stockfish?</a> by <a href="/Jose_Maria_Velasco">Jose Mº Velasco</a>, <a href="/CCC">CCC</a>, September 23, 2013 » <a href="/Syzygy_Bases">Syzygy Bases</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49854">Stockfish search</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, October 28, 2013 » <a href="/Principal_Variation">Principal Variation</a></li>
+<li><a href="http://hiarcs.net/forums/viewtopic.php?t=6425">Some food for thought</a> by <a href="/The_Spacious_Mind">Spacious Mind</a>, <a href="/Computer_Chess_Forums">Hiarcs Forum</a>, November 11, 2013 » <a href="/Stockfish">Stockfish</a> vs. <a href="/ChessMachine">Tasc CM32 512K</a> <a href="/The_King">The King 2.2</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50083">Stockfish scaling</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, November 15, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50220">Stockfish depth vs. others; challenge</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, November 24, 2013 » <a href="/Depth">Depth</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50275">Stockfish DD: a new official release</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, November 29, 2013 » <a href="/TCEC_Season_5">TCEC Season 5</a>, dedicated to <a href="/Don_Dailey">Don Dailey</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50296">Stockfish Syzygy: how to interpret mates?</a> by <a href="/Jouni_Uski">Jouni Uski</a>, <a href="/CCC">CCC</a>, December 01, 2013 » <a href="/Syzygy_Bases">Syzygy Bases</a>, <a href="/Score">Mate Scores</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50587">Is SF DD greater efficiency would be null move pruning?</a> by Jonathan Lee, <a href="/CCC">CCC</a>, December 22, 2013 » <a href="/Null_Move_Pruning">Null Move Pruning</a></li>
+</ul>
+<p><strong>2014</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50742">Help me to test an idea for Stockfish</a> by Robert Tournevisse, <a href="/CCC">CCC</a>, January 03, 2014 » <a href="/Piece-Square_Tables">Piece-Square Tables</a>, <a href="/Tapered_Eval">Tapered Eval</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50989">Stockfish seems definitely the strongest engine</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, January 21, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50992">Stockfish Mac app</a> by <a href="/Daylen_Yang">Daylen Yang</a>, <a href="/CCC">CCC</a>, January 22, 2014 » <a href="/Macintosh">Macintosh</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51096">Stockfish goes EGBB</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, January 29, 2014 » <a href="/Scorpio_Bitbases">Scorpio Bitbases</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51129">fixing the null move search "bug"</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, February 01, 2014 » <a href="/Null_Move_Pruning">Null Move Pruning</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51291">Disabling Null Move Pruning in Stockfish</a> by <a href="/Louis_Zulli">Louis Zulli</a>, <a href="/CCC">CCC</a>, February 15, 2014 » <a href="/Null_Move_Pruning">Null Move Pruning</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51655">Threads-Test</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, March 18, 2014 » <a href="/Thread">Thread</a>, <a href="/Parallel_Search">Parallel Search</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51879">Stockfish haswell optimized build</a> by <a href="/Jean-Francois_Romang">Jean-Francois Romang</a>, <a href="/CCC">CCC</a>, April 06, 2014 » <a href="/BMI2">BMI2</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52117&amp;start=1">Huge simplification</a> by <a href="/Lyudmil_Tsvetkov">Lyudmil Tsvetkov</a>, <a href="/CCC">CCC</a>, April 25, 2014 » <a href="/Pawn_Chain">Pawn Chain</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52204">Stockfish zero evals</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, May 02, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52219">Threads-Test - SF, Zappa, Komodo - 1 vs. 2, 4, 8, 16 Threads</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, May 04, 2014 » <a href="/Thread">Thread</a>, <a href="/Stockfish">Stockfish</a>, <a href="/Zappa">Zappa</a>, <a href="/Komodo">Komodo</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52231">investigating why stockfish is strong idea</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, May 05, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?p=570955">Threads factor: Komodo, Houdini, Stockfish and Zappa</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, May 17, 2014 » <a href="/Komodo">Komodo</a>, <a href="/Houdini">Houdini</a>, <a href="/Stockfish">Stockfish</a>, <a href="/Zappa">Zappa</a></li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/WNrxeXAJ6VI/ZkCnRv4I_qEJ">Goodbye CLOP, hello SPSA</a> by <a href="/Gary_Linscott">Gary Linscott</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, May 17, 2014 » <a href="/CLOP">CLOP</a>, <a href="/SPSA">SPSA</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52487">Stockfish 5</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, May 31, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52781">Stockfish Status Report</a> by <a href="/Louis_Zulli">Louis Zulli</a>, <a href="/CCC">CCC</a>, June 27, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53228">GM and Rybka vs. Stockfish</a> by Robert Maddox, <a href="/CCC">CCC</a>, August 09, 2014 » <a href="/Stockfish">GM+Rybka vs. Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53315">Nakamura vs Stockfish, public match 8/23</a> by Jesse L, <a href="/CCC">CCC</a>, August 17, 2014</li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/6nNXAQQAXOE/FXs2chqDargJ">Using the Transposition Table for long searches</a> by Theodr Elwurtz, <a href="/Computer_Chess_Forums">FishCooking</a>, September 22, 2014 » <a href="/Transposition_Table">Transposition Table</a></li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/T7OFWxD4LK8/pzurkRQNLjwJ">Rule of the square</a> by <a href="/Mikael_Bäckman">Mikael</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, September 24, 2014 » <a href="/Rule_of_the_Square">Rule of the Square</a></li>
+<li><a href="https://chesscomputer.tumblr.com/post/98632536555/using-the-stockfish-position-evaluation-score-to/embed">Using the Stockfish position evaluation score to predict victory probability</a> by unavoidablegrain, <a href="https://en.wikipedia.org/wiki/Tumblr">Tumblr</a>, September 28, 2014 » <a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">Pawn Advantage, Win Percentage, and Elo</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53995">Threads test incl. Stockfish 5 and Komodo 8</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, October 09, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54009">Threads test - Stockfish 5 against Komodo 8</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, October 10, 2014 » <a href="/Thread">Thread</a>, <a href="/Parallel_Search">Parallel Search</a>, <a href="/Stockfish">Stockfish</a>, <a href="/Komodo">Komodo</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54750">Stockfish and accurate PV</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, December 25, 2014 » <a href="/Principal_Variation">Principal Variation</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54798">Stockfish 32-bit and hardware instructions on MSVC++</a> by <a href="/Syed_Fahad">Syed Fahad</a>, <a href="/CCC">CCC</a>, December 30, 2014 » <a href="/BitScan">BitScan</a>, <a href="/Population_Count">Population Count</a></li>
+</ul>
+<h3 id="2015--1">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54891">Stockfish in Lozza UIs</a> by <a href="/Colin_Jenkins">Colin Jenkins</a>, <a href="/CCC">CCC</a>, January 07, 2015 » <a href="/Lozza">Lozza</a>, <a href="/Stockfish-js">Stockfish-js</a> <a href="#fn40" class="footnote-ref" id="fnref40" role="doc-noteref"><sup>40</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55122">SF6 has been released</a> by <a href="/Joona_Kiiski">Joona Kiiski</a>, <a href="/CCC">CCC</a>, January 27, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55167">Stockfish 6 is impressive in Behting study</a> by <a href="/Jouni_Uski">Jouni Uski</a>, <a href="/CCC">CCC</a>, January 31, 2015 » <a href="/Behting_Study">Behting Study</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55352">Stockfish with 16 threads - big news?</a> by <a href="/Louis_Zulli">Louis Zulli</a>, <a href="/CCC">CCC</a>, February 15, 2015 » <a href="/Thread">Thread</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=55368">Explanation for non-expert?</a> by <a href="/Louis_Zulli">Louis Zulli</a>, <a href="/CCC">CCC</a>, February 16, 2015 » <a href="/Parallel_Search">Parallel Search</a></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55402">Stockfish still scales poorly?</a> by <a href="/Louis_Zulli">Louis Zulli</a>, <a href="/CCC">CCC</a>, February 20, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55409">Measuring SF idle time</a> by <a href="/Louis_Zulli">Louis Zulli</a>, <a href="/CCC">CCC</a>, February 21, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55494">Better NPS scaling for Stockfish</a> by <a href="/Louis_Zulli">Louis Zulli</a>, <a href="/CCC">CCC</a>, February 27, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55510">Stockfish Questions</a> by <a href="/Syed_Fahad">Syed Fahad</a>, <a href="/CCC">CCC</a>, February 28, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55536">Best Stockfish NPS scaling yet</a> by <a href="/Louis_Zulli">Louis Zulli</a>, <a href="/CCC">CCC</a>, March 02, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55623">Stockfish contempt factor</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, March 10, 2015 » <a href="/Contempt_Factor">Contempt Factor</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55792">Improving SF passer code</a> by <a href="/Lyudmil_Tsvetkov">Lyudmil Tsvetkov</a>, <a href="/CCC">CCC</a>, March 26, 2015 » <a href="/Connected_Passed_Pawns">Connected Passed Pawns</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55846">Problem with SF6 and Syzygy TB</a> by Forrest Hoch, <a href="/CCC">CCC</a>, April 01, 2015 » <a href="/Syzygy_Bases">Syzygy Bases</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56019">Empirical results with Lazy SMP, YBWC, DTS</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, April 16, 2015 » <a href="/Lazy_SMP">Lazy SMP</a>, <a href="/Young_Brothers_Wait_Concept">YBWC</a>, <a href="/Dynamic_Tree_Splitting">DTS</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56543">The effective speedup from 1 to 8 cpus for SF and Komodo</a> by <a href="/Adam_Hair">Adam Hair</a>, <a href="/CCC">CCC</a>, May 31, 2015 » <a href="/Parallel_Search">Parallel Search</a>, <a href="/Komodo">Komodo</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58056">New Stockfish with Lazy_SMP, but what about the TC bug ?</a> by Ernest Bonnem, <a href="/CCC">CCC</a>, October 26, 2015 » <a href="/Parallel_Search">Parallel Search</a>, <a href="/TCEC_Season_8">TCEC Season 8</a></li>
+<li><a href="https://goo.gl/QLcPAF">Binary for TCEC superfinal</a> by Kiran Panditrao, <a href="/Computer_Chess_Forums">FishCooking</a>, October 30, 2015 » <a href="/TCEC_Season_8">TCEC Season 8</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58103">SF binaries for TCEC superfinal</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, October 31, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58210">Stockfish dev 091115 for ANDROID</a> by Nathanael Russell, <a href="/CCC">CCC</a>, November 09, 2015 » <a href="/Android">Android</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58236">Stockfish now benefits from hyperthreading</a> by <a href="/Dmitri_Gusev">Dmitri Gusev</a>, <a href="/CCC">CCC</a>, November 12, 2015 » <a href="/Thread">Thread</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58703">Stockfish 7 beta 1</a> by <a href="/Joona_Kiiski">Joona Kiiski</a>, <a href="/CCC">CCC</a>, December 27, 2015</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2942">Another GHI example in SF (maybe)</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, December 30, 2015 » <a href="/Graph_History_Interaction">Graph History Interaction</a></li>
+</ul>
+<p><strong>2016</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58779">Stockfish 7</a> by <a href="/Joona_Kiiski">Joona Kiiski</a>, <a href="/CCC">CCC</a>, January 02, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58887">Threads test incl. Stockfish 7</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, January 11, 2016 » <a href="/Thread">Thread</a>, <a href="/Parallel_Search">Parallel Search</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58935">Stockfish 7 progress</a> by Carl Lumma, <a href="/CCC">CCC</a>, January 16, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58990">Oddity around depths 7-8 with Stockfish 6 &amp; 7</a> by <a href="/Kenneth_W._Regan">Ken Regan</a>, <a href="/CCC">CCC</a>, January 21, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59407">Stockfish 7 and partial 6 piece syzygy problem?</a> by <a href="/Jouni_Uski">Jouni Uski</a>, <a href="/CCC">CCC</a>, March 01, 2016</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=59407&amp;start=12">Re: Stockfish 7 and partial 6 piece syzygy problem?</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, September 01, 2016</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59543">Computer Chess Progress: Stockfish 7 vs Ruffian 1.0.5</a> by <a href="/Martin_Fierz">Martin Fierz</a>, <a href="/CCC">CCC</a>, March 17, 2016 » <a href="/Ruffian">Ruffian</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60312">Natural TB</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, May 29, 2016 » <a href="/Syzygy_Bases">Syzygy Bases</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61250">Stockfish eval output</a> by <a href="/Erin_Dame">Erin Dame</a>, <a href="/CCC">CCC</a>, August 27, 2016 » <a href="/Wrong_Color_Bishop_and_Rook_Pawn">Wrong Color Bishop and Rook Pawn</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61373&amp;start=2">Re: Beginner's guide to graphical profiling</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, September 10, 2016 » Profiling</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61444">ELO inflation ha ha ha</a> by Henk van den Belt, <a href="/CCC">CCC</a>, September 16, 2016 » <a href="/Delphil">Delphil</a>, <a href="/Match_Statistics">Match Statistics</a>, <a href="/Playing_Strength">Playing Strength</a>, <a href="/TCEC_Season_9">TCEC Season 9</a> <a href="#fn41" class="footnote-ref" id="fnref41" role="doc-noteref"><sup>41</sup></a></li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/S_4E_Xs5HaE/mS3VTnuEFgAJ">pin-aware see</a> by <a href="/Ronald_de_Man">Ronald de Man</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, September 14, 2016 » <a href="/SEE_-_The_Swap_Algorithm">SEE - The Swap Algorithm</a>, <a href="/Pin">Pin</a></li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/9mcmjnyqbAQ/S6mDA0QsAAAJ">Illegal moves in SEE</a> by <a href="/Stephane_Nicolet">Stephane Nicolet</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, September 22, 2016 » <a href="/SEE_-_The_Swap_Algorithm">SEE - The Swap Algorithm</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61601">Stockfish underpromotes much more often than Komodo</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, October 05, 2016 » <a href="/Komodo">Komodo</a>, <a href="/Match_Statistics">Match Statistics</a>, <a href="/Promotions">Promotions</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61850">couple of questions about stockfish code ?</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, October 26, 2016 » <a href="/SIMD_and_SWAR_Techniques">SIMD and SWAR Techniques</a>, <a href="/Tapered_Eval">Tapered Eval</a></li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/LCoojE9O5jU/h6xgvg2EBgAJ">Stockfish 8</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, November 01, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61924">Stockfish 8 official</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, November 01, 2016</li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/7hHC075ZnnM/IaITCiLaBwAJ">NUMA test compilation</a> by Joachim Müller, <a href="/Computer_Chess_Forums">FishCooking</a>, November 05, 2016 » <a href="/NUMA">NUMA</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62146">Stockfish 8 - Double time control vs. 2 threads</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, November 15, 2016 » <a href="/Match_Statistics">Doubling TC</a>, <a href="/Depth">Diminishing Returns</a>, <a href="/Playing_Strength">Playing Strength</a>, <a href="/Lazy_SMP">Lazy SMP</a></li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=3&amp;t=3044">Stockfish benchmark data</a> by <a href="/Adam_Hair">Adam Hair</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, November 27, 2016</li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/M2bkzC3MuFQ/N3pHK4DcAgAJ">The new chess rules (5-fold repetition and 75-move draw)</a> by <a href="/Lyudmil_Antonov">Lyudmil Antonov</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, November 29, 2016 » <a href="/Repetitions">Repetitions</a>, <a href="/Fifty-move_Rule">Fifty-move Rule</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62452">Scoutfish: powerful chess query tool</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, December 11, 2016 » <a href="/Databases">Databases</a>, <a href="/Portable_Game_Notation">Portable Game Notation</a>, Scoutfish</li>
+</ul>
+<p><strong>2017</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62822">SF Progression since Fishtest inception</a> by <a href="/Adam_Hair">Adam Hair</a>, <a href="/CCC">CCC</a>, January 14, 2017 » <a href="/Stockfish">Fishtest</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54697&amp;start=50">Re: Chessprogams with the most chessknowing</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, February 19, 2017 » <a href="/Knowledge">Search versus Evaluation</a></li>
+<li><span id="i486"></span><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=63857">Stockfish bench in i486 &amp; Pentium 75mhz !</a> by hammerklavier, <a href="/CCC">CCC</a>, April 29, 2017</li>
+</ul>
+<p>Re: Stockfish bench ...</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63903">Symmetric multiprocessing (SMP) scaling - SF8 and K10.4</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, May 05, 2017 » <a href="/Lazy_SMP">Lazy SMP</a>, <a href="/Komodo">Komodo</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63967">Symmetric multiprocessing (SMP) scaling - SF8 Contempt=10</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, May 13, 2017 » <a href="/SMP">SMP</a>, <a href="/Contempt_Factor">Contempt Factor</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64720">Stockfish version with hash saving capability</a> by <a href="/Daniel_José_Queraltó">Daniel José Queraltó</a>, <a href="/CCC">CCC</a>, July 25, 2017 » <a href="/Persistent_Hash_Table">Persistent Hash Table</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60312&amp;start=240">Natural TB (take 2)</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, August 22, 2017 » <a href="/Syzygy_Bases">Syzygy Bases</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64972">Approximating Stockfish's Evaluation by PSQTs</a> by <a href="/Thomas_Dybdahl_Ahle">Thomas Dybdahl Ahle</a>, <a href="/CCC">CCC</a>, August 23, 2017 » <a href="/Automated_Tuning">Regression</a>, <a href="/Piece-Square_Tables">Piece-Square Tables</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65017">Stockfish no progress in 2month and half , why ?</a> by Jean Baptiste, <a href="/CCC">CCC</a>, August 28, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65216">Stockfish testing at STC and LTC: one question</a> by <a href="/Jouni_Uski">Jouni Uski</a>, <a href="/CCC">CCC</a>, September 19, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65288">Scaling from FGRL results with top 3 engines</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, September 26, 2017 » <a href="/FGRL">FGRL</a>, <a href="/Houdini">Houdini</a>, <a href="/Komodo">Komodo</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65919">AlphaZero vs Stockfish</a> by Bigler, <a href="/CCC">CCC</a>, December 06, 2017 » <a href="/AlphaZero">AlphaZero vs. Stockfish</a></li>
+<li><a href="https://groups.google.com/forum/#!topic/fishcooking/AE4EgWQ20dY">A branch to test the Monte Carlo algorithm in Stockfish</a> by <a href="/Stephane_Nicolet">Stephane Nicolet</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, December 06, 2017 » <a href="/Monte-Carlo_Tree_Search">Monte-Carlo Tree Search</a>, <a href="/AlphaZero">AlphaZero</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65934">Reactions about AlphaZero from top GMs...</a> by <a href="/Norman_Schmidt">Norman Schmidt</a>, <a href="/CCC">CCC</a>, December 08, 2017 » <a href="/AlphaZero">AlphaZero: Reactions From Top GMs, Stockfish Author</a>, <a href="/Tord_Romstad">Tord Romstad</a></li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/rMCfc8zMerc/F01WuNtDCgAJ">MCTS wrapper for StockFish</a> by <a href="/Jonathan_Baxter">Jonathan Baxter</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, December 19, 2017 » <a href="/Monte-Carlo_Tree_Search">Monte-Carlo Tree Search</a></li>
+</ul>
+<p><strong>2018</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66340">Stockfish 8 - Initial position until depth 59</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, January 16, 2018 » <a href="/Initial_Position">Initial Position</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66444">New Stockfish contempt</a> by <a href="/Jouni_Uski">Jouni Uski</a>, <a href="/CCC">CCC</a>, January 29, 2018 » <a href="/Contempt_Factor">Contempt Factor</a></li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/_FW_RIowarw/y1e-qMEXAgAJ">Contributors in the last two years</a> by <a href="/Stephane_Nicolet">Stephane Nicolet</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, Jnauary 30, 2018</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66470">Stockfish 9</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, February 01, 2018</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66793">Elo measurement of contempt in SF in self-play</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, <a href="/CCC">CCC</a>, March 10, 2018 » <a href="/Contempt_Factor">Contempt</a>, <a href="/Playing_Strength">Playing Strength</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66935">Stockfish 180113 - Initial position until depth 65</a> by <a href="/Andreas_Strangmüller">Andreas Strangmüller</a>, <a href="/CCC">CCC</a>, March 27, 2018 » <a href="/Initial_Position">Initial Position</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=67932">Stockfish and serious hardware: 384 threads</a> by <a href="/Jouni_Uski">Jouni Uski</a>, <a href="/CCC">CCC</a>, July 08, 2018 » <a href="/Thread">Thread</a></li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/kJ6vNKyp6h8/zwRnc-i7CwAJ">Stockfish 10 - Call for Binaries</a> by <a href="/Daylen_Yang">Daylen Yang</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, November 29, 2018</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69364&amp;start=12">Re: piece lists advantage with bit-boards?</a> by <a href="/Ronald_de_Man">Ronald de Man</a>, <a href="/CCC">CCC</a>, December 26, 2018 » <a href="/Piece-Lists">Piece-Lists</a>, <a href="/AsmFish">asmFish</a></li>
+</ul>
+<p><strong>2019</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69507&amp;start=1">Re: What's the best Lazy SMP logic?</a> by <a href="/Sven_Schüle">Sven Schüle</a>, <a href="/CCC">CCC</a>, January 06, 2019 » <a href="/Lazy_SMP">Lazy SMP</a> in Stockfish</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70069">Training the trainer: how is it done for Stockfish?</a> by <a href="/Marc-Philippe_Huget">Marc-Philippe Huget</a>, <a href="/CCC">CCC</a>, March 01, 2019 » <a href="/Monte-Carlo_Tree_Search">Monte-Carlo Tree Search</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=71027">Some NUMA data for Stockfish-dev and Cfish-dev</a> by <a href="/Louis_Zulli">Louis Zulli</a>, <a href="/CCC">CCC</a>, June 17, 2019 » <a href="/NUMA">NUMA</a>, <a href="/CFish">CFish</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=71707">Why does stockfish randomise draw evaluations?</a> by <a href="/Vincent_Tang">Vincent Tang</a>, <a href="/CCC">CCC</a>, September 01, 2019 » <a href="/Draw">Draw</a>, <a href="/Draw_Evaluation">Draw Evaluation</a>, <a href="/Score">Draw Score</a>, <a href="/Search_with_Random_Leaf_Values">Search with Random Leaf Values</a></li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/xGM9K7wd5rM/pmx2MVX-BwAJ">Help needed testing vectorized Stockfish pawns.cpp...</a> by <a href="/Nick_Pelling">Nick Pelling</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, September 23, 2019</li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/znU1a7aZ2XI/yJDFtOQnAwAJ">mg vs eg eval</a> by <a href="/Joost_VandeVondele">Joost VandeVondele</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, October 06, 2019 » <a href="/Middlegame">Middlegame</a>, <a href="/Endgame">Endgame</a>, <a href="/Tapered_Eval">Tapered Eval</a></li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/liMe2Ho53j8/GP9l07hSBAAJ">Stockfish contempt testing</a> by Leonardo Ljubičić, <a href="/Computer_Chess_Forums">FishCooking</a>, October 29, 2019 » <a href="/Contempt_Factor">Contempt</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72231">some questions about singular search in Stockfish</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, November 01, 2019 » <a href="/Singular_Extensions">Singular Extensions</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72232">"stat score bonus" in stockfish</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, November 01, 2019</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=72480">Stockfish 10 was released 29.11.2018</a> by <a href="/Jouni_Uski">Jouni Uski</a>, <a href="/CCC">CCC</a>, December 01, 2019</li>
+</ul>
+<h3 id="2020--1">2020 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/d/msg/fishcooking/9X3lDH83tlk/DtRtuFMOCAAJ">lazy smp behaviour of stockfish</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, January 05, 2020 » <a href="/Lazy_SMP">Lazy SMP</a></li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=72754">The Stockfish of shogi</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, January 07, 2020 » <a href="/NNUE">NNUE</a>, <a href="/Shogi">Shogi</a></li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=72837">Stockfish 11</a> by <a href="/Stephane_Nicolet">Stephane Nicolet</a>, <a href="/CCC">CCC</a>, January 18, 2020</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72962">Stockfish Reverts 5 Recent Patches</a> by Deberger, <a href="/CCC">CCC</a>, February 01, 2020</li>
+</ul>
+<p><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72962&amp;start=6">Re: Stockfish Reverts 5 Recent Patches</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, <a href="/CCC">CCC</a>, February 02, 2020 » <a href="/Match_Statistics">SPRT</a></p>
+<ul>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=73273">Stockfish and latest +6 ELO patch!</a> by <a href="/Jouni_Uski">Jouni Uski</a>, <a href="/CCC">CCC</a>, March 05, 2020 » <a href="/Distance">Distance</a>, <a href="/Space-Time_Tradeoff">Space-Time Tradeoff</a> <a href="#fn42" class="footnote-ref" id="fnref42" role="doc-noteref"><sup>42</sup></a></li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73753">Null move</a> by <a href="/Robert_Pope">Robert Pope</a>, <a href="/CCC">CCC</a>, April 24, 2020 » <a href="/Null_Move_Pruning">Null Move Pruning</a></li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=74037">Stockfish_dev is probably stronger than Sargon 1978 v1.00</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, May 29, 2020 » <a href="/Sargon">Sargon</a></li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=74059">Stockfish NN release (NNUE)</a> by Henk Drost, <a href="/CCC">CCC</a>, May 31, 2020 » <a href="/NNUE">NNUE</a>, <a href="/Stockfish_NNUE">Stockfish NNUE</a></li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74339">Stockfish has included WDL stats in engine output</a> by Deberger, <a href="/CCC">CCC</a>, July 02, 2020 » <a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">Pawn Advantage, Win Percentage, and Elo</a></li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/EBKQSrb9I08/5xasTnnSCAAJ">stockfishNNUE vs others (TCEC 18 bonus)</a> by <a href="/Warren_D._Smith">Warren D. Smith</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, July 14, 2020</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=74484">Can the sardine! NNUE clobbers SF</a> by Henk Drost, <a href="/CCC">CCC</a>, July 16, 2020 » <a href="/Stockfish_NNUE">Stockfish NNUE</a></li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=74933">The most stupid idea by the Stockfish Team</a> by Damir, <a href="/CCC">CCC</a>, August 30, 2020 » <a href="/Stockfish_NNUE">Stockfish NNUE</a></li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/TJHsiI61yQ4/liQoZ-AzAgAJ">Stockfish 12</a> by <a href="/Joost_VandeVondele">Joost VandeVondele</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, September 02, 2020</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=74974">Stockfish 12 is released today!</a> by Nay Lin Tun, <a href="/CCC">CCC</a>, September 02, 2020</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=74978">Stockfish 12 has arrived!</a> by daniel71, <a href="/CCC">CCC</a>, September 02, 2020</li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/yjh1YOxy7nw/rJA6u1ODAAAJ">SF NNUE/Classical</a> by <a href="/Fauzi_Akram_Dabat">Fauzi</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, October 05, 2020 » <a href="/Stockfish_NNUE">Stockfish NNUE</a></li>
+<li><span id="i486Re"></span><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=63857&amp;start=14">Re: Stockfish bench in i486 &amp; Pentium 75mhz !</a> by Vincent Lejeune, <a href="/CCC">CCC</a>, October 11, 2020 » Stockfish bench ...</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75841&amp;start=8">Re: Raspberry Pi 4 compiled chess engines</a> by <a href="/Rasmus_Althoff">Rasmus Althoff</a>, <a href="/CCC">CCC</a>, November 16, 2020 » <a href="/Raspberry_Pi">Raspberry Pi</a></li>
+</ul>
+<p><strong>2021</strong></p>
+<ul>
+<li><a href="https://groups.google.com/g/fishcooking/c/cad1MGSdpU4/m/Ury4iBqSBgAJ">Shouldn't positional attributes drive SF's NNUE input features (rather than king position)?</a> by <a href="/Nick_Pelling">Nick Pelling</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, January 10, 2021 » <a href="/Stockfish_NNUE">Stockfish NNUE</a></li>
+<li><a href="https://groups.google.com/g/fishcooking/c/AzYDbbv-Coo">Stockfish 13</a> by <a href="/Joost_VandeVondele">Joost VandeVondele</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, February 19, 2021</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76639">Stockfish 13 merged on github</a> by Joshua Shriver, <a href="/CCC">CCC</a>, February 19, 2021</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76977">Setting up Stockfish on a server</a> by Jon12345, <a href="/CCC">CCC</a>, March 29, 2021 » <a href="/Chess_Server">Chess Server</a></li>
+<li><a href="https://lczero.org/blog/2021/04/joking-ftw-seriously/">Joking FTW, Seriously</a> by borg, <a href="/Leela_Chess_Zero">LCZero blog</a>, April 25, 2021</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=77344">Stockfish with new NNUE architecture and bigger net released</a> by Stefan Pohl, <a href="/CCC">CCC</a>, May 19, 2021 <a href="#fn43" class="footnote-ref" id="fnref43" role="doc-noteref"><sup>43</sup></a> <a href="#fn44" class="footnote-ref" id="fnref44" role="doc-noteref"><sup>44</sup></a></li>
+<li><a href="https://lczero.org/blog/2021/06/the-importance-of-open-data/">The importance of open data</a> by borg , <a href="/Leela_Chess_Zero">LCZero blog</a>, June 15, 2021</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=77503">will Tcec allow Stockfish with a Leela net to play?</a> by Wilson, <a href="/CCC">CCC</a>, June 17, 2021 » <a href="/TCEC_Season_21">TCEC Season 21</a></li>
+</ul>
+<p><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=77503&amp;start=55">Re: will Tcec allow Stockfish with a Leela net to play?</a> by <a href="/Connor_McMonigle">Connor McMonigle</a>, <a href="/CCC">CCC</a>, June 17, 2021</p>
+<ul>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=77599">Stockfish 14 release round the corner</a> by Prasanna Bandihole, <a href="/CCC">CCC</a>, July 02, 2021</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=77602">Before things become more messy than they already are</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, July 02, 2021</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=77605">Stockfish 14 has been released</a> by Madeleine Birchfield, <a href="/CCC">CCC</a>, July 02, 2021</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=77762">Stockfish: Our lawsuit against ChessBase</a> by Kurt Lanc, <a href="/CCC">CCC</a>, July 20, 2021</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=78030">The Great Stockfish NPS Debate</a> by Dietrich Kappe, <a href="/CCC">CCC</a>, August 27, 2021</li>
+</ul>
+<p><strong>2022</strong></p>
+<ul>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79588">Stockfish search</a> by Werewolf, <a href="/CCC">CCC</a>, March 26, 2022 » <a href="/Lazy_SMP">Lazy SMP</a></li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=79713">Stockfish 15 is ready</a> by Mehmet Karaman, <a href="/CCC">CCC</a>, April 19, 2022</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=79793">Stockfish 15's Immortal Game?</a> by <a href="/Graham_Banks">Graham Banks</a>, <a href="/CCC">CCC</a>, May 01, 2022</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=80608">Are tablebases useless for Stockfish15?</a> by Jouni, <a href="/CCC">CCC</a>, September 02, 2022</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=81105">Stockfish 15.1 is ready</a> by Mehmet Karaman, <a href="/CCC">CCC</a>, December 05, 2022</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=81108">SF branching factor</a> by Jouni, <a href="/CCC">CCC</a>, December 05, 2022</li>
+</ul>
+<p><strong>2023</strong></p>
+<ul>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=82620">Stockfish randomicity</a> by amchess, <a href="/CCC">CCC</a>, September 21, 2023 » <a href="/Search">Search</a></li>
+<li><a href="https://talkchess.com/viewtopic.php?t=84049">Why is Stockfish removing killer moves in move ordering?</a> by Paul Jérôme--Filio, <a href="/CCC">CCC</a>, June 24, 2024 » <a href="/Search">Search</a></li>
+</ul>
+<h2 id="blog-posts">Blog Posts</h2>
+<ul>
+<li><a href="https://blog.stockfishchess.org/">Stockfish Blog</a></li>
+</ul>
+<h3 id="2014">2014</h3>
+<ul>
+<li><a href="http://tech.mit.edu/V133/N62/chess.html">One chess champion per laptop</a> by <a href="http://www.mit.edu/~roberto/">Roberto Perez-Franco</a>, <a href="/Massachusetts_Institute_of_Technology">MIT's</a> <a href="https://en.wikipedia.org/wiki/The_Tech_%28newspaper%29">The Tech</a>, January 15, 2014 » <a href="/TCEC_Season_5">TCEC Season 5</a></li>
+</ul>
+<h3 id="2015--2">2015 ...</h3>
+<ul>
+<li><a href="http://en.chessbase.com/post/john-hartmann-and-then-there-were-two">And then there were two</a> by <a href="http://en.chessbase.com/author/john-hartmann">John Hartmann</a>, <a href="/ChessBase">ChessBase News</a>, June 09, 2015 » <a href="/Komodo">Komodo</a>, <a href="/Stockfish">Stockfish</a></li>
+<li><a href="https://rjlipton.wordpress.com/2015/10/06/depth-of-satisficing/">Depth of Satisficing</a> by <a href="/Kenneth_W._Regan">Ken Regan</a>, <a href="https://rjlipton.wordpress.com/">Gödel's Lost Letter and P=NP</a>, October 06, 2015 » <a href="/Depth">Depth</a>, <a href="/Match_Statistics">Match Statistics</a>, <a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">Pawn Advantage, Win Percentage, and Elo</a>, <a href="/Stockfish">Stockfish</a>, <a href="/Komodo">Komodo</a> <a href="#fn45" class="footnote-ref" id="fnref45" role="doc-noteref"><sup>45</sup></a></li>
+<li><a href="https://rjlipton.wordpress.com/2016/01/21/a-chess-firewall-at-zero/">A Chess Firewall at Zero?</a> by <a href="/Kenneth_W._Regan">Ken Regan</a>, <a href="https://rjlipton.wordpress.com/">Gödel's Lost Letter and P=NP</a>, January 21, 2016</li>
+<li><a href="https://stockfishchess.org/blog/2016/stockfish-8/">Stockfish 8</a>, November 01, 2016</li>
+<li><a href="https://stockfishchess.org/blog/2018/stockfish-9/">Stockfish 9</a>, February 09, 2018</li>
+<li><a href="https://stockfishchess.org/blog/2018/stockfish-10/">Stockfish 10</a>, December 01, 2018</li>
+</ul>
+<h3 id="2020--2">2020 ...</h3>
+<ul>
+<li><a href="https://stockfishchess.org/blog/2020/stockfish-11/">Stockfish 11</a>, The Stockfish Team, January 15, 2020</li>
+<li><a href="https://stockfishchess.org/blog/2020/introducing-nnue-evaluation/">Introducing NNUE Evaluation</a>, August 07, 2020</li>
+<li><a href="https://stockfishchess.org/blog/2020/stockfish-12/">Stockfish 12</a>, The Stockfish Team, September 02, 2020</li>
+<li><a href="https://stockfishchess.org/blog/2021/stockfish-13/">Stockfish 13</a>, The Stockfish Team, February 19, 2021</li>
+<li><a href="https://stockfishchess.org/blog/2021/stockfish-14/">Stockfish 14</a>, The Stockfish Team, July 02, 2021</li>
+<li><a href="https://stockfishchess.org/blog/2021/our-lawsuit-against-chessbase/">Our lawsuit against ChessBase</a>, The Stockfish Team, July 20, 2021 » <a href="/ChessBase">ChessBase</a>, <a href="/Fat_Fritz">Fat Fritz 2</a>, <a href="/Houdini">Houdini 6</a></li>
+<li><a href="https://stockfishchess.org/blog/2021/stockfish-14-1/">Stockfish 14.1</a>, The Stockfish Team, October 28, 2021</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<h3 id="chess-engine">Chess Engine</h3>
+<ul>
+<li><a href="https://stockfishchess.org/">Stockfish - Open Source Chess Engine</a></li>
+<li><a href="https://github.com/official-stockfish/Stockfish">official-stockfish/Stockfish · GitHub</a></li>
+<li><a href="https://github.com/nodchip/Stockfish">GitHub - nodchip/Stockfish: UCI chess engine</a> (<a href="/Stockfish_NNUE">Stockfish NNUE</a> by <a href="/Hisayori_Noda">Nodchip</a>)</li>
+<li><a href="https://github.com/zamar">zamar · GitHub</a> by <a href="/Joona_Kiiski">Joona Kiiski</a></li>
+<li><a href="https://nextchessmove.com/dev-builds">NCM Stockfish Dev Builds</a></li>
+<li><a href="https://abrok.eu/stockfish/">Stockfish Development Versions</a> hosted by <a href="/Roman_Korba">Roman Korba</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Stockfish_%28chess%29">Stockfish (chess) from Wikipedia</a></li>
+</ul>
+<h3 id="issues">Issues</h3>
+<ul>
+<li><a href="https://github.com/official-stockfish/Stockfish/issues">Issues · official-stockfish/Stockfish · GitHub</a></li>
+<li><a href="https://github.com/official-stockfish/Stockfish/issues/2823">NNUE merge · Issue #2823 · official-stockfish/Stockfish · GitHub</a> by <a href="/Joost_VandeVondele">Joost VandeVondele</a>, July 25, 2020 <a href="#fn46" class="footnote-ref" id="fnref46" role="doc-noteref"><sup>46</sup></a></li>
+<li><a href="https://github.com/official-stockfish/Stockfish/issues/2915">NNUE ideas and discussion (post-merge) Issue #2915 official-stockfish/Stockfish · GitHub</a> by <a href="/Joost_VandeVondele">Joost VandeVondele</a>, August 06, 2020</li>
+<li><a href="https://github.com/official-stockfish/Stockfish/issues/3021">NNUE eval rotate vs mirror · Issue #3021 · official-stockfish/Stockfish · GitHub</a> by Terje Kirstihagen, August 18, 2020</li>
+</ul>
+<h3 id="pull-requests">Pull Requests</h3>
+<ul>
+<li><a href="https://github.com/official-stockfish/Stockfish/pulls">Pull requests · official-stockfish/Stockfish · GitHub</a></li>
+<li><a href="https://github.com/official-stockfish/Stockfish/pull/3474">Update default net to nn-8a08400ed089.nnue by Sopel97 · Pull Request #3474 · official-stockfish/Stockfish · GitHub</a> by <a href="/Tomasz_Sobczyk">Tomasz Sobczyk</a></li>
+</ul>
+<h3 id="testing">Testing</h3>
+<ul>
+<li><a href="https://stockfishchess.org/get-involved/">Get Involved - Stockfish - Powerful Open Source Chess Engine</a></li>
+<li><a href="https://tests.stockfishchess.org/tests">Stockfish Testing Framework</a> » <a href="/Stockfish">Fishtest</a></li>
+<li><a href="https://hxim.github.io/Stockfish-Evaluation-Guide/">Stockfish Evaluation Guide</a> » <a href="/Stockfish">Stockfish Evaluation Guide</a></li>
+</ul>
+<p><a href="https://hxim.github.io/Stockfish-Evaluation-Guide/?p=nnue">Stockfish Evaluation Guide - NNUE</a></p>
+<ul>
+<li><a href="https://github.com/glinscott/fishtest">GitHub - glinscott/fishtest: Stockfish testing</a></li>
+</ul>
+<p><a href="https://github.com/glinscott/fishtest/wiki/Creating-my-first-test">Creating my first test · glinscott/fishtest Wiki · GitHub</a></p>
+<p><a href="https://github.com/glinscott/fishtest/wiki/Fishtest-mathematics">Fishtest mathematics · glinscott/fishtest Wiki · GitHub</a></p>
+<ul>
+<li><a href="https://github.com/zamar/spsa">SPSA Tuner for Stockfish Chess Engine</a> » <a href="/SPSA">SPSA</a></li>
+<li><a href="https://groups.google.com/forum/#!forum/fishcooking">FishCooking - Google Groups</a> a discussion group for developers and testers of <a href="/Stockfish">Stockfish</a> chess engine</li>
+<li><a href="https://adamsccpages.blogspot.com/p/sf-framework-history.html">Adam's Computer Chess Pages: Stockfish Progression</a> by <a href="/Adam_Hair">Adam Hair</a> » <a href="/Stockfish">Fishtest</a></li>
+</ul>
+<h3 id="rating-lists">Rating Lists</h3>
+<ul>
+<li><a href="http://www.computerchess.org.uk/ccrl/4040/cgi/compare_engines.cgi?family=Stockfish&amp;print=Rating+list&amp;print=Results+table&amp;print=LOS+table&amp;print=Ponder+hit+table&amp;print=Eval+difference+table&amp;print=Comopp+gamenum+table&amp;print=Overlap+table&amp;print=Score+with+common+opponents">Stockfish</a> from <a href="/CCRL">CCRL 40/15</a></li>
+<li><a href="http://computerchess.org.uk/ccrl/404/cgi/compare_engines.cgi?family=Stockfish&amp;print=Rating+list&amp;print=Results+table&amp;print=LOS+table&amp;print=Ponder+hit+table&amp;print=Eval+difference+table&amp;print=Comopp+gamenum+table&amp;print=Overlap+table&amp;print=Score+with+common+opponents">Stockfish</a> in <a href="/CCRL">CCRL Blitz</a></li>
+</ul>
+<h3 id="matches">Matches</h3>
+<ul>
+<li><a href="https://www.chess.com/article/view/how-rybka-and-i-tried-to-beat-the-strongest-chess-computer-in-the-world">Can a GM and Rybka beat Stockfish?</a> by GM <a href="https://en.wikipedia.org/wiki/Daniel_Naroditsky">Daniel Naroditsky</a>, Chess.com, August 08, 2014 » <a href="/Stockfish">GM+Rybka vs. Stockfish</a></li>
+<li><a href="https://www.chess.com/news/stockfish-outlasts-nakamura-3634">Stockfish Outlasts "Rybkamura"</a> by <a href="https://www.chess.com/article/view/chesscom-player-profiles-fm-mikeklein">FM Mike Klein</a>, Chess.com, August 24, 2014</li>
+<li><a href="https://www.chess.com/news/view/alphazero-reactions-from-top-gms-stockfish-author">AlphaZero: Reactions From Top GMs, Stockfish Author</a> by <a href="/Peter_Doggers">Peter Doggers</a>, Chess.com, December 08, 2017 » <a href="/AlphaZero">AlphaZero vs. Stockfish</a></li>
+</ul>
+<h3 id="interviews">Interviews</h3>
+<ul>
+<li><a href="http://www.schach-welt.de/schach/computerschach/interviews/romstad-kiiski-costalba-eng">Computerschach, Interview with Tord Romstad (Norway), Joona Kiiski (Finland) and Marco Costalba (Italy)</a> by <a href="/Frank_Quisinsky">Frank Quisinsky</a>, March 29, 2010</li>
+<li><a href="http://www.chessdom.com/stockfish-4-to-play-in-the-new-season-of-tcec/">Stockfish 4 to play in the new season of TCEC | Chessdom - Short interview with the Stockfish team</a>, August 22, 2013 » <a href="/TCEC">TCEC</a>, <a href="/TCEC_Season_5">TCEC Season 5</a></li>
+</ul>
+<h3 id="videos">Videos</h3>
+<ul>
+<li><a href="/Daylen_Yang">How do modern chess engines work? | Video</a>, Talk by <a href="/Daylen_Yang">Daylen Yang</a>, <a href="http://www.tngtech.com/tng-ueber-uns/bigtechday/big-techday-8.html">TNG | Big Techday 8</a>, June 12, 2015</li>
+<li><a href="/Tord_Romstad">Parallelism and Selectivity in Game Tree Search | Video</a>, Talk by <a href="/Tord_Romstad">Tord Romstad</a>, <a href="http://www.tngtech.com/tng-ueber-uns/bigtechday/big-techday-8.html">TNG | Big Techday 8</a>, June 12, 2015</li>
+<li><a href="/Tord_Romstad">How Modern Chess Programs Work | Video</a> by <a href="/Tord_Romstad">Tord Romstad</a>, <a href="http://2017.flatmap.no/talks/romstad/">flatMap(Oslo)</a>, May 02, 2017</li>
+</ul>
+<h3 id="misc-1">Misc</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Stockfish">Stockfish from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Lofoten_Stockfish_Museum">Lofoten Stockfish Museum from Wikipedia</a></li>
+<li><a href="https://ruthhorowitz.wordpress.com/2012/05/29/postcards-from-the-lofoten-islands/">Postcards from the Lofoten Islands</a> from <a href="https://ruthhorowitz.wordpress.com/">Giving Up The Ghost</a>, May 29, 2012 » <a href="/Stockfish">Stockfish</a> and <a href="/Gull">Gulls</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Engines">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p>The Stockfish icon was designed by <a href="http://iamkle.in/">Klein Maetschke</a>, <a href="https://stockfishchess.org/about/">About - Stockfish</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://stockfishchess.org/">Stockfish - Open Source Chess Engine</a>, The Stockfish 12 icon was designed by <a href="http://iamkle.in/">Klein Maetschke</a>, <a href="https://stockfishchess.org/about/">About - Stockfish</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=58779">Stockfish 7</a> by <a href="/Joona_Kiiski">Joona Kiiski</a>, <a href="/CCC">CCC</a>, January 02, 2016<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=24675">Stockfish 1.0</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, November 02, 2008<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=26971&amp;start=1">Re: Smaug: a new chess engine based on glaurung</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, March 12, 2009<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="/David_Silver">David Silver</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Marc_Lanctot">Marc Lanctot</a>, <a href="/Laurent_Sifre">Laurent Sifre</a>, <a href="/Dharshan_Kumaran">Dharshan Kumaran</a>, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, <a href="/Karen_Simonyan">Karen Simonyan</a>, <a href="/Demis_Hassabis">Demis Hassabis</a> (<strong>2017</strong>). <em>Mastering Chess and Shogi by Self-Play with a General Reinforcement Learning Algorithm</em>. <a href="https://arxiv.org/abs/1712.01815">arXiv:1712.01815</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=40610">Stockfish on github</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, October 02, 2011<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=74059">Stockfish NN release (NNUE)</a> by Henk Drost, <a href="/CCC">CCC</a>, May 31, 2020<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="https://stockfishchess.org/blog/2020/stockfish-12/">Stockfish 12</a>, The Stockfish Team, <a href="https://blog.stockfishchess.org/">Stockfish Blog</a>, September 02, 2020<a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="https://stockfishchess.org/blog/2021/stockfish-13/">Stockfish 13</a>, The Stockfish Team, February 19, 2021<a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="https://stockfishchess.org/blog/2021/stockfish-14/">Stockfish 14</a>, The Stockfish Team, July 02, 2021<a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="https://github.com/official-stockfish/Stockfish/commit/af110e02ec96cdb46cf84c68252a1da15a902395">GitHub - Stockfish commit, Remove classical evaluation</a><a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="https://stockfishchess.org/about/">About - Stockfish</a><a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p><a href="https://github.com/glinscott/fishtest">glinscott/fishtest · GitHub</a><a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn15"><p><a href="http://stockfishchess.org/get-involved/">Get Involved - Stockfish - Powerful Open Source Chess Engine</a><a href="#fnref15" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn16"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=47885">Fishtest Distributed Testing Framework</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, May 01, 2013<a href="#fnref16" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn17"><p><a href="http://docs.pylonsproject.org/projects/pyramid/en/latest/">The Pyramid Web Framework — The Pyramid Web Framework v1.5</a><a href="#fnref17" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn18"><p><a href="http://tests.stockfishchess.org/users">Stockfish Testing Framework - Users</a><a href="#fnref18" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn19"><p><a href="http://tests.stockfishchess.org/tests">Stockfish Testing Framework</a><a href="#fnref19" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn20"><p><a href="https://adamsccpages.blogspot.com/p/sf-framework-history.html">Adam's Computer Chess Pages: Stockfish Progression</a> by <a href="/Adam_Hair">Adam Hair</a><a href="#fnref20" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn21"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=64025&amp;start=27">Re: How far away are we from deep learning Stockfish, Komodo</a> by <a href="/Gary_Linscott">Gary</a>, <a href="/CCC">CCC</a>, May 21, 2017<a href="#fnref21" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn22"><p><a href="https://hxim.github.io/Stockfish-Evaluation-Guide/">Stockfish Evaluation Guide</a><a href="#fnref22" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn23"><p><a href="https://hxim.github.io/Stockfish-Evaluation-Guide/?p=nnue">Stockfish Evaluation Guide - NNUE</a><a href="#fnref23" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn24"><p><a href="https://www.chess.com/article/view/how-rybka-and-i-tried-to-beat-the-strongest-chess-computer-in-the-world">Can a GM and Rybka beat Stockfish?</a> by GM <a href="https://en.wikipedia.org/wiki/Daniel_Naroditsky">Daniel Naroditsky</a>, Chess.com, August 08, 2014<a href="#fnref24" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn25"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=53228">GM and Rybka vs. Stockfish</a> by Robert Maddox, <a href="/CCC">CCC</a>, August 09, 2014<a href="#fnref25" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn26"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=53315">Nakamura vs Stockfish, public match 8/23</a> by Jesse L, <a href="/CCC">CCC</a>, August 17, 2014<a href="#fnref26" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn27"><p><a href="https://www.chess.com/news/stockfish-outlasts-nakamura-3634">Stockfish Outlasts "Rybkamura"</a> by <a href="https://www.chess.com/article/view/chesscom-player-profiles-fm-mikeklein">FM Mike Klein</a>, Chess.com, August 24, 2014<a href="#fnref27" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn28"><p>if not mentioned otherwise, based on the sources of Stockfish 6<a href="#fnref28" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn29"><p><a href="https://www.reddit.com/r/Amd/comments/60i6er/ryzen_and_bmi2_strange_behavior_and_high_latencies/">Ryzen and BMI2: Strange behavior and high latencies</a> by DonnieTinyHands, <a href="https://en.wikipedia.org/wiki/Reddit">Reddit</a>, March 20, 2017<a href="#fnref29" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn30"><p><a href="https://github.com/official-stockfish/Stockfish/blob/sf_12/src/position.h#L193">Stockfish/position.h at sf_12 · official-stockfish/Stockfish · GitHub</a><a href="#fnref30" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn31"><p><a href="https://github.com/official-stockfish/Stockfish/pull/3247">Remove piece lists by syzygy1 · Pull Request #3247 · official-stockfish/Stockfish · GitHub</a><a href="#fnref31" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn32"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69364&amp;start=12">Re: piece lists advantage with bit-boards?</a> by <a href="/Ronald_de_Man">Ronald de Man</a>, <a href="/CCC">CCC</a>, December 26, 2018<a href="#fnref32" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn33"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=58935&amp;start=2">Re: Stockfish 7 progress</a> by Lucas Braesch, <a href="/CCC">CCC</a>, January 17, 2016<a href="#fnref33" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn34"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=135133&amp;t=15504">The Art of Evaluation</a> by <a href="/Tord_Romstad">Tord Romstad</a>, <a href="/CCC">CCC</a>, August 2, 2007<a href="#fnref34" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn35"><p><a href="https://hxim.github.io/Stockfish-Evaluation-Guide/">Stockfish Evaluation Guide</a><a href="#fnref35" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn36"><p><a href="https://github.com/exoticorn/stockfish-js">exoticorn/stockfish-js · GitHub</a><a href="#fnref36" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn37"><p><a href="https://docs.google.com/spreadsheets/d/1ZAIuHR6n-5JTxKQc0XUSx1jyUrgVEcj8DNLKA7-urBw/edit#gid=201239930">Cscuile's Sheets</a><a href="#fnref37" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn38"><p>Part 1 covers <a href="/Houdini">Houdini</a>, <a href="/Rybka">Rybka</a>, <a href="/Komodo">Komodo</a>, <a href="/Stockfish">Stockfish</a>, <a href="/Critter">Critter</a>, <a href="/Naum">Naum</a>, <a href="/Chiron">Chiron</a> and <a href="/Spike">Spike</a><a href="#fnref38" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn39"><p><a href="http://www.alliot.fr/CHESS/ficga.html.en">Who is the Master?</a> from <a href="/Jean-Marc_Alliot">Jean-Marc Alliot's</a> <a href="http://www.alliot.fr/fpro.html.en">professional website</a><a href="#fnref39" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn40"><p><a href="https://github.com/exoticorn/stockfish-js">exoticorn/stockfish-js · GitHub</a><a href="#fnref40" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn41"><p><a href="http://tcec.chessdom.com/archive.php?se=9&amp;rapid&amp;ga=163">Delphil 3.3b2 (2334) - Stockfish 030916 (3228), TCEC Season 9 - Rapid, Round 11</a>, September 16, 2016<a href="#fnref41" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn42"><p><a href="https://github.com/official-stockfish/Stockfish/commit/5a7b45eac9dedbf7ebc61d9deb4dd934058d1ca1#diff-4cd6bcdb505b124d7bdc612c4789dc26L57-R59">Use equations for PushAway and PushClose · official-stockfish/Stockfish@5a7b45e · GitHub</a><a href="#fnref42" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn43"><p><a href="https://github.com/official-stockfish/Stockfish/pull/3474">Update default net to nn-8a08400ed089.nnue by Sopel97 · Pull Request #3474 · official-stockfish/Stockfish · GitHub</a> by <a href="/Tomasz_Sobczyk">Tomasz Sobczyk</a><a href="#fnref43" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn44"><p><a href="https://github.com/Sopel97">Sopel97 (Tomasz Sobczyk) · GitHub</a><a href="#fnref44" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn45"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=57890">Regan's latest: Depth of Satisficing</a> by Carl Lumma, <a href="/CCC">CCC</a>, October 09, 2015<a href="#fnref45" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn46"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=74560">An info</a> by Sylwy, <a href="/CCC">CCC</a>, July 25, 2020<a href="#fnref46" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:GPL">GPL</a> · <a href="/Category:Open_Source">Open Source</a> · <a href="/Category:UCI">UCI</a> · <a href="/Category:Chess960">Chess960</a> · <a href="/Category:X86">X86</a> · <a href="/Category:X64">X64</a> · <a href="/Category:PC">PC</a> · <a href="/Category:Android">Android</a> · <a href="/Category:ARM">ARM</a> · <a href="/Category:Pi">Pi</a> · <a href="/Category:Mac">Mac</a> · <a href="/Category:Linux">Linux</a> · <a href="/Category:Windows">Windows</a> · <a href="/Category:NNUE">NNUE</a> · <a href="/Category:Fish">Fish</a> · <a href="/Category:Food">Food</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Stockfish">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, Vincentlejeune, Phhnguyen, TomaszSobczyk, Smatovic, ShawnXu.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

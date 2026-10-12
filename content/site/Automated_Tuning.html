@@ -1,0 +1,900 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Automated Tuning - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Automated Tuning</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * Automated Tuning</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/e/e6/Sun_800_tester-001.jpg" alt="Engine Tuner 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Engine Tuner <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1">A vintage motor engine tester located at the <a href="https://en.wikipedia.org/wiki/James_Hall_Transport_Museum">James Hall museum of Transport</a>, <a href="https://en.wikipedia.org/wiki/Johannesburg">Johannesburg</a>, <a href="https://en.wikipedia.org/wiki/South_Africa">South Africa</a> - <a href="https://en.wikipedia.org/wiki/Engine_tuning">Engine tuning from Wikipedia</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Automated Tuning</strong>,<br />
+an <a href="https://en.wikipedia.org/wiki/Automation">automated</a> adjustment of <a href="/Evaluation">evaluation</a> parameters or weights, and less commonly, <a href="/Search">search</a> parameters <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>, with the aim to improve the <a href="/Playing_Strength">playing strength</a> of a chess engine or game playing program. Evaluation tuning can be applied by <a href="/Automated_Tuning">mathematical optimization</a> or <a href="/Learning">machine learning</a>, both fields with huge overlaps. Learning approaches are subdivided into <a href="/Automated_Tuning">supervised learning</a> using <a href="https://en.wikipedia.org/wiki/Training_set">labeled data</a>, and <a href="/Automated_Tuning">reinforcement learning</a> to learn from trying, facing the exploration (of uncharted territory) and exploitation (of current knowledge) dilemma. <a href="/Johannes_Fürnkranz">Johannes Fürnkranz</a> gives a comprehensive overview in <em>Machine Learning in Games: A Survey</em> published in 2000 <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>, covering evaluation tuning in chapter 4.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#playing-strength">Playing Strength</a></li>
+<li><a href="#parameter">Parameter</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#mathematical-optimization">Mathematical Optimization</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#methods">Methods</a></li>
+<li><a href="#instances">Instances</a></li>
+<li><a href="#advantages">Advantages</a></li>
+<li><a href="#disadvantages">Disadvantages</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#reinforcement-learning">Reinforcement Learning</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#instances-1">Instances</a></li>
+<li><a href="#engines">Engines</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#supervised-learning">Supervised Learning</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#move-adaptation">Move Adaptation</a></li>
+<li><a href="#value-adaptation">Value Adaptation</a></li>
+<li><a href="#advantages-1">Advantages</a></li>
+<li><a href="#disadvantages-1">Disadvantages</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#regression">Regression</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#linear-regression">Linear Regression</a></li>
+<li><a href="#logistic-regression">Logistic Regression</a></li>
+<li><a href="#instances-2">Instances</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#publications">Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1959">1959</a></li>
+<li><a href="#1960-">1960 ...</a></li>
+<li><a href="#1970-">1970 ...</a></li>
+<li><a href="#1980-">1980 ...</a></li>
+<li><a href="#1985-">1985 ...</a></li>
+<li><a href="#1990-">1990 ...</a></li>
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1997-">1997 ...</a></li>
+<li><a href="#2000--1">2000 ...</a></li>
+<li><a href="#2005--1">2005 ...</a></li>
+<li><a href="#2010--1">2010 ...</a></li>
+<li><a href="#2015--1">2015 ...</a></li>
+<li><a href="#2020--1">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#engine-tuning">Engine Tuning</a></li>
+<li><a href="#optimization">Optimization</a></li>
+<li><a href="#machine-learning">Machine Learning</a></li>
+<li><a href="#statisticsregression-analysis">Statistics/Regression Analysis</a></li>
+<li><a href="#code">Code</a></li>
+<li><a href="#misc">Misc</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="playing-strength">Playing Strength</h2>
+<p><span id="Playingstrength"></span>A difficulty in tuning and automated tuning of engine parameters is measuring <a href="/Playing_Strength">playing strength</a>. Using small sets of <a href="/Test-Positions">test-positions</a>, which was quite common in former times to estimate relative strength of chess programs, lacks adequate diversity for a reliable strength predication. In particular, solving test-positions does not necessarily correlate with practical playing strength in matches against other opponents. Therefore, measuring strength requires to play many games against a reference opponent to determine the <a href="/Match_Statistics">win rate</a> with a certain <a href="https://en.wikipedia.org/wiki/Confidence_interval">confidence</a>. The closer the strength of two opponents, the more games are necessary to determine whether changed parameters or weights in one of them are improvements or not, up to several tens of thousands. Playing many games with ultra short time controls has became de facto standard with todays strong programs, as for instance applied in <a href="/Stockfish">Stockfish's</a> <a href="/Stockfish">Fishtest</a>, using the <a href="/Match_Statistics">sequential probability ratio test</a> (SPRT) to possibly terminate a match early <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>.</p>
+<h2 id="parameter">Parameter</h2>
+<p>Quote by <a href="/Ingo_Althöfer">Ingo Althöfer</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>:</p>
+<p><code>It is one of the best arts to find the right SMALL set of parameters and to tune them.</code></p>
+<p><code>Some 12 years ago I had a technical article on this ("On telescoping linear evaluation functions") in the </code><a href="/ICGA_Journal"><code>ICCA Journal, Vol. 16, No. 2</code></a><code>, pp. 91-94, describing a theorem (of existence) which says that in case of linear evaluation functions with lots of terms there is always a small subset of the terms such that this set with the right parameters is almost as good as the full evaluation function. </code></p>
+<p><span id="Optimization"></span></p>
+<h2 id="mathematical-optimization">Mathematical Optimization</h2>
+<p><a href="https://en.wikipedia.org/wiki/Mathematical_optimization">Mathematical optimization</a> methods in tuning consider the engine as a <a href="https://en.wikipedia.org/wiki/Black_box">black box</a>.</p>
+<h3 id="methods">Methods</h3>
+<ul>
+<li><a href="/CLOP">CLOP</a></li>
+<li><a href="/Genetic_Programming">Genetic Algorithms</a></li>
+<li><a href="/Genetic_Programming">PBIL</a></li>
+<li><a href="/Simulated_Annealing">Simulated Annealing</a></li>
+<li><a href="/SPSA">SPSA</a></li>
+</ul>
+<h3 id="instances">Instances</h3>
+<ul>
+<li><a href="/ACPP">ACPP</a></li>
+<li><a href="/Amoeba">Amoeba</a></li>
+<li><a href="/BBChess_%28SI%29">Differential Evolution in BBChess</a></li>
+<li><a href="/Deuterium">Deuterium</a></li>
+<li><a href="/Falcon">Genetic Algorithm in Falcon</a></li>
+<li>Stockfish's Tuning Method</li>
+</ul>
+<h3 id="advantages">Advantages</h3>
+<ul>
+<li>Works with all engine parameters, including search</li>
+<li>Takes search-eval interaction into account</li>
+</ul>
+<h3 id="disadvantages">Disadvantages</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Time_complexity">Time complexity</a> issues with increasing number of weights to tune</li>
+</ul>
+<p><span id="ReinformentLearning"></span></p>
+<h2 id="reinforcement-learning">Reinforcement Learning</h2>
+<p><a href="/Reinforcement_Learning">Reinforcement learning</a>, in particular <a href="/Temporal_Difference_Learning">temporal difference learning</a>, has a long history in tuning evaluation weights in game programming, first seeen in the late 50s by <a href="/Arthur_Samuel">Arthur Samuel</a> in his <a href="/Checkers">Checkers</a> player <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>. In self play against a stable copy of itself, after each move, the weights of the evaluation function were adjusted in a way that the <a href="/Score">score</a> of the <a href="/Root">root position</a> after a <a href="/Quiescence_Search">quiescence search</a> became closer to the score of the full search. This TD method was generalized and formalized by <a href="/Richard_Sutton">Richard Sutton</a> in 1988 <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>, who introduced the decay parameter <strong>λ</strong>, where proportions of the score came from the outcome of <a href="https://en.wikipedia.org/wiki/Monte_Carlo_method">Monte Carlo</a> simulated games, tapering between <a href="https://en.wikipedia.org/wiki/Bootstrapping#Artificial_intelligence_and_machine_learning">bootstrapping</a> (λ = 0) and Monte Carlo (λ = 1). <a href="/Temporal_Difference_Learning">TD-λ</a> was famously applied by <a href="/Gerald_Tesauro">Gerald Tesauro</a> in his <a href="/Backgammon">Backgammon</a> program <a href="https://en.wikipedia.org/wiki/TD-Gammon">TD-Gammon</a> <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a>, its <a href="/Minimax">minimax</a> adaptation <a href="/Temporal_Difference_Learning">TD-Leaf</a> was successful used in eval tuning of chess programs <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a>, with <a href="/KnightCap">KnightCap</a> <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a> and <a href="/CilkChess">CilkChess</a> <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a> as prominent samples.</p>
+<h3 id="instances-1">Instances</h3>
+<ul>
+<li><a href="/Temporal_Difference_Learning">TD-λ</a></li>
+<li><a href="/Temporal_Difference_Learning">TD-Leaf</a></li>
+<li><a href="/Meep">RootStrap</a></li>
+<li><a href="/Meep">TreeStrap</a></li>
+</ul>
+<p><span id="Engines"></span></p>
+<h3 id="engines">Engines</h3>
+<ul>
+<li><a href="/CilkChess">CilkChess</a></li>
+<li><a href="/EXchess">EXchess</a> <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a></li>
+<li><a href="/FUSCsharp">FUSc#</a></li>
+<li><a href="/Green_Light_Chess">Green Light Chess</a></li>
+<li><a href="/KnightCap">KnightCap</a></li>
+<li><a href="/Meep">Meep</a></li>
+<li><a href="/NeuroChess">NeuroChess</a></li>
+<li><a href="/SAL">SAL</a></li>
+<li><a href="/Tao">Tao</a></li>
+<li><a href="/TDChess">TDChess</a></li>
+</ul>
+<p><span id="SupervisedLearning"></span></p>
+<h2 id="supervised-learning">Supervised Learning</h2>
+<h3 id="move-adaptation">Move Adaptation</h3>
+<p><span id="MoveAdaption"></span>One <a href="/Supervised_Learning">supervised learning</a> method considers desired moves from a set of positions, likely from grandmaster games, and tries to adjust their evaluation weights so that for instance a one-ply search agrees with the desired move. Already pioneering in reinforcement learning some years before, move adaptation was described by <a href="/Arthur_Samuel">Arthur Samuel</a> in 1967 as used in the second version of his checkers player <a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a>, where a structure of stacked linear evaluation functions was trained by computing a correlation measure based on the number of times the feature rated an alternative move higher than the desired move played by an expert <a href="#fn15" class="footnote-ref" id="fnref15" role="doc-noteref"><sup>15</sup></a>. In chess, move adaptation was first described by <a href="/Thomas_Nitsche">Thomas Nitsche</a> in 1982 <a href="#fn16" class="footnote-ref" id="fnref16" role="doc-noteref"><sup>16</sup></a>, and with some extensions by <a href="/Tony_Marsland">Tony Marsland</a> in 1985 <a href="#fn17" class="footnote-ref" id="fnref17" role="doc-noteref"><sup>17</sup></a>. <a href="/Eval_Tuning_in_Deep_Thought">Eval Tuning in Deep Thought</a> as mentioned by <a href="/Feng-hsiung_Hsu">Feng-hsiung Hsu</a> et al. in 1990 <a href="#fn18" class="footnote-ref" id="fnref18" role="doc-noteref"><sup>18</sup></a>, and later published by <a href="/Andreas_Nowatzyk">Andreas Nowatzyk</a>, is also based on an extended form of move adaptation <a href="#fn19" class="footnote-ref" id="fnref19" role="doc-noteref"><sup>19</sup></a>. <a href="/Jonathan_Schaeffer">Jonathan Schaeffer's</a> and <a href="/Paul_Lu">Paul Lu's</a> efforts to make Deep Thought's approach work for <a href="https://en.wikipedia.org/wiki/Chinook_%28draughts_player%29">Chinook</a> in 1990 failed <a href="#fn20" class="footnote-ref" id="fnref20" role="doc-noteref"><sup>20</sup></a> - nothing seemed to produce results that were as good than their hand-tuned effort <a href="#fn21" class="footnote-ref" id="fnref21" role="doc-noteref"><sup>21</sup></a>.</p>
+<h3 id="value-adaptation">Value Adaptation</h3>
+<p><span id="ValueAdaption"></span>A second supervised learning approach used to tune evaluation weights is based on <a href="https://en.wikipedia.org/wiki/Regression">regression</a> of the desired value, i.e. using the final outcome from huge sets of positions from quality games, or other information supplied by a supervisor, i.e. in form of annotations from <a href="https://en.wikipedia.org/wiki/Chess_annotation_symbols#Position_evaluation_symbols">position evaluation symbols</a>. Often, value adaptation is reinforced by determining an expected outcome by self play <a href="#fn22" class="footnote-ref" id="fnref22" role="doc-noteref"><sup>22</sup></a>.</p>
+<h3 id="advantages-1">Advantages</h3>
+<ul>
+<li>Can modify any number of weights simultaneously - constant <a href="https://en.wikipedia.org/wiki/Time_complexity">time complexity</a></li>
+</ul>
+<h3 id="disadvantages-1">Disadvantages</h3>
+<ul>
+<li>Requires a source for the labeled data</li>
+<li>Can only be used for evaluation weights or anything else that can be labeled</li>
+<li>Works not optimal when combined with search</li>
+</ul>
+<p><span id="Regression"></span></p>
+<h2 id="regression">Regression</h2>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:300px"><img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Linear_regression.svg" alt="Linear Regression 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="https://en.wikipedia.org/wiki/Linear_regression">Linear Regression</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1">Random data points and their <a href="https://en.wikipedia.org/wiki/Linear_regression">linear regression</a>. <a href="https://commons.wikimedia.org/wiki/File:Linear_regression.svg">Created</a> with <a href="https://en.wikipedia.org/wiki/Sage_%28mathematics_software%29">Sage</a> by Sewaqu, November 5, 2010, <a href="https://en.wikipedia.org/wiki/Wikimedia_Commons">Wikimedia Commons</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><a href="https://en.wikipedia.org/wiki/Regression_analysis">Regression analysis</a> is a <a href="https://en.wikipedia.org/wiki/Statistics">statistical process</a> with a substantial overlap with machine learning to <a href="https://en.wikipedia.org/wiki/Prediction">predict</a> the value of an <a href="https://en.wikipedia.org/wiki/Dependent_and_independent_variables">Y variable</a> (output), given known value pairs of the X and Y variables. While <a href="https://en.wikipedia.org/wiki/Linear_regression">linear regression</a> deals with continuous outputs, <a href="https://en.wikipedia.org/wiki/Logistic_regression">logistic regression</a> covers binary or discrete output, such as win/loss, or win/draw/loss. Parameter estimation in regression analysis can be formulated as the <a href="https://en.wikipedia.org/wiki/Mathematical_optimization">minimization</a> of a <a href="https://en.wikipedia.org/wiki/Loss_function">cost or loss function</a> over a <a href="https://en.wikipedia.org/wiki/Training_set">training set</a> <a href="#fn23" class="footnote-ref" id="fnref23" role="doc-noteref"><sup>23</sup></a>, such as <a href="https://en.wikipedia.org/wiki/Mean_squared_error">mean squared error</a> or <a href="https://en.wikipedia.org/wiki/Cross_entropy#Cross-entropy_error_function_and_logistic_regression">cross-entropy error function</a> for <a href="https://en.wikipedia.org/wiki/Binary_classification">binary classification</a> <a href="#fn24" class="footnote-ref" id="fnref24" role="doc-noteref"><sup>24</sup></a>. The minimization is implemented by <a href="/Iteration">iterative</a> optimization <a href="/Algorithms">algorithms</a> or <a href="https://en.wikipedia.org/wiki/Metaheuristic">metaheuristics</a> such as <a href="https://en.wikipedia.org/wiki/Iterated_local_search">Iterated local search</a>, <a href="https://en.wikipedia.org/wiki/Gauss%E2%80%93Newton_algorithm">Gauss–Newton algorithm</a>, or <a href="https://en.wikipedia.org/wiki/Conjugate_gradient_method">conjugate gradient method</a>. <span id="LinearRegression"></span></p>
+<h3 id="linear-regression">Linear Regression</h3>
+<p>The supervised problem of regression applied to <a href="/Automated_Tuning">move adaptation</a> was used by <a href="/Thomas_Nitsche">Thomas Nitsche</a> in 1982, minimizing the <a href="https://en.wikipedia.org/wiki/Mean_squared_error">mean squared error</a> of a cost function considering the program’s and a grandmaster’s choice of moves, as mentioned, extended by <a href="/Tony_Marsland">Tony Marsland</a> in 1985, and later by the <a href="/Deep_Thought">Deep Thought</a> team. Regression used to <a href="/Automated_Tuning">adapt desired values</a> was described by <a href="/Donald_H._Mitchell">Donald H. Mitchell</a> in his 1984 master thesis on evaluation features in <a href="/Othello">Othello</a>, cited by <a href="/Michael_Buro">Michael Buro</a> <a href="#fn25" class="footnote-ref" id="fnref25" role="doc-noteref"><sup>25</sup></a> <a href="#fn26" class="footnote-ref" id="fnref26" role="doc-noteref"><sup>26</sup></a>. <a href="/Jens_Christensen">Jens Christensen</a> applied <a href="https://en.wikipedia.org/wiki/Linear_regression">linear regression</a> to chess in 1986 to learn <a href="/Point_Value">point values</a> in the domain of <a href="/Temporal_Difference_Learning">temporal difference learning</a> <a href="#fn27" class="footnote-ref" id="fnref27" role="doc-noteref"><sup>27</sup></a>.</p>
+<p><span id="LogisticRegression"></span></p>
+<h3 id="logistic-regression">Logistic Regression</h3>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:300px"><a href="http://wolfr.am/1al3d5B" target="_blank" rel="noopener noreferrer"><img src="/assets/SigmoidTexelTune.gif" alt="Logistic function" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Logistic function</span></span><code> </code></p>
+<p>Since the relationship between <a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">win percentage and pawn advantage</a> is assumed to follow a <a href="https://en.wikipedia.org/wiki/Logistic_model">logistic model</a>, one may treat static evaluation as <a href="/Neural_Networks">single-layer perceptron</a> or single <a href="https://en.wikipedia.org/wiki/Artificial_neuron">neuron</a> <a href="/Neural_Networks">ANN</a> with the common <a href="https://en.wikipedia.org/wiki/Logistic_function">logistic</a> <a href="https://en.wikipedia.org/wiki/Activation_function">activation function</a>, performing the perceptron algorithm to train it <a href="#fn28" class="footnote-ref" id="fnref28" role="doc-noteref"><sup>28</sup></a>. <a href="https://en.wikipedia.org/wiki/Logistic_regression">Logistic regression</a> in evaluation tuning was first elaborated by <a href="/Michael_Buro">Michael Buro</a> in 1995 <a href="#fn29" class="footnote-ref" id="fnref29" role="doc-noteref"><sup>29</sup></a>, and proved successful in the game of <a href="/Othello">Othello</a> in comparison with <a href="/Mathematician">Fisher's</a> <a href="https://en.wikipedia.org/wiki/Kernel_Fisher_discriminant_analysis">linear discriminant</a> and quadratic <a href="https://en.wikipedia.org/wiki/Discriminant">discriminant</a> function for <a href="https://en.wikipedia.org/wiki/Normal_distribution">normally distributed</a> features, and served as eponym of his Othello program <em>Logistello</em> <a href="#fn30" class="footnote-ref" id="fnref30" role="doc-noteref"><sup>30</sup></a>. In computer chess, logistic regression was applied by <a href="/Arkadiusz_Paterek">Arkadiusz Paterek</a> with <a href="/Gosu">Gosu</a> <a href="#fn31" class="footnote-ref" id="fnref31" role="doc-noteref"><sup>31</sup></a>, later proposed by <a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a> in 2009 as used by <a href="/Gaviota">Gaviota</a> <a href="#fn32" class="footnote-ref" id="fnref32" role="doc-noteref"><sup>32</sup></a>, independently described by <a href="/Amir_Ban">Amir Ban</a> in 2012 for <a href="/Junior">Junior's</a> evaluation learning <a href="#fn33" class="footnote-ref" id="fnref33" role="doc-noteref"><sup>33</sup></a>, and explicitly mentioned by <a href="/Álvaro_Begué">Álvaro Begué</a> in a January 2014 <a href="/CCC">CCC</a> discussion <a href="#fn34" class="footnote-ref" id="fnref34" role="doc-noteref"><sup>34</sup></a>, when <a href="/Peter_Österlund">Peter Österlund</a> explained Texel's Tuning Method <a href="#fn35" class="footnote-ref" id="fnref35" role="doc-noteref"><sup>35</sup></a>, which subsequently popularized logistic regression tuning in computer chess. <a href="/Vladimir_Medvedev">Vladimir Medvedev's</a> <a href="/Point_Value_by_Regression_Analysis">Point Value by Regression Analysis</a> <a href="#fn36" class="footnote-ref" id="fnref36" role="doc-noteref"><sup>36</sup></a> <a href="#fn37" class="footnote-ref" id="fnref37" role="doc-noteref"><sup>37</sup></a> experiments showed why the <a href="https://en.wikipedia.org/wiki/Logistic_function">logistic function</a> is appropriate, and further used <a href="https://en.wikipedia.org/wiki/Cross_entropy">cross-entropy</a> and <a href="https://en.wikipedia.org/wiki/Regularization_%28mathematics%29">regularization</a>.</p>
+<h3 id="instances-2">Instances</h3>
+<ul>
+<li><a href="/Arasan">Arasan's Tuning</a></li>
+<li><a href="/Ethereal">Ethereal</a></li>
+<li><a href="/Eval_Tuning_in_Deep_Thought">Eval Tuning in Deep Thought</a></li>
+<li><a href="/FabChess">FabChess</a></li>
+<li><a href="/Gosu">Gosu</a></li>
+<li><a href="/Koivisto">Koivisto</a></li>
+<li><a href="/Minimax_Tree_Optimization">Minimax Tree Optimization</a> (MMTO or the Bonanza-Method in <a href="/Shogi">Shogi</a>)</li>
+<li><a href="/Point_Value_by_Regression_Analysis">Point Value by Regression Analysis</a></li>
+<li><a href="/RuyTune">RuyTune</a></li>
+<li>Texel's Tuning Method</li>
+<li><a href="/Winter">Winter</a></li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Dynamic_Programming">Dynamic Programming</a></li>
+<li><a href="/Evaluation">Evaluation</a></li>
+<li><a href="/Michael_Buro">GLEM</a> by <a href="/Michael_Buro">Michael Buro</a></li>
+<li><a href="/Iteration">Iteration</a></li>
+<li><a href="/Knowledge">Knowledge</a></li>
+<li><a href="/Learning">Learning</a></li>
+<li><a href="/Match_Statistics">Match Statistics</a></li>
+<li><a href="/Neural_Networks">Neural Networks</a></li>
+<li><a href="/Trial_and_Error">Trial and Error</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<h3 id="1959">1959</h3>
+<ul>
+<li><a href="/Arthur_Samuel">Arthur Samuel</a> (<strong>1959</strong>). <em><a href="http://domino.watson.ibm.com/tchjr/journalindex.nsf/600cc5649e2871db852568150060213c/39a870213169f45685256bfa00683d74!OpenDocument">Some Studies in Machine Learning Using the Game of Checkers</a></em>. IBM Journal July 1959</li>
+</ul>
+<h3 id="1960-">1960 ...</h3>
+<ul>
+<li><a href="/Arnold_K._Griffith">Arnold K. Griffith</a> (<strong>1966</strong>). <em><a href="http://dspace.mit.edu/handle/1721.1/5896#files-area">A new Machine-Learning Technique applied to the Game of Checkers</a></em>. <a href="/Massachusetts_Institute_of_Technology">MIT</a>, <a href="https://en.wikipedia.org/wiki/MIT_Computer_Science_and_Artificial_Intelligence_Laboratory#Project_MAC">Project MAC</a>, MAC-M-293</li>
+<li><a href="/Arthur_Samuel">Arthur Samuel</a> (<strong>1967</strong>). <em>Some Studies in Machine Learning. Using the Game of Checkers. II-Recent Progress</em>. <a href="http://researcher.watson.ibm.com/researcher/files/us-beygel/samuel-checkers.pdf">pdf</a></li>
+</ul>
+<h3 id="1970-">1970 ...</h3>
+<ul>
+<li><a href="/Arnold_K._Griffith">Arnold K. Griffith</a> (<strong>1974</strong>). <em><a href="http://www.sciencedirect.com/science/article/pii/0004370274900277">A Comparison and Evaluation of Three Machine Learning Procedures as Applied to the Game of Checkers</a></em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 5, No. 2</li>
+<li><a href="/Mathematician">Mokhtar S. Bazaraa</a>, <a href="/Mathematician">C. M. Shetty</a> (<strong>1976</strong>). <em><a href="https://link.springer.com/book/10.1007%2F978-3-642-48294-6">Foundations of Optimization</a></em>. Lecture Notes in Economics and Mathematical Systems, Vol. 122, <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a></li>
+<li><span id="NonlinearProgramming1st"></span><a href="/Mathematician">Mokhtar S. Bazaraa</a>, <a href="/Mathematician">C. M. Shetty</a> (<strong>1979</strong>). <em>Nonlinear Programming: Theory and Algorithms</em>. <a href="https://en.wikipedia.org/wiki/Wiley_(publisher)">Wiley</a> » 2nd, 3rd edition</li>
+</ul>
+<h3 id="1980-">1980 ...</h3>
+<ul>
+<li><a href="/Thomas_Nitsche">Thomas Nitsche</a> (<strong>1982</strong>). <em>A Learning Chess Program.</em> <a href="/Advances_in_Computer_Chess_3">Advances in Computer Chess 3</a></li>
+<li><a href="/Donald_H._Mitchell">Donald H. Mitchell</a> (<strong>1984</strong>). <em>Using Features to Evaluate Positions in Experts' and Novices' Othello Games</em>. Master thesis, Department of Psychology, <a href="/Northwestern_University">Northwestern University</a>, Evanston, IL</li>
+</ul>
+<h3 id="1985-">1985 ...</h3>
+<ul>
+<li><a href="/Tony_Marsland">Tony Marsland</a> (<strong>1985</strong>). <em>Evaluation-Function Factors</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 8, No. 2</a>, <a href="http://webdocs.cs.ualberta.ca/~tony/OldPapers/evaluation.pdf">pdf</a></li>
+<li><a href="/Jens_Christensen">Jens Christensen</a>, <a href="/Richard_Korf">Richard Korf</a> (<strong>1986</strong>). <em>A Unified Theory of Heuristic Evaluation functions and Its Applications to Learning.</em> Proceedings of the <a href="http://www.aaai.org/Conferences/AAAI/aaai86.php">AAAI-86</a>, pp. 148-152, <a href="http://www.aaai.org/Papers/AAAI/1986/AAAI86-023.pdf">pdf</a></li>
+<li><a href="/Jens_Christensen">Jens Christensen</a> (<strong>1986</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-1-4613-2279-5_9?no-access=true">Learning Static Evaluation Functions by Linear Regression</a></em>. in <a href="/Tom_Mitchell">Tom Mitchell</a>, <a href="/Jaime_Carbonell">Jaime Carbonell</a>, <a href="/Ryszard_Michalski">Ryszard Michalski</a> (<strong>1986</strong>). <em><a href="http://link.springer.com/book/10.1007/978-1-4613-2279-5">Machine Learning: A Guide to Current Research</a></em>. The Kluwer International Series in Engineering and Computer Science, Vol. 12</li>
+<li><a href="/Dap_Hartmann">Dap Hartmann</a> (<strong>1987</strong>). <em>How to Extract Relevant Knowledge from Grandmaster Games. Part 1: Grandmasters have Insights - the Problem is what to Incorporate into Practical Problems.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 10, No. 1</a></li>
+<li><a href="/Dap_Hartmann">Dap Hartmann</a> (<strong>1987</strong>). <em>How to Extract Relevant Knowledge from Grandmaster Games. Part 2: the Notion of Mobility, and the Work of <a href="/Adriaan_de_Groot">De Groot</a> and <a href="/Eliot_Slater">Slater</a></em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 10, No. 2</a></li>
+<li><a href="/Bruce_Abramson">Bruce Abramson</a>, <a href="/Richard_Korf">Richard Korf</a> (<strong>1987</strong>). <em>A Model of Two-Player Evaluation Functions.</em> <a href="http://www.aaai.org/Conferences/AAAI/aaai87.php">AAAI-87</a>. <a href="http://www.aaai.org/Papers/AAAI/1987/AAAI87-016.pdf">pdf</a></li>
+<li><a href="/Bruce_Abramson">Bruce Abramson</a> (<strong>1988</strong>). <em>Learning Expected-Outcome Evaluators in Chess.</em> Proceedings of the 1988 AAAI Spring Symposium Series: Computer Game Playing, 26-28.</li>
+<li><a href="/Kai-Fu_Lee">Kai-Fu Lee</a>, <a href="/Sanjoy_Mahajan">Sanjoy Mahajan</a> (<strong>1988</strong>). <em><a href="http://www.sciencedirect.com/science/article/pii/0004370288900768">A Pattern Classification Approach to Evaluation Function Learning</a></em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 36, No. 1</li>
+<li><a href="/Richard_Sutton">Richard Sutton</a> (<strong>1988</strong>). <em>Learning to Predict by the Methods of Temporal Differences</em>. <a href="https://en.wikipedia.org/wiki/Machine_Learning_%28journal%29">Machine Learning</a>, Vol. 3, No. 1, <a href="http://webdocs.cs.ualberta.ca/~sutton/papers/sutton-88.pdf">pdf</a></li>
+<li><a href="/Bruce_Abramson">Bruce Abramson</a> (<strong>1989</strong>). <em>On Learning and Testing Evaluation Functions.</em> Proceedings of the Sixth Israeli Conference on Artificial Intelligence, 1989, 7-16.</li>
+<li><a href="/Maarten_van_der_Meulen">Maarten van der Meulen</a> (<strong>1989</strong>). <em>Weight Assessment in Evaluation Functions</em>. <a href="/Advances_in_Computer_Chess_5">Advances in Computer Chess 5</a></li>
+</ul>
+<h3 id="1990-">1990 ...</h3>
+<ul>
+<li><a href="/Bruce_Abramson">Bruce Abramson</a> (<strong>1990</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/freeabs_all.jsp?arnumber=44404">Expected-Outcome: A General Model of Static Evaluation</a></em>. <a href="/IEEE">IEEE Transactions on Pattern Analysis and Machine Intelligence</a>, Vol. 12, No. 2</li>
+<li><a href="/Bruce_Abramson">Bruce Abramson</a> (<strong>1990</strong>). <em>An Analysis of Expected-Outcome.</em> Journal of Experimental and Theoretical Artificial Intelligence 2: 55-73.</li>
+<li><a href="/Bruce_Abramson">Bruce Abramson</a> (<strong>1990</strong>). <em>On Learning and Testing Evaluation Functions.</em> Journal of Experimental and Theoretical Artificial Intelligence, Vol. 2</li>
+<li><a href="/Thomas_Anantharaman">Thomas Anantharaman</a> (<strong>1990</strong>). <em>A Statistical Study of Selective Min-Max Search in Computer Chess</em>. Ph.D. thesis, <a href="/Carnegie_Mellon_University">Carnegie Mellon University</a></li>
+<li><a href="/Thomas_Anantharaman">Thomas Anantharaman</a> (<strong>1991</strong>). <em>A Statistical Study of Selective Min-Max Search in Computer Chess</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 14, No. 1</a></li>
+<li><a href="/Feng-hsiung_Hsu">Feng-hsiung Hsu</a>, <a href="/Thomas_Anantharaman">Thomas Anantharaman</a>, <a href="/Murray_Campbell">Murray Campbell</a>, <a href="/Andreas_Nowatzyk">Andreas Nowatzyk</a> (<strong>1990</strong>). <em><a href="http://www.disi.unige.it/person/DelzannoG/AI2/hsu.html">A Grandmaster Chess Machine</a></em>. <a href="/Scientific_American">Scientific American</a>, Vol. 263, No. 4, pp. 44-50. ISSN 0036-8733.</li>
+<li><a href="/Bruce_Abramson">Bruce Abramson</a> (<strong>1991</strong>). <em>The Expected-Outcome Model of Two-Player Games.</em> Part of the series, Research Notes in Artificial Intelligence (San Mateo: Morgan Kaufmann, 1991).</li>
+<li><a href="/Alex_van_Tiggelen">Alex van Tiggelen</a> (<strong>1991</strong>). <em>Neural Networks as a Guide to Optimization - The Chess Middle Game Explored</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 14, No. 3</a></li>
+<li><a href="/William_Tunstall-Pedoe">William Tunstall-Pedoe</a> (<strong>1991</strong>). <em>Genetic Algorithms Optimizing Evaluation Functions</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 14, No. 3</a></li>
+<li><a href="/Paul_E._Utgoff">Paul E. Utgoff</a>, <a href="http://dblp.uni-trier.de/pers/hd/c/Clouse:Jeffery_A=">Jeffery A. Clouse</a> (<strong>1991</strong>). <em><a href="http://scholarworks.umass.edu/cs_faculty_pubs/193/">Two Kinds of Training Information for Evaluation Function Learning</a></em>. <a href="https://en.wikipedia.org/wiki/University_of_Massachusetts_Amherst">University of Massachusetts, Amherst</a>, Proceedings of the AAAI 1991</li>
+<li><a href="/Gerald_Tesauro">Gerald Tesauro</a> (<strong>1992</strong>). <em>Temporal Difference Learning of Backgammon Strategy</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/icml/ml1992.html#Tesauro92">ML 1992</a></li>
+<li><a href="/Ingo_Althöfer">Ingo Althöfer</a> (<strong>1993</strong>). <em>On Telescoping Linear Evaluation Functions.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 16, No. 2</a></li>
+<li><span id="NonlinearProgramming2nd"></span><a href="/Mathematician">Mokhtar S. Bazaraa</a>, <a href="/Mathematician">Hanif D. Sherali</a>, <a href="/Mathematician">C. M. Shetty</a> (<strong>1993</strong>). <em>Nonlinear Programming: Theory and Algorithms</em>. 2nd edition, <a href="https://en.wikipedia.org/wiki/Wiley_(publisher)">Wiley</a> » 1st, 3rd edition</li>
+<li><a href="/Peter_Mysliwietz">Peter Mysliwietz</a> (<strong>1994</strong>). <em>Konstruktion und Optimierung von Bewertungsfunktionen beim Schach.</em> Ph.D. thesis (German)</li>
+</ul>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li><a href="/Michael_Buro">Michael Buro</a> (<strong>1995</strong>). <em><a href="https://www.jair.org/index.php/jair/article/view/10146">Statistical Feature Combination for the Evaluation of Game Positions</a></em>. <a href="https://en.wikipedia.org/wiki/Journal_of_Artificial_Intelligence_Research">JAIR</a>, Vol. 3</li>
+<li><a href="/Chris_McConnell">Chris McConnell</a> (<strong>1995</strong>). <em>Tuning Evaluation Functions for Search</em>. <a href="http://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=9B2A0CCA8B1AFB594A879799D974111A?doi=10.1.1.53.9742&amp;rep=rep1&amp;type=pdf">pdf</a></li>
+<li><a href="/Chris_McConnell">Chris McConnell</a> (<strong>1995</strong>). <em>Tuning Evaluation Functions for Search</em> (Talk), <a href="http://www.cs.cmu.edu/afs/cs.cmu.edu/user/ccm/www/talks/tune.ps">ps</a></li>
+<li><a href="/Johannes_Fürnkranz">Johannes Fürnkranz</a> (<strong>1996</strong>). <em>Machine Learning in Computer Chess: The Next Generation.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 19, No. 3</a>, <a href="http://www.ofai.at/cgi-bin/get-tr?download=1&amp;paper=oefai-tr-96-11.ps.gz">zipped ps</a></li>
+<li><a href="/Don_Beal">Don Beal</a>, <a href="/Martin_C._Smith">Martin C. Smith</a> (<strong>1997</strong>). <em>Learning Piece Values Using Temporal Differences</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 20, No. 3</a></li>
+<li><a href="/Thomas_Anantharaman">Thomas Anantharaman</a> (<strong>1997</strong>). <em>Evaluation Tuning for Computer Chess: Linear Discriminant Methods</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 20, No. 4</a></li>
+<li><a href="/Jonathan_Baxter">Jonathan Baxter</a>, <a href="/Andrew_Tridgell">Andrew Tridgell</a>, <a href="/Lex_Weaver">Lex Weaver</a> (<strong>1998</strong>). <em>Experiments in Parameter Learning Using Temporal Differences</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 21, No. 2</a>, <a href="http://cs.anu.edu.au/%7ELex.Weaver/pub_sem/publications/ICCA-98_equiv.pdf">pdf</a></li>
+<li><a href="/Michael_Buro">Michael Buro</a> (<strong>1998</strong>). <em><a href="http://link.springer.com/chapter/10.1007/3-540-48957-6_8">From Simple Features to Sophisticated Evaluation Functions</a></em>. <a href="/CG_1998">CG 1998</a>, <a href="https://skatgame.net/mburo/ps/glem.pdf">pdf</a></li>
+<li><a href="/James_C._Spall">James C. Spall</a> (<strong>1998</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/login.jsp?tp=&amp;arnumber=705889&amp;url=http%3A%2F%2Fieeexplore.ieee.org%2Fxpls%2Fabs_all.jsp%3Farnumber%3D705889">Implementation of the Simultaneous Perturbation Algorithm for Stochastic Optimization</a></em>. <a href="/IEEE">IEEE Transactions on Aerospace and Electronic Systems</a>, <a href="http://www.jhuapl.edu/spsa/PDF-SPSA/Spall_Implementation_of_the_Simultaneous.PDF">pdf</a> <a href="#fn38" class="footnote-ref" id="fnref38" role="doc-noteref"><sup>38</sup></a></li>
+<li><a href="/Don_Beal">Don Beal</a>, <a href="/Martin_C._Smith">Martin C. Smith</a> (<strong>1999</strong>). <em>Learning Piece-Square Values using Temporal Differences.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 22, No. 4</a></li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="/Johannes_Fürnkranz">Johannes Fürnkranz</a> (<strong>2000</strong>). <em>Machine Learning in Games: A Survey</em>. <a href="https://en.wikipedia.org/wiki/Austrian_Research_Institute_for_Artificial_Intelligence">Austrian Research Institute for Artificial Intelligence</a>, OEFAI-TR-2000-3, <a href="https://fmfi-uk.hq.sk/Informatika/Strojove%20Ucenie/oefai-tr-2000-31.pdf">pdf</a></li>
+<li><a href="/Robert_Levinson">Robert Levinson</a>, Ryan Weber (<strong>2000</strong>). <em><a href="http://link.springer.com/chapter/10.1007/3-540-45579-5_9">Chess Neighborhoods, Function Combination, and Reinforcement Learning</a></em>. <a href="/CG_2000">CG 2000</a>, <a href="https://users.soe.ucsc.edu/~levinson/Papers/CNFCRL.pdf">pdf</a></li>
+<li><a href="/Johannes_Fürnkranz">Johannes Fürnkranz</a>, <a href="/Miroslav_Kubat">Miroslav Kubat</a> (eds.) (<strong>2001</strong>). <em><a href="https://www.novapublishers.com/catalog/product_info.php?products_id=720">Machines that Learn to Play Games</a></em>. Advances in Computation: Theory and Practice, Vol. 8,. <a href="https://en.wikipedia.org/wiki/Nova_Publishers">NOVA Science Publishers</a></li>
+</ul>
+<p><a href="/Gerald_Tesauro">Gerald Tesauro</a> (<strong>2001</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=644397">Comparison Training of Chess Evaluation Functions</a></em>. » <a href="/SCP">SCP</a>, <a href="/Deep_Blue">Deep Blue</a></p>
+<ul>
+<li><a href="/Graham_Kendall">Graham Kendall</a>, Glenn Whitwell (<strong>2001</strong>). <em><a href="https://ieeexplore.ieee.org/document/934299?tp=&amp;arnumber=934299&amp;url=http:%2F%2Fieeexplore.ieee.org%2Fxpls%2Fabs_all.jsp%3Farnumber%3D934299">An Evolutionary Approach for the Tuning of a Chess Evaluation Function using Population Dynamics</a></em>. Proceedings of the 2001 Congress on Evolutionary Computation, Vol. 2, <a href="http://www.cs.nott.ac.uk/~pszgxk/papers/cec2001chess.pdf">pdf</a></li>
+<li><a href="/Yngvi_Björnsson">Yngvi Björnsson</a>, <a href="/Tony_Marsland">Tony Marsland</a> (<strong>2001</strong>). <em>Learning Search Control in Adversary Games</em>. <a href="/Advances_in_Computer_Games_9">Advances in Computer Games 9</a>, pp. 157-174. <a href="http://www.ru.is/faculty/yngvi/pdf/BjornssonM01b.pdf">pdf</a></li>
+<li><a href="/Michael_Buro">Michael Buro</a> (<strong>2002</strong>). <em>Improving Mini-max Search by Supervised Learning.</em> <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 134, No. 1, <a href="http://www.cs.ualberta.ca/~mburo/ps/logaij.pdf">pdf</a></li>
+<li><a href="/Dave_Gomboc">Dave Gomboc</a>, <a href="/Tony_Marsland">Tony Marsland</a>, <a href="/Michael_Buro">Michael Buro</a> (<strong>2003</strong>). <em>Evaluation Function Tuning via Ordinal Correlation</em>. <a href="/Advances_in_Computer_Games_10">Advances in Computer Games 10</a>, <a href="http://www.top-5000.nl/ps/Dave%20Gomboc%20-%20Evaluation%20Tuning.pdf">pdf</a></li>
+<li><a href="/Dave_Gomboc">Dave Gomboc</a> (<strong>2004</strong>). <em>Tuning Evaluation Functions by Maximizing Concordance</em>. M.Sc. Thesis, <a href="/University_of_Alberta">University of Alberta</a></li>
+<li>Adam Marczyk (<strong>2004</strong>). <em><a href="http://www.talkorigins.org/faqs/genalg/genalg.html">Genetic Algorithms and Evolutionary Computation</a></em> from the <a href="https://en.wikipedia.org/wiki/TalkOrigins_Archive">TalkOrigins Archive</a></li>
+<li>Petr Aksenov (<strong>2004</strong>). <em><a href="http://joypub.joensuu.fi/publications/masters_thesis/aksenov_genetic/index_en.html">Genetic algorithms for optimising chess position scoring</a></em>, Master's thesis, <a href="ftp://cs.joensuu.fi/pub/Theses/2004_MSc_Aksenov_Petr.pdf">pdf</a></li>
+<li>Mathieu Autonès, Aryel Beck, Phillippe Camacho, Nicolas Lassabe, Hervé Luga, François Scharffe (<strong>2004</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-24650-3_1">Evaluation of Chess Position by Modular Neural network Generated by Genetic Algorithm</a></em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/eurogp/eurogp2004.html#AutonesBCLLS04">EuroGP 2004</a></li>
+<li><a href="/Henk_Mannen">Henk Mannen</a>, <a href="/Marco_Wiering">Marco Wiering</a> (<strong>2004</strong>). <em><a href="https://www.semanticscholar.org/paper/Learning-to-Play-Chess-using-TD(lambda)-learning-Mannen-Wiering/00a6f81c8ebe8408c147841f26ed27eb13fb07f3">Learning to play chess using TD(λ)-learning with database games</a></em>. Cognitive Artiﬁcial Intelligence, <a href="https://en.wikipedia.org/wiki/Utrecht_University">Utrecht University</a>, Benelearn’04, <a href="https://www.ai.rug.nl/~mwiering/GROUP/ARTICLES/learning-chess.pdf">pdf</a></li>
+<li><a href="/Arkadiusz_Paterek">Arkadiusz Paterek</a> (<strong>2004</strong>). <em>Modelowanie funkcji oceniającej w szachach</em>. Masters thesis, <a href="/University_of_Warsaw">University of Warsaw</a> (Polish, Modeling of an evaluation function in chess)</li>
+<li><a href="/Arkadiusz_Paterek">Arkadiusz Paterek</a> (<strong>2004</strong>). <em>Modelowanie funkcji oceniającej w grach</em>. <a href="/University_of_Warsaw">University of Warsaw</a>, <a href="https://www.mimuw.edu.pl/~paterek/mfog.ps.gz">zipped ps</a> (Polish, Modeling of an evaluation function in games)</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="/Dave_Gomboc">Dave Gomboc</a>, <a href="/Michael_Buro">Michael Buro</a>, <a href="/Tony_Marsland">Tony Marsland</a> (<strong>2005</strong>). <em>Tuning Evaluation Functions by Maximizing Concordance</em>. <a href="https://en.wikipedia.org/wiki/Theoretical_Computer_Science_%28journal%29">Theoretical Computer Science</a>, Vol. 349, No. 2, <a href="http://www.cs.ualberta.ca/%7Emburo/ps/tcs-learn.pdf">pdf</a></li>
+<li><a href="/Jeff_Rollason">Jeff Rollason</a> (<strong>2005</strong>). <em><a href="http://www.aifactory.co.uk/newsletter/2005_03_hill-climbing.htm">Evaluation by Hill-climbing: Getting the right move by solving micro-problems</a></em>. <a href="/AI_Factory">AI Factory</a>, Autumn 2005</li>
+<li><a href="/Levente_Kocsis">Levente Kocsis</a>, <a href="/Csaba_Szepesvári">Csaba Szepesvári</a>, <a href="/Mark_Winands">Mark Winands</a> (<strong>2005</strong>). <em><a href="http://link.springer.com/chapter/10.1007/11922155_4">RSPSA: Enhanced Parameter Optimization in Games</a></em>. <a href="/Advances_in_Computer_Games_11">Advances in Computer Games 11</a>, <a href="http://www.sztaki.hu/~szcsaba/papers/rspsa_acg.pdf">pdf</a></li>
+</ul>
+<p><strong>2006</strong></p>
+<ul>
+<li><span id="NonlinearProgramming3rd"></span><a href="/Mathematician">Mokhtar S. Bazaraa</a>, <a href="/Mathematician">Hanif D. Sherali</a>, <a href="/Mathematician">C. M. Shetty</a> (<strong>2006</strong>). <em><a href="https://www.wiley.com/en-us/Nonlinear+Programming%3A+Theory+and+Algorithms%2C+3rd+Edition-p-9780471486008">Nonlinear Programming: Theory and Algorithms</a></em>. 3rd edition, <a href="https://en.wikipedia.org/wiki/Wiley_(publisher)">Wiley</a> <a href="#fn39" class="footnote-ref" id="fnref39" role="doc-noteref"><sup>39</sup></a> » 1st, 2nd edition</li>
+<li><a href="/Levente_Kocsis">Levente Kocsis</a>, <a href="/Csaba_Szepesvári">Csaba Szepesvári</a> (<strong>2006</strong>). <em><a href="http://link.springer.com/article/10.1007/s10994-006-6888-8">Universal Parameter Optimisation in Games Based on SPSA</a></em>. <a href="https://en.wikipedia.org/wiki/Machine_Learning_%28journal%29">Machine Learning</a>, Special Issue on Machine Learning and Games, Vol. 63, No. 3</li>
+<li>Hallam Nasreddine, Hendra Suhanto Poh, <a href="/Graham_Kendall">Graham Kendall</a> (<strong>2006</strong>). <em>Using an Evolutionary Algorithm for the Tuning of a Chess Evaluation Function Based on a Dynamic Boundary Strategy</em>. Proceedings of the 2006 <a href="/IEEE">IEEE</a> Conference on Cybernetics and Intelligent Systems, <a href="http://www.graham-kendall.com/papers/npk2006.pdf">pdf</a></li>
+<li><a href="/Makoto_Miwa">Makoto Miwa</a>, <a href="/Daisaku_Yokoyama">Daisaku Yokoyama</a>, <a href="/Takashi_Chikayama">Takashi Chikayama</a> (<strong>2006</strong>). <em><a href="http://www.springerlink.com/content/6180u7h3t312468u/">Automatic Construction of Static Evaluation Functions for Computer Game Players</a></em>. ALT ’06</li>
+<li><a href="/Borko_Bošković">Borko Bošković</a>, <a href="/Sašo_Greiner">Sašo Greiner</a>, <a href="/Janez_Brest">Janez Brest</a>, <a href="/Viljem_Žumer">Viljem Žumer</a> (<strong>2006</strong>). <em><a href="https://ieeexplore.ieee.org/document/1688532">A Differential Evolution for the Tuning of a Chess Evaluation Function</a></em>. <a href="/IEEE">IEEE Congress on Evolutionary Computation</a></li>
+<li><a href="/Kunihito_Hoki">Kunihito Hoki</a> (<strong>2006</strong>). <em>Optimal control of minimax search result to learn positional evaluation</em>. <a href="/Conferences">11th Game Programming Workshop</a> (Japanese)</li>
+<li><a href="/Frank_Hutter">Frank Hutter</a>, <a href="https://scholar.google.co.uk/citations?user=LqUxHuQAAAAJ&amp;hl=en">Youssef Hamadi</a>, <a href="/Mathematician">Holger H. Hoos</a>, <a href="/Mathematician">Kevin Leyton-Brown</a> (<strong>2006</strong>). <em><a href="https://link.springer.com/chapter/10.1007/11889205_17">Performance Prediction and Automated Tuning of Randomized and Parametric Algorithms</a></em>. <a href="https://dblp.org/db/conf/cp/cp2006.html">CP 2006</a>, <a href="https://www.cs.ubc.ca/~hutter/papers/aaaiws06_lfs06-autoparam-prelim.pdf">pdf</a></li>
+</ul>
+<p><strong>2007</strong></p>
+<ul>
+<li><a href="/Shogo_Takeuchi">Shogo Takeuchi</a>, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a>, <a href="/Kazunori_Yamaguchi">Kazunori Yamaguchi</a>, <a href="/Satoru_Kawai">Satoru Kawai</a> (<strong>2007</strong>). <em>Visualization and Adjustment of Evaluation Functions Based on Evaluation Values and Win Probability</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/aaai/aaai2007.html">AAAI 2007</a>, <a href="https://www.aaai.org/Papers/AAAI/2007/AAAI07-136.pdf">pdf</a></li>
+<li><a href="/Makoto_Miwa">Makoto Miwa</a>, <a href="/Daisaku_Yokoyama">Daisaku Yokoyama</a>, <a href="/Takashi_Chikayama">Takashi Chikayama</a> (<strong>2007</strong>). <em>Automatic Generation of Evaluation Features for Computer Game Players</em>. <a href="http://cswww.essex.ac.uk/cig/2007/papers/2037.pdf">pdf</a></li>
+<li><a href="/Johannes_Fürnkranz">Johannes Fürnkranz</a> (<strong>2007</strong>). <em>Recent advances in machine learning and game playing</em>. <a href="http://www.oegai.at/journal.shtml">ÖGAI Journal</a>, Vol. 26, No. 2, Computer Game Playing, <a href="https://www.ke.tu-darmstadt.de/~juffi/publications/ogai-07.pdf">pdf</a></li>
+<li><a href="https://dblp.org/pid/70/382.html">Mohammed Shahid Abdulla</a>, <a href="/Shalabh_Bhatnagar">Shalabh Bhatnagar</a> (<strong>2007</strong>). <em><a href="https://link.springer.com/article/10.1007/s10626-006-0003-y">Reinforcement Learning Based Algorithms for Average Cost Markov Decision Processes</a></em>. <a href="https://www.springer.com/journal/10626">Discrete Event Dynamic Systems</a>, Vol.17, No.1 » <a href="/SPSA">SPSA</a></li>
+</ul>
+<p><strong>2008</strong></p>
+<ul>
+<li><a href="/Eli_David">Omid David</a>, <a href="/Moshe_Koppel">Moshe Koppel</a>, <a href="/Nathan_S._Netanyahu">Nathan S. Netanyahu</a> (<strong>2008</strong>). <em>Genetic Algorithms for Mentor-Assisted Evaluation Function Optimization</em>. <a href="http://www.sigevo.org/gecco-2008/">GECCO '08</a>, <a href="https://arxiv.org/abs/1711.06839">arXiv:1711.06839</a></li>
+<li><a href="/Borko_Bošković">Borko Bošković</a>, <a href="/Sašo_Greiner">Sašo Greiner</a>, <a href="/Janez_Brest">Janez Brest</a>, <a href="/Aleš_Zamuda">Aleš Zamuda</a>, <a href="/Viljem_Žumer">Viljem Žumer</a> (<strong>2008</strong>). <em><a href="https://link.springer.com/chapter/10.1007%2F978-3-540-68830-3_12">An Adaptive Differential Evolution Algorithm with Opposition-Based Mechanisms, Applied to the Tuning of a Chess Program</a></em>. <a href="https://link.springer.com/book/10.1007/978-3-540-68830-3">Advances in Differential Evolution</a>, <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a></li>
+</ul>
+<p><strong>2009</strong></p>
+<ul>
+<li><a href="/Joel_Veness">Joel Veness</a>, <a href="/David_Silver">David Silver</a>, <a href="/William_Uther">William Uther</a>, <a href="/Alan_Blair">Alan Blair</a> (<strong>2009</strong>). <em><a href="http://papers.nips.cc/paper/3722-bootstrapping-from-game-tree-search">Bootstrapping from Game Tree Search</a></em>. <a href="http://nips.cc/">Neural Information Processing Systems (NIPS), 2009</a>, <a href="http://jveness.info/publications/nips2009%20-%20bootstrapping%20from%20game%20tree%20search.pdf">pdf</a> » <a href="/Meep">Meep</a> <a href="#fn40" class="footnote-ref" id="fnref40" role="doc-noteref"><sup>40</sup></a></li>
+<li><a href="/Eli_David">Omid David</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Moshe_Koppel">Moshe Koppel</a>, <a href="/Nathan_S._Netanyahu">Nathan S. Netanyahu</a> (<strong>2009</strong>). <em>Simulating Human Grandmasters: Evolution and Coevolution of Evaluation Functions</em>. <a href="http://www.sigevo.org/gecco-2009/">GECCO '09</a>, <a href="https://arxiv.org/abs/1711.06840">arXiv:1711.0684</a></li>
+<li><a href="/Eli_David">Omid David</a> (<strong>2009</strong>). <em>Genetic Algorithms Based Learning for Evolving Intelligent Organisms</em>. Ph.D. Thesis.</li>
+<li>Broch Davison (<strong>2009</strong>). <em><a href="http://www.enm.bris.ac.uk/teaching/projects/2008_09/bd5053/index.html">Playing Chess with Matlab</a></em>. M.Sc. thesis supervised by <a href="http://www.bris.ac.uk/engineering/people/nello-cristianini/index.html">Nello Cristianini</a>, <a href="http://www.enm.bris.ac.uk/teaching/projects/2008_09/bd5053/FinalReport.pdf">pdf</a> <a href="#fn41" class="footnote-ref" id="fnref41" role="doc-noteref"><sup>41</sup></a></li>
+<li><a href="/Mark_Levene">Mark Levene</a>, <a href="/Trevor_Fenner">Trevor Fenner</a> (<strong>2009</strong>). <em>A Methodology for Learning Players' Styles from Game Records</em>. <a href="http://arxiv.org/abs/0904.2595v1">arXiv:0904.2595v1</a></li>
+<li><a href="/Wei-Lun_Kao">Wei-Lun Kao</a> (<strong>2009</strong>). <em>The Automatically Tuning System of Evaluation Function for Computer Chinese Chess</em>. Master thesis, <a href="/National_Chiao_Tung_University">National Chiao Tung University</a>, <a href="https://ir.nctu.edu.tw/bitstream/11536/43333/1/553001.pdf">pdf</a> (Chinese)</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="/Frank_Hutter">Frank Hutter</a>, <a href="/Mathematician">Holger H. Hoos</a>, <a href="/Mathematician">Kevin Leyton-Brown</a>, <a href="/Mathematician">Kevin P. Murphy</a> (<strong>2010</strong>). <em><a href="https://dl.acm.org/citation.cfm?id=1893694">Time-Bounded Sequential Parameter Optimization</a></em>. <a href="https://dblp.org/db/conf/lion/lion2010.html">LION 2010</a>, <a href="https://ml.informatik.uni-freiburg.de/papers/10-LION-TB-SPO.pdf">pdf</a></li>
+<li>Amine Bourki, Matthieu Coulm, Philippe Rolet, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, Paul Vayssière (<strong>2010</strong>). <em><a href="http://hal.inria.fr/inria-00467796/en/">Parameter Tuning by Simple Regret Algorithms and Multiple Simultaneous Hypothesis Testing</a></em>. <a href="http://hal.inria.fr/docs/00/46/77/96/PDF/tosubmit.pdf">pd</a></li>
+<li><a href="/Eli_David">Omid David</a>, <a href="/Moshe_Koppel">Moshe Koppel</a>, <a href="/Nathan_S._Netanyahu">Nathan S. Netanyahu</a> (<strong>2010</strong>). <em>Genetic Algorithms for Automatic Search Tuning</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 33, No. 2</a></li>
+<li><a href="/Borko_Bošković">Borko Bošković</a> (<strong>2010</strong>). <em><a href="http://labraj.uni-mb.si/en/PhD_Thesis_Defence_%28Borko_Bo%C5%A1kovi%C4%87%29">Differential Evolution for the Tuning of a Chess Evaluation Function</a></em>. Ph.D. thesis, <a href="/University_of_Maribor">University of Maribor</a></li>
+</ul>
+<p><strong>2011</strong></p>
+<ul>
+<li><a href="/Frank_Hutter">Frank Hutter</a>, <a href="/Mathematician">Holger H. Hoos</a>, <a href="/Mathematician">Kevin Leyton-Brown</a> (<strong>2011</strong>). <em><a href="https://link.springer.com/chapter/10.1007/978-3-642-25566-3_40">Sequential Model-Based Optimization for General Algorithm Configuration</a></em>. <a href="https://dblp.org/db/conf/lion/lion2011.html">LION 2011</a>, <a href="https://ml.informatik.uni-freiburg.de/papers/11-LION5-SMAC.pdf">pdf</a></li>
+<li><a href="/Eli_David">Omid David</a>, <a href="/Moshe_Koppel">Moshe Koppel</a>, <a href="/Nathan_S._Netanyahu">Nathan S. Netanyahu</a> (<strong>2011</strong>). <em>Expert-Driven Genetic Algorithms for Simulating Evaluation Functions</em>. Genetic Programming and Evolvable Machines, Vol. 12, No. 1, <a href="https://arxiv.org/abs/1711.06841">arXiv:1711.06841</a></li>
+<li><a href="/Borko_Bošković">Borko Bošković</a>, <a href="/Janez_Brest">Janez Brest</a> (<strong>2011</strong>). <em><a href="http://www.informatica.si/index.php/informatica/article/view/353">Tuning Chess Evaluation Function Parameters using Differential Evolution</a></em>. Informatica, Vol. 35, No. 2</li>
+<li><a href="/Borko_Bošković">Borko Bošković</a>, <a href="/Janez_Brest">Janez Brest</a>, <a href="/Aleš_Zamuda">Aleš Zamuda</a>, <a href="/Sašo_Greiner">Sašo Greiner</a>, <a href="/Viljem_Žumer">Viljem Žumer</a> (<strong>2011</strong>). <em><a href="https://dl.acm.org/citation.cfm?id=1966601">History mechanism supported differential evolution for chess evaluation function tuning</a></em>. <a href="http://www.springer.com/engineering/computational+intelligence+and+complexity/journal/500">Soft Computing</a>, Vol. 15, No. 4</li>
+<li>Eduardo Vázquez-Fernández, Carlos Artemio Coello Coello, Feliú Davino Sagols Troncoso (<strong>2011</strong>). <em>An Evolutionary Algorithm for Tuning a Chess Evaluation Function</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/cec/cec2011.html#Vazquez-FernandezCT11">CEC 2011</a>, <a href="http://delta.cs.cinvestav.mx/~ccoello/conferences/eduardo-cec2011-final.pdf.gz">pdf</a></li>
+<li>Eduardo Vázquez-Fernández, Carlos Artemio Coello Coello, Feliú Davino Sagols Troncoso (<strong>2011</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=2001882">An Adaptive Evolutionary Algorithm Based on Typical Chess Problems for Tuning a Chess Evaluation Function</a></em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/gecco/gecco2011c.html#Vazquez-FernandezCT11">GECCO 2011</a>, <a href="http://delta.cs.cinvestav.mx/~ccoello/conferences/vazquez-gecco2011.pdf.gz">pdf</a></li>
+<li><a href="/Ilya_Loshchilov">Ilya Loshchilov</a>, <a href="/Marc_Schoenauer">Marc Schoenauer</a>, <a href="/Michèle_Sebag">Michèle Sebag</a> (<strong>2011</strong>). <em>Adaptive coordinate descent.</em> <a href="https://dblp.org/db/conf/gecco/gecco2011.html">GECCO 2011</a>, <a href="http://www.loshchilov.com/publications/GECCO2011_AdaptiveCoordinateDescent.pdf">pdf</a> <a href="#fn42" class="footnote-ref" id="fnref42" role="doc-noteref"><sup>42</sup></a></li>
+<li><a href="/Rémi_Coulom">Rémi Coulom</a> (<strong>2011</strong>). <em><a href="http://remi.coulom.free.fr/CLOP/">CLOP: Confident Local Optimization for Noisy Black-Box Parameter Tuning</a></em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a> <a href="#fn43" class="footnote-ref" id="fnref43" role="doc-noteref"><sup>43</sup></a> <a href="#fn44" class="footnote-ref" id="fnref44" role="doc-noteref"><sup>44</sup></a></li>
+<li><a href="/Kunihito_Hoki">Kunihito Hoki</a>, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a> (<strong>2011</strong>). <em><a href="http://link.springer.com/chapter/10.1007%2F978-3-642-31866-5_16">The Global Landscape of Objective Functions for the Optimization of Shogi Piece Values with a Game-Tree Search</a></em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a> » <a href="/Shogi">Shogi</a></li>
+<li><a href="/Mathematician">John Duchi</a>, <a href="/Mathematician">Elad Hazan</a>, <a href="/Mathematician">Yoram Singer</a> (<strong>2011</strong>). <em><a href="https://dl.acm.org/doi/10.5555/1953048.2021068">Adaptive Subgradient Methods for Online Learning and Stochastic Optimization</a></em>. <a href="https://en.wikipedia.org/wiki/Journal_of_Machine_Learning_Research">Journal of Machine Learning Research</a>, Vol. 12, <a href="https://jmlr.org/papers/volume12/duchi11a/duchi11a.pdf">pdf</a> » <a href="https://en.wikipedia.org/wiki/Stochastic_gradient_descent#AdaGrad">AdaGrad</a></li>
+</ul>
+<p><strong>2012</strong></p>
+<ul>
+<li><a href="/Amir_Ban">Amir Ban</a> (<strong>2012</strong>). <em><a href="http://www.ratio.huji.ac.il/node/2362">Automatic Learning of Evaluation, with Applications to Computer Chess</a></em>. Discussion Paper 613, <a href="https://en.wikipedia.org/wiki/Hebrew_University_of_Jerusalem">The Hebrew University of Jerusalem</a> - Center for the Study of Rationality, <a href="https://en.wikipedia.org/wiki/Givat_Ram">Givat Ram</a></li>
+<li>Thitipong Kanjanapa, Kanako Komiya, <a href="/Yoshiyuki_Kotani">Yoshiyuki Kotani</a> (<strong>2012</strong>). <em>Design and Implementation of Bonanza Method for the Evaluation in the Game of Arimaa</em>. <a href="http://www.ipsj.or.jp/english/index.html">IPSJ SIG Technical Report</a>, Vol. 2012-GI-27, No. 4, <a href="http://arimaa.com/arimaa/papers/KanjanapaThitipong/IPSJ-GI12027004.pdf">pdf</a> » <a href="/Arimaa">Arimaa</a></li>
+<li><a href="/Alan_J._Lockett">Alan J. Lockett</a> (<strong>2012</strong>). <em>General-Purpose Optimization Through Information Maximization</em>. Ph.D. thesis, <a href="https://en.wikipedia.org/wiki/University_of_Texas_at_Austin">University of Texas at Austin</a>, advisor <a href="/Risto_Miikkulainen">Risto Miikkulainen</a>, <a href="http://www.alockett.com/static/pdf/lockett-thesis.pdf">pdf</a></li>
+</ul>
+<p><strong>2013</strong></p>
+<ul>
+<li><a href="/Alan_J._Lockett">Alan J. Lockett</a>, <a href="/Risto_Miikkulainen">Risto Miikkulainen</a> (<strong>2013</strong>). <em><a href="http://nn.cs.utexas.edu/?lockett:foga2013">A Measure-Theoretic Analysis of Stochastic Optimization</a></em>. <a href="https://dblp.uni-trier.de/db/conf/foga/foga2013.html">FOGA 2013</a></li>
+<li><a href="/Wen-Jie_Tseng">Wen-Jie Tseng</a>, <a href="/Jr-Chang_Chen">Jr-Chang Chen</a>, <a href="/I-Chen_Wu">I-Chen Wu</a>, <a href="/Ching-Hua_Kuo">Ching-Hua Kuo</a>, Bo-Han Lin (<strong>2013</strong>). <em><a href="https://kaigi.org/jsai/webprogram/2013/paper-138.html">A Supervised Learning Method for Chinese Chess Programs</a></em>. <a href="http://2013.conf.ai-gakkai.or.jp/english-info">JSAI2013</a>, <a href="https://kaigi.org/jsai/webprogram/2013/pdf/138.pdf">pdf</a></li>
+<li><a href="/Akira_Ura">Akira Ura</a>, <a href="/Makoto_Miwa">Makoto Miwa</a>, <a href="/Yoshimasa_Tsuruoka">Yoshimasa Tsuruoka</a>, <a href="/Takashi_Chikayama">Takashi Chikayama</a> (<strong>2013</strong>). <em><a href="https://link.springer.com/chapter/10.1007/978-3-319-09165-5_18">Comparison Training of Shogi Evaluation Functions with Self-Generated Training Positions and Moves</a></em>. <a href="/CG_2013">CG 2013</a>, <a href="https://pdfs.semanticscholar.org/6ad0/7167425539cf64e6bf420d7a28a1fc1047d6.pdf">slides as pdf</a></li>
+<li><a href="/Yoshikuni_Sato">Yoshikuni Sato</a>, <a href="/Makoto_Miwa">Makoto Miwa</a>, <a href="/Shogo_Takeuchi">Shogo Takeuchi</a>, <a href="/Daisuke_Takahashi">Daisuke Takahashi</a> (<strong>2013</strong>). <em><a href="http://www.aaai.org/ocs/index.php/AAAI/AAAI13/paper/view/6402">Optimizing Objective Function Parameters for Strength in Computer Game-Playing</a></em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/aaai/aaai2013.html#SatoMTT13">AAAI 2013</a></li>
+<li><a href="/Shalabh_Bhatnagar">Shalabh Bhatnagar</a>, <a href="https://dblp.org/pid/31/10493.html">H.L. Prasad</a>, <a href="https://scholar.google.co.in/citations?user=Q1YXWpoAAAAJ&amp;hl=en">L.A. Prashanth</a> (<strong>2013</strong>). <em><a href="https://link.springer.com/book/10.1007/978-1-4471-4285-0">Stochastic Recursive Algorithms for Optimization: Simultaneous Perturbation Methods</a></em>. <a href="https://www.springer.com/series/642">Lecture Notes in Control and Information Sciences</a>, Vol. 434, <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a> » <a href="/SPSA">SPSA</a></li>
+<li>Tomáš Hřebejk (<strong>2013</strong>). <em>Arimaa challenge - Static Evaluation Function</em>. Master Thesis, <a href="https://en.wikipedia.org/wiki/Charles_University_in_Prague">Charles University in Prague</a>, <a href="http://arimaa.com/arimaa/papers/ThomasHrebejk/Arimaa.pdf">pdf</a> » <a href="/Arimaa">Arimaa</a> <a href="#fn45" class="footnote-ref" id="fnref45" role="doc-noteref"><sup>45</sup></a></li>
+<li><a href="/Yoshikuni_Sato">Yoshikuni Sato</a>, <a href="/Makoto_Miwa">Makoto Miwa</a>, <a href="/Shogo_Takeuchi">Shogo Takeuchi</a>, <a href="/Daisuke_Takahashi">Daisuke Takahashi</a> (<strong>2013</strong>). <em><a href="http://www.aaai.org/ocs/index.php/AAAI/AAAI13/paper/view/6402">Optimizing Objective Function Parameters for Strength in Computer Game-Playing</a></em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/aaai/aaai2013.html#SatoMTT13">AAAI 2013</a></li>
+<li><a href="/Ilya_Loshchilov">Ilya Loshchilov</a> (<strong>2013</strong>). <em><a href="http://loshchilov.com/phd.html">Surrogate-Assisted Evolutionary Algorithms</a></em>. Ph.D. thesis, <a href="/University_of_Paris">Paris-Sud 11 University</a>, advisors <a href="/Marc_Schoenauer">Marc Schoenauer</a> and <a href="/Michèle_Sebag">Michèle Sebag</a></li>
+<li><a href="https://www.cs.ubc.ca/~schmidtm/">Mark Schmidt</a>, <a href="https://inria.academia.edu/NicolasLeRoux">Nicolas Le Roux</a>, <a href="https://www.di.ens.fr/~fbach/">Francis Bach</a> (<strong>2013</strong>). <em>Minimizing Finite Sums with the Stochastic Average Gradient</em>. <a href="https://arxiv.org/abs/1309.2388">arXiv:1309.2388</a> <a href="#fn46" class="footnote-ref" id="fnref46" role="doc-noteref"><sup>46</sup></a></li>
+</ul>
+<p><strong>2014</strong></p>
+<ul>
+<li><a href="/Kunihito_Hoki">Kunihito Hoki</a>, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a> (<strong>2014</strong>). <em><a href="https://www.jair.org/papers/paper4217.html">Large-Scale Optimization for Evaluation Functions with Minimax Search</a></em>. <a href="https://www.jair.org/vol/vol49.html">JAIR Vol. 49</a>, <a href="https://pdfs.semanticscholar.org/eb9c/173576577acbb8800bf96aba452d77f1dc19.pdf">pdf</a> » <a href="/Shogi">Shogi</a> <a href="#fn47" class="footnote-ref" id="fnref47" role="doc-noteref"><sup>47</sup></a></li>
+<li><a href="https://scholar.google.com/citations?user=glcep6EAAAAJ&amp;hl=en">Aryan Mokhtari</a>, <a href="https://scholar.google.com/citations?user=7mrPM4kAAAAJ&amp;hl=en">Alejandro Ribeiro</a> (<strong>2014</strong>). <em>RES: Regularized Stochastic BFGS Algorithm</em>. <a href="https://arxiv.org/abs/1401.7625">arXiv:1401.7625</a> <a href="#fn48" class="footnote-ref" id="fnref48" role="doc-noteref"><sup>48</sup></a></li>
+<li><span id="ROCK"></span><a href="http://www.asl.ethz.ch/the-lab/people/person-detail.html?persid=184943">Jemin Hwangbo</a>, <a href="https://www.linkedin.com/in/christian-gehring-1b958395/">Christian Gehring</a>, <a href="http://www.asl.ethz.ch/the-lab/people/person-detail.html?persid=186652">Hannes Sommer</a>, <a href="http://www.asl.ethz.ch/the-lab/people/person-detail.html?persid=29981">Roland Siegwart</a>, <a href="http://www.adrl.ethz.ch/doku.php/adrl:people:jbuchli">Jonas Buchli</a> (<strong>2014</strong>). <em>ROCK∗ — Efficient black-box optimization for policy learning</em>. <a href="http://ieeexplore.ieee.org/xpl/mostRecentIssue.jsp?punumber=7028729">Humanoids, 2014</a> » <a href="/Automated_Tuning">Rockstar</a></li>
+<li><a href="/Mathematician">Yann Dauphin</a>, <a href="/Mathematician">Razvan Pascanu</a>, <a href="/Mathematician">Caglar Gulcehre</a>, <a href="/Mathematician">Kyunghyun Cho</a>, <a href="/Mathematician">Surya Ganguli</a>, <a href="/Mathematician">Yoshua Bengio</a> (<strong>2014</strong>). <em>Identifying and attacking the saddle point problem in high-dimensional non-convex optimization</em>. <a href="https://arxiv.org/abs/1406.2572">arXiv:1406.2572</a> <a href="#fn49" class="footnote-ref" id="fnref49" role="doc-noteref"><sup>49</sup></a></li>
+<li><a href="https://arxiv.org/find/cs/1/au:+Martens_J/0/1/0/all/0/1">James Martens</a> (<strong>2014, 2017</strong>). <em>New insights and perspectives on the natural gradient method</em>. <a href="https://arxiv.org/abs/1412.1193">arXiv:1412.1193</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="https://scholar.google.nl/citations?user=yyIoQu4AAAAJ">Diederik P. Kingma</a>, <a href="https://scholar.google.ca/citations?user=ymzxRhAAAAAJ&amp;hl=en">Jimmy Lei Ba</a> (<strong>2015</strong>). <em>Adam: A Method for Stochastic Optimization</em>. <a href="https://arxiv.org/abs/1412.6980v8">arXiv:1412.6980v8</a>, <a href="http://www.iclr.cc/doku.php?id=iclr2015:main">ICLR 2015</a> <a href="#fn50" class="footnote-ref" id="fnref50" role="doc-noteref"><sup>50</sup></a></li>
+<li><a href="https://scholar.google.com/citations?user=glcep6EAAAAJ&amp;hl=en">Aryan Mokhtari</a>, <a href="https://scholar.google.com/citations?user=7mrPM4kAAAAJ&amp;hl=en">Alejandro Ribeiro</a> (<strong>2015</strong>). <em>Global Convergence of Online Limited Memory BFGS</em>. <a href="https://en.wikipedia.org/wiki/Journal_of_Machine_Learning_Research">Journal of Machine Learning Research</a>, Vol. 16, <a href="http://www.jmlr.org/papers/volume16/mokhtari15a/mokhtari15a.pdf">pdf</a> <a href="#fn51" class="footnote-ref" id="fnref51" role="doc-noteref"><sup>51</sup></a> <a href="#fn52" class="footnote-ref" id="fnref52" role="doc-noteref"><sup>52</sup></a></li>
+<li><a href="/Ilya_Loshchilov">Ilya Loshchilov</a> (<strong>2015</strong>). <em>LM-CMA: an Alternative to L-BFGS for Large Scale Black-box Optimization</em>. <a href="https://arxiv.org/abs/1511.00221">arXiv:1511.00221</a> <a href="#fn53" class="footnote-ref" id="fnref53" role="doc-noteref"><sup>53</sup></a> <a href="#fn54" class="footnote-ref" id="fnref54" role="doc-noteref"><sup>54</sup></a></li>
+</ul>
+<p><strong>2016</strong></p>
+<ul>
+<li>Diogo Real, <a href="/Alan_Blair">Alan Blair</a> (<strong>2016</strong>). <em><a href="https://ieeexplore.ieee.org/document/7743850/">Learning a multi-player chess game with TreeStrap</a></em>. <a href="https://dblp.uni-trier.de/db/conf/cec/cec2016.html">CEC 2016</a></li>
+<li><a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Marcin_Szubert">Marcin Szubert</a> (<strong>2016</strong>). <em><a href="https://ieeexplore.ieee.org/document/7180338">Coevolutionary CMA-ES for Knowledge-Free Learning of Game Position Evaluation</a></em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 8, No. 4 <a href="#fn55" class="footnote-ref" id="fnref55" role="doc-noteref"><sup>55</sup></a></li>
+<li><a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Paweł_Liskowski">Paweł Liskowski</a>, <a href="/Marcin_Szubert">Marcin Szubert</a>, <a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a> (<strong>2016</strong>). <em><a href="https://content.sciendo.com/view/journals/amcs/26/1/article-p215.xml">The performance profile: A multi–criteria performance evaluation method for test–based problems</a></em>. <a href="https://en.wikipedia.org/wiki/International_Journal_of_Applied_Mathematics_and_Computer_Science">International Journal of Applied Mathematics and Computer Science</a>, Vol. 26, No. 1</li>
+</ul>
+<p><strong>2017</strong></p>
+<ul>
+<li><a href="http://ruder.io/">Sebastian Ruder</a> (<strong>2017</strong>). <em><a href="http://ruder.io/optimizing-gradient-descent/">An overview of gradient descent optimization algorithms</a></em>. <a href="https://arxiv.org/abs/1609.04747v2">arXiv:1609.04747v2</a> <a href="#fn56" class="footnote-ref" id="fnref56" role="doc-noteref"><sup>56</sup></a></li>
+<li><a href="/Hung-Jui_Chang">Hung-Jui Chang</a>, Gang-Yu Fan, <a href="/Jr-Chang_Chen">Jr-Chang Chen</a>, <a href="/Chih-Wen_Hsueh">Chih-Wen Hsueh</a>, <a href="/Tsan-sheng_Hsu">Tsan-sheng Hsu</a> (<strong>2017</strong>). <em><a href="https://link.springer.com/chapter/10.1007/978-3-319-75931-9_10">Validating and Fine-Tuning of Game Evaluation Functions Using Endgame Databases</a></em>. <a href="/Conferences">CGW@IJCAI 2017</a></li>
+</ul>
+<p><strong>2018</strong></p>
+<ul>
+<li>Takafumi Nakamichi, <a href="/Takeshi_Ito">Takeshi Ito</a> (<strong>2018</strong>). <em>Adjusting the evaluation function for weakening the competency level of a computer shogi program</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 40, No. 1</a></li>
+<li><a href="/Hung-Jui_Chang">Hung-Jui Chang</a>, <a href="/Jr-Chang_Chen">Jr-Chang Chen</a>, Gang-Yu Fan, <a href="/Chih-Wen_Hsueh">Chih-Wen Hsueh</a>, <a href="/Tsan-sheng_Hsu">Tsan-sheng Hsu</a> (<strong>2018</strong>). <em>Using Chinese dark chess endgame databases to validate and fine-tune game evaluation functions</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 40, No. 2</a> » <a href="/Chinese_Dark_Chess">Chinese Dark Chess</a>, <a href="/Endgame_Tablebases">Endgame Tablebases</a></li>
+<li><a href="/Wen-Jie_Tseng">Wen-Jie Tseng</a>, <a href="/Jr-Chang_Chen">Jr-Chang Chen</a>, <a href="/I-Chen_Wu">I-Chen Wu</a>, Tinghan Wei (<strong>2018</strong>). <em>Comparison Training for Computer Chinese Chess</em>. <a href="https://arxiv.org/abs/1801.07411">arXiv:1801.07411</a> <a href="#fn57" class="footnote-ref" id="fnref57" role="doc-noteref"><sup>57</sup></a></li>
+<li>Jeremy Rapin, <a href="/Olivier_Teytaud">Olivier Teytaud</a> (<strong>2018</strong>). <em>Nevergrad - A gradient-free optimization platform</em>. <a href="https://github.com/facebookresearch/nevergrad">GitHub - facebookresearch/nevergrad: A Python toolbox for performing gradient-free optimization</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="/Andrew_Grant">Andrew Grant</a> (<strong>2020</strong>). <em>Evaluation &amp; Tuning in Chess Engines</em>. <a href="https://github.com/AndyGrant/Ethereal/blob/master/Tuning.pdf">pdf</a> <a href="#fn58" class="footnote-ref" id="fnref58" role="doc-noteref"><sup>58</sup></a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1997-">1997 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/77f10f072e907302">Evolutionary Evaluation</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/Computer_Chess_Forums">rgcc</a>, September 09, 1997 » <a href="/Evaluation">Evaluation</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=13794">Deep Blue eval function tuning technique</a> by <a href="/Stuart_Cracraft">Stuart Cracraft</a>, <a href="/CCC">CCC</a>, January 08, 1998 » <a href="/Deep_Blue">Deep Blue</a> <a href="#fn59" class="footnote-ref" id="fnref59" role="doc-noteref"><sup>59</sup></a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=13968">Automated Tuning</a> by <a href="/Stuart_Cracraft">Stuart Cracraft</a>, <a href="/CCC">CCC</a>, January 12, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=14472">Pattern Matching -- Avoiding Hand-Tuning</a> by <a href="/Stuart_Cracraft">Stuart Cracraft</a>, <a href="/CCC">CCC</a>, January 21, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=28362">Speaking of "Evaluate"</a> by <a href="/Dann_Corbit">Danniel Corbit</a>, <a href="/CCC">CCC</a>, September 29, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=28584">Parameter Tuning</a> by <a href="/Jonathan_Baxter">Jonathan Baxter</a>, <a href="/CCC">CCC</a>, October 01, 1998 » <a href="/Temporal_Difference_Learning">TD-learning</a>, <a href="/KnightCap">KnightCap</a></li>
+</ul>
+<h3 id="2000--1">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=128297">Deep Thought's tuning code and eval function!</a> by <a href="/Severi_Salminen">Severi Salminen</a>, <a href="/CCC">CCC</a>, September 05, 2000 » <a href="/Eval_Tuning_in_Deep_Thought">Eval Tuning in Deep Thought</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=146691">learning to tune parameters by comp-comp games</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, December 28, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=177538">Automatic Eval Tuning</a> by <a href="/Artem_Petakov">Artem Pyatakov</a>, <a href="/CCC">CCC</a>, June 29, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=290239">deep blue's automatic tuning of evaluation function</a> by Emerson Tan, <a href="/CCC">CCC</a>, March 22, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=314498">evaluationfunction tuning</a> by Jan Willem de Kort, <a href="/CCC">CCC</a>, September 07, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=355083">evaluation tuning tricks</a> by <a href="/Peter_Aloysius_Harjanto">Peter Alloysius</a>, <a href="/CCC">CCC</a>, March 17, 2004</li>
+</ul>
+<h3 id="2005--1">2005 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=487022">"learning" or "tuning" programs</a> by Sean Mintz, <a href="/CCC">CCC</a>, February 15, 2006</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=49450">Adjusting weights the Deep Blue way</a> by <a href="/Tony_van_Roon-Werten">Tony van Roon-Werten</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, August 29, 2008 » <a href="/Deep_Blue">Deep Blue</a></li>
+</ul>
+<p><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=49450&amp;start=3">Re: Adjusting weights the Deep Blue way</a> by <a href="/Pradu_Kannan">Pradu Kannan</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, September 01, 2008</p>
+<ul>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=49818">Tuning the eval</a> by <a href="/Daniel_Anulliero">Daniel Anulliero</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, January 02, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=27266">Insanity... or Tal style?</a> by <a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a>, <a href="/CCC">CCC</a>, April 01, 2009</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=27266&amp;postdays=0&amp;postorder=asc&amp;topic_view=&amp;start=11">Re: Insanity... or Tal style?</a> by <a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a>, <a href="/CCC">CCC</a>, April 02, 2009 <a href="#fn60" class="footnote-ref" id="fnref60" role="doc-noteref"><sup>60</sup></a></p>
+<h3 id="2010--1">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=31445">Revisiting GA's for tuning evaluation weights</a> by <a href="/Ilari_Pihlajisto">Ilari Pihlajisto</a>, <a href="/CCC">CCC</a>, January 03, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=31935">Idea for Automatic Calibration of Evaluation Function...</a> by <a href="/Steve_Maughan">Steve Maughan</a>, <a href="/CCC">CCC</a>, January 22, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=378648&amp;t=36829">Re: TEST position TCEC5- Houdini 1.03a-DRybka4 1-0</a> by <a href="/Milos_Stanisavljevic">Milos Stanisavljevic</a>, <a href="/CCC">CCC</a>, November 30, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38412">Parameter tuning</a> by <a href="/Onno_Garms">Onno Garms</a>, <a href="/CCC">CCC</a>, March 13, 2011 » <a href="/Onno">Onno</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40166">Ahhh... the holy grail of computer chess</a> by <a href="/Marcel_van_Kervinck">Marcel van Kervinck</a>, <a href="/CCC">CCC</a>, August 23, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?p=421995">CLOP for Noisy Black-Box Parameter Optimization</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/CCC">CCC</a>, September 01, 2011 <a href="#fn61" class="footnote-ref" id="fnref61" role="doc-noteref"><sup>61</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=40964">Tuning again</a> by <a href="/Ed_Schroder">Ed Schroder</a>, <a href="/CCC">CCC</a>, November 01, 2011</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=42283">What is the most difficult and danger feature to tune it?</a> by <a href="/Fermin_Serrano">Fermin Serrano</a>, <a href="/CCC">CCC</a>, February 02, 2012</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=1954">Ban: Automatic Learning of Evaluation [...</a>] by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, May 10, 2012 <a href="#fn62" class="footnote-ref" id="fnref62" role="doc-noteref"><sup>62</sup></a></li>
+</ul>
+<p><strong>2014</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50823">How Do You Automatically Tune Your Evaluation Tables</a> by <a href="/Tom_Likens">Tom Likens</a>, <a href="/CCC">CCC</a>, January 07, 2014</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=50823&amp;start=10">Re: How Do You Automatically Tune Your Evaluation Tables</a> by <a href="/Álvaro_Begué">Álvaro Begué</a>, <a href="/CCC">CCC</a>, January 08, 2014</p>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=50823&amp;start=26">The texel evaluation function optimization algorithm</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, January 31, 2014 » Texel's Tuning Method</p>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=50823&amp;start=27">Re: The texel evaluation function optimization algorithm</a> by <a href="/Álvaro_Begué">Álvaro Begué</a>, <a href="/CCC">CCC</a>, January 31, 2014 » <a href="https://en.wikipedia.org/wiki/Cross_entropy">Cross-entropy</a></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53526">Tuning eval</a> by <a href="/Daniel_Anulliero">Daniel Anulliero</a>, <a href="/CCC">CCC</a>, September 01, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53657">Tune cut margins with Texel/gaviota tuning method</a> by <a href="/Fabio_Gobbato">Fabio Gobbato</a>, <a href="/CCC">CCC</a>, September 11, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54545">Eval tuning - any open source engines with GA or PBIL?</a> by Hrvoje Horvatic, <a href="/CCC">CCC</a>, December 04, 2014 » <a href="/Genetic_Programming">PBIL</a></li>
+</ul>
+<h3 id="2015--1">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55084">MMTO for evaluation learning</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, January 25, 2015 <a href="#fn63" class="footnote-ref" id="fnref63" role="doc-noteref"><sup>63</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55621">Experiments with eval tuning</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, March 10, 2015 » <a href="/Arasan">Arasan</a>, Texel's Tuning Method</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55696">txt: automated chess engine tuning</a> by <a href="/Alexandru_Mosoi">Alexandru Mosoi</a>, <a href="/CCC">CCC</a>, March 18, 2015 » <a href="/Zurichess">Zurichess</a>, Texel's Tuning Method <a href="#fn64" class="footnote-ref" id="fnref64" role="doc-noteref"><sup>64</sup></a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=55696&amp;start=108">Re: txt: automated chess engine tuning</a> by <a href="/Sergei_Markoff">Sergei S. Markoff</a>, <a href="/CCC">CCC</a>, February 15, 2016 » <a href="/SmarThink">SmarThink</a></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56168">Piece weights with regression analysis (in Russian)</a> by <a href="/Vladimir_Medvedev">Vladimir Medvedev</a>, <a href="/CCC">CCC</a>, April 30, 2015 » <a href="/Point_Value_by_Regression_Analysis">Point Value by Regression Analysis</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=56168&amp;start=36">Re: Piece weights with regression analysis (in Russian)</a> by <a href="/Fabien_Letouzey">Fabien Letouzey</a>, <a href="/CCC">CCC</a>, May 04, 2015</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56377">New Idea For Automated Tuning</a> by Jordan Bray, <a href="/CCC">CCC</a>, May 16, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57225">Evaluation Tuning</a> by <a href="/Michael_Hoffmann">Michael Hoffmann</a>, <a href="/CCC">CCC</a>, August 09, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57246">Genetical tuning</a> by <a href="/Stefano_Gemma">Stefano Gemma</a>, <a href="/CCC">CCC</a>, August 11, 2015 » <a href="/Genetic_Programming">Genetic Programming</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=57246&amp;start=34">Re: Genetical tuning</a> by <a href="/Ferdinand_Mosca">Ferdinand Mosca</a>, <a href="/CCC">CCC</a>, August 20, 2015</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57270">Some musings about search</a> by <a href="/Ed_Schroder">Ed Schroder</a>, <a href="/CCC">CCC</a>, August 14, 2015 » <a href="/Search">Search</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57860">td-leaf</a> by <a href="/Alexandru_Mosoi">Alexandru Mosoi</a>, <a href="/CCC">CCC</a>, October 06, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58211">tensorflow</a> by <a href="/Alexandru_Mosoi">Alexandru Mosoi</a>, <a href="/CCC">CCC</a>, November 10, 2015 <a href="#fn65" class="footnote-ref" id="fnref65" role="doc-noteref"><sup>65</sup></a></li>
+</ul>
+<p><strong>2016</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59319">pawn hash and eval tuning</a> by J. Wesley Cleveland, <a href="/CCC">CCC</a>, February 21, 2016 » <a href="/Pawn_Hash_Table">Pawn Hash Table</a></li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2987">Tuning</a> by ppyvabw, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, June 11, 2016 » Texel's Tuning Method</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60902">GreKo 2015 ML: tuning evaluation (article in Russian)</a> by <a href="/Vladimir_Medvedev">Vladimir Medvedev</a>, <a href="/CCC">CCC</a>, July 22, 2016 » <a href="/GreKo">GreKo</a>, Texel's Tuning Method</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61861">A database for learning evaluation functions</a> by <a href="/Álvaro_Begué">Álvaro Begué</a>, <a href="/CCC">CCC</a>, October 28, 2016 » <a href="/Evaluation">Evaluation</a>, <a href="/Learning">Learning</a>, Texel's Tuning Method</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62012">CLOP: when to stop?</a> by <a href="/Erin_Dame">Erin Dame</a>, <a href="/CCC">CCC</a>, November 07, 2016 » <a href="/CLOP">CLOP</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=62012&amp;start=6">Re: CLOP: when to stop?</a> by <a href="/Álvaro_Begué">Álvaro Begué</a>, <a href="/CCC">CCC</a>, November 08, 2016 <a href="#fn66" class="footnote-ref" id="fnref66" role="doc-noteref"><sup>66</sup></a></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62056">C++ code for tuning evaluation function parameters</a> by <a href="/Álvaro_Begué">Álvaro Begué</a>, <a href="/CCC">CCC</a>, November 10, 2016 » <a href="/RuyTune">RuyTune</a></li>
+</ul>
+<p><strong>2017</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63408">improved evaluation function</a> by <a href="/Alexandru_Mosoi">Alexandru Mosoi</a>, <a href="/CCC">CCC</a>, March 11, 2017 » Texel's Tuning Method, <a href="/Zurichess">Zurichess</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63425">automated tuning</a> by <a href="/Stuart_Cracraft">Stuart Cracraft</a>, <a href="/CCC">CCC</a>, March 13, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63926">Parameter tuning with multi objective optimization</a> by <a href="/Marco_Pampaloni">Marco Pampaloni</a>, <a href="/CCC">CCC</a>, May 07, 2017 » <a href="/Napoleon">Napoleon</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64119">Evaluation Tuning: When To Stop?</a> by Cheney Nattress, <a href="/CCC">CCC</a>, May 29, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64189">Texel tuning method question</a> by Sander Maassen vd Brink, <a href="/CCC">CCC</a>, June 05, 2017 » Texel's Tuning Method</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=64189&amp;start=35">Re: Texel tuning method question</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, June 07, 2017</p>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=64189&amp;start=42">Re: Texel tuning method question</a> by <a href="/Ferdinand_Mosca">Ferdinand Mosca</a>, <a href="/CCC">CCC</a>, July 20, 2017 » <a href="/Python">Python</a></p>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=64189&amp;start=46">Re: Texel tuning method question</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, July 23, 2017</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64972">Approximating Stockfish's Evaluation by PSQTs</a> by <a href="/Thomas_Dybdahl_Ahle">Thomas Dybdahl Ahle</a>, <a href="/CCC">CCC</a>, August 23, 2017 » <a href="/Automated_Tuning">Regression</a>, <a href="/Piece-Square_Tables">Piece-Square Tables</a>, <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65039">Ab-initio evaluation tuning</a> by <a href="/Evert_Glebbeek">Evert Glebbeek</a>, <a href="/CCC">CCC</a>, August 30, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65045">ROCK* black-box optimizer for chess</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, August 31, 2017 » <a href="/Automated_Tuning">ROCK*</a>, <a href="/Automated_Tuning">Rockstar</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65373">tuning via maximizing likelihood</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, October 04, 2017 <a href="#fn67" class="footnote-ref" id="fnref67" role="doc-noteref"><sup>67</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65660">tool to create derivates of a given function</a> by <a href="/Alexandru_Mosoi">Alexandru Mosoi</a>, <a href="/CCC">CCC</a>, November 07, 2017</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=65660&amp;start=2">Re: tool to create derivates of a given function</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, November 07, 2017 <a href="#fn68" class="footnote-ref" id="fnref68" role="doc-noteref"><sup>68</sup></a></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65799">tuning for the uninformed</a> by <a href="/Folkert_van_Heusden">Folkert van Heusden</a>, <a href="/CCC">CCC</a>, November 23, 2017</li>
+</ul>
+<p><strong>2018</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66221">tuning info</a> by <a href="/Marco_Belli">Marco Belli</a>, <a href="/CCC">CCC</a>, January 03, 2018</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66681">3 million games for training neural networks</a> by <a href="/Álvaro_Begué">Álvaro Begué</a>, <a href="/CCC">CCC</a>, February 24, 2018 » <a href="/Neural_Networks">Neural Networks</a></li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/XnLmUP_78iw/QgMZzmeVBgAJ">Tuning floats</a> by <a href="/Stephane_Nicolet">Stephane Nicolet</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, April 12, 2018</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=67831">Introducing PET</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, June 27, 2018 » <a href="/Strategic_Test_Suite">Strategic Test Suite</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=68326">Texel tuning speed</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, August 29, 2018 » Texel's Tuning Method</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=68753">methods for tuning coefficients</a> by <a href="/Stuart_Cracraft">Stuart Cracraft</a>, <a href="/CCC">CCC</a>, October 28, 2018</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69035">Particle Swarm Optimization Code</a> by <a href="/Erik_Madsen">Erik Madsen</a>, <a href="/CCC">CCC</a>, November 24, 2018 » <a href="/MadChess">MadChess</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69207">Gradient Descent Introduction</a> by <a href="/Michael_Hoffmann">Desperado</a>, <a href="/CCC">CCC</a>, December 09, 2018</li>
+</ul>
+<p><strong>2019</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69532">Automated tuning... finally... (Topple v0.3.0)</a> by <a href="/Vincent_Tang">Vincent Tang</a>, <a href="/CCC">CCC</a>, January 08, 2019 » <a href="/Topple">Topple</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=71650">New Tool for Tuning with Skopt</a> by <a href="/Thomas_Dybdahl_Ahle">Thomas Dybdahl Ahle</a>, <a href="/CCC">CCC</a>, August 25, 2019 <a href="#fn69" class="footnote-ref" id="fnref69" role="doc-noteref"><sup>69</sup></a></li>
+<li><a href="https://www.game-ai-forum.org/viewtopic.php?f=21&amp;t=695">TD(1)</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/Computer_Chess_Forums">Game-AI Forum</a>, November 20, 2019 » <a href="/Temporal_Difference_Learning">Temporal Difference Learning</a></li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/wOfRuzTSi_8/VgjN8MmSBQAJ">high dimensional optimization</a> by <a href="/Warren_D._Smith">Warren D. Smith</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, December 27, 2019 <a href="#fn70" class="footnote-ref" id="fnref70" role="doc-noteref"><sup>70</sup></a></li>
+</ul>
+<h3 id="2020--1">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72810">Board adaptive / tuning evaluation function - no NN/AI</a> by Moritz Gedig, <a href="/CCC">CCC</a>, January 14, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73629">Pawn structure tuning</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, April 11, 2020 » <a href="/Pawn_Structure">Pawn Structure</a>, <a href="/Ethereal">Ethereal</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74184">Learning/Tuning in SlowChess Blitz Classic</a> by <a href="/Jonathan_Kreuzer">Jonathan Kreuzer</a>, <a href="/CCC">CCC</a>, June 15, 2020 » <a href="/Slow_Chess">Slow Chess</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74209">Great input about Bayesian optimization of noisy function methods</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, June 16, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74877">Evaluation &amp; Tuning in Chess Engines</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, August 24, 2020 » <a href="/Ethereal">Ethereal</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74955">Train a neural network evaluation</a> by <a href="/Fabio_Gobbato">Fabio Gobbato</a>, <a href="/CCC">CCC</a>, September 01, 2020 » <a href="/NNUE">NNUE</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75012">Speeding Up The Tuner</a> by <a href="/Dennis_Sceviour">Dennis Sceviour</a>, <a href="/CCC">CCC</a>, September 06, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75104">Yet another parameter tuner using optuna framework</a> by <a href="/Ferdinand_Mosca">Ferdinand Mosca</a>, <a href="/CCC">CCC</a>, September 14, 2020</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75104&amp;start=15">Re: Yet another parameter tuner using optuna framework</a> by <a href="/Karlson_Pfannschmidt">Karlson Pfannschmidt</a>, <a href="/CCC">CCC</a>, September 16, 2020 <a href="#fn71" class="footnote-ref" id="fnref71" role="doc-noteref"><sup>71</sup></a></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75234">evaluation tuning - where to start?</a> by <a href="/Maksim_Korzh">Maksim Korzh</a>, <a href="/CCC">CCC</a>, September 27, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75267">How to calculate piece weights with logistic regression?</a> by <a href="/Maksim_Korzh">Maksim Korzh</a>, <a href="/CCC">CCC</a>, October 01, 2020 » <a href="/Automated_Tuning">Regression</a>, <a href="/Point_Value_by_Regression_Analysis">Point Value by Regression Analysis</a>, <a href="/Point_Value">Point Value</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75411">Unsupervised reinforcement tuning from zero</a> by Madeleine Birchfield, <a href="/CCC">CCC</a>, October 16, 2020 » <a href="/Reinforcement_Learning">Reinforcement Learning</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76024">Laskas parameter optimizer</a> by <a href="/Ferdinand_Mosca">Ferdinand Mosca</a>, <a href="/CCC">CCC</a>, December 09, 2020</li>
+</ul>
+<p><strong>2021</strong></p>
+<ul>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76205&amp;start=14">Re: Wasp 4.5 Released</a> by <a href="/John_Stanback">John Stanback</a>, <a href="/CCC">CCC</a>, January 03, 2021 » <a href="/Wasp">Wasp</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76227">How to calc the derivative for gradient descent?</a> by Brian Neal, <a href="/CCC">CCC</a>, January 04, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76238">Help with Texel's tuning</a> by <a href="/Maksim_Korzh">Maksim Korzh</a>, <a href="/CCC">CCC</a>, January 05, 2021 » Texel's Tuning Method</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76265">Tapered Evaluation and MSE (Texel Tuning)</a> by <a href="/Michael_Hoffmann">Michael Hoffmann</a>, <a href="/CCC">CCC</a>, January 10, 2021 » Texel's Tuning Method, <a href="/Tapered_Eval">Tapered Eval</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76288">Training data</a> by <a href="/Michael_Hoffmann">Michael Hoffmann</a>, <a href="/CCC">CCC</a>, January 12, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76292">Why using the game result instead of evaluation scores</a> by <a href="/Michael_Hoffmann">Michael Hoffmann</a>, <a href="/CCC">CCC</a>, January 12, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76294">Using Mini-Batch for tunig</a> by <a href="/Michael_Hoffmann">Michael Hoffmann</a>, <a href="/CCC">CCC</a>, January 12, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76380">Texel tuning variant</a> by <a href="/Ferdinand_Mosca">Ferdinand Mosca</a>, <a href="/CCC">CCC</a>, January 21, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76385">Parameter Tuning Algorithm</a> by <a href="/Michael_Hoffmann">Michael Hoffmann</a>, <a href="/CCC">CCC</a>, January 21, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76917">Mabigat - hyperparameter optimizer for NNUE net</a> by <a href="/Ferdinand_Mosca">Ferdinand Mosca</a>, <a href="/CCC">CCC</a>, March 22, 2021 » <a href="/NNUE">NNUE</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77118">Tuning search parameters</a> by <a href="/Niels_Abildskov">Niels Abildskov</a>, <a href="/CCC">CCC</a>, April 18, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77318">Search tuned depending on TC</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, May 16, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77420">A hybrid of SPSA and local optimization</a> by <a href="/Niels_Abildskov">Niels Abildskov</a>, <a href="/CCC">CCC</a>, June 01, 2021 » <a href="/SPSA">SPSA</a>, Texel's Tuning Method</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77715">Just an untested idea</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, July 12, 2021 » <a href="/Piece-Square_Tables">Piece-Square Tables</a></li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=78896">Tuning Search Parameters</a> by Jeremy Wright, <a href="/CCC">CCC</a>, December 16, 2021</li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=78958">Eval tuning data</a> by gaard, <a href="/CCC">CCC</a>, December 22, 2021</li>
+</ul>
+<p><strong>2022</strong></p>
+<ul>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79301">SGD basics</a> by <a href="/Michael_Hoffmann">Desperado</a>, <a href="/CCC">CCC</a>, February 06, 2022 » <a href="/Automated_Tuning">SGD</a></li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79049&amp;start=127">Re: Devlog of Leorik - A.k.a. how to tune high-quality PSTs from scratch (material values) in 20 seconds</a> by <a href="/Thomas_Jahn">Thomas Jahn</a>, <a href="/CCC">CCC</a>, March 28, 2022 » <a href="/Piece-Square_Tables">Piece-Square Tables</a>, <a href="/Leorik">Leorik</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wiktionary.org/wiki/automatic">automatic - Wiktionary</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Automation">Automation from Wikipedia</a></li>
+<li><a href="https://en.wiktionary.org/wiki/tuning">tuning - Wiktionary</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Tuning">Tuning from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/Engine_tuning">Engine tuning from Wikipedia</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Self-tuning">Self-tuning from Wikipedia</a></p>
+<h3 id="engine-tuning">Engine Tuning</h3>
+<ul>
+<li><a href="https://www.3dkingdoms.com/chess/learning.html">Automatic Tuning &amp; Learning for Slow Chess Blitz Classic</a> by by <a href="/Jonathan_Kreuzer">Jonathan Kreuzer</a> » <a href="/Slow_Chess">Slow Chess</a> <a href="#fn72" class="footnote-ref" id="fnref72" role="doc-noteref"><sup>72</sup></a></li>
+<li><a href="https://chess-tuning-tools.readthedocs.io/en/latest/">Chess Tuning Tools</a> by <a href="/Karlson_Pfannschmidt">Karlson Pfannschmidt</a></li>
+<li><a href="http://rebel13.nl/rebel13/pet.html">Practical Engine Tuning</a> by <a href="/Ed_Schroder">Ed Schröder</a>, June 2018 » <a href="/Strategic_Test_Suite">Strategic Test Suite</a> <a href="#fn73" class="footnote-ref" id="fnref73" role="doc-noteref"><sup>73</sup></a></li>
+</ul>
+<h3 id="optimization">Optimization</h3>
+<ul>
+<li><a href="https://en.wiktionary.org/wiki/optimization">optimization - Wiktionary</a></li>
+</ul>
+<p><a href="https://en.wiktionary.org/wiki/optimize">optimize - Wiktionary</a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Mathematical_optimization">Mathematical optimization from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Operations_research">Operations research from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Optimization_problem">Optimization problem from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Duality_(optimization)">Duality (optimization) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Local_search_%28optimization%29">Local search (optimization) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Iterated_local_search">Iterated local search from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Global_optimization">Global optimization from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Bayesian_optimization">Bayesian optimization from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Broyden%E2%80%93Fletcher%E2%80%93Goldfarb%E2%80%93Shanno_algorithm">Broyden–Fletcher–Goldfarb–Shanno algorithm from Wikipedia</a></li>
+<li><a href="http://remi.coulom.free.fr/CLOP/">CLOP for Noisy Black-Box Parameter Optimization</a> by <a href="/Rémi_Coulom">Rémi Coulom</a> » <a href="/CLOP">CLOP</a> <a href="#fn74" class="footnote-ref" id="fnref74" role="doc-noteref"><sup>74</sup></a> <a href="#fn75" class="footnote-ref" id="fnref75" role="doc-noteref"><sup>75</sup></a></li>
+<li><a href="https://en.wikipedia.org/wiki/Conjugate_gradient_method">Conjugate gradient method from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Convex_optimization">Convex optimization from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/Entropy_maximization">Entropy maximization from Wikipedia</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Linear_programming">Linear programming from Wikipedia</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Nonlinear_programming">Nonlinear programming from Wikipedia</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Simplex_algorithm">Simplex algorithm from Wikipedia</a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Differential_evolution">Differential evolution from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Evolutionary_computation">Evolutionary computation from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Gauss%E2%80%93Newton_algorithm">Gauss–Newton algorithm from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Genetic_algorithm">Genetic algorithm from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Gradient_descent">Gradient descent from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Hill_climbing">Hill climbing from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Hyperparameter_optimization">Hyperparameter optimization from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Limited-memory_BFGS">Limited-memory BFGS from Wikipedia</a> <a href="#fn76" class="footnote-ref" id="fnref76" role="doc-noteref"><sup>76</sup></a></li>
+<li><a href="https://en.wikipedia.org/wiki/Loss_function">Loss function from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Nelder%E2%80%93Mead_method">Nelder–Mead method from Wikipedia</a> » <a href="/Amoeba">Amoeba</a>, <a href="/Murka">Murka</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Newton%27s_method_in_optimization">Newton's method in optimization from Wikipedia</a></li>
+<li><a href="https://www.gerad.ca/nomad/Project/Home.html">NOMAD - A blackbox optimization software</a> <a href="#fn77" class="footnote-ref" id="fnref77" role="doc-noteref"><sup>77</sup></a></li>
+<li><a href="https://en.wikipedia.org/wiki/NEWUOA">NEWUOA from Wikipedia</a> <a href="#fn78" class="footnote-ref" id="fnref78" role="doc-noteref"><sup>78</sup></a></li>
+<li><a href="https://en.wikipedia.org/wiki/Particle_swarm_optimization">Particle swarm optimization from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Population-based_incremental_learning">Population-based incremental learning (PBIL) - Wikipedia</a> <a href="#fn79" class="footnote-ref" id="fnref79" role="doc-noteref"><sup>79</sup></a></li>
+<li><a href="http://macechess.blogspot.de/2013/03/population-based-incremental-learning.html">Population Based Incremental Learning (PBIL)</a> by <a href="/Thomas_Petzke">Thomas Petzke</a>, March 16, 2013 » <a href="/ICE">iCE</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Simulated_annealing">Simulated annealing from Wikipedia</a></li>
+<li><a href="https://github.com/scikit-optimize">Skopt (Scikit-Optimize) · GitHub</a></li>
+<li><a href="https://bayes-skopt.readthedocs.io/en/latest/">Welcome to Bayes-skopt’s documentation!</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Stochastic_optimization">Stochastic optimization from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/Simultaneous_perturbation_stochastic_approximation">Simultaneous perturbation stochastic approximation (SPSA) - Wikipedia</a></p>
+<p><a href="https://www.jhuapl.edu/spsa/">SPSA Algorithm</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Stochastic_approximation">Stochastic approximation from Wikipedia</a></p>
+<p><span id="SGD"></span><a href="https://en.wikipedia.org/wiki/Stochastic_gradient_descent">Stochastic gradient descent from Wikipedia</a> (SGD)</p>
+<p><a href="https://en.wikipedia.org/wiki/Stochastic_gradient_descent#AdaGrad">AdaGrad from Wikipedia</a></p>
+<h3 id="machine-learning">Machine Learning</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Machine_learning">Machine learning from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/List_of_machine_learning_concepts">List of machine learning concepts from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Backpropagation">Backpropagation from Wikipedia</a> » <a href="/Neural_Networks">Neural Networks</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Reinforcement_learning">Reinforcement learning from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wiktionary.org/wiki/reinforcement">reinforcement - Wiktionary</a></p>
+<p><a href="https://en.wiktionary.org/wiki/reinforce">reinforce - Wiktionary</a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Supervised_learning">Supervised learning from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wiktionary.org/wiki/supervisor">supervisor - Wiktionary</a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Temporal_difference_learning">Temporal Difference Learning from Wikipeadia</a></li>
+</ul>
+<p><a href="https://en.wiktionary.org/wiki/temporal">temporal - Wiktionary</a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Unsupervised_learning">Unsupervised learning from Wikipedia</a></li>
+</ul>
+<h3 id="statisticsregression-analysis">Statistics/Regression Analysis</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Statistics">Statistics from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Regression">Regression from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wiktionary.org/wiki/regression">regression - Wiktionary</a></p>
+<p><a href="https://en.wiktionary.org/wiki/regress">regress - Wiktionary</a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Regression_analysis">Regression analysis from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Outline_of_regression_analysis">Outline of regression analysis from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Bayesian_linear_regression">Bayesian linear regression from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Bayesian_multivariate_linear_regression">Bayesian multivariate linear regression from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Correlation_does_not_imply_causation">Correlation does not imply causation from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Cross_entropy">Cross entropy from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Elastic_net_regularization">Elastic net regularization from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Lasso_(statistics)">LASSO from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Likelihood_function">Likelihood function from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Linear_regression">Linear regression from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Linear_discriminant_analysis">Linear discriminant analysis from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Logistic_regression">Logistic regression from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Kernel_Fisher_discriminant_analysis">Kernel Fisher discriminant analysis from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Maximum_likelihood_estimation">Maximum likelihood estimation from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Mean_squared_error">Mean squared error from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Nonlinear_regression">Nonlinear regression from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Ordinary_least_squares">Ordinary least squares from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Polynomial_regression">Polynomial regression from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Simple_linear_regression">Simple linear regression from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Tikhonov_regularization">Tikhonov regularization (Ridge regression) from Wikipedia</a></li>
+</ul>
+<h3 id="code">Code</h3>
+<ul>
+<li><a href="https://github.com/facebookresearch/nevergrad">GitHub - facebookresearch/nevergrad: A Python toolbox for performing gradient-free optimization</a></li>
+<li><a href="https://github.com/fsmosca/Optuna-Game-Parameter-Tuner">GitHub - fsmosca/Optuna-Game-Parameter-Tuner: A game search and evaluation parameter tuner using optuna framework</a> by <a href="/Ferdinand_Mosca">Ferdinand Mosca</a> » <a href="/Deuterium">Deuterium</a> <a href="#fn80" class="footnote-ref" id="fnref80" role="doc-noteref"><sup>80</sup></a></li>
+<li><a href="https://github.com/fsmosca/Lakas">GitHub - fsmosca/Lakas: Game parameter optimizer using nevergrad framework</a> by <a href="/Ferdinand_Mosca">Ferdinand Mosca</a> <a href="#fn81" class="footnote-ref" id="fnref81" role="doc-noteref"><sup>81</sup></a></li>
+<li><a href="https://github.com/fsmosca/Mabigat">GitHub - fsmosca/Mabigat: NNUE parameter optimizer</a> by <a href="/Ferdinand_Mosca">Ferdinand Mosca</a> » <a href="/NNUE">NNUE</a> <a href="#fn82" class="footnote-ref" id="fnref82" role="doc-noteref"><sup>82</sup></a></li>
+<li><a href="https://github.com/kiudee/bayes-skopt">GitHub - kiudee/bayes-skopt: A fully Bayesian implementation of sequential model-based optimization</a> by <a href="/Karlson_Pfannschmidt">Karlson Pfannschmidt</a> » <a href="/Fat_Fritz">Fat Fritz</a> <a href="#fn83" class="footnote-ref" id="fnref83" role="doc-noteref"><sup>83</sup></a></li>
+<li><a href="https://github.com/kiudee/chess-tuning-tools">GitHub - kiudee/chess-tuning-tools</a> by <a href="/Karlson_Pfannschmidt">Karlson Pfannschmidt</a> » <a href="/Leela_Chess_Zero">Leela Chess Zero</a></li>
+<li><a href="https://github.com/krasserm/bayesian-machine-learning">GitHub - krasserm/bayesian-machine-learning: Notebooks about Bayesian methods for machine learning</a> by <a href="https://krasserm.github.io/">Martin Krasser</a> <a href="#fn84" class="footnote-ref" id="fnref84" role="doc-noteref"><sup>84</sup></a></li>
+<li><a href="https://github.com/thomasahle/noisy-bayesian-optimization">GitHub - thomasahle/noisy-bayesian-optimization: Bayesian Optimization for very Noisy functions</a> by <a href="/Thomas_Dybdahl_Ahle">Thomas Dybdahl Ahle</a> » <a href="/FastChess">FastChess</a></li>
+<li><a href="https://github.com/scikit-optimize/scikit-optimize">GitHub - scikit-optimize/scikit-optimize: Sequential model-based optimization with a `scipy.optimize` interface</a></li>
+<li><span id="Rockstar"></span><a href="https://github.com/lantonov/Rockstar">Rockstar: Implementation of ROCK* algorithm (Gaussian kernel regression + natural gradient descent) for optimisation | GitHub</a> by <a href="/Lyudmil_Antonov">Lyudmil Antonov</a> and <a href="/Joona_Kiiski">Joona Kiiski</a> » <a href="/Automated_Tuning">ROCK*</a> <a href="#fn85" class="footnote-ref" id="fnref85" role="doc-noteref"><sup>85</sup></a></li>
+<li><a href="https://github.com/zamar/spsa">SPSA Tuner for Stockfish Chess Engine | GitHub</a> by <a href="/Joona_Kiiski">Joona Kiiski</a> » <a href="/Stockfish">Stockfish</a>, Stockfish's Tuning Method</li>
+</ul>
+<h3 id="misc">Misc</h3>
+<ul>
+<li><a href="/Category:The_Next_Step_Quintet">The Next Step Quintet</a> feat. <a href="http://www.tivonpennicott.com/">Tivon Pennicott</a> - <a href="http://www.discogs.com/Next-Step-Quintet-The-Next-Step-Quintet/release/4970720">Regression</a>, <a href="https://el-gr.facebook.com/KerameioBar">KerameioBar</a> <a href="https://en.wikipedia.org/wiki/Athens">Athens</a>, <a href="https://en.wikipedia.org/wiki/Greece">Greece</a>, September 2014, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/lc4LBx2_Mak" title="YouTube video lc4LBx2_Mak" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=lc4LBx2_Mak">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Main_Page">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Yngvi_Björnsson">Yngvi Björnsson</a>, <a href="/Tony_Marsland">Tony Marsland</a> (<strong>2001</strong>). <em>Learning Search Control in Adversary Games</em>. <a href="/Advances_in_Computer_Games_9">Advances in Computer Games 9</a>, pp. 157-174. <a href="http://www.ru.is/faculty/yngvi/pdf/BjornssonM01b.pdf">pdf</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Johannes_Fürnkranz">Johannes Fürnkranz</a> (<strong>2000</strong>). <em>Machine Learning in Games: A Survey</em>. <a href="https://en.wikipedia.org/wiki/Austrian_Research_Institute_for_Artificial_Intelligence">Austrian Research Institute for Artificial Intelligence</a>, OEFAI-TR-2000-3, <a href="https://fmfi-uk.hq.sk/Informatika/Strojove%20Ucenie/oefai-tr-2000-31.pdf">pdf</a> - Chapter 4, Evaluation Function Tuning<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=47885">Fishtest Distributed Testing Framework</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, May 01, 2013<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://www.stmintz.com/ccc/index.php?id=475521">Re: Zappa Report</a> by <a href="/Ingo_Althöfer">Ingo Althöfer</a>, <a href="/CCC">CCC</a>, December 30, 2005 » <a href="/Zappa">Zappa</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="/Ingo_Althöfer">Ingo Althöfer</a> (<strong>1993</strong>). <em>On Telescoping Linear Evaluation Functions.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 16, No. 2</a>, pp. 91-94<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="/Arthur_Samuel">Arthur Samuel</a> (<strong>1959</strong>). <em><a href="http://domino.watson.ibm.com/tchjr/journalindex.nsf/600cc5649e2871db852568150060213c/39a870213169f45685256bfa00683d74!OpenDocument">Some Studies in Machine Learning Using the Game of Checkers</a></em>. IBM Journal July 1959<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="/Richard_Sutton">Richard Sutton</a> (<strong>1988</strong>). <em>Learning to Predict by the Methods of Temporal Differences</em>. <a href="https://en.wikipedia.org/wiki/Machine_Learning_%28journal%29">Machine Learning</a>, Vol. 3, No. 1, <a href="http://webdocs.cs.ualberta.ca/~sutton/papers/sutton-88.pdf">pdf</a><a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="/Gerald_Tesauro">Gerald Tesauro</a> (<strong>1992</strong>). <em>Temporal Difference Learning of Backgammon Strategy</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/icml/ml1992.html#Tesauro92">ML 1992</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="/Gerald_Tesauro">Gerald Tesauro</a> (<strong>1994</strong>). <em>TD-Gammon, a Self-Teaching Backgammon Program, Achieves Master-Level Play</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/journals/neco/neco6.html#Tesauro94">Neural Computation Vol. 6, No. 2</a><a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="/Don_Beal">Don Beal</a>, <a href="/Martin_C._Smith">Martin C. Smith</a> (<strong>1999</strong>). <em>Learning Piece-Square Values using Temporal Differences.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 22, No. 4</a><a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="/Jonathan_Baxter">Jonathan Baxter</a>, <a href="/Andrew_Tridgell">Andrew Tridgell</a>, <a href="/Lex_Weaver">Lex Weaver</a> (<strong>1998</strong>). <em>Experiments in Parameter Learning Using Temporal Differences</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 21, No. 2</a>, <a href="http://cs.anu.edu.au/%7ELex.Weaver/pub_sem/publications/ICCA-98_equiv.pdf">pdf</a><a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="http://supertech.csail.mit.edu/chess/">The Cilkchess Parallel Chess Program</a><a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="/EXchess">EXchess</a> also uses <a href="/CLOP">CLOP</a><a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p><a href="/Arthur_Samuel">Arthur Samuel</a> (<strong>1967</strong>). <em>Some Studies in Machine Learning. Using the Game of Checkers. II-Recent Progress</em>. <a href="http://researcher.watson.ibm.com/researcher/files/us-beygel/samuel-checkers.pdf">pdf</a><a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn15"><p><a href="/Johannes_Fürnkranz">Johannes Fürnkranz</a> (<strong>2000</strong>). <em>Machine Learning in Games: A Survey</em>. <a href="https://en.wikipedia.org/wiki/Austrian_Research_Institute_for_Artificial_Intelligence">Austrian Research Institute for Artificial Intelligence</a>, OEFAI-TR-2000-3, <a href="https://fmfi-uk.hq.sk/Informatika/Strojove%20Ucenie/oefai-tr-2000-31.pdf">pdf</a><a href="#fnref15" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn16"><p><a href="/Thomas_Nitsche">Thomas Nitsche</a> (<strong>1982</strong>). <em>A Learning Chess Program.</em> <a href="/Advances_in_Computer_Chess_3">Advances in Computer Chess 3</a><a href="#fnref16" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn17"><p><a href="/Tony_Marsland">Tony Marsland</a> (<strong>1985</strong>). <em>Evaluation-Function Factors</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 8, No. 2</a>, <a href="http://webdocs.cs.ualberta.ca/~tony/OldPapers/evaluation.pdf">pdf</a><a href="#fnref17" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn18"><p><a href="/Feng-hsiung_Hsu">Feng-hsiung Hsu</a>, <a href="/Thomas_Anantharaman">Thomas Anantharaman</a>, <a href="/Murray_Campbell">Murray Campbell</a>, <a href="/Andreas_Nowatzyk">Andreas Nowatzyk</a> (<strong>1990</strong>). <em><a href="http://www.disi.unige.it/person/DelzannoG/AI2/hsu.html">A Grandmaster Chess Machine</a></em>. <a href="/Scientific_American">Scientific American</a>, Vol. 263, No. 4, pp. 44-50. ISSN 0036-8733.<a href="#fnref18" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn19"><p>see <em>2.1 Learning from Desired Moves in Chess</em> in <a href="/Kunihito_Hoki">Kunihito Hoki</a>, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a> (<strong>2014</strong>). <em><a href="https://www.jair.org/papers/paper4217.html">Large-Scale Optimization for Evaluation Functions with Minimax Search</a></em>. <a href="https://www.jair.org/vol/vol49.html">JAIR Vol. 49</a><a href="#fnref19" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn20"><p><a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, <a href="/Joe_Culberson">Joe Culberson</a>, Norman Treloar, Brent Knight, <a href="/Paul_Lu">Paul Lu</a>, <a href="/Duane_Szafron">Duane Szafron</a> (<strong>1992</strong>). <em>A World Championship Caliber Checkers Program</em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 53, Nos. 2-3,<a href="http://webdocs.cs.ualberta.ca/%7Ejonathan/Papers/Papers/chinook.ps">ps</a><a href="#fnref20" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn21"><p><a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a> (<strong>1997, 2009</strong>). <em><a href="http://www.springer.com/computer/ai/book/978-0-387-76575-4">One Jump Ahead</a></em>. 7. The Case for the Prosecution, pp. 111-114<a href="#fnref21" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn22"><p><a href="/Bruce_Abramson">Bruce Abramson</a> (<strong>1990</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/freeabs_all.jsp?arnumber=44404">Expected-Outcome: A General Model of Static Evaluation</a></em>. <a href="/IEEE">IEEE Transactions on Pattern Analysis and Machine Intelligence</a>, Vol. 12, No. 2<a href="#fnref22" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn23"><p><a href="https://en.wikipedia.org/wiki/Loss_function#Use_in_statistics">Loss function - Use in statistics - Wkipedia</a><a href="#fnref23" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn24"><p>"Using <a href="https://en.wikipedia.org/wiki/Cross_entropy#Cross-entropy_error_function_and_logistic_regression">cross-entropy error function</a> instead of <a href="https://en.wikipedia.org/wiki/Mean_squared_error">sum of squares</a> leads to faster training and improved generalization", from <a href="https://en.wikipedia.org/wiki/Sargur_Srihari">Sargur Srihari</a>, <a href="http://www.cedar.buffalo.edu/~srihari/CSE574/Chap5/Chap5.2-Training.pdf">Neural Network Training</a> (pdf)<a href="#fnref24" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn25"><p><a href="/Michael_Buro">Michael Buro</a> (<strong>1995</strong>). <em><a href="https://www.jair.org/index.php/jair/article/view/10146">Statistical Feature Combination for the Evaluation of Game Positions</a></em>. <a href="https://en.wikipedia.org/wiki/Journal_of_Artificial_Intelligence_Research">JAIR</a>, Vol. 3<a href="#fnref25" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn26"><p><a href="/Donald_H._Mitchell">Donald H. Mitchell</a> (<strong>1984</strong>). <em>Using Features to Evaluate Positions in Experts' and Novices' Othello Games</em>. Master thesis, Department of Psychology, <a href="/Northwestern_University">Northwestern University</a>, Evanston, IL<a href="#fnref26" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn27"><p><a href="/Jens_Christensen">Jens Christensen</a> (<strong>1986</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-1-4613-2279-5_9?no-access=true">Learning Static Evaluation Functions by Linear Regression</a></em>. in <a href="/Tom_Mitchell">Tom Mitchell</a>, <a href="/Jaime_Carbonell">Jaime Carbonell</a>, <a href="/Ryszard_Michalski">Ryszard Michalski</a> (<strong>1986</strong>). <em><a href="http://link.springer.com/book/10.1007/978-1-4613-2279-5">Machine Learning: A Guide to Current Research</a></em>. The Kluwer International Series in Engineering and Computer Science, Vol. 12<a href="#fnref27" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn28"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=56168&amp;start=36">Re: Piece weights with regression analysis (in Russian)</a> by <a href="/Fabien_Letouzey">Fabien Letouzey</a>, <a href="/CCC">CCC</a>, May 04, 2015<a href="#fnref28" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn29"><p><a href="/Michael_Buro">Michael Buro</a> (<strong>1995</strong>). <em><a href="https://www.jair.org/index.php/jair/article/view/10146">Statistical Feature Combination for the Evaluation of Game Positions</a></em>. <a href="https://en.wikipedia.org/wiki/Journal_of_Artificial_Intelligence_Research">JAIR</a>, Vol. 3<a href="#fnref29" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn30"><p><a href="https://skatgame.net/mburo/log.html">LOGISTELLO's Homepage</a><a href="#fnref30" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn31"><p><a href="/Arkadiusz_Paterek">Arkadiusz Paterek</a> (<strong>2004</strong>). <em>Modelowanie funkcji oceniającej w grach</em>. <a href="/University_of_Warsaw">University of Warsaw</a>, <a href="https://www.mimuw.edu.pl/~paterek/mfog.ps.gz">zipped ps</a> (Polish, Modeling of an evaluation function in games)<a href="#fnref31" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn32"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=27266&amp;postdays=0&amp;postorder=asc&amp;topic_view=&amp;start=11">Re: Insanity... or Tal style?</a> by <a href="/Miguel_A._Ballicora">Miguel A. Ballicora</a>, <a href="/CCC">CCC</a>, April 02, 2009<a href="#fnref32" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn33"><p><a href="/Amir_Ban">Amir Ban</a> (<strong>2012</strong>). <em><a href="http://www.ratio.huji.ac.il/node/2362">Automatic Learning of Evaluation, with Applications to Computer Chess</a></em>. Discussion Paper 613, <a href="https://en.wikipedia.org/wiki/Hebrew_University_of_Jerusalem">The Hebrew University of Jerusalem</a> - Center for the Study of Rationality, <a href="https://en.wikipedia.org/wiki/Givat_Ram">Givat Ram</a><a href="#fnref33" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn34"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=50823&amp;start=10">Re: How Do You Automatically Tune Your Evaluation Tables</a> by <a href="/Álvaro_Begué">Álvaro Begué</a>, <a href="/CCC">CCC</a>, January 08, 2014<a href="#fnref34" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn35"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=555522&amp;t=50823">The texel evaluation function optimization algorithm</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, January 31, 2014<a href="#fnref35" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn36"><p><a href="http://habrahabr.ru/post/254753/">Определяем веса шахматных фигур регрессионным анализом / Хабрахабр</a> by <a href="/Vladimir_Medvedev">WinPooh</a>, April 27, 2015 (Russian)<a href="#fnref36" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn37"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=56168">Piece weights with regression analysis (in Russian)</a> by <a href="/Vladimir_Medvedev">Vladimir Medvedev</a>, <a href="/CCC">CCC</a>, April 30, 2015<a href="#fnref37" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn38"><p><a href="https://github.com/zamar/spsa">SPSA Tuner for Stockfish Chess Engine</a> by <a href="/Joona_Kiiski">Joona Kiiski</a><a href="#fnref38" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn39"><p><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=49450&amp;start=3">Re: Adjusting weights the Deep Blue way</a> by <a href="/Pradu_Kannan">Pradu Kannan</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, September 01, 2008<a href="#fnref39" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn40"><p><a href="http://www.talkchess.com/forum/viewtopic.php?start=0&amp;t=31667">A paper about parameter tuning</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/CCC">CCC</a>, January 12, 2010<a href="#fnref40" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn41"><p><a href="https://en.wikipedia.org/wiki/MATLAB">MATLAB from Wikipedia</a><a href="#fnref41" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn42"><p><a href="https://en.wikipedia.org/wiki/Adaptive_coordinate_descent">Adaptive coordinate descent from Wikipedia</a><a href="#fnref42" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn43"><p><a href="http://www.talkchess.com/forum/viewtopic.php?p=421995">CLOP for Noisy Black-Box Parameter Optimization</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/CCC">CCC</a>, September 01, 2011<a href="#fnref43" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn44"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=40987">CLOP slides</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/CCC">CCC</a>, November 03, 2011<a href="#fnref44" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn45"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=58472">thesis on eval function learning in Arimaa</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, December 04, 2015<a href="#fnref45" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn46"><p><a href="https://groups.google.com/d/msg/fishcooking/XnLmUP_78iw/QgMZzmeVBgAJ">Tuning floats</a> by <a href="/Stephane_Nicolet">Stephane Nicolet</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, April 12, 2018<a href="#fnref46" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn47"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=55084">MMTO for evaluation learning</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, January 25, 2015<a href="#fnref47" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn48"><p><a href="https://en.wikipedia.org/wiki/Broyden%E2%80%93Fletcher%E2%80%93Goldfarb%E2%80%93Shanno_algorithm">Broyden–Fletcher–Goldfarb–Shanno algorithm from Wikipedia</a><a href="#fnref48" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn49"><p><a href="https://groups.google.com/d/msg/fishcooking/wOfRuzTSi_8/VgjN8MmSBQAJ">high dimensional optimization</a> by <a href="/Warren_D._Smith">Warren D. Smith</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, December 27, 2019<a href="#fnref49" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn50"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=61948">Arasan 19.2</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, November 03, 2016 » <a href="/Arasan">Arasan's Tuning</a><a href="#fnref50" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn51"><p><a href="https://en.wikipedia.org/wiki/Limited-memory_BFGS">Limited-memory BFGS from Wikipedia</a><a href="#fnref51" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn52"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=62012&amp;start=6">Re: CLOP: when to stop?</a> by <a href="/Álvaro_Begué">Álvaro Begué</a>, <a href="/CCC">CCC</a>, November 08, 2016<a href="#fnref52" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn53"><p><a href="https://en.wikipedia.org/wiki/Limited-memory_BFGS">LM-BFGS from Wikipedia</a><a href="#fnref53" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn54"><p><a href="https://sites.google.com/site/ecjlmcma/">LM-CMA source code</a><a href="#fnref54" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn55"><p><a href="https://en.wikipedia.org/wiki/CMA-ES">CMA-ES from Wikipedia</a><a href="#fnref55" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn56"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=64189&amp;start=46">Re: Texel tuning method question</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, July 23, 2017<a href="#fnref56" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn57"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=52861&amp;start=7">Re: multi-dimensional piece/square tables</a> by Tony P., <a href="/CCC">CCC</a>, January 28, 2020 » <a href="/Piece-Square_Tables">Piece-Square Tables</a><a href="#fnref57" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn58"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74877">Evaluation &amp; Tuning in Chess Engines</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, August 24, 2020<a href="#fnref58" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn59"><p><a href="/Thomas_Anantharaman">Thomas Anantharaman</a> (<strong>1997</strong>). <em>Evaluation Tuning for Computer Chess: Linear Discriminant Methods</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 20, No. 4</a><a href="#fnref59" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn60"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=555522&amp;t=50823">The texel evaluation function optimization algorithm</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, January 31, 2014<a href="#fnref60" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn61"><p><a href="/Rémi_Coulom">Rémi Coulom</a> (<strong>2011</strong>). <em><a href="http://remi.coulom.free.fr/CLOP/">CLOP: Confident Local Optimization for Noisy Black-Box Parameter Tuning</a></em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a><a href="#fnref61" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn62"><p><a href="/Amir_Ban">Amir Ban</a> (<strong>2012</strong>). <em><a href="http://www.ratio.huji.ac.il/node/2362">Automatic Learning of Evaluation, with Applications to Computer Chess</a></em>. Discussion Paper 613, <a href="https://en.wikipedia.org/wiki/Hebrew_University_of_Jerusalem">The Hebrew University of Jerusalem</a> - Center for the Study of Rationality, <a href="https://en.wikipedia.org/wiki/Givat_Ram">Givat Ram</a><a href="#fnref62" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn63"><p><a href="/Kunihito_Hoki">Kunihito Hoki</a>, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a> (<strong>2014</strong>). <em><a href="https://www.jair.org/papers/paper4217.html">Large-Scale Optimization for Evaluation Functions with Minimax Search</a></em>. <a href="https://www.jair.org/vol/vol49.html">JAIR Vol. 49</a>, <a href="https://www.jair.org/media/4217/live-4217-7792-jair.pdf">pdf</a><a href="#fnref63" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn64"><p><a href="https://bitbucket.org/brtzsnr/txt">brtzsnr / txt — Bitbucket</a> by <a href="/Alexandru_Mosoi">Alexandru Mosoi</a><a href="#fnref64" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn65"><p><a href="http://tensorflow.org/">Home — TensorFlow</a><a href="#fnref65" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn66"><p><a href="https://en.wikipedia.org/wiki/Limited-memory_BFGS">Limited-memory BFGS from Wikipedia</a><a href="#fnref66" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn67"><p><a href="https://en.wikipedia.org/wiki/Maximum_likelihood_estimation">Maximum likelihood estimation from Wikipedia</a><a href="#fnref67" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn68"><p><a href="https://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant">Jacobian matrix and determinant from WIkipedia</a><a href="#fnref68" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn69"><p><a href="https://scikit-optimize.github.io/">skopt API documentation</a><a href="#fnref69" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn70"><p><a href="/Mathematician">Yann Dauphin</a>, <a href="/Mathematician">Razvan Pascanu</a>, <a href="/Mathematician">Caglar Gulcehre</a>, <a href="/Mathematician">Kyunghyun Cho</a>, <a href="/Mathematician">Surya Ganguli</a>, <a href="/Mathematician">Yoshua Bengio</a> (<strong>2014</strong>). <em>Identifying and attacking the saddle point problem in high-dimensional non-convex optimization</em>. <a href="https://arxiv.org/abs/1406.2572">arXiv:1406.2572</a><a href="#fnref70" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn71"><p><a href="https://optunity.readthedocs.io/en/latest/user/solvers/TPE.html">Tree-structured Parzen Estimator — Optunity 1.1.0 documentation</a><a href="#fnref71" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn72"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74184">Learning/Tuning in SlowChess Blitz Classic</a> by <a href="/Jonathan_Kreuzer">Jonathan Kreuzer</a>, <a href="/CCC">CCC</a>, June 15, 2020<a href="#fnref72" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn73"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=67831">Introducing PET</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, June 27, 2018<a href="#fnref73" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn74"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=35049">Tool for automatic black-box parameter optimization released</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/CCC">CCC</a>, June 20, 2010<a href="#fnref74" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn75"><p><a href="http://www.talkchess.com/forum/viewtopic.php?p=421995">CLOP for Noisy Black-Box Parameter Optimization</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/CCC">CCC</a>, September 01, 2011<a href="#fnref75" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn76"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=62012&amp;start=6">Re: CLOP: when to stop?</a> by <a href="/Álvaro_Begué">Álvaro Begué</a>, <a href="/CCC">CCC</a>, November 08, 2016<a href="#fnref76" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn77"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=54545&amp;start=2">Re: Eval tuning - any open source engines with GA or PBIL?</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, December 06, 2014<a href="#fnref77" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn78"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=50823&amp;start=94">Re: The texel evaluation function optimization algorithm</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, March 12, 2014<a href="#fnref78" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn79"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=54545">Eval tuning - any open source engines with GA or PBIL?</a> by Hrvoje Horvatic, <a href="/CCC">CCC</a>, December 04, 2014<a href="#fnref79" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn80"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75104">Yet another parameter tuner using optuna framework</a> by <a href="/Ferdinand_Mosca">Ferdinand Mosca</a>, <a href="/CCC">CCC</a>, September 14, 2020<a href="#fnref80" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn81"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76024">Laskas parameter optimizer</a> by <a href="/Ferdinand_Mosca">Ferdinand Mosca</a>, <a href="/CCC">CCC</a>, December 09, 2020<a href="#fnref81" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn82"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76917">Mabigat - hyperparameter optimizer for NNUE net</a> by <a href="/Ferdinand_Mosca">Ferdinand Mosca</a>, <a href="/CCC">CCC</a>, March 22, 2021<a href="#fnref82" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn83"><p><a href="https://en.chessbase.com/post/fat-fritz-update-and-fat-fritz-jr">Fat Fritz 1.1 update and a small gift</a> by <a href="/Albert_Silver">Albert Silver</a>. <a href="/ChessBase">ChessBase News</a>, March 05, 2020<a href="#fnref83" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn84"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74209">Great input about Bayesian optimization of noisy function methods</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, June 16, 2020<a href="#fnref84" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn85"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=65045">ROCK* black-box optimizer for chess</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, August 31, 2017<a href="#fnref85" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:The_Next_Step_Quintet">The Next Step Quintet</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Automated_Tuning">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, Folkert van Heusden.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

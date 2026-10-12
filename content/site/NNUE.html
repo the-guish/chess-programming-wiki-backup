@@ -1,0 +1,778 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NNUE - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">NNUE</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Learning">Learning</a> * <a href="/Neural_Networks">Neural Networks</a> * NNUE</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:250px"><img src="https://upload.wikimedia.org/wikipedia/commons/2/22/SekienNue.jpg" alt="Toriyama Sekien - Nue (鵺) 1 2" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Toriyama_Sekien">Toriyama Sekien</a> - Nue (鵺) <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://en.wikipedia.org/wiki/Nue">Nue</a> (鵺) from the <a href="https://en.wikipedia.org/wiki/Konjaku_Gazu_Zoku_Hyakki">Konjaku Gazu Zoku Hyakki</a> (今昔画図続百鬼) by <a href="/Category:Toriyama_Sekien">Toriyama Sekien</a>, circa 1779, <a href="https://en.wikipedia.org/wiki/Wikimedia_Commons">Wikimedia Commons</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+<li id="fn2"><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=74611&amp;start=2">Re: What does NNUE actually mean</a> by Henk Drost, <a href="/CCC">CCC</a>, July 29, 2020<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>NNUE</strong>, (ƎUИИ Efficiently Updatable Neural Networks)<br />
+a Neural Network architecture intended to replace the <a href="/Evaluation">evaluation</a> of <a href="/Shogi">Shogi</a>, <a href="/Chess">chess</a> and other board game playing <a href="/Alpha-Beta">alpha-beta</a> searchers running on a CPU. Inspired by <a href="/Kunihito_Hoki">Kunihito Hoki's</a> approach of <a href="/Piece-Square_Tables">piece-square tables</a> indexed by king location, and further two-piece locations and side to move as applied in his Shogi engine <a href="/Bonanza">Bonanza</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>, <strong>NNUE</strong> was introduced in 2018 by <a href="/Yu_Nasu">Yu Nasu</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>, and was used in Shogi adaptations of <a href="/Stockfish">Stockfish</a> such as <a href="/YaneuraOu">YaneuraOu</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>, and <a href="/Kristallweizen">Kristallweizen</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>, apparently with <a href="/AlphaZero">AlphaZero</a> strength <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#stockfish-nnue">Stockfish NNUE</a></li>
+<li><a href="#adoption">Adoption</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#architecture">Architecture</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#basic-nnue">Basic NNUE</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#input-layer">Input Layer</a></li>
+<li><a href="#accumulator">Accumulator</a></li>
+<li><a href="#perspective">Perspective</a></li>
+<li><a href="#efficient-updates">Efficient Updates</a></li>
+<li><a href="#output-layer">Output Layer</a></li>
+<li><a href="#quantization">Quantization</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#advanced-nnue-techniques">Advanced NNUE Techniques</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#output-buckets">Output Buckets</a></li>
+<li><a href="#horizontal-mirroring">Horizontal Mirroring</a></li>
+<li><a href="#king-input-buckets">King Input Buckets</a></li>
+<li><a href="#feature-factorizer">Feature Factorizer</a></li>
+<li><a href="#pairwise-multiplication">Pairwise Multiplication</a></li>
+<li><a href="#multiple-layers">Multiple Layers</a></li>
+<li><a href="#layerstacks">LayerStacks</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#performance-improvements">Performance Improvements</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#fused-updates">Fused Updates</a></li>
+<li><a href="#copy-make">Copy-Make</a></li>
+<li><a href="#lazy-updates">Lazy Updates</a></li>
+<li><a href="#accumulator-refresh-table">Accumulator Refresh Table</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#simd">SIMD</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#lizard-screlu">Lizard SCReLU</a></li>
+</ol>
+</details></li>
+</ol>
+</details></li>
+</ol>
+</details></li>
+<li><a href="#notable-trainers">Notable Trainers</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#2020">2020</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#january-">January ...</a></li>
+<li><a href="#july">July</a></li>
+<li><a href="#august">August</a></li>
+<li><a href="#september">September</a></li>
+<li><a href="#october">October</a></li>
+<li><a href="#november">November</a></li>
+<li><a href="#december">December</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#2021">2021</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#january">January</a></li>
+<li><a href="#february">February</a></li>
+<li><a href="#march">March</a></li>
+<li><a href="#april">April</a></li>
+<li><a href="#may">May</a></li>
+<li><a href="#june">June</a></li>
+<li><a href="#july-1">July</a></li>
+<li><a href="#august-">August ...</a></li>
+</ol>
+</details></li>
+<li><a href="#2022-">2022 ...</a></li>
+<li><a href="#2023-">2023 ...</a></li>
+<li><a href="#2024-">2024 ...</a></li>
+<li><a href="#2025-">2025 ...</a></li>
+<li><a href="#2026-">2026 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#nnue">NNUE</a></li>
+<li><a href="#nnue-libraries">NNUE libraries</a></li>
+<li><a href="#source-code">Source Code</a></li>
+<li><a href="#misc">Misc</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="stockfish-nnue"><a href="/Stockfish_NNUE">Stockfish NNUE</a></h2>
+<p>As reported by Henk Drost <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>, <a href="/Hisayori_Noda">Nodchip</a> incorporated NNUE into the chess playing <a href="/Stockfish">Stockfish</a> 10 as a proof of concept. <a href="/Stockfish_NNUE">Stockfish NNUE</a> was born, and in summer 2020, the computer chess community burst out enthusiastically due to its rapidly rising <a href="/Playing_Strength">playing strength</a> with different networks trained using a mixture of <a href="/Supervised_Learning">supervised</a> and <a href="/Reinforcement_Learning">reinforcement learning</a> methods - despite the approximately halved search speed, it became stronger than its original <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>, finally responsible for the huge <a href="/Playing_Strength">strength</a> improvement of <strong>Stockfish 12</strong>.</p>
+<h2 id="adoption">Adoption</h2>
+<p><em>see <a href="/Category:NNUE">:Category:NNUE</a></em></p>
+<p>Being tempted by the success of <a href="/Stockfish_NNUE">Stockfish NNUE</a> and attracted by how easy the method and small the code is, many engine developers have started testing and applying <a href="/NNUE">NNUE</a>. For quick trials and evaluating before going into serious development, some of them borrowed and/or rewrote the NNUE code and used networks from Stockfish NNUE. Most of them reported positive results, such as David Carteau with <a href="/Orion">Orion</a> <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a>, Ehsan Rashid with <a href="/DON">DON</a> <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a>, various <a href="/Stockfish">Stockfish derivatives</a> by <a href="/Michael_Byrne">Michael Byrne</a> <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a>, and <a href="/Volodymyr_Shcherbyna">Volodymyr Shcherbyna</a> with <a href="/Igel">Igel</a> <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a> using the <em>Night Nurse</em> NNUE net by <a href="/Dietrich_Kappe">Dietrich Kappe</a> <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a>. <a href="/Daniel_Shawul">Daniel Shawul</a> added NNUE support à la <a href="/CFish">CFish</a> into his <a href="/Scorpio">egbbdll</a> probing library of <a href="/Scorpio">Scorpio</a> <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a> <a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a>, making it even easier to use NNUE. The promising engines <a href="/Halogen">Halogen</a> 7 and 8 by <a href="/Kieren_Pearson">Kieren Pearson</a>, and <a href="/Seer">Seer</a> by <a href="/Connor_McMonigle">Connor McMonigle</a> came with their own, distinct NNUE implementations, and on November 10, 2020, the commercial <a href="/Dragon_by_Komodo_Chess">Dragon by Komodo Chess</a> aka <a href="/Komodo">Komodo</a> NNUE appeared <a href="#fn15" class="footnote-ref" id="fnref15" role="doc-noteref"><sup>15</sup></a>, trying to close the gap to Stockfish NNUE. The commercial <a href="/Fat_Fritz">Fat Fritz 2.0</a>, based on a slightly modified Stockfish 12 using a customized, double-sized network, was released by <a href="/ChessBase">ChessBase</a> in February 2021.</p>
+<h2 id="architecture">Architecture</h2>
+<h3 id="basic-nnue">Basic NNUE</h3>
+<p>The most basic form of an NNUE network consists of three layers: an input layer of length 768 (768 = 6 pieces x 2 colors x 64 squares), one hidden layer of arbitrary size, and an output layer consisting of one neuron, representing the evaluation of the position. A NNUE network also commonly consists of two perspectives. That is, two hidden layers representing both sides are concatenated into a single hidden layer of twice the length, before being forwarded to the output layer.</p>
+<pre><code>#define INPUT_SIZE 768
+#define HL_SIZE ...
+
+// These parameters are part of the training configuration
+// These are the commonly used values as of 2024
+#define SCALE 400
+#define QA 255
+#define QB 64
+
+struct Network {
+    int16_t accumulator_weights[INPUT_SIZE][HL_SIZE];
+    int16_t accumulator_biases[HL_SIZE];
+    int16_t output_weights[2 * HL_SIZE];
+    int16_t output_bias;
+};</code></pre>
+<h4 id="input-layer">Input Layer</h4>
+<p>The input layer of a basic NNUE network contains 768 neurons of binary values, each representing one possible combination of piece, square, and color. Each neuron can be either on or off, depending on whether a piece with the corresponding combination exists on the board. The following is a common encoding scheme seen in most NNUE engines.</p>
+<pre><code>// Square: 0 - 63
+// PieceType: Pawn = 0, Knight = 1, Bishop, Rook, Queen, King
+// Side: White = 0, Black = 1
+
+int calculateIndex(Square square, PieceType pieceType, Side side)
+{
+    return side * 64 * 6 + pieceType * 64 + square;
+}</code></pre>
+<h4 id="accumulator">Accumulator</h4>
+<p>The first hidden layer of a NNUE is also called the accumulator. The accumulator can be of arbitrary size, but integer multiples of powers of 2 are preferred as they allow the inference to be optimized more effectively. A large hidden layer trades speed for higher evaluation accuracy, and vice versa. Larger hidden layers are usually preferred as Elo gain from speedup tends to scale inversely with respect to time and computational power. Most top engines have accumulator sizes of more than 1024 neurons, with some even using accumulators as wide as 3072. A large accumulator is important as it is the only hidden layer that can be <strong>efficiently updated</strong>.</p>
+<pre><code>struct Accumulator {
+    int16_t values[HL_SIZE];
+};</code></pre>
+<h4 id="perspective">Perspective</h4>
+<p>The vast majority of NNUE architectures require two accumulators to be maintained separately. Each represents the board from the "perspective", or point-of-view, from each side. The current board position is always from the white perspective. To calculate the input values from the perspective of black, the board is flipped vertically. This means that the piece's color is inverted, and its square is mirrored across the centre of the board (e.g., A1 becomes A8). Both perspectives use identical input weights and biases. During inference, the two accumulators are concatenated, with the accumulator representing the side to move being first. This resulting vector of double the accumulator width is the "true" hidden layer, and is the vector that gets forwarded to the output layer.</p>
+<pre><code>int calculateIndex(Side perspective, Square square, PieceType pieceType, Side side)
+{
+    if (perspective == BLACK)
+    {
+        side   = 1 - side;          // Flip side
+        square = square ^ 0b111000; // Vertically flip the square
+    }
+    
+    return side * 64 * 6 + pieceType * 64 + square;
+}
+
+struct AccumulatorPair {
+    Accumulator white;
+    Accumulator black;
+};</code></pre>
+<h4 id="efficient-updates">Efficient Updates</h4>
+<p>The format of the input layer allows the accumulators to be efficiently updated, meaning that the neural network does not need to be fully re-evaluated after making a move. Quiet moves and promotions can only change the values of two neurons in the input layers, while captures and castling can change the values of three and four input neurons, respectively. Therefore, instead of fully calculating the accumulator values, one can take the values of the accumulator from the previous ply, subtract the weight contributions from neurons that will be turned off, and add the weights from neurons that will be turned on. Due to the nonlinearity introduced by the activation function, these efficient updates can only be performed on the first hidden layer of the neural network.</p>
+<p>The following is a basic implementation of efficient single add/sub:</p>
+<pre><code>void accumulatorAdd(const struct Network* const network, struct Accumulator* accumulator, size_t index)
+{
+    for (int i = 0; i &lt; HL_SIZE; i ++)
+        accumulator-&gt;values[i] += network-&gt;accumulator_weights[index][i];
+}
+
+void accumulatorSub(const struct Network* const network, struct Accumulator* accumulator, size_t index)
+{
+    for (int i = 0; i &lt; HL_SIZE; i ++)
+        accumulator-&gt;values[i] -= network-&gt;accumulator_weights[index][i];
+}</code></pre>
+<h4 id="output-layer">Output Layer</h4>
+<p>Most NNUE networks have exactly one output neuron, indicating the heuristic score of a position. The accumulator values are passed through an activation function, then forwarded to the output layer by taking the dot product with the output weights, and adding the output bias.</p>
+<p>During training, the final evaluation is passed through a sigmoid activation to be trained on a target value. The target value is the result of a linear interpolation of the game result (0, 0.5, 1), and <span style="background-color: #e0e0e0;">sigmoid(evaluation/eval_scale)</span>.</p>
+<p>However, during inference, the sigmoid function is unused, and the final evaluation is scaled by <span style="background-color: #e0e0e0;">eval_scale</span>. This will produce a reasonable evaluation with a large range and sufficient precision.</p>
+<table>
+<thead>
+<tr>
+<th>Activation Function</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ReLU (Rectified Linear Unit): <span style="background-color: #e0e0e0;">f(x) = max(x, 0)</span></td>
+<td>Rarely used due to potential to overflow.</td>
+</tr>
+<tr>
+<td>CReLU (Clipped ReLU): <span style="background-color: #e0e0e0;">f(x) = clamp(x, 0, 1)</span></td>
+<td>Used less commonly. Easy to implement and can be auto-vectorized.</td>
+</tr>
+<tr>
+<td>SCReLU (Squared Clipped ReLU): <span style="background-color: #e0e0e0;">f(x) = clamp(x, 0, 1)^2</span></td>
+<td>Most prevalent and produces the strongest network. Cannot be auto-vectorized, and requires hand-written SIMD code to optimize.</td>
+</tr>
+</tbody>
+</table>
+<pre><code>int16_t CReLU(int16_t value, int16_t min, int16_t max)
+{
+    if (value &lt;= min)
+        return min;
+
+    if (value &gt;= max)
+        return max;
+
+    return value;
+}
+
+// Example: CReLU activation
+int32_t activation(int16_t value)
+{
+    return CReLU(value, 0, QA);
+}
+
+// When forwarding the accumulator values, the network does not consider the color of the perspectives.
+// Rather, we are more interested in whether the accumulator is from the perspective of the side-to-move.
+int32_t forward(const struct Network*     const network,
+                const struct Accumulator* const stm_accumulator,
+                const struct Accumulator* const nstm_accumulator)
+{
+    int32_t eval = 0;
+
+    // Dot product to the weights
+    for (int i = 0; i &lt; HL_SIZE; i++)
+    {
+        // BEWARE of integer overflows here.
+        eval += activation( stm_accumulator-&gt;values[i]) * network-&gt;output_weights[i];
+        eval += activation(nstm_accumulator-&gt;values[i]) * network-&gt;output_weights[i + HL_SIZE];
+    }
+
+    // Uncomment the following dequantization step when using SCReLU
+    // eval /= QA;
+    eval += network-&gt;output_bias;
+
+    eval *= SCALE;
+    eval /= QA * QB;
+
+    return eval;
+}</code></pre>
+<h4 id="quantization">Quantization</h4>
+<p>You may be wondering where the constants QA and QB came from, or why the final evaluation is divided by their product. This is because most NNUE networks are <strong>quantized</strong>. During training, the weights of the network are represented in floating points, since they offer a continuous range of values and reasonable accuracy. However, floating points are slow, and since floating point operations are not completely accurate, small errors could build up on each accumulator update, resulting in inaccurate evaluation. Therefore, trained floating-point weights are quantized before loading the network.</p>
+<p>Quantization of a NNUE proceeds as follows: multiply weights and biases by some amount, then round the values into an integer. This will lose some precision, but not enough to significantly affect evaluation accuracy. Suppose we quantize the input-accumulator weights by QA, then one floating point at the accumulator will correspond to QA after quantization. Therefore, the accumulator biases are also scaled by QA, and the activation function no longer clips the value to 1, but to QA. Suppose we then quantize the accumulator-output weights by QB. Then, assuming CReLU activation, one floating-point value at the output node will correspond to QA * QB after quantization. Thus, the output bias is scaled by QA * QB. At the end of inference, we divide out the quantization, leaving us a very close approximation of the network evaluation.</p>
+<p>SCReLU activation makes things messier. A floating point value of the accumulator values after SCReLU is actually QA * QA, so the output bias is scaled by QA * QA * QB. However, this does not fit inside a 16-bit integer. To prevent this, some trainers will still scale the output bias by QA * QB, so you would divide the dot product by QA preliminarily. This puts the output scaling back to QA * QB, and the dequantization can continue as usual.</p>
+<h3 id="advanced-nnue-techniques">Advanced NNUE Techniques</h3>
+<h4 id="output-buckets">Output Buckets</h4>
+<p>In a network with output buckets, the output weights and biases are split into several versions. The index of the active output weights is typically chosen by considering the number of non-king pieces left on the board. The following code illustrates one simple formula:</p>
+<pre><code>const int OUTPUT_BUCKETS = 8; // can be adjusted
+const int DIVISOR = (32 + OUTPUT_BUCKETS - 1) / OUTPUT_BUCKETS;
+
+int choose_output_buckets(uint64_t occupancy_bb)
+{
+    return (bit_count(occupancy_bb) - 2) / DIVISOR;
+}</code></pre>
+<h4 id="horizontal-mirroring">Horizontal Mirroring</h4>
+<p>In a network with horizontal mirroring, the king will always be on the left side of the board. If the king goes over the middle line, then the entire board is flipped horizontally (from the accumulator's perspective), so that the king remains on one side of the board. This reduces the network's input space, which makes the training data between one and two times more effective, depending on the architecture. Note that the accumulator cannot be efficiently updated when the king crosses the vertical line of symmetry, as the index of every input neuron would be recalculated.</p>
+<h4 id="king-input-buckets">King Input Buckets</h4>
+<p>An application of the mixture of experts technique. With king input buckets, several versions of accumulator weights are generated. The board is divided into regions, and the king's location in the region determines which set of accumulator weights are used. Like horizontal mirroring, a boundary-crossing king move is not efficiently updatable, and the accumulator must undergo a full refresh. However, the improvements in evaluation accuracy are often worth the slowdown.</p>
+<h4 id="feature-factorizer">Feature Factorizer</h4>
+<p>A technique for training king-bucketed nets. During training, a "shadow" bucket called the factorizer is added to the network. The factorizer is always activated and contributes to the evaluation of every position. When the training run finishes, the factorizer weights are added back into each bucket. Factorizers allow faster learning for buckets, especially those with low training data coverage.</p>
+<h4 id="pairwise-multiplication">Pairwise Multiplication</h4>
+<p>Before concatenating the accumulators, divide each accumulator into two parts of equal length. Multiply each element in the first part by a corresponding element in the second part, resulting in a vector half the size of the original accumulator. The hidden layer becomes the result of concatenating two such vectors. With pairwise multiplication, the hidden layer is reduced to the same width as each of the accumulators. At the same accumulator size, this speeds up inference but decreases evaluation accuracy. However, it allows even wider HL sizes as well as more complex architectures with multiple hidden layers.</p>
+<h4 id="multiple-layers">Multiple Layers</h4>
+<p>Some engines, such as Stockfish, <a href="/Ethereal">Ethereal</a> and Viridithas, use networks that consist of multiple hidden layers. These networks are generally stronger than simple three-layer networks. However, the increased computational complexity may result in weaker results at short testing time controls (10s+0.1s).</p>
+<p>Compared to simple networks, multi-layer NNUE enables greater architectural flexibility, as well as new opportunities for speed improvements.</p>
+<h4 id="layerstacks">LayerStacks</h4>
+<p>Stockfish's <em>LayerStacks</em> is a concept where the network parameters after the first hidden layer is dynamically switched based on the material count of the evaluated position. It can be seen as a generalization of the traditional output buckets. Similar techniques are employed in most top engines that utilizes multi-layer networks.</p>
+<h3 id="performance-improvements">Performance Improvements</h3>
+<h4 id="fused-updates">Fused Updates</h4>
+<p>Instead of calling accumulatorAdd or accumulatorSub multiple times to update the counter, merge these updates into a single function such as accumulatorAddSub or accumulatorAddSubSub. This improves the performance of efficient updates, since it reduces loop overhead and allows register reuse.</p>
+<h4 id="copy-make"><a href="/Copy-Make">Copy-Make</a></h4>
+<p>Store a ply-indexed array of accumulators and only perform the update once during make move. This approach is faster compared to make/unmake and allows optimizations such as Lazy Updates.</p>
+<h4 id="lazy-updates">Lazy Updates</h4>
+<p>Delay accumulator updates until evaluation call. There are variants of lazy updates, but the following implementation is the simplest and most common. On make-move, instead of updating the accumulator, only mark it as dirty and save the features that were changed by the current move. Before the network is evaluated, travel back through the accumulator stack until reaching a clean accumulator. Do incremental updates from that clean accumulator back to the current accumulator, refreshing every accumulator in between. This is a speedup because evaluation is not necessary in certain nodes, as most engines cache static evaluation in Transposition Tables. Lazy updates are especially important in multi-threading because of the shared Transposition Table in <a href="/Lazy_SMP">Lazy SMP</a>.</p>
+<h4 id="accumulator-refresh-table">Accumulator Refresh Table</h4>
+<p>Introduced by Koivisto author Finn Eggers, and colloquially referred to as <strong>Finny Tables</strong>. When performing lazy updates on architectures with king bucketed inputs, it may not be possible to reach a clean accumulator via efficient updates. Since a full refresh is very expensive, one could save some computation by storing a king-bucket-indexed table of accumulators and their associated bitboards. Whenever one reaches a point without a clean accumulator, probe the cached accumulator and bitboards from the refresh table, and update from the cached accumulator by computing the difference between the cached bitboards and the current bitboards. Once an updated accumulator has been obtained, update the cache entry with the current accumulator and bitboards.</p>
+<h4 id="simd">SIMD</h4>
+<p>SIMD is an acronym for Single Instruction, Multiple Data. It allows the CPU to process multiple data simultaneously. Compilers can automatically generate SIMD instructions to improve the speed of NNUE inference. However, it is not perfect, and there are still opportunities to optimize NNUE inference with hand-written SIMD code.</p>
+<h5 id="lizard-screlu">Lizard SCReLU</h5>
+<p>This optimization is introduced by Liam McGuire in Lizard chess engine. It significantly speeds up inference on a simple NNUE architecture with SCReLU activation.</p>
+<p>Consider the following loop to forward a SCReLU-activated hidden layer:</p>
+<pre><code>const int QA = 255;
+const int QB = 64;
+
+for (int i = 0; i &lt; HL_SIZE; i++)
+{
+    const int us_clamped = clamp(stm_accumulator-&gt;values[i], 0, QA);
+    const int them_clamped = clamp(mstm_accumulator-&gt;values[i], 0, QA);
+    eval += us_clamped * us_clamped * network-&gt;output_weights[i];
+    eval += them_clamped * them_clamped * network-&gt;output_weights[i + HL_SIZE];
+}</code></pre>
+<p>How can one vectorize this loop? Since QA = 255, <span style="background-color: #e0e0e0;">SCReLU(x)</span> can be as large as 65025, which is outside of the range of 16-bit integers. One may consider using a lower quantization factor, but the loss of precision will be too much to account for the Elo loss. Fortunately, there is another way to approach this problem.</p>
+<p>Say the value after clamping is v, and the output weight is w. Instead of calculating (v * v) * w, one can instead calculate in a different order: (v * w) * v. This way, as long as v * w is in range, the code will not overflow. Therefore, during training, we can clip w to ensure it is always between [-1.98, 1.98]. And since we know that v has a maximum of QA, and that w is scaled by QB, the maximum of v * w is QA * QB * 1.98, which is within the maximum representable value of 16-bit integers. To finish the last step, we can use the multiply-add-adjacent intrinsic such as <span style="background-color: #e0e0e0;">vpmaddwd</span> or <span style="background-color: #e0e0e0;">_mm256_madd_epi16</span> to multiply the elements pairwise (producing intermediary 32-bit results), then sum adjacent pairs in the result vector to yield a result vector of identical length. In code, this looks like the following</p>
+<pre><code>const int QA = 255;
+const int QB = 64;
+
+const __m256i vec_zero = _mm256_setzero_si256();
+const __m256i vec_qa   = _mm256_set1_epi16(QA);
+__m256i sum      = vec_zero;
+
+for (int i = 0; i &lt; ...; i ...)
+{
+    const __m256i us   = ...; // Load from accumulator
+    const __m256i them = ...;
+    const __m256i us_weights   = ...; // Load from net
+    const __m256i them_weights = ...;
+
+    const __m256i us_clamped   = _mm256_min_epi16( _mm256_max_epi16(   us, vec_zero ), vec_qa );
+    const __m256i them_clamped = _mm256_min_epi16( _mm256_max_epi16( them, vec_zero ), vec_qa );
+
+    const __m256i us_results   = _mm256_madd_epi16( _mm256_mullo_epi16(   us_weights,   us_clamped ),   us_clamped );
+    const __m256i them_results = _mm256_madd_epi16( _mm256_mullo_epi16( them_weights, them_clamped ), them_clamped );
+
+    sum = _mm256_add_epi32(sum,   us_results);
+    sum = _mm256_add_epi32(sum, them_results);
+}</code></pre>
+<h2 id="notable-trainers">Notable Trainers</h2>
+<p>Several notable trainers have been developed since the introduction of NNUE. As of 2025, Bullet stands as the most widely adopted trainer among top chess engines.</p>
+<ul>
+<li><strong>Bullet</strong> - A high-performance NNUE trainer written in Rust by Jamie Whiting.</li>
+<li><strong>nnue-pytorch</strong> - A trainer based on PyTorch, originally written for <a href="/Stockfish">Stockfish</a> and has since been adopted by <a href="/Torch">Torch</a>.</li>
+<li><strong>marlinflow</strong> - The trainer developed by Doruk Şekercioğlu for his engine <a href="/Black_Marlin">Black Marlin</a>. It has also been adopted by Carp, Svart, and was historically used by Viridithas.</li>
+<li><strong>Grapheus</strong> - A C++ NNUE trainer developed by <a href="/Jay_Honnold">Jay Honnold</a>, <a href="/Finn_Eggers">Finn Eggers</a>, and Rafid Ahsan.</li>
+<li><strong>CudAD</strong> - The original trainer for the <a href="/Koivisto">Koivisto</a> chess engine, now superseded by Grapheus.</li>
+<li><strong>NNTrainer</strong> - The official trainer for the <a href="/Ethereal">Ethereal</a> chess engine.</li>
+<li><strong>Starway</strong> - The official trainer for the Starzix chess engine.</li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li>Cerebrum</li>
+<li><a href="/David_E._Moriarty">SANE</a></li>
+<li><a href="/Stockfish_NNUE">Stockfish HalfKAv2</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Yu_Nasu">Yu Nasu</a> (<strong>2018</strong>). <em>ƎUИИ Efficiently Updatable Neural-Network based Evaluation Functions for Computer Shogi</em>. Ziosoft Computer Shogi Club, <a href="https://github.com/ynasu87/nnue/blob/master/docs/nnue.pdf">pdf</a>, <a href="https://www.apply.computer-shogi.org/wcsc28/appeal/the_end_of_genesis_T.N.K.evolution_turbo_type_D/nnue.pdf">pdf</a> (Japanese with English abstract) <a href="https://github.com/asdfjkl/nnue">GitHub - asdfjkl/nnue translation</a> <a href="#fn16" class="footnote-ref" id="fnref16" role="doc-noteref"><sup>16</sup></a></li>
+<li><a href="/Dominik_Klein">Dominik Klein</a> (<strong>2021</strong>). <em><a href="https://github.com/asdfjkl/neural_network_chess">Neural Networks For Chess</a></em>. <a href="https://github.com/asdfjkl/neural_network_chess/releases/tag/v1.1">Release Version 1.1 · GitHub</a> <a href="#fn17" class="footnote-ref" id="fnref17" role="doc-noteref"><sup>17</sup></a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2020">2020</h3>
+<h4 id="january-">January ...</h4>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=72754">The Stockfish of shogi</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, January 07, 2020 » <a href="/Stockfish">Stockfish</a>, <a href="/Shogi">Shogi</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=72754&amp;start=18">Re: The Stockfish of shogi</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, <a href="/CCC">CCC</a>, January 18, 2020</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74058">Stockfish NNUE</a> by Henk Drost, <a href="/CCC">CCC</a>, May 31, 2020 » <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=74059">Stockfish NN release (NNUE)</a> by Henk Drost, <a href="/CCC">CCC</a>, May 31, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=74148">NNUE shared library and tools</a> by <a href="/Adam_Treat">Adam Treat</a>, <a href="/CCC">CCC</a>, June 10, 2020</li>
+</ul>
+<h4 id="july">July</h4>
+<ul>
+<li><a href="http://talkchess.com/forum3/viewtopic.php?t=74480">Lizard-NNUE Experiment NOT bad with NNUE Net Evaluation...</a> by Nancy M Pichardo, <a href="/CCC">CCC</a>, July 15, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=74484">Can the sardine! NNUE clobbers SF</a> by Henk Drost, <a href="/CCC">CCC</a>, July 16, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74531">NNUE accessible explanation</a> by <a href="/Martin_Fierz">Martin Fierz</a>, <a href="/CCC">CCC</a>, July 21, 2020</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74531&amp;start=1">Re: NNUE accessible explanation</a> by <a href="/Jonathan_Rosenthal">Jonathan Rosenthal</a>, <a href="/CCC">CCC</a>, July 23, 2020</p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74531&amp;start=5">Re: NNUE accessible explanation</a> by <a href="/Jonathan_Rosenthal">Jonathan Rosenthal</a>, <a href="/CCC">CCC</a>, July 24, 2020</p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74531&amp;start=8">Re: NNUE accessible explanation</a> by <a href="/Jonathan_Rosenthal">Jonathan Rosenthal</a>, <a href="/CCC">CCC</a>, August 03, 2020</p>
+<ul>
+<li><a href="https://groups.google.com/d/msg/fishcooking/Wpk-9COzk64/ez643VTkAAAJ">BrainLearn NNUE 1.0</a> by <a href="/Andrea_Manzo">Andrea Manzo</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, July 25, 2020 » BrainLearn</li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/yWtpz_FY5_Y/RMTG56fkAAAJ">ShashChess NNUE 1.0</a> by <a href="/Andrea_Manzo">Andrea Manzo</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, July 25, 2020 » <a href="/ShashChess">ShashChess</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=74607">LC0 vs. NNUE - some tech details...</a> by <a href="/Srdja_Matovic">Srdja Matovic</a>, <a href="/CCC">CCC</a>, July 29, 2020 » <a href="/Leela_Chess_Zero">Lc0</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=74611">What does NNUE actually mean</a> by Paloma, <a href="/CCC">CCC</a>, July 29, 2020</li>
+</ul>
+<h4 id="august">August</h4>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=74705">What happens with my hyperthreading?</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, August 06, 2020 » <a href="/Stockfish_NNUE">Stockfish NNUE</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=73521&amp;start=59">Re: Minic version 2</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, August 08, 2020 » <a href="/Minic">Minic</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74777">Neural Networks weights type</a> by <a href="/Fabio_Gobbato">Fabio Gobbato</a>, <a href="/CCC">CCC</a>, August 13, 2020 » <a href="/Stockfish_NNUE">Stockfish NNUE</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=67890&amp;start=17">Re: Introducing Igel chess engine - Igel and NNUE</a> by <a href="/Volodymyr_Shcherbyna">Volodymyr Shcherbyna</a>, <a href="/CCC">CCC</a>, August 19, 2020 » <a href="/Igel">Igel</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=74828">Orion 0.7 : NNUE experiment</a> by David Carteau, <a href="/CCC">CCC</a>, August 19, 2020 » <a href="/Orion">Orion</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=74837">Night Nurse 0.2</a> by <a href="/Dietrich_Kappe">Dietrich Kappe</a>, <a href="/CCC">CCC</a>, August 19, 2020 » <a href="/A0lite">A0lite</a>, <a href="/Igel">Igel</a></li>
+<li><a href="http://laatste.info/bb3/viewtopic.php?f=53&amp;t=8298">NNUE</a> by Bert Tuyt, <a href="http://laatste.info/bb3/viewforum.php?f=53">World Draughts Forum</a>, August 19, 2020 » <a href="/Draughts">Draughts</a></li>
+</ul>
+<h4 id="september">September</h4>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74955">Train a neural network evaluation</a> by <a href="/Fabio_Gobbato">Fabio Gobbato</a>, <a href="/CCC">CCC</a>, September 01, 2020 » <a href="/Automated_Tuning">Automated Tuning</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75016">RubiChess NNUE player implemented</a> by <a href="/Andreas_Matthies">Andreas Matthies</a>, <a href="/CCC">CCC</a>, September 06, 2020 » <a href="/RubiChess">RubiChess</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75027">Toga III 0.4 NNUE</a> by <a href="/Dietrich_Kappe">Dietrich Kappe</a>, <a href="/CCC">CCC</a>, September 07, 2020 » <a href="/Toga">Toga</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75042">Neural network quantization</a> by <a href="/Fabio_Gobbato">Fabio Gobbato</a>, <a href="/CCC">CCC</a>, September 08, 2020 » <a href="/Neural_Networks">Neural Networks</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75049">AVX-512 and NNUE</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, <a href="/CCC">CCC</a>, September 08, 2020 » <a href="/AVX-512">AVX-512</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75190">First success with neural nets</a> by <a href="/Jonathan_Kreuzer">Jonathan Kreuzer</a>, <a href="/CCC">CCC</a>, September 23, 2020 » <a href="/Neural_Networks">Neural Networks</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75190&amp;start=21">Re: First success with neural nets</a> by <a href="/Jonathan_Kreuzer">Jonathan Kreuzer</a>, <a href="/CCC">CCC</a>, November 11, 2020 » <a href="/Checkers">Checkers</a></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75241">Nemorino 6 (NNUE)</a> by Florentino, <a href="/CCC">CCC</a>, September 28, 2020 » <a href="/Nemorino">Nemorino</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75247">A Crossroad in Computer Chess; Or Desperate Flailing for Relevance</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, September 29, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75248">NNUE variation</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, September 29, 2020</li>
+</ul>
+<h4 id="october">October</h4>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75296">BONA_PIECE_ZERO</a> by <a href="/Marco_Belli">elcabesa</a>, <a href="/CCC">CCC</a>, October 04, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75335&amp;start=91">Re: Final Release of Ethereal, V12.75</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, October 09, 2020 » <a href="/Ethereal">Ethereal</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75345">Request for someone to train an NNUE for Ethereal</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, October 09, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75350">Ethereal Tuning - Data Dump</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, October 10, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75358">Dangerous turn</a> by <a href="/Dann_Corbit">Dann Corbit</a>, <a href="/CCC">CCC</a>, October 10, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75393">Black crushing white, weird ?</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, October 14, 2020 » <a href="/Minic">MinicNNUE</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75400">Hacking around CFish NNUE</a> by <a href="/Maksim_Korzh">Maksim Korzh</a>, <a href="/CCC">CCC</a>, October 15, 2020 » <a href="/CFish">CFish</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75400&amp;start=22">Re: Hacking around CFish NNUE</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, October 15, 2020 » <a href="/Scorpio">Scorpio</a></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75415">How to scale stockfish NNUE score?</a> by <a href="/Maksim_Korzh">Maksim Korzh</a>, <a href="/CCC">CCC</a>, October 17, 2020</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75415&amp;start=3">Re: How to scale stockfish NNUE score?</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, October 17, 2020</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75418">Embedding Stockfish NNUE to ANY CHESS ENGINE: YouTube series</a> by <a href="/Maksim_Korzh">Maksim Korzh</a>, <a href="/CCC">CCC</a>, October 17, 2020 » <a href="/BBC">BBC</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75433">Seer</a> by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, <a href="/CCC">CCC</a>, October 18, 2020 » <a href="/Seer">Seer</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75482">BBC 1.3 + Stockfish NNUE released!</a> by <a href="/Maksim_Korzh">Maksim Korzh</a>, <a href="/CCC">CCC</a>, October 21, 2020 » <a href="/BBC">BBC</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75500">Mayhem NNUE - New NN engine</a> by <a href="/Toni_Helminen">JohnWoe</a>, <a href="/CCC">CCC</a>, October 22, 2020 » <a href="/Mayhem">Mayhem</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75501">Centipawns vs Millipawns with NNUE</a> by Madeleine Birchfield, <a href="/CCC">CCC</a>, October 23, 2020 » <a href="/Centipawns">Centipawns</a>, <a href="/Millipawns">Millipawns</a></li>
+<li><span id="KingPlacements"></span><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75506">NNUE Question - King Placements</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, October 23, 2020 » <a href="/Stockfish_NNUE">Stockfish NNUE - NNUE Structure</a></li>
+</ul>
+<p>July 01, 2021 continuation</p>
+<h4 id="november">November</h4>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75651">Komodo 14.1 Release and Dragon Announcement</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, November 02, 2020 » <a href="/Komodo">Komodo</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75653">NNUE outer product vs tensor product</a> by Madeleine Birchfield, <a href="/CCC">CCC</a>, November 02, 2020 <a href="#fn18" class="footnote-ref" id="fnref18" role="doc-noteref"><sup>18</sup></a> <a href="#fn19" class="footnote-ref" id="fnref19" role="doc-noteref"><sup>19</sup></a></li>
+<li><span id="Training"></span><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75724">Pytorch NNUE training</a> by <a href="/Gary_Linscott">Gary Linscott</a>, <a href="/CCC">CCC</a>, November 08, 2020 <a href="#fn20" class="footnote-ref" id="fnref20" role="doc-noteref"><sup>20</sup></a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75725">TucaNNo: neural network research</a> by <a href="/Alcides_Schulz">Alcides Schulz</a>, <a href="/CCC">CCC</a>, November 08, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75748">Dragon by Komodo Chess</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, November 10, 2020 » <a href="/Dragon_by_Komodo_Chess">Dragon by Komodo Chess</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75751">Tensorflow NNUE training</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, November 10, 2020 <a href="#fn21" class="footnote-ref" id="fnref21" role="doc-noteref"><sup>21</sup></a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75890">Speculations about NNUE development (was New engine releases 2020)</a> by Madeleine Birchfield, <a href="/CCC">CCC</a>, November 11, 2020</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75890&amp;start=6">Re: Speculations about NNUE development (was New engine releases 2020)</a> by <a href="/Connor_McMonigle">Connor McMonigle</a>, <a href="/CCC">CCC</a>, November 12, 2020</p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75890&amp;start=9">Re: Speculations about NNUE development (was New engine releases 2020)</a> by <a href="/Connor_McMonigle">Connor McMonigle</a>, <a href="/CCC">CCC</a>, November 12, 2020 » <a href="/Dragon_by_Komodo_Chess">Dragon by Komodo Chess</a>, <a href="/Seer">Seer</a>, <a href="/Halogen">Halogen</a></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75335&amp;start=134">Re: Final Release of Ethereal, V12.75</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, November 12, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75797">Maybe not the best diversity of strongest chess engines under development</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, November 14, 2020 » <a href="/Engine_Similarity">Engine Similarity</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75862">CPU Vector Unit, the new jam for NNs...</a> by <a href="/Srdja_Matovic">Srdja Matovic</a>, <a href="/CCC">CCC</a>, November 18, 2020 » <a href="/SIMD_and_SWAR_Techniques">SIMD</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75870">You've trained a brilliant NN(UE) King-Piece Network. Now what?</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, November 19, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75925">Pawn King Neural Network</a> by <a href="/Tamás_Kuzmics">Tamás Kuzmics</a>, <a href="/CCC">CCC</a>, November 26, 2020</li>
+</ul>
+<h4 id="december">December</h4>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75953">Orion 0.8 + The Cerebrum release</a> by David Carteau, <a href="/CCC">CCC</a>, December 01, 2020 » <a href="/Orion">Orion</a>, Cerebrum</li>
+<li><a href="https://prodeo.actieforum.com/t104-the-nnue-split-programmers-are-in">The NNUE split programmers are in</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/Computer_Chess_Forums">ProDeo Forum</a>, December 02, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76006">Introducing the "Cerebrum" library (NNUE-like trainer and inference code)</a> by David Carteau, <a href="/CCC">CCC</a>, December 07, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76190">Dispelling the Myth of NNUE with LazySMP: An Analysis</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, December 30, 2020 » <a href="/Lazy_SMP">Lazy SMP</a></li>
+</ul>
+<h3 id="2021">2021</h3>
+<h4 id="january">January</h4>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76250">Translation of Yu Nasu's NNUE paper</a> by <a href="/Dominik_Klein">Dominik Klein</a>, <a href="/CCC">CCC</a>, January 07, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75724&amp;start=60">Re: Pytorch NNUE training</a> by <a href="/Gary_Linscott">Gary Linscott</a>, <a href="/CCC">CCC</a>, January 09, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76263">More experiments with neural nets</a> by <a href="/Jonathan_Kreuzer">Jonathan Kreuzer</a>, <a href="/CCC">CCC</a>, January 09, 2021 » <a href="/Slow_Chess">Slow Chess</a></li>
+<li><a href="https://groups.google.com/g/fishcooking/c/cad1MGSdpU4/m/Ury4iBqSBgAJ">Shouldn't positional attributes drive SF's NNUE input features (rather than king position)?</a> by <a href="/Nick_Pelling">Nick Pelling</a>, <a href="/Computer_Chess_Forums">FishCooking</a>, January 10, 2021 » <a href="/Stockfish_NNUE">Stockfish NNUE</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76285">HalfKP Structure in NNUE</a> by Roger Stephenson, <a href="/CCC">CCC</a>, January 12, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76346">Andscacs nnue 0.1</a> by <a href="/Daniel_José_Queraltó">Daniel José Queraltó</a>, <a href="/CCC">CCC</a>, January 17, 2021 » <a href="/Andscacs">Andscacs</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76353">It's NNUE era (sharing my thoughts)</a> by Basti Dangca, <a href="/CCC">CCC</a>, January 18, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76356">NNUE and game phase</a> by <a href="/Dann_Corbit">Dann Corbit</a>, <a href="/CCC">CCC</a>, January 18, 2021 » <a href="/Game_Phases">Game Phases</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76382">correspondence chess in the age of NNUE</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, January 21, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76386">One for Andrew Grant et al. - NNUE?</a> by <a href="/Srdja_Matovic">Srdja Matovic</a>, <a href="/CCC">CCC</a>, January 21, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76437">256 in NNUE?</a> by Ted Wong, <a href="/CCC">CCC</a>, January 28, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76446">So what do we miss in the traditional evaluation?</a> by <a href="/Ferdinand_Mosca">Ferdinand Mosca</a>, <a href="/CCC">CCC</a>, January 29, 2021 » <a href="/Evaluation">Evaluation</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76447">Latest Night Nurse released</a> by <a href="/Dietrich_Kappe">Dietrich Kappe</a>, <a href="/CCC">CCC</a>, January 29, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76456">None-GPL NNUE probing code</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, January 31, 2021</li>
+</ul>
+<h4 id="february">February</h4>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76537">Fat Fritz 2</a> by <a href="/Jouni_Uski">Jouni Uski</a>, <a href="/CCC">CCC</a>, February 09, 2021 » <a href="/Fat_Fritz">Fat Fritz 2.0</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76552">How much work is it to train an NNUE?</a> by <a href="/Gabor_Szots">Gabor Szots</a>, <a href="/CCC">CCC</a>, February 11, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76556">HCE and NNUE and vectorisation</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, February 11, 2021 » <a href="/Minic">Minic</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76570">nnue reading code</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, February 13, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76648">New net: The White Rose</a> by <a href="/Dietrich_Kappe">Dietrich Kappe</a>, <a href="/CCC">CCC</a>, February 20, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76664">Are neural nets (the weights file) copyrightable?</a> by <a href="/Adam_Treat">Adam Treat</a>, <a href="/CCC">CCC</a>, February 21, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76731">My first NNUE nn-f0c1c3cbf2f1.nnue</a> by <a href="/Michael_Byrne">MikeB</a>, <a href="/CCC">CCC</a>, February 27, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76742">How to make a double-sized net as good as SF NNUE in a few easy steps</a> by <a href="/Chris_Whittington">Chris Whittington</a>, <a href="/CCC">CCC</a>, February 28, 2021 » <a href="/Fat_Fritz">Fat Fritz 2.0</a></li>
+</ul>
+<h4 id="march">March</h4>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76790">A random walk down NNUE street …</a> by <a href="/Michael_Byrne">MikeB</a>, <a href="/CCC">CCC</a>, March 06, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76833">NNUE Research Project</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, March 10, 2021 » <a href="/Engine_Similarity">Engine Similarity</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76840">Simex including NNUE</a> by jjoshua2, <a href="/CCC">CCC</a>, March 11, 2021 » <a href="/Engine_Similarity">Engine Similarity</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76844">NNUE ranking</a> by Jim Logan, <a href="/CCC">CCC</a>, March 12, 2021 » <a href="/Stockfish_NNUE">Stockfish NNUE</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76892">FEN compression</a> by lucasart, <a href="/CCC">CCC</a>, March 17, 2021 » <a href="/BMI2">FEN Compression</a>, NNUE Training</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76917">Mabigat - hyperparameter optimizer for NNUE net</a> by <a href="/Ferdinand_Mosca">Ferdinand Mosca</a>, <a href="/CCC">CCC</a>, March 22, 2021 » <a href="/Automated_Tuning">Automated Tuning</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76964">nnue-trainer</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, March 27, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76986">Zeta with NNUE on GPU?</a> by <a href="/Srdja_Matovic">Srdja Matovic</a>, <a href="/CCC">CCC</a>, March 31, 2021 » <a href="/Zeta">Zeta</a>, <a href="/GPU">GPU</a></li>
+</ul>
+<h4 id="april">April</h4>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77157">Rubichess NN questions</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, April 23, 2021 » <a href="/RubiChess">RubiChess</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=77200">Crafty NNUE Chess Engine?</a> by supersharp77, <a href="/CCC">CCC</a>, April 29, 2021 » <a href="/Crafty">Crafty</a>, Vafra <a href="#fn22" class="footnote-ref" id="fnref22" role="doc-noteref"><sup>22</sup></a></li>
+</ul>
+<h4 id="may">May</h4>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=77244">Komodo Dragon 2 released</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, May 04, 2021 » <a href="/Dragon_by_Komodo_Chess">Komodo Dragon</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=77344">Stockfish with new NNUE architecture and bigger net released</a> by Stefan Pohl, <a href="/CCC">CCC</a>, May 19, 2021 » <a href="/Stockfish">Stockfish</a>, <a href="/Stockfish_NNUE">Stockfish NNUE</a> <a href="#fn23" class="footnote-ref" id="fnref23" role="doc-noteref"><sup>23</sup></a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77348">NNUE scoring (egbb lib)</a> by <a href="/Michael_Hoffmann">Desperado</a>, <a href="/CCC">CCC</a>, May 19, 2021 » <a href="/Scorpio">Scorpio NNUE</a></li>
+</ul>
+<h4 id="june">June</h4>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77243&amp;start=20">Re: Booot progress</a> by <a href="/Alex_Morozov">Alex Morozov</a>, <a href="/CCC">CCC</a>, June 01, 2021 » <a href="/Booot">Booot</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=77438">Commercial Release of Ethereal 13.00 (NNUE) for AVX2 Systems</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, June 04, 2021 » <a href="/Ethereal">Ethereal 13.00 (NNUE)</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=77438&amp;start=17">Re: Commercial Release of Ethereal 13.00 (NNUE) for AVX2 Systems</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, June 04, 2021 » <a href="/Stockfish_NNUE">HalfKP</a></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=77467">Dark Horse Update</a> by <a href="/Dietrich_Kappe">Dietrich Kappe</a>, <a href="/CCC">CCC</a>, June 11, 2021</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77492">Some more experiments with neural nets</a> by <a href="/Jonathan_Kreuzer">Jonathan Kreuzer</a>, <a href="/CCC">CCC</a>, June 15, 2021 » <a href="/Slow_Chess">Slow Chess</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=77503&amp;start=55">Re: will Tcec allow Stockfish with a Leela net to play?</a> by <a href="/Connor_McMonigle">Connor McMonigle</a>, <a href="/CCC">CCC</a>, June 17, 2021 » <a href="/Stockfish">Stockfish</a>, <a href="/Dragon_by_Komodo_Chess">Komodo Dragon</a>, <a href="/Ethereal">Ethereal</a>, <a href="/Seer">Seer</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=77503&amp;start=63">Re: will Tcec allow Stockfish with a Leela net to play?</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, June 18, 2021 » <a href="/Scorpio">Scorpio</a></p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=77503&amp;start=68">Re: will Tcec allow Stockfish with a Leela net to play?</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, June 18, 2021 » <a href="/Minic">Minic</a></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=77571">I declare that HCE is dead...</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, June 29, 2021 » <a href="/Ethereal">Ethereal</a>, <a href="/Evaluation">HCE</a></li>
+</ul>
+<h4 id="july-1">July</h4>
+<ul>
+<li><span id="KingPlacementsCont"></span><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75506&amp;start=39">Re: NNUE Question - King Placements</a> by <a href="/Tomasz_Sobczyk">Tomasz Sobczyk</a>, <a href="/CCC">CCC</a>, July 01, 2021 » NNUE Question</li>
+</ul>
+<p><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75506&amp;start=40">Re: NNUE Question - King Placements</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, July 01, 2021 » <a href="/Scorpio">ScorpioNNUE</a></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=77602">Before things become more messy than they already are</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, July 02, 2021</li>
+<li><a href="http://talkchess.com/viewtopic.php?f=7&amp;t=77606">NNUE training set generation</a> by <a href="/Edsel_Apostol">Edsel Apostol</a>, <a href="/CCC">CCC</a>, July 03, 2021</li>
+<li><a href="http://talkchess.com/viewtopic.php?f=2&amp;t=77612">Time to rethink what Albert Silver has done?</a> by <a href="/Srdja_Matovic">Srdja Matovic</a>, <a href="/CCC">CCC</a>, July 03, 2021 » <a href="/Fat_Fritz">Fat Fritz 2</a></li>
+<li><a href="http://talkchess.com/viewtopic.php?f=2&amp;t=77639">Would the ICGA have accepted today's NNUE engines?</a> by Madeleine Birchfield, <a href="/CCC">CCC</a>, July 05, 2021 » <a href="/ICGA">ICGA</a></li>
+<li><a href="http://talkchess.com/viewtopic.php?f=2&amp;t=77664">Koivisto 5.0</a> by <a href="/Finn_Eggers">Finn Eggers</a>, <a href="/CCC">CCC</a>, July 07, 2021 » <a href="/Koivisto">Koivisto</a></li>
+<li><a href="http://talkchess.com/viewtopic.php?f=2&amp;t=77681">NNUE one year retrospective</a> by Madeleine Birchfield, <a href="/CCC">CCC</a>, July 09, 2021</li>
+</ul>
+<h4 id="august-">August ...</h4>
+<ul>
+<li><a href="http://talkchess.com/viewtopic.php?f=7&amp;t=77869">Basic NNUE questions</a> by <a href="/Amanj_Sherwany">Amanj Sherwany</a>, <a href="/CCC">CCC</a>, August 04, 2021</li>
+<li><a href="http://talkchess.com/viewtopic.php?f=7&amp;t=78109">Alternatives to King-Pawn, King-All NNUE encoding</a> by <a href="/Andrew_Grant">Andrew Grant</a>, <a href="/CCC">CCC</a>, September 05, 2021</li>
+<li><a href="https://talkchess.com/viewtopic.php?f=7&amp;t=78394">NNUE - Efficiently Updatable Network - understanding</a> by Daniel Infuehr, <a href="/CCC">CCC</a>, October 11, 2021</li>
+<li><a href="https://talkchess.com/viewtopic.php?f=2&amp;t=78497">NNUE - only from own engine?</a> by <a href="/Ed_Schroder">Rebel</a>, October 25, 2021</li>
+<li><a href="https://talkchess.com/viewtopic.php?f=2&amp;t=78588">Regarding AVX2</a> by <a href="/Ed_Schroder">Rebel</a>, <a href="/CCC">CCC</a>, November 03, 2021 » <a href="/AVX2">AVX2</a></li>
+<li><a href="https://talkchess.com/viewtopic.php?f=2&amp;t=78855">Mantissa 3.0.0</a> by Jeremy Wright, <a href="/CCC">CCC</a>, December 10, 2021 » <a href="/Mantissa">Mantissa</a></li>
+<li><a href="https://talkchess.com/viewtopic.php?f=2&amp;t=78979">Are NNUE Nets Specific to Chess Engines or They Universal to All Engines?</a> by daniel71, <a href="/CCC">CCC</a>, December 26, 2021</li>
+</ul>
+<h3 id="2022-">2022 ...</h3>
+<ul>
+<li><a href="https://talkchess.com/viewtopic.php?f=7&amp;t=79020">Why NNUE trainer requires an online qsearch on each training position?</a> by <a href="/Chao_Ma">Chao Ma</a>, <a href="/CCC">CCC</a>, January 01, 2022</li>
+<li><a href="https://talkchess.com/viewtopic.php?f=2&amp;t=79107">Rebel 14</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, January 12, 2022 » <a href="/Rebel">Rebel 14</a></li>
+<li><a href="https://talkchess.com/viewtopic.php?t=79332">Binary Neural Networks Sliding Piece Inference [Release</a>] by Daniel Infuehr, <a href="/CCC">CCC</a>, February 10 2022</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=79368">Failure of trivial approach to neural network move ordering</a> by Jost Triller, <a href="/CCC">CCC</a>, February 16 2022</li>
+<li><a href="https://www.talkchess.com/viewtopic.php?f=2&amp;t=79523">Koivisto 8.0</a> by <a href="/Finn_Eggers">Finn Eggers</a>, <a href="/CCC">CCC</a>, March 15, 2022 » <a href="/Koivisto">Koivisto</a></li>
+<li><a href="https://www.talkchess.com/viewtopic.php?f=7&amp;t=79742">NNUE + Pawn-King Network</a> by Alvin Peng, <a href="/CCC">CCC</a>, April 22, 2022</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=79900">building NN for different chess positions</a> by <a href="/Uri_Blass">Uri Blass</a> <a href="/CCC">CCC</a> May 18 2022</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=80364">NNOM++ - Move Ordering Neural Networks?</a> by <a href="/Srdja_Matovic">Srdja Matovic</a>, <a href="/CCC">CCC</a>, July 24 2022</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=80372">Neural network evaluation for a Monte Carlo Tree Search engine</a> by Ellie Moore, <a href="/CCC">CCC</a>, July 27 2022</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=81017">Neural network architectures HalfKP vs HalfKA</a> by Fabio Gobbato, <a href="/CCC">CCC</a>, November 16 2022</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=81189">nnue-pytorch</a> by jdart <a href="/CCC">CCC</a> December 24 2022</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=81221">NNUE — Newbie Questions...</a> by <a href="/Steve_Maughan">Steve Maughan</a>, <a href="/CCC">CCC</a>, December 28 2022</li>
+</ul>
+<h3 id="2023-">2023 ...</h3>
+<ul>
+<li><a href="https://talkchess.com/viewtopic.php?t=81330">Games for Training NNUE?</a> by <a href="/Steve_Maughan">Steve Maughan</a>, <a href="/CCC">CCC</a>, January 11 2023</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=81516">Choice of loss function to train a neural network evaluation</a> by Fabio Gobbato, <a href="/CCC">CCC</a>, February 12 2023</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=81850">AI performs poorly despite decent depth.</a> by Jayden Joo, <a href="/CCC">CCC</a>, April 10 2023</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=81913">Sigmoid scale in neural network training question</a> by Alcides Schulz , <a href="/CCC">CCC</a>, April 21 2023</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=81937">NNUE Poll</a> by Thomas Jahn, <a href="/CCC">CCC</a>, April 24 2023</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=82074">Stockfish NNUE net question: Why 40k input nodes?</a> by Richard Hoffmann, <a href="/CCC">CCC</a>, May 23 2023</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=82142">Making NNUE 60% faster</a> by Daniel Infuehr, <a href="/CCC">CCC</a>, June 06 2023</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=82368">A series of introduction articles about the original/old Stockfish NNUE networks in 2020</a> by Chao M., <a href="/CCC">CCC</a>, July 24 2023</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=82430">Using Neural or Graphical Processor Units in NNUE engines</a> by Roger C., <a href="/CCC">CCC</a>, August 03 2023</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=82780">King buckets for NN evaluation</a> by Fabio Gobbato, <a href="/CCC">CCC</a>, October 27 2023</li>
+</ul>
+<h3 id="2024-">2024 ...</h3>
+<ul>
+<li><a href="https://talkchess.com/viewtopic.php?f=7&amp;t=83170">How to get started with NNUE</a> by Arjun Basandrai, <a href="/CCC">CCC</a>, January 12, 2024</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=83530">nnue evaluation question</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, March 25 2024</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=83704">The dumbest neural network there is</a> by PK, <a href="/CCC">CCC</a>, April 26 2024</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=83960">AI to explain chess positions to amateurs</a> by Gary Gauthier, <a href="/CCC">CCC</a>, July 02 2024</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=83988">How to understand 'perspective' in NNUE nets?</a> by Dan Kelsey, <a href="/CCC">CCC</a>, July 08 2024</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=83170">How to get started with NNUE</a> by Arjun Basandrai, <a href="/CCC">CCC</a>, January 12 2024</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=83958">Cwtch - an experimental NNUE Javascript engine</a> by op12no2, <a href="/CCC">CCC</a>, July 02 2024</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=84285">NN Eval functions/Embedding Leela/NNUE prebuilt models into Engine</a> by Michael Lewis , <a href="/CCC">CCC</a>, September 24 2024</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=84370">bullet trainer problems</a> by jdart, <a href="/CCC">CCC</a>, October 17 2024</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=84431">Thoughts on "Zero" training of NNUEs</a> by John Hamlen, <a href="/CCC">CCC</a>, November 01, 2024</li>
+</ul>
+<h3 id="2025-">2025 ...</h3>
+<ul>
+<li><a href="https://talkchess.com/viewtopic.php?t=84777">Attempting to implement NNUE into my engine</a> by sovaz1997, <a href="/CCC">CCC</a>, January 28, 2025</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=84811">Generating original training data</a> by Stuart Marshall, <a href="/CCC">CCC</a>, February 07 2025</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=85120">Using Neural Network or Syzygy tables</a> by Dr. Oliver Brausch, <a href="/CCC">CCC</a>, May 25 2025</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=85350">Understanding neural networks in chess... from RL point.</a> by Alex S, <a href="/CCC">CCC</a>, August 13 2025</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=85351">To NNUE or not to NNUE, that is the question</a> by Robert Pope, <a href="/CCC">CCC</a>, August 13, 2025</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=85584">Alternative NNUE inputs</a> by Salomon Dölle, <a href="/CCC">CCC</a>, October 22 2025</li>
+</ul>
+<h3 id="2026-">2026 ...</h3>
+<ul>
+<li><a href="https://talkchess.com/viewtopic.php?t=85866">On the design of NNUE and possible ML approaches for evaluation</a> by Lazar Radu, <a href="/CCC">CCC</a>, January 08 2026</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=85963">NNUE loss function why MSE?</a> by Matthijs Tijin, <a href="/CCC">CCC</a>, February 02 2026</li>
+<li><a href="https://talkchess.com/viewtopic.php?t=86052">How to teach neural network not to lose?</a> by Jaroslav Tavgen, <a href="/CCC">CCC</a>, February 27 2026</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<h3 id="nnue">NNUE</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Efficiently_updatable_neural_network">Efficiently updatable neural network | Wikipedia</a></li>
+<li><a href="http://qhapaq.hatenablog.com/entry/2018/06/02/221612">次世代の将棋思考エンジン、NNUE関数を学ぼう（その１．ネットワーク構造編） - コンピュータ将棋 Qhapaq</a>, June 02, 2018 (Japanese)</li>
+</ul>
+<p>Learn Next Generation Shogi Thinking Engine, NNUE Function (Part 1. Network Structure) - Computer Shogi</p>
+<ul>
+<li><a href="http://qhapaq.hatenablog.com/entry/2018/07/08/193316">次世代の将棋思考エンジン、NNUE関数を学ぼう（その2．改造/学習編） - コンピュータ将棋 Qhapaq</a>, July 08, 2018 (Japanese)</li>
+</ul>
+<p>Let's Learn Next Generation Shogi Thinking Engine, NNUE Function (Part 2. Remodeling/Learning) - Computer Shogi</p>
+<ul>
+<li><a href="http://yaneuraou.yaneu.com/2020/06/19/stockfish-nnue-the-complete-guide/">Stockfish NNUE – The Complete Guide</a>, June 19, 2020 (Japanese and English)</li>
+<li><a href="http://yaneuraou.yaneu.com/2020/08/21/3-technologies-in-shogi-ai-that-could-be-used-for-chess-ai/">3 technologies in shogi AI that could be used for chess AI</a> by <a href="/Motohiro_Isozaki">Motohiro Isozaki</a>, August 21, 2020 » <a href="/Stockfish_NNUE">Stockfish NNUE</a></li>
+<li><a href="https://www.qhapaq.org/shogi/shogiwiki/stockfish-nnue/">Stockfish NNUE Wiki</a></li>
+<li><a href="http://rebel13.nl/home/nnue.html">nnue | Home of the Dutch Rebel</a> by <a href="/Ed_Schroder">Ed Schröder</a></li>
+<li><a href="https://github.com/glinscott/nnue-pytorch/blob/master/docs/nnue.md">NNUE Guide (nnue-pytorch/nnue.md at master · glinscott/nnue-pytorch · GitHub)</a> hosted by <a href="/Gary_Linscott">Gary Linscott</a></li>
+<li><a href="https://obrhubr.org/chess-engine">How to Build a Chess Engine and Fail</a> by Niklas Oberhuber</li>
+</ul>
+<h3 id="nnue-libraries">NNUE libraries</h3>
+<p>Some developers disintegrate and rewrite the Stockfish NNUE code into independent libraries which can be much easier to embed into other chess engines.</p>
+<ul>
+<li><a href="https://github.com/david-carteau/cerebrum">GitHub - david-carteau/cerebrum: The Cerebrum library</a> by David Carteau » Cerebrum</li>
+<li><a href="https://github.com/dshawul/nncpu-probe">GitHub - dshawul/nncpu-probe</a> by <a href="/Daniel_Shawul">Daniel Shawul</a></li>
+<li><a href="https://github.com/jdart1/nnue">GitHub - jdart1/nnue: NNUE reading code for chess</a> by <a href="/Jon_Dart">Jon Dart</a></li>
+</ul>
+<h3 id="source-code">Source Code</h3>
+<ul>
+<li><a href="https://github.com/yaneurao/YaneuraOu">GitHub - yaneurao/YaneuraOu: YaneuraOu is the World's Strongest Shogi engine(AI player), WCSC29 1st winner, educational and USI compliant engine</a></li>
+<li><a href="https://github.com/Tama4649/Kristallweizen">GitHub - Tama4649/Kristallweizen: 第29回世界コンピュータ将棋選手権 準優勝のKristallweizenです。</a></li>
+<li><a href="https://github.com/nodchip/Stockfish">GitHub - nodchip/Stockfish: UCI chess engine</a> (<a href="/Stockfish_NNUE">Stockfish NNUE</a> by <a href="/Hisayori_Noda">Nodchip</a>)</li>
+<li><a href="https://github.com/dkappe/leela-chess-weights/wiki/A-Leela-NNUE%3F-Night-Nurse-and-Others">A Leela NNUE? Night Nurse and Others · dkappe/leela-chess-weights Wiki · GitHub</a> by <a href="/Dietrich_Kappe">Dietrich Kappe</a></li>
+<li><a href="https://github.com/DanielUranga/TensorFlowNNUE">GitHub - DanielUranga/TensorFlowNNUE</a> by <a href="/Daniel_Uranga">Daniel Uranga</a></li>
+<li><a href="https://github.com/glinscott/nnue-pytorch">GitHub - glinscott/nnue-pytorch: NNUE (Chess evaluation) trainer in Pytorch</a> by <a href="/Gary_Linscott">Gary Linscott</a></li>
+<li><a href="https://github.com/connormcmonigle/seer-nnue">GitHub - connormcmonigle/seer-nnue: UCI chess engine using neural networks for position evaluation</a> by <a href="/Connor_McMonigle">Connor McMonigle</a> » <a href="/Seer">Seer</a></li>
+<li><a href="https://github.com/bmdanielsson/nnue-trainer">GitHub - bmdanielsson/nnue-trainer: PyTorch trainer for NNUE style neural networks</a> by <a href="/Martin_Danielsson">Martin Danielsson</a> » <a href="/Marvin">Marvin</a> <a href="#fn24" class="footnote-ref" id="fnref24" role="doc-noteref"><sup>24</sup></a></li>
+<li><a href="https://github.com/fsmosca/Mabigat">GitHub - fsmosca/Mabigat: NNUE parameter optimizer</a> by <a href="/Ferdinand_Mosca">Ferdinand Mosca</a> » <a href="/Automated_Tuning">Automated Tuning</a></li>
+<li><a href="https://github.com/jw1912/bullet">GitHub - jw1912/bullet: Neural Network Trainer</a> by Jamie Whiting » <a href="/Automated_Tuning">Automated Tuning</a></li>
+<li><a href="https://github.com/jnlt3/marlinflow">GitHub - jnlt3/marlinflow: Neural Network training repository for the Black Marlin chess engine</a> by Doruk Şekercioğlu » <a href="/Automated_Tuning">Automated Tuning</a></li>
+<li><a href="https://github.com/Luecx/Grapheus">GitHub - Luecx/Grapheus</a> by <a href="/Jay_Honnold">Jay Honnold</a>, <a href="/Finn_Eggers">Finn Eggers</a>, and Rafid Ahsan » <a href="/Automated_Tuning">Automated Tuning</a></li>
+<li><a href="https://github.com/Luecx/CudAD">GitHub - Luecx/CudAD</a> by <a href="/Finn_Eggers">Finn Eggers</a> and <a href="/Jay_Honnold">Jay Honnold</a> » <a href="/Automated_Tuning">Automated Tuning</a></li>
+<li><a href="https://github.com/AndyGrant/NNTrainer">GitHub - AndyGrant/NNTrainer</a> by <a href="/Andrew_Grant">Andrew Grant</a> » <a href="/Automated_Tuning">Automated Tuning</a></li>
+<li><a href="https://github.com/martinnovaak/forge">GitHub - martinnovaak/forge: Simple chess NNUE trainer</a> by Martin Novák » <a href="/Automated_Tuning">Automated Tuning</a></li>
+<li><a href="https://github.com/zzzzz151/Starway">GitHub - zzzzz151/Starway</a> by zzzzz151 » <a href="/Automated_Tuning">Automated Tuning</a></li>
+<li><a href="https://github.com/lucametehau/CudaTest">GitHub - lucametehau/CudaTest</a> by <a href="/Luca_Metehau">Luca Metehau</a> » <a href="/Automated_Tuning">Automated Tuning</a></li>
+<li><a href="https://github.com/xu-shawn/Cortex">GitHub - xu-shawn/Cortex: Java NNUE Trainer</a> by Shawn Xu » <a href="/Automated_Tuning">Automated Tuning</a></li>
+<li><a href="https://github.com/xu-shawn/nnue-visualize">GitHub - xu-shawn/nnue-visualizer</a> by Shawn Xu</li>
+</ul>
+<h3 id="misc">Misc</h3>
+<ul>
+<li><a href="https://software.intel.com/content/www/us/en/develop/articles/lower-numerical-precision-deep-learning-inference-and-training.html">Lower Numerical Precision Deep Learning Inference and Training</a> by <a href="https://community.intel.com/t5/user/viewprofilepage/user-id/134067">Andres Rodriguez</a> et al., <a href="/Intel">Intel</a>, January 19, 2018 » <a href="/AVX-512">AVX-512</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Nue">Nue from Wikipedia</a></li>
+<li><a href="/Category:Hiromi_Uehara">Hiromi</a> - <a href="https://en.wikipedia.org/wiki/Spectrum_(Hiromi_album)">Spectrum</a>, 2019, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/A8RCz_RoefM" title="YouTube video A8RCz_RoefM" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=A8RCz_RoefM">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Neural_Networks">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://yaneuraou.yaneu.com/2020/05/03/%E6%A9%9F%E6%A2%B0%E5%AD%A6%E7%BF%92%E3%82%A8%E3%83%B3%E3%82%B8%E3%83%8B%E3%82%A2%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AE%E5%B0%86%E6%A3%8Bai%E9%96%8B%E7%99%BA%E5%85%A5%E9%96%80%E3%81%9D%E3%81%AE1/">機械学習エンジニアのための将棋AI開発入門その1 Introduction to Shogi AI development for machine learning engineers Part 1</a>, May 03, 2020 (Japanese)<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Yu_Nasu">Yu Nasu</a> (<strong>2018</strong>). <em>ƎUИИ Efficiently Updatable Neural-Network based Evaluation Functions for Computer Shogi</em>. Ziosoft Computer Shogi Club, <a href="https://github.com/ynasu87/nnue/blob/master/docs/nnue.pdf">pdf</a> (Japanese with English abstract)<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://github.com/yaneurao/YaneuraOu">GitHub - yaneurao/YaneuraOu: YaneuraOu is the World's Strongest Shogi engine(AI player), WCSC29 1st winner, educational and USI compliant engine</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://github.com/Tama4649/Kristallweizen/">GitHub - Tama4649/Kristallweizen: 第29回世界コンピュータ将棋選手権 準優勝のKristallweizenです。</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=72754">The Stockfish of shogi</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, January 07, 2020<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=74059">Stockfish NN release (NNUE)</a> by Henk Drost, <a href="/CCC">CCC</a>, May 31, 2020<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=74484">Can the sardine! NNUE clobbers SF</a> by Henk Drost, <a href="/CCC">CCC</a>, July 16, 2020<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=74828">Orion 0.7 : NNUE experiment</a> by David Carteau, <a href="/CCC">CCC</a>, August 19, 2020<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=72613&amp;start=320#p856640">Re: New engine releases 2020...Don NNUE 2020?</a> by supersharp77, <a href="/CCC">CCC</a>, August 19, 2020<a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="http://talkchess.com/forum3/viewtopic.php?f=2&amp;t=74825">... the last shall be first ...</a> by <a href="/Michael_Byrne">MikeB</a>, <a href="/CCC">CCC</a>, 19 Aug 2020<a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="http://talkchess.com/forum3/viewtopic.php?f=2&amp;t=67890&amp;start=10#p856742">Introducing Igel chess engine</a> by <a href="/Volodymyr_Shcherbyna">Volodymyr Shcherbyna</a>, <a href="/CCC">CCC</a>, 20 Aug 2020<a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="http://talkchess.com/forum3/viewtopic.php?f=2&amp;t=74837">Night Nurse 0.2</a> by <a href="/Dietrich_Kappe">Dietrich Kappe</a>, <a href="/CCC">CCC</a>, August 19, 2020<a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75400&amp;start=22">Re: Hacking around CFish NNUE</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, October 15, 2020<a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=75415&amp;start=3">Re: How to scale stockfish NNUE score?</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, October 17, 2020<a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn15"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75748">Dragon by Komodo Chess</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, November 10, 2020<a href="#fnref15" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn16"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=76250">Translation of Yu Nasu's NNUE paper</a> by <a href="/Dominik_Klein">Dominik Klein</a>, <a href="/CCC">CCC</a>, January 07, 2021<a href="#fnref16" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn17"><p><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=78283">Book about Neural Networks for Chess</a> by dkl, <a href="/CCC">CCC</a>, September 29, 2021<a href="#fnref17" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn18"><p><a href="https://en.wikipedia.org/wiki/Outer_product">Outer product from Wikipedia</a><a href="#fnref18" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn19"><p><a href="https://en.wikipedia.org/wiki/Tensor_product">Tensor product from Wikipedia</a><a href="#fnref19" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn20"><p><a href="https://en.wikipedia.org/wiki/PyTorch">PyTorch from Wikipedia</a><a href="#fnref20" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn21"><p><a href="https://en.wikipedia.org/wiki/TensorFlow">TensorFlow from Wikipedia</a><a href="#fnref21" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn22"><p><a href="http://www.jurjevic.org.uk/chess/vafra/index.html">Vafra</a> by Robert Jurjević<a href="#fnref22" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn23"><p><a href="https://github.com/official-stockfish/Stockfish/pull/3474">Update default net to nn-8a08400ed089.nnue by Sopel97 · Pull Request #3474 · official-stockfish/Stockfish · GitHub</a> by <a href="/Tomasz_Sobczyk">Tomasz Sobczyk</a><a href="#fnref23" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn24"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76964">nnue-trainer</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, March 27, 2021<a href="#fnref24" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Toriyama_Sekien">Toriyama Sekien</a> · <a href="/Category:Hiromi_Uehara">Hiromi Uehara</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/NNUE">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, Phhnguyen, Voffka, Smatovic, ShawnXu, Nour Berakdar.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

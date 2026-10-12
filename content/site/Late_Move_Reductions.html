@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Late Move Reductions - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Late Move Reductions</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Search">Search</a> * <a href="/Selectivity">Selectivity</a> * <a href="/Reductions">Reductions</a> * Late Move Reductions</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:333px"><a href="http://chgs.elevator.umn.edu/asset/viewAsset/57f3b6787d58ae5f74bf8ba9#57f3b6d77d58ae5574bf8bc8" target="_blank" rel="noopener noreferrer"><img src="/assets/Bak_OtherRules.jpg" alt="Samuel Bak - Other Rules 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Samuel_Bak">Samuel Bak</a> - Other Rules <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://chgs.elevator.umn.edu/asset/viewAsset/57f3b6787d58ae5f74bf8ba9#57f3b6d77d58ae5574bf8bc8">Chess in the Art of Samuel Bak</a>, <a href="http://www.chgs.umn.edu/">Center for Holocaust &amp; Genocide Studies</a>, <a href="/University_of_Minnesota">University of Minnesota</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Late Move Reductions (LMR)</strong>,<br />
+save search by reducing <a href="/Moves">moves</a> that are <a href="/Move_Ordering">ordered</a> closer to the end. Typically, most schemes search the first few moves (say 1-2) at full <a href="/Depth">depth</a>, then if no move <a href="/Fail-High">fails high</a>, many of the remaining moves are reduced in search <a href="/Depth">depth</a>, and only re-searched if the reduced search fails high. The technique has been used for many years in various forms, but it became very popular in 2005 after <a href="/Fruit">Fruit</a> and <a href="/Glaurung">Glaurung</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> used open source implementations based on the <a href="/History_Heuristic">History Heuristic</a>. LMR can often reduce the <a href="/Branching_Factor">effective branching factor</a> to less than 2, depending on the reduction conditions.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#common-conditions">Common Conditions</a></li>
+<li><a href="#uncommon-conditions">Uncommon Conditions</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#reduction-depth">Reduction Depth</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#base-reduction">Base Reduction</a></li>
+<li><a href="#heuristic-reductions">Heuristic Reductions</a></li>
+<li><a href="#reduction-range">Reduction Range</a></li>
+</ol>
+</details></li>
+<li><a href="#re-searches">Re-searches</a></li>
+<li><a href="#test-results">Test Results</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2004">2004</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="common-conditions">Common Conditions</h2>
+<p>Most programs do not reduce these types of <a href="/Moves">moves</a>:</p>
+<ul>
+<li><a href="/Depth">Depth</a> &lt; 3 (sometimes depth &lt; 2)</li>
+</ul>
+<h2 id="uncommon-conditions">Uncommon Conditions</h2>
+<p>Uncommon conditions on moves not to reduce:</p>
+<ul>
+<li><a href="/Tactical_Moves">Tactical Moves</a> (<a href="/Captures">captures</a> and <a href="/Promotions">promotions</a>)</li>
+<li>Moves while in check</li>
+<li>Moves which give check</li>
+<li>Moves that cause a search <a href="/Extensions">extension</a></li>
+<li>Anytime in a PV-Node in a PVS search</li>
+<li><a href="/Passed_Pawn">Passed Pawn</a> Moves</li>
+<li><a href="/Killer_Heuristic">Killer Moves</a></li>
+<li>Moves threatening the King area</li>
+<li><a href="/Tactics">Tactically</a> threatening moves</li>
+<li>Moves with good past <a href="/Relative_History_Heuristic">relative history</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></li>
+<li>Any <a href="/Pawn_Push">Pawn Moves</a></li>
+<li>Allowing reductions of "bad" <a href="/Captures">captures</a> (<a href="/Static_Exchange_Evaluation">SEE</a> &lt; 0)</li>
+<li>Moves of a <a href="/Null_Move_Pruning">threatened piece</a> to safety (often detected via a <a href="/Null_Move_Pruning">Null Move search</a>)</li>
+</ul>
+<h2 id="reduction-depth">Reduction Depth</h2>
+<p>Modern programs, most notably <a href="/Stockfish">Stockfish</a>, allow reductions of more than one <a href="/Ply">ply</a> and adjust them based on contextual information.</p>
+<h3 id="base-reduction">Base Reduction</h3>
+<p>The base reduction depth changes according to <a href="/Depth">depth</a> and the number of moves that have been searched. In the simplest case, the base reduction is linear with respect to the product of the logarithm of depth and move number. For example:</p>
+<ul>
+<li>Obsidian reduces by 0.99 + ln(depth) * ln(moves) / 3.14</li>
+</ul>
+<p>Here some extra sample formulas can be viewed:</p>
+<ul>
+<li><a href="/Weiss">Weiss</a> reduces by 0.20 + ln(depth) * ln(moves) / 3.35 for captures and promotions and 1.35 + ln(depth) * ln(moves) / 2.75 for quiet moves.</li>
+<li><a href="/Ethereal">Ethereal</a> reduces by 0.7844 + ln(depth) * ln(moves) / 2.4696 for quiet moves and 3 (or 2 if the move gave check) for captures and promotions.</li>
+<li>Equisetum reduces by 0.57 + (pow(depth, 0.10) * pow(moves, 0.16)) / 2.49 for all moves.</li>
+<li><a href="/Halogen">Halogen</a> reduces by -0.7851 + 1.041 * log(depth + 1) + 2.126 * log(moves + 1) - 0.6481 * log(depth + 1) * log(moves + 1)</li>
+<li><a href="/Senpai">Senpai</a> reduces by one ply for the first 6 moves and by depth / 3 for remaining moves.</li>
+<li><a href="/Fruit_Reloaded">Fruit Reloaded</a> uses formula: uint8(sqrt(double(depth-1)) + sqrt(double(moves-1))); for non-PV nodes. In PV-nodes it reduces by 2/3 of this value.</li>
+</ul>
+<h3 id="heuristic-reductions">Heuristic Reductions</h3>
+<p>In addition to a well-tuned base reduction formula, modern programs also reduce conditionally based on specific sets of heuristics. Some common examples include:</p>
+<ul>
+<li>Reduce less while in <a href="/Check">check</a>.</li>
+<li>Reduce less on moves which give check.</li>
+<li>Reduce less on <a href="/Killer_Heuristic">Killer Moves</a>.</li>
+<li>Reduce less in the <a href="/Node_Types">PV-Nodes</a> of a <a href="/Principal_Variation_Search">PVS</a> search.</li>
+<li>Reduce less when <a href="/Improving">improving</a>.</li>
+<li>Reduce more in an expected <a href="/Node_Types">Cut-node</a>.</li>
+<li>Reduce more when <a href="/Best_Move">hash move</a> is a capture.</li>
+<li>Reduce more/less based on the history value of the move.</li>
+</ul>
+<h3 id="reduction-range">Reduction Range</h3>
+<p>Nominal reduction values can sometimes reach below zero or exceed depth. Therefore, it is common to clamp reduction to ensure correctness. The range at which reductions are clamped is an area of further refinements.</p>
+<h2 id="re-searches">Re-searches</h2>
+<p>Classical implementation assumes a re-search at full depth if the reduced depth search returns a score above alpha. In recent years, <a href="/Stockfish">Stockfish</a> had success with adjusting re-search depth based on result from reduced search.</p>
+<h2 id="test-results">Test Results</h2>
+<p>Some test results related to LMR can be found on</p>
+<ul>
+<li><a href="/Late_Move_Reduction_Test_Results">Late Move Reduction Test Results</a></li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Tord_Romstad">Parallelism and Selectivity in Game Tree Search | Video</a>, Talk by <a href="/Tord_Romstad">Tord Romstad</a></li>
+<li><a href="/Bobby">Bobby's Strategic Quiescence Search</a></li>
+<li><a href="/History_Heuristic">History Heuristic</a></li>
+<li><a href="/History_Leaf_Pruning">History Leaf Pruning</a></li>
+<li><a href="/Futility_Pruning">Move Count Based Pruning</a> (Late Move Pruning)</li>
+<li><a href="/Null_Move_Pruning">Null Move Pruning</a></li>
+<li><a href="/Relative_History_Heuristic">Relative History Heuristic</a></li>
+<li><a href="/SEX_Algorithm">SEX Algorithm</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/David_Levy">David Levy</a>, <a href="/David_Broughton">David Broughton</a>, <a href="/Mark_Taylor">Mark Taylor</a> (<strong>1989</strong>). <em>The SEX Algorithm in Computer Chess</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 12, No. 1</a></li>
+<li><a href="/Kunihito_Hoki">Kunihito Hoki</a>, <a href="/Masakazu_Muramatsu">Masakazu Muramatsu</a> (<strong>2012</strong>). <em><a href="https://www.semanticscholar.org/paper/Efficiency-of-three-forward-pruning-techniques-in-Hoki-Muramatsu/206099961f401c8693e071c2b739f164ae5ffa6c">Efficiency of three Forward-Pruning Techniques in Shogi: Futility Pruning, Null-move Pruning, and Late Move Reduction (LMR)</a></em>. <a href="https://www.journals.elsevier.com/entertainment-computing">Entertainment Computing</a>, Vol. 3, No. 3</li>
+<li><a href="/Daniel_Shawul">Daniel S. Abdi</a> (<strong>2013</strong>). <em>Analysis of pruned minimax trees</em>. <a href="https://dl.dropboxusercontent.com/u/55295461/analysis/pruning.pdf">pdf</a> » <a href="/Alpha-Beta">Alpha-Beta</a>, <a href="/Null_Move_Pruning">Null Move Pruning</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2004">2004</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=352384">Forward pruning and some related techniques</a> by <a href="/Sergei_Markoff">Sergei Markoff</a>, <a href="/CCC">CCC</a>, March 02, 2004</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=2300&amp;p=10549">Reductions and null move refutations</a> by <a href="/Tord_Romstad">Tord Romstad</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, April 18, 2005 » <a href="/Null_Move_Pruning">Null Move Pruning</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=434809">What is History Pruning?</a> by David Dahlem, <a href="/CCC">CCC</a>, July 03, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=445457">History based pruning question</a> by <a href="/Alvaro_Cardoso">Alvaro Jose Povoa Cardoso</a>, <a href="/CCC">CCC</a>, August 26, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=457846">About history pruning...</a> by Svein Bjørnar Myrvang, <a href="/CCC">CCC</a>, October 26, 2005</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=3795">What is "history pruning"?</a> by <a href="/Vladimir_Medvedev">Vladimir Medvedev</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, November 07, 2005</li>
+</ul>
+<p><strong>2006</strong></p>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=489978">History pruning</a> by <a href="/Frank_Phillips">Frank Phillips</a>, <a href="/CCC">CCC</a>, February 27, 2006</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=490705">late move reductions</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, March 01, 2006</li>
+</ul>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=490712">Re: late move reductions</a> by <a href="/Alessandro_Scotti">Alessandro Scotti</a>, <a href="/CCC">CCC</a>, March 01, 2006 » <a href="/Kiwi">Kiwi</a></p>
+<p><a href="https://www.stmintz.com/ccc/index.php?id=490779">PHR (Peak History Reduction) idea</a> by <a href="/Daniel_Mehrmann">Daniel Mehrmann</a>, <a href="/CCC">CCC</a>, March 01, 2006 » <a href="/Main_Page">Home</a>, <a href="/Relative_History_Heuristic">Relative History Heuristic</a></p>
+<ul>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=4435&amp;p=23839">history pruning/ late move pruning</a> by <a href="/Tom_King">Tom King</a>, <a href="/Computer_Chess_Forums">Winboard Programming Forum</a>, March 02, 2006</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?t=5194">LMR question</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/Computer_Chess_Forums">Winboard Programming Forum</a>, July 13, 2006</li>
+</ul>
+<p><strong>2007</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=12936">LMR in micro-Max</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, April 07, 2007 » <a href="/Micro-Max">Micro-Max</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=15219">Fruit and History Reductions</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, July 19, 2007 » <a href="/Fruit">Fruit</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=15304">LMR other conditions</a> by <a href="/Mark_Lefler">Mark Lefler</a>, <a href="/CCC">CCC</a>, July 23, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=15337">Improving history tables</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/CCC">CCC</a>, July 25, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=18345">LMR: history or not?</a> by <a href="/Alessandro_Scotti">Alessandro Scotti</a>, <a href="/CCC">CCC</a>, December 13, 2007 » <a href="/Hamsters">Hamsters</a></li>
+</ul>
+<p><strong>2008</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?p=178438">Extreme late move reductions?</a> by <a href="/Gary_Linscott">Gary</a>, <a href="/CCC">CCC</a>, March 05, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=20636">LMR?</a> by <a href="/Martin_Giepmans">Martin Giepmans</a>, <a href="/CCC">CCC</a>, April 12, 2008 » <a href="/Anatoli">Anatoli</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=25599">Adaptative LMR and TT</a> by <a href="/Fermin_Serrano">Fermin Serrano</a>, <a href="/CCC">CCC</a>, December 23, 2008</li>
+</ul>
+<p><strong>2009</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=26703">About LMR &amp; History reductions</a> by <a href="/Joona_Kiiski">Joona Kiiski</a>, <a href="/CCC">CCC</a>, February 24, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=26877">LMR</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, March 05, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=26944">LMR and 'tactically connected' moves</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, March 10, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=27277">LMR revisited</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, April 01, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=27530">LMR and null move selectivity</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, April 20, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=29944">LMR</a> by <a href="/Bas_Hamstra">Bas Hamstra</a>, <a href="/CCC">CCC</a>, September 30, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=30245">May I Ask What You Think Of This?</a> by Christopher Conkie, <a href="/CCC">CCC</a>, October 20, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=31369">Did people try replacing LMR by pruning</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, December 31, 2009</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=31494">The problem with LMR in suprtactical positions</a> by <a href="/Oliver_Brausch">Oliver Brausch</a>, <a href="/CCC">CCC</a>, January 05, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=31933">Researching if LMR-affected search improves Alpha?</a> by <a href="/John_Merlino">John Merlino</a>, <a href="/CCC">CCC</a>, January 22, 2010</li>
+<li><a href="http://talkchess.com/forum/viewtopic.php?t=32984">Problems with LMR in late endgames</a> by <a href="/Luca_Hemmerich">Luca Hemmerich</a>, <a href="/CCC">CCC</a>, March 01, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=33265">LMR algorithm</a> by kenny stanley, <a href="/CCC">CCC</a>, March 15, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=33434">LMR Conditions</a> by kenny stanley, <a href="/CCC">CCC</a>, March 23, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=34437">LMR at root of search tree - worthwhile?</a> by <a href="/Tom_King">Tom King</a>, <a href="/CCC">CCC</a>, May 21, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=34557">EPR, even better than LMR!</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/CCC">CCC</a>, May 27, 2010</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=248#p2538">Re: "Automated Discovery of Search Extensions"</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, June 26, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=35558">lmr at PV nodes?</a> by <a href="/Tom_King">Tom King</a>, <a href="/CCC">CCC</a>, July 23, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=35955">move count based pruning</a> by <a href="/Tom_King">Tom King</a>, <a href="/CCC">CCC</a>, September 02, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=36633">LMR differences in long vs short games</a> by Jacob Børs Lind, <a href="/CCC">CCC</a>, November 08, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=37337">fulitiy + lmr; funny results</a> by <a href="/Volker_Böhm">Volker Böhm</a>, <a href="/CCC">CCC</a>, December 28, 2010</li>
+</ul>
+<p><strong>2011</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=37424">lmr in PV</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, January 03, 2011</li>
+</ul>
+<p><strong>2012</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41995">Should reduction depend on depth?</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, January 14, 2012 » <a href="/Komodo">Komodo</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=43434">Possible LMR improvement using AB_FOOL</a> by <a href="/Ed_Schroder">Ed Schroder</a>, <a href="/CCC">CCC</a>, April 24, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=44272">LMR Research</a> by <a href="/Matthew_R._Brades">Matthew R. Brades</a>, <a href="/CCC">CCC</a>, July 02, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=46503">Adjustable search pruning depending on time control</a> by Jerry Donald, <a href="/CCC">CCC</a>, December 20, 2012 » <a href="/Time_Management">Time Management</a></li>
+</ul>
+<p><strong>2013</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47577">ROC analysis of Late Move Reductions</a> by Gerard van Ewijk, <a href="/CCC">CCC</a>, March 22, 2013 <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48144">Is LMR Sound</a> by Henk van den Belt, <a href="/CCC">CCC</a>, May 29, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48154">Is LMR safe within NULL move reduction</a> by Henk van den Belt, <a href="/CCC">CCC</a>, May 30, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48356">LMR at CUT nodes can be arbitrarily bad!</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, <a href="/CCC">CCC</a>, June 20, 2013 » <a href="/Node_Types">Node Types</a>, <a href="/Python">Python</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49558">How much to reduce ?</a> by Henk van den Belt, <a href="/CCC">CCC</a>, October 03, 2013 » <a href="/Depth_Reduction_R">R</a></li>
+</ul>
+<p><strong>2014</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=51578">Null move and LMR</a> by <a href="/Laurie_Tunnicliffe">Laurie Tunnicliffe</a>, <a href="/CCC">CCC</a>, March 12, 2014 » <a href="/Null_Move_Pruning">Null Move Pruning</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52169">LMR &amp; TT interaction</a> by Natale Galioto, <a href="/CCC">CCC</a>, April 29, 2014 » <a href="/Transposition_Table">Transposition Table</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54392">A question about Stockfish and LMR or other pruning...</a> by Forrest Hoch, <a href="/CCC">CCC</a>, November 20, 2014</li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=55526">About LMR , again :-)</a> by <a href="/Daniel_Anulliero">Daniel Anulliero</a>, <a href="/CCC">CCC</a>, March 01, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56312">LMR tuning</a> by <a href="/Shawn_Chidester">Shawn Chidester</a>, <a href="/CCC">CCC</a>, May 11, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56524">Interpretation of LMR</a> by <a href="/Alexandru_Mosoi">Alexandru Mosoi</a>, <a href="/CCC">CCC</a>, May 29, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56631">What's Your Engine's Maximum LMR Reduction?</a> by <a href="/Steve_Maughan">Steve Maughan</a>, <a href="/CCC">CCC</a>, June 08, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57035">New "smoothing" issue</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, July 20, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57381">On LMR, and statically predicting moves</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, August 25, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57486">LMR by another name</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, September 02, 2015 » <a href="/Spector">Spector</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57697">Ratio reduction</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, September 20, 2015 » <a href="/Symbolic">Symbolic</a></li>
+</ul>
+<p><strong>2016</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58996">late move reduction</a> by <a href="/Folkert_van_Heusden">Folkert van Heusden</a>, <a href="/CCC">CCC</a>, January 21, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59598">Extensions in the days of LMR?</a> by <a href="/Martin_Fierz">Martin Fierz</a>, <a href="/CCC">CCC</a>, March 22, 2016 » <a href="/Extensions">Extensions</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60194">LMR problems</a> by <a href="/Alvaro_Cardoso">Alvaro Cardoso</a>, <a href="/CCC">CCC</a>, May 16, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60240">Reductions</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, May 22, 2016 » <a href="/Depth_Reduction_R">R</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61031">Disappointing LMR Results</a> by David Cimbalista, <a href="/CCC">CCC</a>, August 04, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61086">Null Move in LMR</a> by <a href="/Laurie_Tunnicliffe">Laurie Tunnicliffe</a>, <a href="/CCC">CCC</a>, August 10, 2016 » <a href="/Null_Move_Pruning">Null Move Pruning</a></li>
+</ul>
+<p><strong>2017</strong></p>
+<ul>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=3084">LMR and PVS</a> by thevinenator, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, February 10, 2017 » <a href="/Principal_Variation_Search">Principal Variation Search</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63521">Late move reductions ?</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, March 22, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63649">Check extension vs LMR</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, April 04, 2017 » <a href="/Check_Extensions">Check Extensions</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63870">LMR - or starters - Advance and Expert</a> by <a href="/Ed_Schroder">Ed Schroder</a>, <a href="/CCC">CCC</a>, May 01, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65169">LMR and killer</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, September 14, 2017 » <a href="/Killer_Heuristic">Killer Heuristic</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65273">LMR prescription</a> by <a href="/Evert_Glebbeek">Evert Glebbeek</a>, <a href="/CCC">CCC</a>, September 24, 2017</li>
+</ul>
+<p><strong>2019</strong></p>
+<ul>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=70217">Depth reduced but ELO increased</a> by <a href="/Tom_King">Tom King</a>, <a href="/CCC">CCC</a>, March 16, 2019 » <a href="/Playing_Strength">Playing Strength</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=78397">Elo expected from LMR</a> by Christian Dean, <a href="/CCC">CCC</a>, October 11, 2021 » <a href="/Playing_Strength">Playing Strength</a></li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79616">Troubles with LMR</a> by Kurt Peters, <a href="/CCC">CCC</a>, March 31, 2022</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Late_Move_Reductions">Late Move Reductions from Wikipedia</a></li>
+<li><a href="https://web.archive.org/web/20150212051846/http://www.glaurungchess.com/lmr.html">An Introduction to Late Move Reductions</a> by <a href="/Tord_Romstad">Tord Romstad</a> (<a href="https://en.wikipedia.org/wiki/Wayback_Machine">Wayback Machine</a>)</li>
+<li><a href="http://mediocrechess.blogspot.de/2007/03/other-late-move-reduction-lmr.html">Mediocre Chess: [Guide] Late move reduction (LMR)</a> by <a href="/Jonatan_Pettersson">Jonatan Pettersson</a>, March 26, 2007 » <a href="/Mediocre">Mediocre</a></li>
+<li><a href="http://members.home.nl/matador/hr.htm">History Reductions in Pro Deo</a> by <a href="/Ed_Schroder">Ed Schröder</a> » <a href="/ProDeo">ProDeo</a></li>
+<li><a href="http://rebel13.nl/rebel13/blog/lmr%20advanced.html">LMR advanced</a> from <a href="http://rebel13.nl/index.html">Rebel 13</a> by <a href="/Ed_Schroder">Ed Schroder</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> » <a href="/Rebel">Rebel</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Reductions">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://web.archive.org/web/20150212051846/http://www.glaurungchess.com/lmr.html">An Introduction to Late Move Reductions</a> by <a href="/Tord_Romstad">Tord Romstad</a> (<a href="https://en.wikipedia.org/wiki/Wayback_Machine">Wayback Machine</a>)<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Mark_Winands">Mark Winands</a>, <a href="/Erik_van_der_Werf">Erik van der Werf</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a> (<strong>2004</strong>). <em><a href="http://link.springer.com/chapter/10.1007/11674399_18">The Relative History Heuristic</a></em>. <a href="/CG_2004">CG 2004</a>, <a href="http://erikvanderwerf.tengen.nl/pubdown/relhis.pdf">pdf</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://en.wikipedia.org/wiki/Receiver_operating_characteristic">Receiver operating characteristic (ROC) from Wikipedia</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=63870">LMR - or starters - Advance and Expert</a> by <a href="/Ed_Schroder">Ed Schroder</a>, <a href="/CCC">CCC</a>, May 01, 2017<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Samuel_Bak">Samuel Bak</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Late_Move_Reductions">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, ShawnXu.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

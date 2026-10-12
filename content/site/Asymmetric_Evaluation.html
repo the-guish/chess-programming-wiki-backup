@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asymmetric Evaluation - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Asymmetric Evaluation</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Evaluation">Evaluation</a> * Asymmetric Evaluation</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="https://commons.wikimedia.org/wiki/File:%27Helmet_Head_No._2%27,_bronze_sculpture_by_Henry_Moore,_1955,_Art_Gallery_of_New_South_Wales.JPG" target="_blank" rel="noopener noreferrer"><img src="/assets/HelmedHeadNo2HenryMoore.JPG" alt="Henry Moore - Helmed Head N° 2 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Henry_Moore">Henry Moore</a> - Helmed Head N° 2 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="/Category:Henry_Moore">Henry Moore</a> - <a href="http://www.kunstmuseumbochum.de/collection/helm-kopf-no-2-1950/">Helmed Head N° 2</a> (1950), Bronze on Marble slab, <a href="/Category:Art_Museum_Bochum">Art Museum</a>, <a href="https://en.wikipedia.org/wiki/Bochum">Bochum</a>, <a href="https://en.wikipedia.org/wiki/North_Rhine-Westphalia">North Rhine-Westphalia</a>, <a href="https://en.wikipedia.org/wiki/Germany">Germany</a>,, Photo by <a href="/Gerd_Isenberg">Gerd Isenberg</a>, October 30, 2016, see also 2011 <a href="https://commons.wikimedia.org/wiki/File:%27Helmet_Head_No._2%27,_bronze_sculpture_by_Henry_Moore,_1955,_Art_Gallery_of_New_South_Wales.JPG">image</a> of the sculpture at <a href="https://en.wikipedia.org/wiki/Art_Gallery_of_New_South_Wales">Art Gallery of New South Wales</a> from <a href="https://en.wikipedia.org/wiki/Wikimedia_Commons">Wikimedia Commons</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p>Some programs score certain terms <strong>differently</strong> for the <a href="/Side_to_move">side</a> they are playing and for the opponent. Most often the big terms, like <a href="/King_Safety">king safety</a>, <a href="/Passed_Pawn">passed pawn evaluation</a> or <a href="/Mobility">mobility</a> are scaled in some way. Whilst it might be argued that this idea runs counter the definition of chess as a zero-sum game, it also allows greater freedom in shaping the program's playing style. <a href="/Richard_Lang">Richard Lang's</a> programs were famous for their asymmetry in evaluation and <a href="/Pruning">forward pruning</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> , which emphasis safety (rules like 'do not start a wild attack, but worry a lot if the opponent does so') <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> .</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1997-">1997 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Odd-Even_Effect">Odd-Even Effect</a></li>
+<li><a href="/Opponent_Model_Search">Opponent Model Search</a></li>
+<li><a href="/Parity_Pruning">Parity Pruning</a></li>
+<li><a href="/Tempo">Tempo</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Ingo_Althöfer">Ingo Althöfer</a> (<strong>1992</strong>). <em>On Asymmetries in Chess Programs.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 15, No. 1</a></li>
+<li>Javier Ros Padilla (<strong>1994</strong>). <em>Estimating Asymmetry and Selectivity in Chess Programs</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 17, No. 1</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></li>
+<li><a href="/Mathematician">David Carmel</a>, <a href="/Shaul_Markovitch">Shaul Markovitch</a> (<strong>1994</strong>). <em><a href="https://www.semanticscholar.org/paper/The-M*-Algorithm%3A-Incorporating-Opponent-Models-Carmel-Markovitch/bd788272c81951dc44fa7944e0f72451ced14129">The M* Algorithm: Incorporating Opponent Models into Adversary Search</a></em>. CIS Report #9402, <a href="http://www.cs.technion.ac.il/~shaulm/papers/pdf/Carmel-Markovitch-CIS9402.pdf">pdf</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1997-">1997 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/msg/f9bfe5d4457a19ad">asymmetry</a> by <a href="/Andrew_Tridgell">Andrew Tridgell</a>, <a href="/Computer_Chess_Forums">rgcc</a>, August 12, 1997 » <a href="/KnightCap">KnightCap</a>, <a href="/Parity_Pruning">Parity Pruning</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=13323">Re: Junior's long lines: more data about this...</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, December 26, 1997</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/b456400a43207b02">Genius' asymmetric-search by example: TRY yourself</a> by <a href="/Thorsten_Czub">Thorsten Czub</a>, <a href="/Computer_Chess_Forums">rgcc</a>, December 30, 1997</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/462b49226d1f1dfe#">Asymetric king safety</a> by <a href="/Tom_King">Tom King</a>, <a href="/Computer_Chess_Forums">rgcc</a>, March 13, 1999</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=431012">Parity of depth level and evaluation</a> by Claude Le Page, <a href="/CCC">CCC</a>, June 13, 2005</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49719">evaluating color agnostic terms</a> by <a href="/Alvaro_Cardoso">Alvaro Cardoso</a>, <a href="/CCC">CCC</a>, October 15, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54865">Different eval for white/black</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, January 05, 2015</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=57067">Asymmetric evaluation function</a> by <a href="/Fabio_Gobbato">Fabio Gobbato</a>, <a href="/CCC">CCC</a>, July 24, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60262">Asymmetrical evaluation</a> by <a href="/Laurie_Tunnicliffe">Laurie Tunnicliffe</a>, <a href="/CCC">CCC</a>, May 24, 2016 » <a href="/Odd-Even_Effect">Odd-Even Effect</a></li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2985">Symmetrical evaluation and endgame</a> by Hamfer, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, June 02, 2016 » <a href="/Tempo">Tempo</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=68072">Why Lc0 eval (in cp) is asymmetric against AB engines?</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, July 25, 2018 » <a href="/Leela_Chess_Zero">Leela Chess Zero</a>, <a href="/Pawn_Advantage,_Win_Percentage,_and_Elo">Pawn Advantage, Win Percentage, and Elo</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74081">asymmetric evaluation and TT</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, June 02, 2020 » <a href="/Transposition_Table">Transposition Table</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Evaluation">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/b456400a43207b02">Genius' asymmetric-search by example: TRY yourself</a> by <a href="/Thorsten_Czub">Thorsten Czub</a>, <a href="/Computer_Chess_Forums">rgcc</a>, December 30, 1997<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/Kaare_Danielsen">Kaare Danielsen</a> (<strong>1987</strong>). <em>The 7th World Microcomputer Chess Championship, Rome, Italy, September 14-20, 1987</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 10, No. 3</a> » <a href="/WMCCC_1987">WMCCC 1987</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://groups.google.com/d/msg/rec.games.chess/5_dMbe0_juo/bXQQVYVEpykJ">ICCA Journal, Vol. 17, No. 1</a> by <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Computer_Chess_Forums">rgcc</a>, May 02, 1994<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=54865&amp;start=27">Re: Different eval for white/black</a> by <a href="/Ronald_de_Man">Ronald de Man</a>, <a href="/CCC">CCC</a>, January 08, 2015<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Henry_Moore">Henry Moore</a> · <a href="/Category:Art_Museum_Bochum">Art Museum Bochum</a> · <a href="/Category:Industrial_Heritage_Trail">Industrial Heritage Trail</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Asymmetric_Evaluation">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

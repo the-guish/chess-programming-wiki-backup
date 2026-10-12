@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AlphaZero - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">AlphaZero</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Engines">Engines</a> * AlphaZero</strong></p>
+<table>
+<tbody>
+<tr>
+<td><p><strong>AlphaZero</strong>,<br />
+a chess and <a href="/Go">Go</a> playing entity by Google DeepMind based on a general <a href="/Reinforcement_Learning">reinforcement learning</a> algorithm with the same name. On <a href="https://en.wikipedia.org/wiki/December_5#Holidays_and_observances">December 5</a>, <a href="https://en.wikipedia.org/wiki/Portal:Current_events/2017_December_5">2017</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>, the DeepMind team around <a href="/David_Silver">David Silver</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, and <a href="/Julian_Schrittwieser">Julian Schrittwieser</a> along with former <a href="/Giraffe">Giraffe</a> author <a href="/Matthew_Lai">Matthew Lai</a>, reported on their generalized algorithm, combining <a href="/Deep_Learning">Deep learning</a> with <a href="/Monte-Carlo_Tree_Search">Monte-Carlo Tree Search</a> (MCTS) <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>. The final <a href="https://en.wikipedia.org/wiki/Peer_review">peer reviewed</a> paper with various clarifications was published almost one year later in the <a href="https://en.wikipedia.org/wiki/Science_(journal)">Science magazine</a> under the title <em>A general reinforcement learning algorithm that masters chess, shogi, and Go through self-play</em> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>.</p>
+<p>Starting from random play, and given no domain knowledge except the game rules, AlphaZero achieved a superhuman level of play in the games of chess and <a href="/Shogi">Shogi</a> as well as in <a href="/Go">Go</a>. The algorithm is a more generic version of the AlphaGo Zero algorithm that was first introduced in the domain of Go <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>. AlphaZero <a href="/Evaluation">evaluates</a> <a href="/Chess_Position">positions</a> using non-linear function approximation based on a <a href="/Neural_Networks">deep neural network</a>, rather than the <a href="/Evaluation">linear function approximation</a> as used in classical chess programs. This neural network takes the board position as input and outputs a vector of move probabilities (policy) and a position evaluation. Once trained, these network is combined with a <a href="/Monte-Carlo_Tree_Search">Monte-Carlo Tree Search</a> (MCTS) using the policy to narrow down the search to high ­probability moves, and using the value in conjunction with a fast rollout policy to evaluate positions in the tree. The selection is done by a variation of <a href="/Christopher_D._Rosin">Rosin's</a> <a href="/UCT">UCT</a> improvement dubbed <a href="/Christopher_D._Rosin">PUCT</a>.</p></td>
+<td style="width: 30%"><p><span style="display: block; text-align: center;"><span style="font-family: Comic Sans MS,cursive; font-size: 100%;">„Zero<br />
+ist die Stille. Zero ist der<br />
+Anfang. Zero ist rund. Zero dreht sich.<br />
+Zero ist der Mond. Die Sonne ist Zero.<br />
+Zero ist weiss. Die Wüste Zero. Der Himmel<br />
+über Zero. Die Nacht –, Zero fließt. Das Auge<br />
+Zero. Nabel. Mund. Kuß. Die Milch ist rund. Die<br />
+Blume Zero der Vogel. Schweigend. Schwebend. Ich<br />
+esse Zero, ich trinke Zero, ich schlafe Zero, ich wache<br />
+Zero, ich liebe Zero. Zero ist schön, dynamo, dynamo,<br />
+dynamo. Die Bäume im Frühling, der Schnee, Feuer,<br />
+Wasser, Meer. Rot orange gelb grün indigo blau violett<br />
+Zero Zero Regenbogen. 4 3 2 1 Zero. Gold und<br />
+Silber, Schall und Rauch. Wanderzirkus Zero.<br />
+Zero ist die Stille. Zero ist der Anfang.<br />
+Zero ist rund. Zero ist<br />
+Zero.“ </span></span> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a></p></td>
+</tr>
+</tbody>
+</table>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1">"5th of December - The <a href="https://en.wikipedia.org/wiki/Krampus">Krampus</a> has come", suggested by Michael Scheidl in <a href="http://forum.computerschach.de/cgi-bin/mwf/topic_show.pl?tid=9635">AlphaZero</a> by Peter Martan, <a href="/Computer_Chess_Forums">CSS Forum</a>, December 06, 2017, with further comments by <a href="/Ingo_Althöfer">Ingo Althöfer</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+<li id="fn2"><a href="/David_Silver">David Silver</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Marc_Lanctot">Marc Lanctot</a>, <a href="/Laurent_Sifre">Laurent Sifre</a>, <a href="/Dharshan_Kumaran">Dharshan Kumaran</a>, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, <a href="/Karen_Simonyan">Karen Simonyan</a>, <a href="/Demis_Hassabis">Demis Hassabis</a> (<strong>2017</strong>). <em>Mastering Chess and Shogi by Self-Play with a General Reinforcement Learning Algorithm</em>. <a href="https://arxiv.org/abs/1712.01815">arXiv:1712.01815</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></li>
+<li id="fn3"><a href="/David_Silver">David Silver</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Marc_Lanctot">Marc Lanctot</a>, <a href="/Laurent_Sifre">Laurent Sifre</a>, <a href="/Dharshan_Kumaran">Dharshan Kumaran</a>, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, <a href="/Karen_Simonyan">Karen Simonyan</a>, <a href="/Demis_Hassabis">Demis Hassabis</a> (<strong>2018</strong>). <em><a href="http://science.sciencemag.org/content/362/6419/1140">A general reinforcement learning algorithm that masters chess, shogi, and Go through self-play</a></em>. <a href="https://en.wikipedia.org/wiki/Science_(journal)">Science</a>, Vol. 362, No. 6419<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></li>
+<li id="fn4"><a href="https://deepmind.com/blog/alphago-zero-learning-scratch/">AlphaGo Zero: Learning from scratch</a> by <a href="/Demis_Hassabis">Demis Hassabis</a> and <a href="/David_Silver">David Silver</a>, DeepMind, October 18, 2017<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></li>
+<li id="fn5"><a href="https://de.wikipedia.org/wiki/ZERO#Manifest">Zero Manifesto</a> by <a href="https://en.wikipedia.org/wiki/G%C3%BCnther_Uecker">Günther Uecker</a>, <a href="https://en.wikipedia.org/wiki/Heinz_Mack">Heinz Mack</a> and <a href="https://en.wikipedia.org/wiki/Otto_Piene">Otto Piene</a> of the <a href="https://en.wikipedia.org/wiki/Zero_(art)">ZERO</a> <a href="https://en.wikipedia.org/wiki/Art_movement">Art group</a> 1963, Translation by <a href="https://en.wikipedia.org/wiki/Google_Translate">Google Translate</a><br />
+"Zero is silence. Zero is the beginning. Zero is round. Zero turns. Zero is the moon. The sun is zero. Zero is white. The desert zero. The sky over zero. The night -, Zero flows. The eye zero. Navel. Mouth. Kiss. The milk is round. The flower zero the bird. Silently. Pending. I eat Zero, I drink Zero, I sleep Zero, I watch Zero, I love Zero. Zero is beautiful, dynamo, dynamo, dynamo. The trees in spring, the snow, fire, water, sea. Red orange yellow green indigo blue violet zero zero rainbow. 4 3 2 1 Zero. Gold and silver, noise and smoke. Zero circus. Zero is silence. Zero is the beginning. Zero is round. Zero is zero. "<br />
+Zero the new Idealism<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<h3 id="network-architecture">Network Architecture</h3>
+<p>The <a href="/Neural_Networks">deep neural network</a> consists of a “body” with input and hidden layers of spatial NxN planes, <a href="/8x8_Board">8x8 board</a> arrays for chess, followed by both policy and value “heads” <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>. Each square cell of the input plane contains 6x2 <a href="/Pieces">piece-type</a> and <a href="/Color">color</a> bits of the current <a href="/Chess_Position">chess position</a> from the current player's point of view, plus two bits of a <a href="/Repetitions">repetition counter</a> concerning the <a href="/Draw">draw</a> rule, and to further address <a href="/Graph_History_Interaction">graph history</a> and <a href="/Path-Dependency">path-dependency</a> issues - these 14 bits times eight, that is up to seven predecessor positions as well - so that <a href="/En_passant">en passant</a>, or some sense of progress is implicit. Additional 7 input bits consider <a href="/Castling_Rights">castling rights</a>, total move count and <a href="/Side_to_move">side to move</a>, yielding in 119 bits per square cell for chess.</p>
+<p>The body consists of a <a href="https://en.wikipedia.org/wiki/Rectifier_(neural_networks)">rectified</a> <a href="https://en.wikipedia.org/wiki/Batch_normalization">batch-normalized</a> <a href="/Neural_Networks">convolutional layer</a> followed by 19 <a href="/Neural_Networks">residual</a> blocks. Each such block consists of two rectified batch-normalized residual convolutional layers with a skip connection <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>. Each convolution applies 256 filters (shared weight vectors) of kernel size 3x3 with <a href="https://en.wikipedia.org/wiki/Stride_of_an_array">stride</a> 1. These layers connect the pieces on different squares to each other due to consecutive convolutions, where a cell of a layer is connected to the correspondent 3x3 <a href="https://en.wikipedia.org/wiki/Receptive_field">receptive field</a> of the previous layer, so that after 4 convolutions, each square is connected to every other cell in the original input layer <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>.</p>
+<p>The policy head applies an additional rectified, batch-normalized convolutional layer, followed by a final convolution of 73 filters for chess, with the final policy output represented as an 8x8 board array as well, for every <a href="/Origin_Square">origin square</a> up to 73 <a href="/Target_Square">target square</a> possibilities (<a href="/Direction">NRayDirs</a> x <a href="/Rays">MaxRayLength</a> + <a href="/Direction">NKnightDirs</a> + NPawnDirs * <a href="/Promotions">NMinorPromotions</a>), encoding a probability distribution over 64x73 = 4,672 possible moves, where illegal moves were masked out by setting their probabilities to zero, re-normalising the probabilities for remaining moves. The value head applies an additional rectified, batch-normalized convolution of 1 filter of kernel size 1x1 with stride 1, followed by a rectified linear layer of size 256 and a <a href="https://en.wikipedia.org/wiki/Hyperbolic_function">tanh</a>-linear layer of size 1.</p>
+<h3 id="training">Training</h3>
+<p>AlphaZero was trained in 700,000 steps or mini-batches of size 4096 each, starting from randomly initialized parameters, using 5,000 <a href="https://en.wikipedia.org/wiki/Tensor_processing_unit#First_generation">first-generation TPUs</a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> to generate self-play games and 64 <a href="https://en.wikipedia.org/wiki/Tensor_processing_unit#Second_generation">second-generation TPUs</a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a> to train the neural networks <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a> .</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#network-architecture">Network Architecture</a></li>
+<li><a href="#training">Training</a></li>
+<li><a href="#stockfish-match">Stockfish Match</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#publications">Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2017">2017</a></li>
+<li><a href="#2018">2018</a></li>
+<li><a href="#2019">2019</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2017-1">2017</a></li>
+<li><a href="#2018-1">2018</a></li>
+<li><a href="#2019-1">2019</a></li>
+<li><a href="#2020--1">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#blog-posts">Blog Posts</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#openspiel">OpenSpiel</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#reports">Reports</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2017-2">2017</a></li>
+<li><a href="#2018-">2018 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#stockfish-match-1">Stockfish Match</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#round-1">Round 1</a></li>
+<li><a href="#round-2-3">Round 2, 3</a></li>
+</ol>
+</details></li>
+<li><a href="#misc">Misc</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="stockfish-match">Stockfish Match</h2>
+<p>As mentioned in the December 2017 paper <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a>, a 100 game match versus <a href="/Stockfish">Stockfish 8</a> using 64 <a href="/Thread">threads</a> and a <a href="/Transposition_Table">transposition table</a> size of 1GiB, was won by AlphaZero using a single machine with 4 <a href="https://en.wikipedia.org/wiki/Tensor_processing_unit#First_generation">first-generation TPUs</a> with +28=72-0, 10 games were published. Despite a possible hardware advantage of AlphaZero and criticized playing conditions <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a>, this is a tremendous achievement.</p>
+<p>In the final <a href="https://en.wikipedia.org/wiki/Peer_review">peer reviewed</a> paper, published in <a href="https://en.wikipedia.org/wiki/Science_(journal)">Science magazine</a> in December 2018 <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a> along with supplementary materials <a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a>, a 1000 game match was reported with about 200 games published, versus various most recent Stockfish versions available at the time of the matches, that is Stockfish 8, a development version as of January 13, 2018 close to Stockfish 9, <a href="/Brainfish">Brainfish</a> with Cerebellum book, and Stockfish 9, in total AlphaZero winning 155 games and losing 6 games.</p>
+<p>Stockfish was configured according to its <a href="/TCEC_Season_9">2016 TCEC Season 9 superfinal</a> settings: 44 threads on 44 cores (two 2.2GHz <a href="/Intel">Intel</a> <a href="https://en.wikipedia.org/wiki/Xeon#E3-12xx_v4_series_%22Broadwell-WS%22">Xeon Broadwell</a> <a href="/X86-64">x86-64</a> CPUs with 22 cores, running <a href="/Linux">Linux</a>), a transposition table size of 32 GiB, and 6-men <a href="/Syzygy_Bases">Syzygy bases</a>. Time control was 3 hours per side and game plus 15 seconds increment per move. AlphaZero used a simple time control strategy: thinking for 1/20th of the remaining time, and selects moves greedily with respect to the root visit count. Each MCTS was executed on a single machine with 4 <a href="https://en.wikipedia.org/wiki/Tensor_processing_unit#First_generation">first-generation TPUs</a>.</p>
+<p>AlphaZero and Stockfish (except Brainfish) used no <a href="/Opening_Book">opening book</a>, 12 common human positions as well as the <a href="/TCEC_Season_9">2016 TCEC Season 9 superfinal</a> positions were played, originally selected by <a href="/Jeroen_Noomen">Jeroen Noomen</a> <a href="#fn15" class="footnote-ref" id="fnref15" role="doc-noteref"><sup>15</sup></a>. To ensure diversity against opponents (Brainfish) with a deterministic opening book, AlphaZero used a small amount of randomization in its opening moves. This avoided duplicate games but also resulted in more losses by AlphaZero.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Alpha-Beta">Alpha-Beta</a></li>
+<li><a href="/Alpha_I">Alpha I</a></li>
+<li>AlphaGo</li>
+<li><a href="/Neural_Networks">Chess Engines with Neural Networks</a></li>
+<li><a href="/Learning">Learning Chess Programs</a></li>
+<li><a href="/Leela_Chess_Zero">Leela Chess Zero</a></li>
+<li>Zeta36</li>
+</ul>
+<h2 id="publications">Publications</h2>
+<h3 id="2017">2017</h3>
+<ul>
+<li><a href="/David_Silver">David Silver</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Karen_Simonyan">Karen Simonyan</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, <a href="/Shih-Chieh_Huang">Aja Huang</a>, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, Lucas Baker, <a href="/Matthew_Lai">Matthew Lai</a>, Adrian Bolton, Yutian Chen, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, Fan Hui, <a href="/Laurent_Sifre">Laurent Sifre</a>, George van den Driessche, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Demis_Hassabis">Demis Hassabis</a> (<strong>2017</strong>). <em><a href="https://www.nature.com/nature/journal/v550/n7676/full/nature24270.html">Mastering the game of Go without human knowledge</a></em>. <a href="https://en.wikipedia.org/wiki/Nature_%28journal%29">Nature</a>, Vol. 550, <a href="https://www.gwern.net/docs/rl/2017-silver.pdf">pdf</a></li>
+<li><a href="/David_Silver">David Silver</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Marc_Lanctot">Marc Lanctot</a>, <a href="/Laurent_Sifre">Laurent Sifre</a>, <a href="/Dharshan_Kumaran">Dharshan Kumaran</a>, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, <a href="/Karen_Simonyan">Karen Simonyan</a>, <a href="/Demis_Hassabis">Demis Hassabis</a> (<strong>2017</strong>). <em>Mastering Chess and Shogi by Self-Play with a General Reinforcement Learning Algorithm</em>. <a href="https://arxiv.org/abs/1712.01815">arXiv:1712.01815</a></li>
+</ul>
+<h3 id="2018">2018</h3>
+<ul>
+<li><a href="/George_Rajna">George Rajna</a> (<strong>2018</strong>). <em>AlphaZero Just Playing</em>. <a href="http://vixra.org/abs/1802.0330">viXra:1802.0330</a></li>
+<li><a href="/Mathematician">Vinton G. Cerf</a> (<strong>2018</strong>). <em><a href="https://cacm.acm.org/magazines/2018/7/229041-on-neural-networks/fulltext">On Neural Networks</a></em>. <a href="/ACM">Communications of the ACM</a>, Vol. 61, No. 7
+<ul>
+<li><a href="/Hermann_Kaindl">Hermann Kaindl</a> (<strong>2018</strong>). <em><a href="https://cacm.acm.org/magazines/2018/12/232884-reclaim-internet-greatness/fulltext">Comment - Lookahead Search for Computer Chess</a></em>. <a href="/ACM">Communications of the ACM</a>, Vol. 61, No. 12</li>
+</ul></li>
+<li><a href="/Garry_Kasparov">Garry Kasparov</a> (<strong>2018</strong>). <em><a href="http://science.sciencemag.org/content/362/6419/1087">Chess, a Drosophila of reasoning</a></em>. <a href="https://en.wikipedia.org/wiki/Science_(journal)">Science</a>, Vol. 362, No. 6419</li>
+<li><a href="/Murray_Campbell">Murray Campbell</a> (<strong>2018</strong>). <em><a href="http://science.sciencemag.org/content/362/6419/1118">Mastering board games</a></em>. <a href="https://en.wikipedia.org/wiki/Science_(journal)">Science</a>, Vol. 362, No. 6419</li>
+<li><a href="/Chu-Hsuan_Hsueh">Chu-Hsuan Hsueh</a>, <a href="/I-Chen_Wu">I-Chen Wu</a>, <a href="/Jr-Chang_Chen">Jr-Chang Chen</a>, <a href="/Tsan-sheng_Hsu">Tsan-sheng Hsu</a> (<strong>2018</strong>). <em>AlphaZero for a Non-Deterministic Game</em>. <a href="/TAAI_2018">TAAI 2018</a> » <a href="/Chinese_Dark_Chess">Chinese Dark Chess</a></li>
+<li>Nai-Yuan Chang, <a href="/Chih-Hung_Chen">Chih-Hung Chen</a>, <a href="/Shun-Shii_Lin">Shun-Shii Lin</a>, Surag Nair (<strong>2018</strong>). <em><a href="https://dl.acm.org/citation.cfm?id=3278325">The Big Win Strategy on Multi-Value Network: An Improvement over AlphaZero Approach for 6x6 Othello</a></em>. <a href="https://dl.acm.org/citation.cfm?id=3278312">MLMI2018</a></li>
+<li><a href="/Yen-Chi_Chen">Yen-Chi Chen</a>, <a href="/Chih-Hung_Chen">Chih-Hung Chen</a>, <a href="/Shun-Shii_Lin">Shun-Shii Lin</a> (<strong>2018</strong>). <em><a href="https://dl.acm.org/citation.cfm?id=3293486">Exact-Win Strategy for Overcoming AlphaZero</a></em>. <a href="https://dl.acm.org/citation.cfm?id=3293475">CIIS 2018</a> <a href="#fn16" class="footnote-ref" id="fnref16" role="doc-noteref"><sup>16</sup></a></li>
+<li><a href="/David_Silver">David Silver</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Marc_Lanctot">Marc Lanctot</a>, <a href="/Laurent_Sifre">Laurent Sifre</a>, <a href="/Dharshan_Kumaran">Dharshan Kumaran</a>, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, <a href="/Karen_Simonyan">Karen Simonyan</a>, <a href="/Demis_Hassabis">Demis Hassabis</a> (<strong>2018</strong>). <em><a href="http://science.sciencemag.org/content/362/6419/1140">A general reinforcement learning algorithm that masters chess, shogi, and Go through self-play</a></em>. <a href="https://en.wikipedia.org/wiki/Science_(journal)">Science</a>, Vol. 362, No. 6419 <a href="#fn17" class="footnote-ref" id="fnref17" role="doc-noteref"><sup>17</sup></a></li>
+</ul>
+<h3 id="2019">2019</h3>
+<ul>
+<li><a href="/Matthew_Sadler">Matthew Sadler</a>, Natasha Regan (<strong>2019</strong>). <em><a href="https://www.newinchess.com/game-changer">Game Changer: AlphaZero's Groundbreaking Chess Strategies and the Promise of AI</a></em>. <a href="https://en.wikipedia.org/wiki/New_In_Chess">New In Chess</a></li>
+<li><a href="/Marc_Lanctot">Marc Lanctot</a>, <a href="/Edward_Lockhart">Edward Lockhart</a>, Jean-Baptiste Lespiau, Vinícius Flores Zambaldi, Satyaki Upadhyay, Julien Pérolat, Sriram Srinivasan, Finbarr Timbers, Karl Tuyls, Shayegan Omidshafiei, Daniel Hennes, Dustin Morrill, Paul Muller, Timo Ewalds, Ryan Faulkner, János Kramár, Bart De Vylder, Brennan Saeta, James Bradbury, David Ding, Sebastian Borgeaud, <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, Thomas Anthony, Edward Hughes, Ivo Danihelka, Jonah Ryan-Davis (<strong>2019</strong>). <em>OpenSpiel: A Framework for Reinforcement Learning in Games</em>. <a href="https://arxiv.org/abs/1908.09453">arXiv:1908.09453</a> <a href="#fn18" class="footnote-ref" id="fnref18" role="doc-noteref"><sup>18</sup></a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li>Nenad Tomašev, Ulrich Paquet, <a href="/Demis_Hassabis">Demis Hassabis</a>, Vladimir Kramnik (<strong>2020</strong>). <em>Assessing Game Balance with AlphaZero: Exploring Alternative Rule Sets in Chess</em>. <a href="https://arxiv.org/abs/2009.04374">arXiv:2009.04374</a></li>
+<li><a href="/Johannes_Czech">Johannes Czech</a>, <a href="/Patrick_Korus">Patrick Korus</a>, <a href="/Kristian_Kersting">Kristian Kersting</a> (<strong>2020</strong>). <em>Monte-Carlo Graph Search for AlphaZero</em>. <a href="https://arxiv.org/abs/2012.11045">arXiv:2012.11045</a> » <a href="/CrazyAra">CrazyAra</a></li>
+<li><a href="/Johannes_Czech">Johannes Czech</a>, <a href="/Patrick_Korus">Patrick Korus</a>, <a href="/Kristian_Kersting">Kristian Kersting</a> (<strong>2021</strong>). <em><a href="https://ojs.aaai.org/index.php/ICAPS/article/view/15952">Improving AlphaZero Using Monte-Carlo Graph Search</a></em>. <a href="https://ojs.aaai.org/index.php/ICAPS/issue/view/380">Proceedings of the Thirty-First International Conference on Automated Planning and Scheduling</a>, Vol. 31, <a href="https://www.ml.informatik.tu-darmstadt.de/papers/czech2021icaps_mcgs.pdf">pdf</a></li>
+<li><a href="/Dominik_Klein">Dominik Klein</a> (<strong>2021</strong>). <em><a href="https://github.com/asdfjkl/neural_network_chess">Neural Networks For Chess</a></em>. <a href="https://github.com/asdfjkl/neural_network_chess/releases/tag/v1.1">Release Version 1.1 · GitHub</a> <a href="#fn19" class="footnote-ref" id="fnref19" role="doc-noteref"><sup>19</sup></a></li>
+<li>Thomas McGrath, Andrei Kapishnikov, Nenad Tomašev, Adam Pearce, <a href="/Demis_Hassabis">Demis Hassabis</a>, Been Kim, Ulrich Paquet, Vladimir Kramnik (<strong>2021</strong>). <em>Acquisition of Chess Knowledge in AlphaZero</em>. <a href="https://arxiv.org/abs/2111.09259">arXiv:2111.09259</a> <a href="#fn20" class="footnote-ref" id="fnref20" role="doc-noteref"><sup>20</sup></a></li>
+<li>Nenad Tomašev, Ulrich Paquet, <a href="/Demis_Hassabis">Demis Hassabis</a>, Vladimir Kramnik (<strong>2022</strong>). <em><a href="https://cacm.acm.org/magazines/2022/2/258230-reimagining-chess-with-alphazero/fulltext">Reimagining Chess with AlphaZero</a></em>. <a href="/ACM">Communications of the ACM</a>, Vol. 65, No. 2</li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2017-1">2017</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65909">Google's AlphaGo team has been working on chess</a> by <a href="/Peter_Kappler">Peter Kappler</a>, <a href="/CCC">CCC</a>, December 06, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65910">Historic Milestone: AlphaZero</a> by Miguel Castanuela, <a href="/CCC">CCC</a>, December 06, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65911">AlphaZero beats AlphaGo Zero, Stockfish, and Elmo</a> by Carl Lumma, <a href="/CCC">CCC</a>, December 06, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65919">AlphaZero vs Stockfish</a> by Bigler, <a href="/CCC">CCC</a>, December 06, 2017</li>
+<li><a href="https://groups.google.com/forum/#!topic/fishcooking/pcFRIurN_l4">Deepmind drops the bomb</a> by Leebot, <a href="/Computer_Chess_Forums">FishCooking</a>, December 06, 2017</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=32392">AlphaZero beats Stockfish 8 by 64-36</a> by <a href="/Jeroen_Noomen">Venator</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, December 06, 2017</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=3153">Alpha Zero</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, December 06, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65924">AlphaGo Zero And AlphaZero, RomiChess done better</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/CCC">CCC</a>, December 07, 2017 » <a href="/RomiChess">RomiChess</a></li>
+<li><a href="http://www.hiarcs.net/forums/viewtopic.php?t=8709">BBC News; 'Google's ... DeepMind AI claims chess crown'</a> by pennine22, <a href="/Computer_Chess_Forums">Hiarcs Forum</a>, December 07, 2017</li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/S5W57LgDHQ8/WNiGb_25BgAJ">Press Release Stockfish vs. AlphaZero</a> by Michael Whiteley, <a href="/Computer_Chess_Forums">FishCooking</a>, December 08, 2017</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=32398">AlphaZero reinvents mobility and romanticism</a> by <a href="/Chris_Whittington">Chris Whittington</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, December 08, 2017 » <a href="/AlphaZero">Alpha Zero's "Immortal Zugzwang Game"</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65934">Reactions about AlphaZero from top GMs...</a> by <a href="/Norman_Schmidt">Norman Schmidt</a>, <a href="/CCC">CCC</a>, December 08, 2017 » <a href="/AlphaZero">Reactions From Top GMs, Stockfish Author</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65937">AlphaZero is not like other chess programs</a> by <a href="/Dann_Corbit">Dann Corbit</a>, <a href="/CCC">CCC</a>, December 08, 2017</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=65937&amp;start=10">Re: AlphaZero is not like other chess programs</a> by <a href="/Rein_Halbersma">Rein Halbersma</a>, <a href="/CCC">CCC</a>, December 09, 2017</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65945">Photo of Google Cloud TPU cluster</a> by <a href="/Norman_Schmidt">Norman Schmidt</a>, <a href="/CCC">CCC</a>, December 09, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65983">Cerebellum analysis of the AlphaZero - Stockfish Games</a> by Thomas Zipproth, <a href="/CCC">CCC</a>, December 11, 2017 » Cerebellum</li>
+<li><a href="https://groups.google.com/d/msg/fishcooking/ExSnY8xy7sY/_x32q6INCAAJ">Open letter to Google DeepMind</a> by Michael Stembera, <a href="/Computer_Chess_Forums">FishCooking</a>, December 12, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66005">recent article on alphazero ... 12/11/2017 ...</a> by Dan Ellwein, <a href="/CCC">CCC</a>, December 14, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66013">An AlphaZero inspired project</a> by Truls Edvard Stokke, <a href="/CCC">CCC</a>, December 14, 2017 » ZeroFish</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66026">AlphaZero - Tactical Abilities</a> by <a href="/David_Rasmussen">David Rasmussen</a>, <a href="/CCC">CCC</a>, December 16, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66047">In chess,AlphaZero outperformed Stockfish after just 4 hours</a> by <a href="/Ed_Schroder">Ed Schroder</a>, <a href="/CCC">CCC</a>, December 18, 2017</li>
+<li><a href="http://forum.computerschach.de/cgi-bin/mwf/topic_show.pl?tid=9653">AlphaZero - Youtube Videos</a> by Christoph Fieberg, <a href="/Computer_Chess_Forums">CSS Forum</a>, December 18, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66062">AlphaZero Chess is not that strong ...</a> by Vincent Lejeune, <a href="/CCC">CCC</a>, December 19, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66087">David Silver (Deepmind) inaccuracies</a> by <a href="/Ed_Schroder">Ed Schroder</a>, <a href="/CCC">CCC</a>, December 21, 2017</li>
+<li><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=32423">AZ vs SF - game 99</a> by <a href="/Ed_Schroder">Rebel</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, December 23, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66121">AlphaZero performance</a> by <a href="/Martin_Sedlak">Martin Sedlak</a>, <a href="/CCC">CCC</a>, December 25, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66179">A Simple Alpha(Go) Zero Tutorial</a> by Oliver Roese, <a href="/CCC">CCC</a>, December 30, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66184">AlphaZero: The 10 Top Shots</a> by Walter Eigenmann, <a href="/CCC">CCC</a>, December 30, 2017</li>
+</ul>
+<h3 id="2018-1">2018</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66214">SF was more seriously handicapped than I thought</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, January 02, 2018</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66299">Chess World to Google Deep Mind..Prove You beat Stockfish 8!</a> by AA Ross, <a href="/CCC">CCC</a>, January 11, 2018</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66349">Article:"How Alpha Zero Sees/Wins"</a> by AA Ross, <a href="/CCC">CCC</a>, January 17, 2018 » <a href="/AlphaZero">How AlphaZero Wins</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66443">Connect 4 AlphaZero implemented using Python...</a> by <a href="/Steve_Maughan">Steve Maughan</a>, <a href="/CCC">CCC</a>, January 29, 2018 » <a href="/Connect_Four">Connect Four</a>, <a href="/Python">Python</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66546">Seeing Alphazero in perspective ...</a> by Dan Ellwein, <a href="/CCC">CCC</a>, February 10, 2018</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69174">Matthew Sadler analysis of A0 vs SF [Edit: A0 published in Science?]</a> by trulses, <a href="/CCC">CCC</a>, December 06, 2018</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69175">Alphazero news</a> by arunsoorya1309, <a href="/CCC">CCC</a>, December 06, 2018</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69175&amp;start=25">Re: Alphazero news</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, December 07, 2018</p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69175&amp;start=32">Re: Alphazero news</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, December 07, 2018</p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69175&amp;start=44">Re: Alphazero news</a> by <a href="/Larry_Kaufman">Larry Kaufman</a>, <a href="/CCC">CCC</a>, December 07, 2018</p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69175&amp;start=46">Re: Alphazero news</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, December 07, 2018</p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69175&amp;start=60">Re: Alphazero news</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, December 07, 2018</p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69175&amp;start=63">Re: Alphazero news</a> by <a href="/Alexander_Lyashuk">crem</a>, <a href="/CCC">CCC</a>, December 07, 2018</p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69175&amp;start=64">Re: Alphazero news</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, December 07, 2018</p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69175&amp;start=66">Re: Alphazero news</a> by <a href="/Alexander_Lyashuk">crem</a>, <a href="/CCC">CCC</a>, December 07, 2018</p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69175&amp;start=72">Re: Alphazero news</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, December 07, 2018</p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69175&amp;start=75">Re: Alphazero news</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, <a href="/CCC">CCC</a>, December 07, 2018 » <a href="/Leela_Chess_Zero">Leela Chess Zero</a></p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69175&amp;start=82">Re: Alphazero news</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, December 07, 2018</p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69175&amp;start=86">Re: Alphazero news</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, December 07, 2018 » <a href="/Giraffe">Giraffe</a></p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69175&amp;start=93">Re: Alphazero news</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, December 08, 2018</p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69175&amp;start=185">Re: Alphazero news</a> by <a href="/Jonathan_Rosenthal">Jonathan Rosenthal</a>, <a href="/CCC">CCC</a>, December 11, 2018</p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69175&amp;start=192">Re: Alphazero news</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, December 11, 2018</p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69175&amp;start=193">Re: Alphazero news</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, December 11, 2018 » Stockfish Match</p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69175&amp;start=209">Re: Alphazero news</a> by <a href="/Milos_Stanisavljevic">Milos</a>, <a href="/CCC">CCC</a>, December 11, 2018</p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69175&amp;start=211">Re: Alphazero news</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, <a href="/CCC">CCC</a>, December 11, 2018</p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69175&amp;start=213">Re: Alphazero news</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, December 11, 2018</p>
+<p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69175&amp;start=232">Re: Alphazero news</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, December 12, 2018 » Stockfish Match</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69306">Policy training in Alpha Zero, LC0 ..</a> by <a href="/Chris_Whittington">Chris Whittington</a>, <a href="/CCC">CCC</a>, December 18, 2018 » <a href="/Leela_Chess_Zero">LC0</a></li>
+</ul>
+<h3 id="2019-1">2019</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69668">A0 policy head ambiguity</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, January 21, 2019</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=72498">AlphaZero No Castling Chess</a> by Javier Ros, <a href="/CCC">CCC</a>, December 03, 2019</li>
+</ul>
+<h3 id="2020--1">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73772">AlphaZero</a> by Pawel Wojcik, <a href="/CCC">CCC</a>, April 26, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75063">Chess variants made with help from alpha zero article</a> by jmartus, <a href="/CCC">CCC</a>, September 10, 2020</li>
+</ul>
+<h2 id="blog-posts">Blog Posts</h2>
+<ul>
+<li><a href="https://medium.com/oracledevs/lessons-from-implementing-alphazero-7e36e9054191">Lessons From Implementing AlphaZero</a> by <a href="https://medium.com/@akprasad">Aditya Prasad</a>, <a href="https://blogs.oracle.com/">Oracle Blog</a>, June 05, 2018</li>
+</ul>
+<p><a href="https://medium.com/oracledevs/lessons-from-alphazero-connect-four-e4a0ae82af68">Lessons from AlphaZero: Connect Four</a> by <a href="https://medium.com/@akprasad">Aditya Prasad</a>, <a href="https://blogs.oracle.com/">Oracle Blog</a>, June 13, 2018</p>
+<p><a href="https://medium.com/oracledevs/lessons-from-alphazero-part-3-parameter-tweaking-4dceb78ed1e5">Lessons from AlphaZero (part 3): Parameter Tweaking</a> by <a href="https://medium.com/@akprasad">Aditya Prasad</a>, <a href="https://blogs.oracle.com/">Oracle Blog</a>, June 20, 2018</p>
+<p><a href="https://medium.com/oracledevs/lessons-from-alphazero-part-4-improving-the-training-target-6efba2e71628">Lessons From AlphaZero (part 4): Improving the Training Target</a> by <a href="https://blogs.oracle.com/author/vish-abrams">Vish Abrams</a>, <a href="https://blogs.oracle.com/">Oracle Blog</a>, June 27, 2018</p>
+<p><a href="https://medium.com/oracledevs/lessons-from-alpha-zero-part-5-performance-optimization-664b38dc509e">Lessons From Alpha Zero (part 5): Performance Optimization</a> by <a href="https://blogs.oracle.com/author/anthony-young">Anthony Young</a>, <a href="https://blogs.oracle.com/">Oracle Blog</a>, July 03, 2018</p>
+<p><a href="https://medium.com/oracledevs/lessons-from-alpha-zero-part-6-hyperparameter-tuning-b1cfcbe4ca9a">Lessons From Alpha Zero (part 6) — Hyperparameter Tuning</a> by <a href="https://blogs.oracle.com/author/anthony-young">Anthony Young</a>, <a href="https://blogs.oracle.com/">Oracle Blog</a>, July 11, 2018</p>
+<ul>
+<li><a href="https://deepmind.com/blog/alphazero-shedding-new-light-grand-games-chess-shogi-and-go/">AlphaZero: Shedding new light on the grand games of chess, shogi and Go</a> by <a href="/David_Silver">David Silver</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a> and <a href="/Demis_Hassabis">Demis Hassabis</a>, DeepMind, December 03, 2018</li>
+<li><a href="http://blog.lczero.org/2018/12/alphazero-paper-and-lc0-v0191.html">AlphaZero paper, and Lc0 v0.19.1</a> by <a href="/Alexander_Lyashuk">crem</a>, <a href="/Leela_Chess_Zero">LCZero blog</a>, December 07, 2018</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/AlphaZero">AlphaZero from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/AlphaGo_Zero#AlphaZero">AlphaGo Zero - AlphaZero from Wikipedia</a></li>
+<li><span id="Keynote"></span>Keynote <a href="/David_Silver">David Silver</a> <a href="https://nips.cc/Conferences/2017">NIPS 2017</a> <a href="https://youtu.be/A3ekFcZ3KNw">Deep Reinforcement Learning Symposium AlphaZero</a>, December 06, 2017, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video <a href="#fn21" class="footnote-ref" id="fnref21" role="doc-noteref"><sup>21</sup></a></li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/A3ekFcZ3KNw" title="YouTube video A3ekFcZ3KNw" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=A3ekFcZ3KNw">Watch on YouTube</a></p>
+<ul>
+<li><a href="http://web.stanford.edu/~surag/posts/alphazero.html">A Simple Alpha(Go) Zero Tutorial</a> by Surag Nair, <a href="/Stanford_University">Stanford University</a>, December 29, 2017 <a href="#fn22" class="footnote-ref" id="fnref22" role="doc-noteref"><sup>22</sup></a></li>
+</ul>
+<p><a href="https://github.com/suragnair/alpha-zero-general">GitHub - suragnair/alpha-zero-general: A clean and simple implementation of a self-play learning algorithm based on AlphaGo Zero (any game, any framework!)</a></p>
+<ul>
+<li><a href="https://deepmind.com/blog/alphazero-shedding-new-light-grand-games-chess-shogi-and-go/">AlphaZero: Shedding new light on the grand games of chess, shogi and Go</a> by <a href="/David_Silver">David Silver</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a> and <a href="/Demis_Hassabis">Demis Hassabis</a>, DeepMind, December 03, 2018</li>
+<li>AlphaZero: Shedding new light on the grand games of chess, shogi and Go, December 06, 2018, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/7L2sUGcOgh0" title="YouTube video 7L2sUGcOgh0" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=7L2sUGcOgh0">Watch on YouTube</a></p>
+<h3 id="openspiel">OpenSpiel</h3>
+<ul>
+<li><a href="https://github.com/deepmind/open_spiel">GitHub - deepmind/open_spiel: OpenSpiel is a collection of environments and algorithms for research in general reinforcement learning and search/planning in games</a> <a href="#fn23" class="footnote-ref" id="fnref23" role="doc-noteref"><sup>23</sup></a>
+<ul>
+<li><a href="https://github.com/deepmind/open_spiel/tree/master/open_spiel/algorithms">open_spiel/open_spiel/algorithms at master · deepmind/open_spiel · GitHub</a>
+<ul>
+<li><a href="https://github.com/deepmind/open_spiel/tree/master/open_spiel/algorithms/alpha_zero">open_spiel/open_spiel/algorithms/alpha_zero at master · deepmind/open_spiel · GitHub</a></li>
+</ul></li>
+<li><a href="https://github.com/deepmind/open_spiel/tree/master/open_spiel/games">open_spiel/open_spiel/games at master · deepmind/open_spiel · GitHub</a>
+<ul>
+<li><a href="https://github.com/deepmind/open_spiel/tree/master/open_spiel/games/chess">open_spiel/open_spiel/games/chess at master · deepmind/open_spiel · GitHub</a></li>
+</ul></li>
+</ul></li>
+</ul>
+<h3 id="reports">Reports</h3>
+<h4 id="2017-2">2017</h4>
+<ul>
+<li><a href="https://www.theverge.com/2017/12/6/16741106/deepmind-ai-chess-alphazero-shogi-go">DeepMind’s AI became a superhuman chess player in a few hours, just for fun</a> by <a href="https://www.theverge.com/users/James%20Vincent">James Vincent</a>, <a href="https://en.wikipedia.org/wiki/The_Verge">The Verge</a>, December 06, 2017</li>
+<li><a href="http://www.telegraph.co.uk/science/2017/12/06/entire-human-chess-knowledge-learned-surpassed-deepminds-alphazero/">Entire human chess knowledge learned and surpassed by DeepMind's AlphaZero in four hours</a> by <a href="http://www.telegraph.co.uk/authors/sarah-knapton/">Sarah Knapton</a>, and <a href="http://www.telegraph.co.uk/authors/leon-watson/">Leon Watson</a>, <a href="https://en.wikipedia.org/wiki/Telegraph_Media_Group">The Telegraph</a>, December 06, 2017</li>
+<li><a href="http://www.bbc.co.uk/news/technology-42251535">Google's 'superhuman' DeepMind AI claims chess crown</a>, <a href="https://en.wikipedia.org/wiki/BBC_News">BBC News</a>, December 06, 2017 <a href="#fn24" class="footnote-ref" id="fnref24" role="doc-noteref"><sup>24</sup></a></li>
+<li><a href="https://chess24.com/en/read/news/deepmind-s-alphazero-crushes-chess">DeepMind’s AlphaZero crushes chess</a> by <a href="https://chess24.com/en/profile/colin">Colin McGourty</a>, chess24, December 06, 2017</li>
+<li><a href="http://www.danamackenzie.com/blog/?p=5068">One Small Step for Computers, One Giant Leap for Mankind</a> by <a href="/Dana_Mackenzie">Dana Mackenzie</a>, <a href="http://www.danamackenzie.com/blog/">Dana Blogs Chess</a>, December 06, 2017</li>
+<li><a href="https://www.chess.com/news/view/google-s-alphazero-destroys-stockfish-in-100-game-match">Google's AlphaZero Destroys Stockfish In 100-Game Match</a> by <a href="https://www.chess.com/member/mikeklein">Mike Klein</a>, Chess.com, December 06, 2017</li>
+<li><a href="https://en.chessbase.com/post/the-future-is-here-alphazero-learns-chess">The future is here – AlphaZero learns chess</a> by <a href="/Albert_Silver">Albert Silver</a>, <a href="/ChessBase">ChessBase News</a>, December 06, 2017</li>
+<li><span id="Reactions"></span><a href="https://www.chess.com/news/view/alphazero-reactions-from-top-gms-stockfish-author">AlphaZero: Reactions From Top GMs, Stockfish Author</a> by <a href="/Peter_Doggers">Peter Doggers</a>, Chess.com, December 08, 2017 » <a href="/Stockfish">Stockfish</a>, <a href="/Tord_Romstad">Tord Romstad</a> <a href="#fn25" class="footnote-ref" id="fnref25" role="doc-noteref"><sup>25</sup></a></li>
+<li><a href="https://medium.com/@josecamachocollados/is-alphazero-really-a-scientific-breakthrough-in-ai-bf66ae1c84f2">Is AlphaZero really a scientific breakthrough in AI?</a> by <a href="https://scholar.google.com/citations?user=NP4KdQQAAAAJ&amp;hl=en">Jose Camacho Collados</a>, <a href="https://medium.com/">Medium</a>, December 11, 2017 <a href="#fn26" class="footnote-ref" id="fnref26" role="doc-noteref"><sup>26</sup></a></li>
+<li><a href="https://en.chessbase.com/post/alpha-zero-comparing-orang-utans-and-apples">Alpha Zero: Comparing "Orangutans and Apples"</a> by <a href="https://en.chessbase.com/author/andre-schulz">André Schulz</a>, <a href="/ChessBase">ChessBase News</a>, December 13, 2017</li>
+<li><a href="https://en.chessbase.com/post/kasparov-on-deep-learning-in-chess">Kasparov on Deep Learning in chess</a> by <a href="/Frederic_Friedel">Frederic Friedel</a>, <a href="/ChessBase">ChessBase News</a>, December 13, 2017</li>
+</ul>
+<h4 id="2018-">2018 ...</h4>
+<ul>
+<li><a href="https://chess24.com/en/read/news/alphazero-really-is-that-good">AlphaZero really is that good</a> by <a href="http://michaelkonik.com/colin-mcgourty-chess-reporter/">Colin McGourty</a>, chess24, December 06, 2018</li>
+<li><a href="https://en.chessbase.com/post/the-full-alphazero-paper-is-published-at-long-last">Inside the (deep) mind of AlphaZero</a> by <a href="/Albert_Silver">Albert Silver</a>, <a href="/ChessBase">ChessBase News</a>, December 07, 2018</li>
+<li><a href="https://en.chessbase.com/post/standing-on-the-shoulders-of-giants">Standing on the shoulders of giants</a> by <a href="/Albert_Silver">Albert Silver</a>, <a href="/ChessBase">ChessBase News</a>, September 18, 2019</li>
+<li><a href="https://www.chess.com/article/view/no-castling-chess-kramnik-alphazero">Kramnik And AlphaZero: How To Rethink Chess‎</a>, Chess.com, December 02, 2019 <a href="#fn27" class="footnote-ref" id="fnref27" role="doc-noteref"><sup>27</sup></a></li>
+</ul>
+<h3 id="stockfish-match-1"><span id="StockfishMatch"></span>Stockfish Match</h3>
+<h4 id="round-1">Round 1</h4>
+<ul>
+<li><a href="http://www.chessgames.com/perl/chessplayer?pid=160016">The chess games of AlphaZero (Computer)</a> from <a href="http://www.chessgames.com/index.html">chessgames.com</a></li>
+<li><a href="http://www.zipproth.de/Brainfish/Cerebellum_AlphaZero.html">Cerebellum AlphaZero Analysis</a> » Cerebellum <a href="#fn28" class="footnote-ref" id="fnref28" role="doc-noteref"><sup>28</sup></a></li>
+<li><span id="ImmortalZugzwang"></span><a href="https://youtu.be/lFXJWPhDsSY">Deep Mind Alpha Zero's "Immortal Zugzwang Game" against Stockfish</a> by <a href="https://www.facebook.com/AGADMATOR">Antonio Radic</a>, December 07, 2017, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video <a href="#fn29" class="footnote-ref" id="fnref29" role="doc-noteref"><sup>29</sup></a> <a href="#fn30" class="footnote-ref" id="fnref30" role="doc-noteref"><sup>30</sup></a> » <a href="/Zugzwang">Zugzwang</a></li>
+<li><a href="https://youtu.be/pcdpgn9OINs">Deep Mind AI Alpha Zero Dismantles Stockfish's French Defense</a> by <a href="https://www.facebook.com/AGADMATOR">Antonio Radic</a>, December 08, 2017, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+<li><span id="DanaMackenzie"></span><a href="http://www.danamackenzie.com/blog/?p=5072">How AlphaZero Wins</a> by <a href="/Dana_Mackenzie">Dana Mackenzie</a>, <a href="http://www.danamackenzie.com/blog/">Dana Blogs Chess</a>, December 15, 2017 <a href="#fn31" class="footnote-ref" id="fnref31" role="doc-noteref"><sup>31</sup></a></li>
+</ul>
+<h4 id="round-2-3">Round 2, 3</h4>
+<ul>
+<li><a href="https://chess24.com/en/watch/live-tournaments/alphazero-vs-stockfish">AlphaZero vs. Stockfish</a> from chess24</li>
+<li><a href="https://youtu.be/nPexHaFL1uo">AlphaZero's Attacking Chess</a> by <a href="https://en.wikipedia.org/wiki/Anna_Rudolf">Anna Rudolf</a>, December 06, 2018, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video <a href="#fn32" class="footnote-ref" id="fnref32" role="doc-noteref"><sup>32</sup></a></li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/nPexHaFL1uo" title="YouTube video nPexHaFL1uo" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=nPexHaFL1uo">Watch on YouTube</a></p>
+<ul>
+<li><a href="https://youtu.be/bo5plUo86BU">"Exactly How to Attack" | DeepMind's AlphaZero vs. Stockfish</a> by <a href="/Matthew_Sadler">Matthew Sadler</a>, December 06, 2018, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+<li><a href="https://youtu.be/g0O3QmAhoeA">"Bold Sir Lancelot" | DeepMind's AlphaZero vs. Stockfish</a> by <a href="/Matthew_Sadler">Matthew Sadler</a>, December 06, 2018, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+<li><a href="https://youtu.be/2-wFUdvKTVQ">"All-in Defence" | DeepMind's AlphaZero vs. Stockfish</a> by <a href="/Matthew_Sadler">Matthew Sadler</a>, December 06, 2018, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+<li><a href="https://youtu.be/JacRX6cKIaY">"Long-term Sacrifice" | DeepMind's AlphaZero vs. Stockfish</a> by <a href="/Matthew_Sadler">Matthew Sadler</a>, December 06, 2018, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+<li><a href="https://youtu.be/jS26Ct34YrQ">"Endgame Class" | DeepMind's AlphaZero vs. Stockfish</a> by <a href="/Matthew_Sadler">Matthew Sadler</a>, December 06, 2018, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/jS26Ct34YrQ" title="YouTube video jS26Ct34YrQ" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=jS26Ct34YrQ">Watch on YouTube</a></p>
+<h3 id="misc">Misc</h3>
+<ul>
+<li><a href="https://medium.com/applied-data-science/how-to-build-your-own-alphazero-ai-using-python-and-keras-7f664945c188">How to build your own AlphaZero AI using Python and Keras</a> by <a href="https://www.linkedin.com/in/davidtfoster/">David Foster</a>, January 26, 2018 » <a href="/Connect_Four">Connect Four</a>, <a href="/Python">Python</a> <a href="#fn33" class="footnote-ref" id="fnref33" role="doc-noteref"><sup>33</sup></a></li>
+<li><a href="/Category:Can">Can</a> - <a href="https://en.wikipedia.org/wiki/Halleluhwah">Halleluwah</a>, from <a href="https://en.wikipedia.org/wiki/Tago_Mago">Tago Mago</a> 1971, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p>lineup: <a href="https://en.wikipedia.org/wiki/Irmin_Schmidt">Irmin Schmidt</a>, <a href="https://en.wikipedia.org/wiki/Michael_Karoli">Michael Karoli</a>, <a href="https://en.wikipedia.org/wiki/Holger_Czukay">Holger Czukay</a>, <a href="https://en.wikipedia.org/wiki/Damo_Suzuki">Damo Suzuki</a>, <a href="https://en.wikipedia.org/wiki/Jaki_Liebezeit">Jaki Liebezeit</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/2dZbAFmnRVA" title="YouTube video 2dZbAFmnRVA" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=2dZbAFmnRVA">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Engines">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/David_Silver">David Silver</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Marc_Lanctot">Marc Lanctot</a>, <a href="/Laurent_Sifre">Laurent Sifre</a>, <a href="/Dharshan_Kumaran">Dharshan Kumaran</a>, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, <a href="/Karen_Simonyan">Karen Simonyan</a>, <a href="/Demis_Hassabis">Demis Hassabis</a> (<strong>2018</strong>). <em><a href="http://science.sciencemag.org/content/362/6419/1140">A general reinforcement learning algorithm that masters chess, shogi, and Go through self-play</a></em>. <a href="https://en.wikipedia.org/wiki/Science_(journal)">Science</a>, Vol. 362, No. 6419, <a href="http://science.sciencemag.org/content/suppl/2018/12/05/362.6419.1140.DC1">Supplementary Materials</a> - Architecture<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=69175&amp;start=93">Re: Alphazero news</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, December 08, 2018<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>The principle of residual nets is to add the input of the layer to the output of each layer. With this simple modification training is faster and enables deeper networks, see <a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2017</strong>). <em><a href="http://ieeexplore.ieee.org/document/7875402/">Residual Networks for Computer Go</a></em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. PP, No. 99, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/resnet.pdf">pdf</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=65923">Residual Networks for Computer Go</a> by Brahim Hamadicharef, <a href="/CCC">CCC</a>, December 07, 2017<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=65937&amp;start=10">Re: AlphaZero is not like other chess programs</a> by <a href="/Rein_Halbersma">Rein Halbersma</a>, <a href="/CCC">CCC</a>, December 09, 2017<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="https://www.nextplatform.com/2017/04/05/first-depth-look-googles-tpu-architecture/">First In-Depth Look at Google’s TPU Architecture</a> by <a href="https://www.nextplatform.com/author/nicole/">Nicole Hemsoth</a>, <a href="https://www.nextplatform.com/">The Next Platform</a>, April 05, 2017<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=65945">Photo of Google Cloud TPU cluster</a> by <a href="/Norman_Schmidt">Norman Schmidt</a>, <a href="/CCC">CCC</a>, December 09, 2017<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="https://www.nextplatform.com/2017/05/17/first-depth-look-googles-new-second-generation-tpu/">First In-Depth Look at Google’s New Second-Generation TPU</a> by <a href="https://www.nextplatform.com/author/nicole/">Nicole Hemsoth</a>, <a href="https://www.nextplatform.com/">The Next Platform</a>, May 17, 2017<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="https://www.nextplatform.com/2017/05/22/hood-googles-tpu2-machine-learning-clusters/">Under The Hood Of Google’s TPU2 Machine Learning Clusters</a> by Paul Teich, <a href="https://www.nextplatform.com/">The Next Platform</a>, May 22, 2017<a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="/David_Silver">David Silver</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Marc_Lanctot">Marc Lanctot</a>, <a href="/Laurent_Sifre">Laurent Sifre</a>, <a href="/Dharshan_Kumaran">Dharshan Kumaran</a>, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, <a href="/Karen_Simonyan">Karen Simonyan</a>, <a href="/Demis_Hassabis">Demis Hassabis</a> (<strong>2017</strong>). <em>Mastering Chess and Shogi by Self-Play with a General Reinforcement Learning Algorithm</em>. <a href="https://arxiv.org/abs/1712.01815">arXiv:1712.01815</a><a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="/David_Silver">David Silver</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Marc_Lanctot">Marc Lanctot</a>, <a href="/Laurent_Sifre">Laurent Sifre</a>, <a href="/Dharshan_Kumaran">Dharshan Kumaran</a>, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, <a href="/Karen_Simonyan">Karen Simonyan</a>, <a href="/Demis_Hassabis">Demis Hassabis</a> (<strong>2017</strong>). <em>Mastering Chess and Shogi by Self-Play with a General Reinforcement Learning Algorithm</em>. <a href="https://arxiv.org/abs/1712.01815">arXiv:1712.01815</a><a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=3153">Alpha Zero</a> by <a href="/Mark_Watkins">BB+</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, December 06, 2017<a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="/David_Silver">David Silver</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Marc_Lanctot">Marc Lanctot</a>, <a href="/Laurent_Sifre">Laurent Sifre</a>, <a href="/Dharshan_Kumaran">Dharshan Kumaran</a>, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, <a href="/Karen_Simonyan">Karen Simonyan</a>, <a href="/Demis_Hassabis">Demis Hassabis</a> (<strong>2018</strong>). <em><a href="http://science.sciencemag.org/content/362/6419/1140">A general reinforcement learning algorithm that masters chess, shogi, and Go through self-play</a></em>. <a href="https://en.wikipedia.org/wiki/Science_(journal)">Science</a>, Vol. 362, No. 6419<a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p><a href="http://science.sciencemag.org/content/suppl/2018/12/05/362.6419.1140.DC1">Supplementary Materials</a><a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn15"><p><a href="http://science.sciencemag.org/content/suppl/2018/12/05/362.6419.1140.DC1">Supplementary Materials</a> S4<a href="#fnref15" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn16"><p><a href="https://github.com/LeelaChessZero/lc0/issues/799">"Exact-Win Strategy for Overcoming AlphaZero" · Issue #799 · LeelaChessZero/lc0 · GitHub</a><a href="#fnref16" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn17"><p><a href="https://deepmind.com/blog/alphazero-shedding-new-light-grand-games-chess-shogi-and-go/">AlphaZero: Shedding new light on the grand games of chess, shogi and Go</a> by <a href="/David_Silver">David Silver</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a> and <a href="/Demis_Hassabis">Demis Hassabis</a>, DeepMind, December 03, 2018<a href="#fnref17" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn18"><p><a href="https://github.com/deepmind/open_spiel/blob/master/docs/contributing.md">open_spiel/contributing.md at master · deepmind/open_spiel · GitHub</a><a href="#fnref18" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn19"><p><a href="https://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=78283">Book about Neural Networks for Chess</a> by dkl, <a href="/CCC">CCC</a>, September 29, 2021<a href="#fnref19" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn20"><p><a href="https://en.chessbase.com/post/acquisition-of-chess-knowledge-in-alphazero">Acquisition of Chess Knowledge in AlphaZero</a>, <a href="/ChessBase">ChessBase News</a>, November 18, 2021<a href="#fnref20" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn21"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=66059">AlphaZero explained by one creator</a> by <a href="/Mario_Carbonell_Martinez">Mario Carbonell Martinez</a>, <a href="/CCC">CCC</a>, December 19, 2017<a href="#fnref21" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn22"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=66179">A Simple Alpha(Go) Zero Tutorial</a> by Oliver Roese, <a href="/CCC">CCC</a>, December 30, 2017<a href="#fnref22" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn23"><p><a href="/Marc_Lanctot">Marc Lanctot</a>, <a href="/Edward_Lockhart">Edward Lockhart</a>, Jean-Baptiste Lespiau, Vinícius Flores Zambaldi, Satyaki Upadhyay, Julien Pérolat, Sriram Srinivasan, Finbarr Timbers, Karl Tuyls, Shayegan Omidshafiei, Daniel Hennes, Dustin Morrill, Paul Muller, Timo Ewalds, Ryan Faulkner, János Kramár, Bart De Vylder, Brennan Saeta, James Bradbury, David Ding, Sebastian Borgeaud, <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, Thomas Anthony, Edward Hughes, Ivo Danihelka, Jonah Ryan-Davis (<strong>2019</strong>). <em>OpenSpiel: A Framework for Reinforcement Learning in Games</em>. <a href="https://arxiv.org/abs/1908.09453">arXiv:1908.09453</a><a href="#fnref23" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn24"><p><a href="http://www.hiarcs.net/forums/viewtopic.php?t=8709">BBC News; 'Google's ... DeepMind AI claims chess crown'</a> by pennine22, <a href="/Computer_Chess_Forums">Hiarcs Forum</a>, December 07, 2017<a href="#fnref24" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn25"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=65934">Reactions about AlphaZero from top GMs...</a> by <a href="/Norman_Schmidt">Norman Schmidt</a>, <a href="/CCC">CCC</a>, December 08, 2017<a href="#fnref25" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn26"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=66005">recent article on alphazero ... 12/11/2017 ...</a> by Dan Ellwein, <a href="/CCC">CCC</a>, December 14, 2017<a href="#fnref26" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn27"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=72498">AlphaZero No Castling Chess</a> by Javier Ros, <a href="/CCC">CCC</a>, December 03, 2019<a href="#fnref27" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn28"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=65983">Cerebellum analysis of the AlphaZero - Stockfish Games</a> by Thomas Zipproth, <a href="/CCC">CCC</a>, December 11, 2017<a href="#fnref28" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn29"><p><a href="http://rybkaforum.net/cgi-bin/rybkaforum/topic_show.pl?tid=32398">AlphaZero reinvents mobility and romanticism</a> by <a href="/Chris_Whittington">Chris Whittington</a>, <a href="/Computer_Chess_Forums">Rybka Forum</a>, December 08, 2017<a href="#fnref29" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn30"><p><a href="https://en.wikipedia.org/wiki/Immortal_Zugzwang_Game">Immortal Zugzwang Game from Wikipedia</a><a href="#fnref30" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn31"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=66349">Article:"How Alpha Zero Sees/Wins"</a> by AA Ross, <a href="/CCC">CCC</a>, January 17, 2018<a href="#fnref31" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn32"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69181">Anna Rudolf analyzes a game of AlphaZero's</a> by <a href="/Stuart_Cracraft">Stuart Cracraft</a>, <a href="/CCC">CCC</a>, December 07, 2018<a href="#fnref32" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn33"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=66443">Connect 4 AlphaZero implemented using Python...</a> by <a href="/Steve_Maughan">Steve Maughan</a>, <a href="/CCC">CCC</a>, January 29, 2018<a href="#fnref33" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:GPU">GPU</a> · <a href="/Category:DCNN">DCNN</a> · <a href="/Category:MCTS">MCTS</a> · <a href="/Category:Can">Can</a> · <a href="/Category:Videos">Videos</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/AlphaZero">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

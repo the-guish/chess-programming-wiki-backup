@@ -1,0 +1,1467 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Best Magics so far - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Best Magics so far</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * <a href="/Sliding_Piece_Attacks">Sliding Piece Attacks</a> * <a href="/Magic_Bitboards">Magic Bitboards</a> * Best Magics so far</strong></p>
+<p>This page is intended to publish and share results on magic factors and shifts (64 - <strong>Bits used</strong>) for most dense magic bitboards tables. <a href="/Square_Mapping_Considerations">Little endian file and rank mapping</a> is used (a1 = 0), for other mappings simply transform the square.</p>
+<p>If you prefer your own magics, see <a href="/Looking_for_Magics">Looking for Magics</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#legende">Legende</a></li>
+<li><a href="#rook-magics">Rook Magics</a></li>
+<li><a href="#bishop-magics">Bishop Magics</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+</ol>
+</details><h2 id="legende">Legende</h2>
+<ul>
+<li><strong>sq</strong> - the square of a rook or bishop considering little endian file and rank mapping</li>
+<li><strong>#sq</strong> - index of that square in the 0..63 range</li>
+<li><strong>premask</strong> - the mask to get all relevant occupied bits, considering the <a href="/First_Rank_Attacks">inner six bits</a>.</li>
+<li><strong>bits</strong> - the <a href="/Population_Count">population count</a> of premask</li>
+<li><strong>used</strong> - hopefully less than <strong>bits</strong>, determines the <strong>shift</strong> (64 - <strong>used</strong>)</li>
+<li><strong>magic</strong> - the magic factor</li>
+<li><strong>postmask</strong> - attacks on the otherwise empty board</li>
+<li><strong>found by</strong> (optional) - the person who found that number.</li>
+</ul>
+<h2 id="rook-magics">Rook Magics</h2>
+<table>
+<thead>
+<tr>
+<th><p>sq</p></th>
+<th><p>#sq</p></th>
+<th><p>premask</p></th>
+<th><p>bits</p></th>
+<th><p>used</p></th>
+<th><p>magic</p></th>
+<th><p>postmask</p></th>
+<th><p>found by</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;"><p>a1</p></td>
+<td style="text-align:right;"><p>0</p></td>
+<td style="text-align:right;"><p>0x000101010101017E<br />
+. . . . . . . .<br />
+1 . . . . . . .<br />
+1 . . . . . . .<br />
+1 . . . . . . .<br />
+1 . . . . . . .<br />
+1 . . . . . . .<br />
+1 . . . . . . .<br />
+. 1 1 1 1 1 1 .</p></td>
+<td style="text-align:center;"><p>12</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>0x01010101010101FE<br />
+1 . . . . . . .<br />
+1 . . . . . . .<br />
+1 . . . . . . .<br />
+1 . . . . . . .<br />
+1 . . . . . . .<br />
+1 . . . . . . .<br />
+1 . . . . . . .<br />
+. 1 1 1 1 1 1 1</p></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>b1</p></td>
+<td style="text-align:right;"><p>1</p></td>
+<td style="text-align:right;"><p>0x000202020202027C</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>0x02020202020202FD</p></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>c1</p></td>
+<td style="text-align:right;"><p>2</p></td>
+<td style="text-align:right;"><p>0x000404040404047A</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>0x04040404040404FB</p></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>d1</p></td>
+<td style="text-align:right;"><p>3</p></td>
+<td style="text-align:right;"><p>0x0008080808080876</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>0x08080808080808F7</p></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>e1</p></td>
+<td style="text-align:right;"><p>4</p></td>
+<td style="text-align:right;"><p>0x001010101010106E</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>0x10101010101010EF</p></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>f1</p></td>
+<td style="text-align:right;"><p>5</p></td>
+<td style="text-align:right;"><p>0x002020202020205E</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>g1</p></td>
+<td style="text-align:right;"><p>6</p></td>
+<td style="text-align:right;"><p>0x004040404040403E</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>h1</p></td>
+<td style="text-align:right;"><p>7</p></td>
+<td style="text-align:right;"><p>0x008080808080807E</p></td>
+<td style="text-align:center;"><p>12</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>0x808080808080807F</p></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>a2</p></td>
+<td style="text-align:right;"><p>8</p></td>
+<td style="text-align:right;"><p>0x0001010101017E00</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>0x010101010101FE01</p></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>b2</p></td>
+<td style="text-align:right;"><p>9</p></td>
+<td style="text-align:right;"><p>0x0002020202027C00</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>0x020202020202FD02</p></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>c2</p></td>
+<td style="text-align:right;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>d2</p></td>
+<td style="text-align:right;"><p>11</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>e2</p></td>
+<td style="text-align:right;"><p>12</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>f2</p></td>
+<td style="text-align:right;"><p>13</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>g2</p></td>
+<td style="text-align:right;"><p>14</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>h2</p></td>
+<td style="text-align:right;"><p>15</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>a3</p></td>
+<td style="text-align:right;"><p>16</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>b3</p></td>
+<td style="text-align:right;"><p>17</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>c3</p></td>
+<td style="text-align:right;"><p>18</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>d3</p></td>
+<td style="text-align:right;"><p>19</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>e3</p></td>
+<td style="text-align:right;"><p>20</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>f3</p></td>
+<td style="text-align:right;"><p>21</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>g3</p></td>
+<td style="text-align:right;"><p>22</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>h3</p></td>
+<td style="text-align:right;"><p>23</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>a4</p></td>
+<td style="text-align:right;"><p>24</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>b4</p></td>
+<td style="text-align:right;"><p>25</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>c4</p></td>
+<td style="text-align:right;"><p>26</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>d4</p></td>
+<td style="text-align:right;"><p>27</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>e4</p></td>
+<td style="text-align:right;"><p>28</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>f4</p></td>
+<td style="text-align:right;"><p>29</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>g4</p></td>
+<td style="text-align:right;"><p>30</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>h4</p></td>
+<td style="text-align:right;"><p>31</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>a5</p></td>
+<td style="text-align:right;"><p>32</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>b5</p></td>
+<td style="text-align:right;"><p>33</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>c5</p></td>
+<td style="text-align:right;"><p>34</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>d5</p></td>
+<td style="text-align:right;"><p>35</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>e5</p></td>
+<td style="text-align:right;"><p>36</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>f5</p></td>
+<td style="text-align:right;"><p>37</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>g5</p></td>
+<td style="text-align:right;"><p>38</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>h5</p></td>
+<td style="text-align:right;"><p>39</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>a6</p></td>
+<td style="text-align:right;"><p>40</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>b6</p></td>
+<td style="text-align:right;"><p>41</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>c6</p></td>
+<td style="text-align:right;"><p>42</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>d6</p></td>
+<td style="text-align:right;"><p>43</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>e6</p></td>
+<td style="text-align:right;"><p>44</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>f6</p></td>
+<td style="text-align:right;"><p>45</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>g6</p></td>
+<td style="text-align:right;"><p>46</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>h6</p></td>
+<td style="text-align:right;"><p>47</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>a7</p></td>
+<td style="text-align:right;"><p>48</p></td>
+<td style="text-align:right;"><p>0x007E010101010100</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"><p>0x48FFFE99FECFAA00</p></td>
+<td style="text-align:right;"><p>0x01FE010101010101</p></td>
+<td style="text-align:right;"><p><a href="/Grant_Osborne">Grant Osborne</a></p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>b7</p></td>
+<td style="text-align:right;"><p>49</p></td>
+<td style="text-align:right;"><p>0x007C020202020200</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>9</p></td>
+<td style="text-align:right;"><p>0x48FFFE99FECFAA00</p></td>
+<td style="text-align:right;"><p>0x02FD020202020202</p></td>
+<td style="text-align:right;"><p>Grant Osborne</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>c7</p></td>
+<td style="text-align:right;"><p>50</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>9</p></td>
+<td style="text-align:right;"><p>0x497FFFADFF9C2E00</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>Grant Osborne</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>d7</p></td>
+<td style="text-align:right;"><p>51</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>9</p></td>
+<td style="text-align:right;"><p>0x613FFFDDFFCE9200</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>Grant Osborne</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>e7</p></td>
+<td style="text-align:right;"><p>52</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>9</p></td>
+<td style="text-align:right;"><p>0xffffffe9ffe7ce00</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p><a href="/Volker_Annuss">Volker Annuss</a></p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>f7</p></td>
+<td style="text-align:right;"><p>53</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>9</p></td>
+<td style="text-align:right;"><p>0xfffffff5fff3e600</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>Volker Annuss</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>g7</p></td>
+<td style="text-align:right;"><p>54</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:center;"><p>9</p></td>
+<td style="text-align:right;"><p>0x0003ff95e5e6a4c0</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p><a href="/Niklas_Fiekas">Niklas Fiekas</a></p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>h7</p></td>
+<td style="text-align:right;"><p>55</p></td>
+<td style="text-align:right;"><p>0x007E808080808000</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"><p>0x510FFFF5F63C96A0</p></td>
+<td style="text-align:right;"><p>0x807F808080808080</p></td>
+<td style="text-align:right;"><p>Grant Osborne</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>a8</p></td>
+<td style="text-align:right;"><p>56</p></td>
+<td style="text-align:right;"><p>0x7E01010101010100</p></td>
+<td style="text-align:center;"><p>12</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:right;"><p>0xEBFFFFB9FF9FC526</p></td>
+<td style="text-align:right;"><p>0xFE01010101010101</p></td>
+<td style="text-align:right;"><p>Grant Osborne</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>b8</p></td>
+<td style="text-align:right;"><p>57</p></td>
+<td style="text-align:right;"><p>0x7C02020202020200</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"><p>0x61FFFEDDFEEDAEAE</p></td>
+<td style="text-align:right;"><p>0xFD02020202020202</p></td>
+<td style="text-align:right;"><p>Grant Osborne</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>c8</p></td>
+<td style="text-align:right;"><p>58</p></td>
+<td style="text-align:right;"><p>0x7A04040404040400</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"><p>0x53BFFFEDFFDEB1A2</p></td>
+<td style="text-align:right;"><p>0xFB04040404040404</p></td>
+<td style="text-align:right;"><p>Grant Osborne</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>d8</p></td>
+<td style="text-align:right;"><p>59</p></td>
+<td style="text-align:right;"><p>0x7608080808080800</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"><p>0x127FFFB9FFDFB5F6</p></td>
+<td style="text-align:right;"><p>0xF708080808080808</p></td>
+<td style="text-align:right;"><p>Grant Osborne</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>e8</p></td>
+<td style="text-align:right;"><p>60</p></td>
+<td style="text-align:right;"><p>0x6E10101010101000</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"><p>0x411FFFDDFFDBF4D6</p></td>
+<td style="text-align:right;"><p>0xEF10101010101010</p></td>
+<td style="text-align:right;"><p>Grant Osborne</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>f8</p></td>
+<td style="text-align:right;"><p>61</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>g8</p></td>
+<td style="text-align:right;"><p>62</p></td>
+<td style="text-align:right;"><p>0x3E40404040404000</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:center;"><p>10</p></td>
+<td style="text-align:right;"><p>0x0003ffef27eebe74</p></td>
+<td style="text-align:right;"><p>0xBF40404040404040</p></td>
+<td style="text-align:right;"><p><a href="/Peter_Österlund">Peter Österlund</a></p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>h8</p></td>
+<td style="text-align:right;"><p>63</p></td>
+<td style="text-align:right;"><p>0x7E80808080808000</p></td>
+<td style="text-align:center;"><p>12</p></td>
+<td style="text-align:center;"><p>11</p></td>
+<td style="text-align:right;"><p>0x7645FFFECBFEA79E</p></td>
+<td style="text-align:right;"><p>0x7F80808080808080</p></td>
+<td style="text-align:right;"><p>Grant Osborne</p></td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="bishop-magics">Bishop Magics</h2>
+<table>
+<thead>
+<tr>
+<th><p>sq</p></th>
+<th><p>#sq</p></th>
+<th><p>premask</p></th>
+<th><p>bits</p></th>
+<th><p>used</p></th>
+<th><p>magic</p></th>
+<th><p>postmask</p></th>
+<th><p>found by</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;"><p>a1</p></td>
+<td style="text-align:right;"><p>0</p></td>
+<td style="text-align:right;"><p>0x0040201008040200<br />
+. . . . . . . .<br />
+. . . . . . 1 .<br />
+. . . . . 1 . .<br />
+. . . . 1 . . .<br />
+. . . 1 . . . .<br />
+. . 1 . . . . .<br />
+. 1 . . . . . .<br />
+. . . . . . . .</p></td>
+<td style="text-align:center;"><p>6</p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"><p>0xffedf9fd7cfcffff</p></td>
+<td style="text-align:right;"><p>0x8040201008040200<br />
+. . . . . . . 1<br />
+. . . . . . 1 .<br />
+. . . . . 1 . .<br />
+. . . . 1 . . .<br />
+. . . 1 . . . .<br />
+. . 1 . . . . .<br />
+. 1 . . . . . .<br />
+. . . . . . . .</p></td>
+<td style="text-align:right;"><p><a href="/Gerd_Isenberg">Gerd Isenberg</a></p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>b1</p></td>
+<td style="text-align:right;"><p>1</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>4</p></td>
+<td style="text-align:right;"><p>0xfc0962854a77f576</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p><a href="/Gerd_Isenberg">Gerd Isenberg</a></p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>c1</p></td>
+<td style="text-align:right;"><p>2</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>d1</p></td>
+<td style="text-align:right;"><p>3</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>e1</p></td>
+<td style="text-align:right;"><p>4</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>f1</p></td>
+<td style="text-align:right;"><p>5</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>g1</p></td>
+<td style="text-align:right;"><p>6</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>4</p></td>
+<td style="text-align:right;"><p>0xfc0a66c64a7ef576</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>Gerd Isenberg</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>h1</p></td>
+<td style="text-align:right;"><p>7</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>6</p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"><p>0x7ffdfdfcbd79ffff</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>Gerd Isenberg</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>a2</p></td>
+<td style="text-align:right;"><p>8</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>4</p></td>
+<td style="text-align:right;"><p>0xfc0846a64a34fff6</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>Gerd Isenberg</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>b2</p></td>
+<td style="text-align:right;"><p>9</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>4</p></td>
+<td style="text-align:right;"><p>0xfc087a874a3cf7f6</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>Gerd Isenberg</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>c2</p></td>
+<td style="text-align:right;"><p>10</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>d2</p></td>
+<td style="text-align:right;"><p>11</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>e2</p></td>
+<td style="text-align:right;"><p>12</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>f2</p></td>
+<td style="text-align:right;"><p>13</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>g2</p></td>
+<td style="text-align:right;"><p>14</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>4</p></td>
+<td style="text-align:right;"><p>0xfc0864ae59b4ff76</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>Gerd Isenberg</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>h2</p></td>
+<td style="text-align:right;"><p>15</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>4</p></td>
+<td style="text-align:right;"><p>0x3c0860af4b35ff76</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>Gerd Isenberg</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>a3</p></td>
+<td style="text-align:right;"><p>16</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>4</p></td>
+<td style="text-align:right;"><p>0x73C01AF56CF4CFFB</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p><a href="/Richard_Pijl">Richard Pijl</a></p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>b3</p></td>
+<td style="text-align:right;"><p>17</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>4</p></td>
+<td style="text-align:right;"><p>0x41A01CFAD64AAFFC</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>Richard Pijl</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>c3</p></td>
+<td style="text-align:right;"><p>18</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>d3</p></td>
+<td style="text-align:right;"><p>19</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>e3</p></td>
+<td style="text-align:right;"><p>20</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>f3</p></td>
+<td style="text-align:right;"><p>21</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>g3</p></td>
+<td style="text-align:right;"><p>22</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>4</p></td>
+<td style="text-align:right;"><p>0x7c0c028f5b34ff76</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>Gerd Isenberg</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>h3</p></td>
+<td style="text-align:right;"><p>23</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>4</p></td>
+<td style="text-align:right;"><p>0xfc0a028e5ab4df76</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>Gerd Isenberg</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>a4</p></td>
+<td style="text-align:right;"><p>24</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>b4</p></td>
+<td style="text-align:right;"><p>25</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>c4</p></td>
+<td style="text-align:right;"><p>26</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>d4</p></td>
+<td style="text-align:right;"><p>27</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>9</p></td>
+<td style="text-align:center;"><p>9</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>e4</p></td>
+<td style="text-align:right;"><p>28</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>9</p></td>
+<td style="text-align:center;"><p>9</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>f4</p></td>
+<td style="text-align:right;"><p>29</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>g4</p></td>
+<td style="text-align:right;"><p>30</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>h4</p></td>
+<td style="text-align:right;"><p>31</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>a5</p></td>
+<td style="text-align:right;"><p>32</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>b5</p></td>
+<td style="text-align:right;"><p>33</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>c5</p></td>
+<td style="text-align:right;"><p>34</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>d5</p></td>
+<td style="text-align:right;"><p>35</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>9</p></td>
+<td style="text-align:center;"><p>9</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>e5</p></td>
+<td style="text-align:right;"><p>36</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>9</p></td>
+<td style="text-align:center;"><p>9</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>f5</p></td>
+<td style="text-align:right;"><p>37</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>g5</p></td>
+<td style="text-align:right;"><p>38</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>h5</p></td>
+<td style="text-align:right;"><p>39</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>a6</p></td>
+<td style="text-align:right;"><p>40</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>4</p></td>
+<td style="text-align:right;"><p>0xDCEFD9B54BFCC09F</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>Richard Pijl</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>b6</p></td>
+<td style="text-align:right;"><p>41</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>4</p></td>
+<td style="text-align:right;"><p>0xF95FFA765AFD602B</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>Richard Pijl</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>c6</p></td>
+<td style="text-align:right;"><p>42</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>d6</p></td>
+<td style="text-align:right;"><p>43</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>e6</p></td>
+<td style="text-align:right;"><p>44</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>f6</p></td>
+<td style="text-align:right;"><p>45</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:center;"><p>7</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>g6</p></td>
+<td style="text-align:right;"><p>46</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>4</p></td>
+<td style="text-align:right;"><p>0x43ff9a5cf4ca0c01</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>Gerd Isenberg</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>h6</p></td>
+<td style="text-align:right;"><p>47</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>4</p></td>
+<td style="text-align:right;"><p>0x4BFFCD8E7C587601</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>Richard Pijl</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>a7</p></td>
+<td style="text-align:right;"><p>48</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>4</p></td>
+<td style="text-align:right;"><p>0xfc0ff2865334f576</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>Gerd Isenberg</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>b7</p></td>
+<td style="text-align:right;"><p>49</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>4</p></td>
+<td style="text-align:right;"><p>0xfc0bf6ce5924f576</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>Gerd Isenberg</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>c7</p></td>
+<td style="text-align:right;"><p>50</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>d7</p></td>
+<td style="text-align:right;"><p>51</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>e7</p></td>
+<td style="text-align:right;"><p>52</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>f7</p></td>
+<td style="text-align:right;"><p>53</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>g7</p></td>
+<td style="text-align:right;"><p>54</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>4</p></td>
+<td style="text-align:right;"><p>0xc3ffb7dc36ca8c89</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>Gerd Isenberg</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>h7</p></td>
+<td style="text-align:right;"><p>55</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>4</p></td>
+<td style="text-align:right;"><p>0xc3ff8a54f4ca2c89</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>Gerd Isenberg</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>a8</p></td>
+<td style="text-align:right;"><p>56</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>6</p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"><p>0xfffffcfcfd79edff</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>Gerd Isenberg</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>b8</p></td>
+<td style="text-align:right;"><p>57</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>4</p></td>
+<td style="text-align:right;"><p>0xfc0863fccb147576</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>Gerd Isenberg</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>c8</p></td>
+<td style="text-align:right;"><p>58</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>d8</p></td>
+<td style="text-align:right;"><p>59</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>e8</p></td>
+<td style="text-align:right;"><p>60</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>f8</p></td>
+<td style="text-align:right;"><p>61</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>g8</p></td>
+<td style="text-align:right;"><p>62</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:center;"><p>4</p></td>
+<td style="text-align:right;"><p>0xfc087e8e4bb2f736</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>Gerd Isenberg</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>h8</p></td>
+<td style="text-align:right;"><p>63</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:center;"><p>6</p></td>
+<td style="text-align:center;"><p>5</p></td>
+<td style="text-align:right;"><p>0x43ff9e4ef4ca2c89</p></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"><p>Gerd Isenberg</p></td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64578">Looking for dense magics</a> by Lucas Braesch, <a href="/CCC">CCC</a>, July 11, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65187">Disproving the existence of some magics</a> by <a href="/Niklas_Fiekas">Niklas Fiekas</a>, <a href="/CCC">CCC</a>, September 16, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=67051">No bishop magics with fixed shift 8</a> by <a href="/Niklas_Fiekas">Niklas Fiekas</a>, <a href="/CCC">CCC</a>, April 09, 2018</li>
+</ul>
+<p><strong><a href="/Magic_Bitboards">Up one level</a></strong></p>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Best_Magics_so_far">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, Niklasf.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

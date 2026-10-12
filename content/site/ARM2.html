@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ARM2 - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">ARM2</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Hardware">Hardware</a> * ARM2</strong></p>
+<p><strong>ARM2</strong>, (ARM3)<br />
+the Acorn RISC Machine <a href="https://en.wikipedia.org/wiki/List_of_ARM_microarchitectures">ARMv2 architecture</a> is a 32-bit <a href="https://en.wikipedia.org/wiki/CMOS">CMOS</a> <a href="https://en.wikipedia.org/wiki/Reduced_instruction_set_computer">reduced instruction set computer</a>, first released in 1987 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> as successor of the initial ARM (1985), designed by <a href="https://en.wikipedia.org/wiki/Sophie_Wilson">Sophie Wilson</a> and <a href="https://en.wikipedia.org/wiki/Steve_Furber">Steve Furber</a> in 1984. It features a 32-bit data bus, a <a href="https://en.wikipedia.org/wiki/26-bit">26-bit</a> address space and sixteen 32-bit <a href="https://en.wikipedia.org/wiki/Processor_register">registers</a> (r0 - r15, including <a href="https://en.wikipedia.org/wiki/Program_counter">PC</a> and <a href="https://en.wikipedia.org/wiki/Call_stack#Structure">SP</a>) <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>, and a 3-stage <a href="https://en.wikipedia.org/wiki/Instruction_pipeline">pipelined</a> (Fetch, Decode, Execute) <a href="https://en.wikipedia.org/wiki/Von_Neumann_architecture">Von Neumann architecture</a>. The ARM is a <a href="/Endianness">bi endian</a> machine, per default <a href="/Little-endian">little-endian</a>. <span id="Assembly"></span></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#features">Features</a></li>
+<li><a href="#computer-chess">Computer Chess</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#manuals">Manuals</a></li>
+<li><a href="#postings">Postings</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="features">Features</h2>
+<p>The ARM <a href="https://en.wikipedia.org/wiki/Instruction_set">instruction set</a> features three operand instructions, and <a href="https://en.wikipedia.org/wiki/ARM_architecture#Conditional_execution">conditional execution</a> to <a href="/Avoiding_Branches">avoid conditional branches</a>. Some sample ARM <a href="/Assembly">assembly</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> :</p>
+<pre><code>  CMP    r0, r1           ; set flags
+  ADDGE  r2, r2, r3       ; if (r0 &gt;= r1) then r2 := r2 + r3;
+  ADDLT  r2, r2, r4       ; else r2 := r2 + r4;</code></pre>
+<p>A 32-bit <a href="https://en.wikipedia.org/wiki/Barrel_shifter">barrel shifter</a> can be used without performance penalty with most arithmetic instructions and address calculations:</p>
+<pre><code>  ADD  r2, r3, r3, lsl #2 ; r2 := r3 + (r3 &lt;&lt; 2)
+                          ; → r2 := r3 + r3 * 4
+                          ; → r2 := r3 * 5 </code></pre>
+<h2 id="computer-chess">Computer Chess</h2>
+<p>The ARM2 processor was embedded inside the <a href="/TASC">TASC</a> <a href="/ChessMachine">ChessMachine</a> plugged in as <a href="https://en.wikipedia.org/wiki/ISA_bus">ISA card</a> inside an <a href="/IBM_PC">IBM PC</a>, running <a href="/Gideon">Gideon</a> and <a href="/The_King">The King</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>, and was further used in various <a href="/Dedicated_Chess_Computers">dedicated chess computers</a> by Hegener &amp; Glaser such as the <a href="/Mephisto_RISC">Mephisto RISC</a>.</p>
+<ul>
+<li><a href="/Category:ARM2">:Category:ARM2</a></li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Acorn_Archimedes">Acorn Archimedes</a></li>
+<li><a href="/ARM6">ARM6</a></li>
+</ul>
+<h2 id="manuals">Manuals</h2>
+<ul>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.qrc0001m/QRC0001_UAL.pdf">ARM® and Thumb®-2 Instruction Set Quick Reference Card</a> (pdf)</li>
+<li><a href="http://www.peter-cockerell.net/aalp/html/frames.html">ARM Assembly Language Programming</a> by <a href="http://www.peter-cockerell.net/">Pete Cockerell</a></li>
+</ul>
+<h2 id="postings">Postings</h2>
+<ul>
+<li><a href="https://groups.google.com/d/msg/comp.arch/hPsDLEPf2eo/nvJR_d7nnyYJ">Some facts about the Acorn RISC Machine</a> by <a href="https://en.wikipedia.org/wiki/Sophie_Wilson">Roger Wilson</a>, <a href="https://groups.google.com/forum/#!forum/comp.arch">comp.arch</a>, November 02, 1988</li>
+<li><a href="https://groups.google.com/forum/#!msg/rec.games.chess.computer/LN4AMZzpvJE/7_s4MVp7C2UJ">StrongARM speed of Streater program (was Re: M-Chess Pro 6.0 program description)</a> by <a href="/Stephen_B._Streater">Stephen B. Streater</a>, <a href="/Computer_Chess_Forums">rgcc</a>, October 21, 1996 » reply to <a href="/Ed_Schroder">Ed Schröder</a> on <a href="/ARM2">ARM2</a> vs. StrongARM</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/ARM_architecture#Acorn_RISC_Machine:_ARM2">Acorn RISC Machine: ARM2 from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Amber_%28processor_core%29">Amber (processor core) from Wikipedia</a></li>
+<li><a href="https://en.wikichip.org/wiki/acorn/microarchitectures/arm2">ARM2 - Microarchitectures - Acorn - WikiChip</a></li>
+<li><a href="https://en.wikichip.org/wiki/acorn/microarchitectures/arm3">ARM3 - Microarchitectures - Acorn - WikiChip</a></li>
+<li><a href="http://www.heyrick.co.uk/armwiki/Main_Page">ARMwiki</a></li>
+<li><a href="http://www.heyrick.co.uk/assembler/">ARM Assembler</a></li>
+<li><a href="http://www.heyrick.co.uk/assembler/qfinder.html">Instruction set quick finder</a></li>
+<li><a href="https://www.schach-computer.info/wiki/index.php/ARM">ARM</a> from <a href="https://www.schach-computer.info/wiki/index.php/Hauptseite_En">Schachcomputer.info Wiki</a></li>
+<li><a href="https://en.wikipedia.org/wiki/RISC_OS">RISC OS from Wikipedia</a></li>
+<li><a href="https://www.riscosopen.org/wiki/documentation/show/ARM%20Hardware%20Overview">ARM Hardware Overview</a></li>
+<li><a href="http://infocenter.arm.com/help/index.jsp">ARM Information Center</a></li>
+<li><a href="https://www.realworldtech.com/arms-race/ARM’s">Race to Embedded World Domination</a> by <a href="https://www.realworldtech.com/author/pdemone/">Paul DeMone</a>, <a href="https://www.realworldtech.com/">Real World Tech</a>, November 9, 2000</li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Hardware">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://groups.google.com/forum/#!msg/comp.arch/hPsDLEPf2eo/nvJR_d7nnyYJ">Some facts about the Acorn RISC Machine</a> by <a href="https://en.wikipedia.org/wiki/Sophie_Wilson">Roger Wilson</a>, comp.arch, November 02, 1988<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.peter-cockerell.net/aalp/html/ch-2.html">ARM Assembly Language Programming - Chapter 2 - Inside the ARM</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>Samples from <a href="https://de.wikipedia.org/wiki/ARM-Architektur#Besonderheiten_des_Befehlssatzes">ARM-Architektur - Besonderheiten des Befehlssatzes | Wikipedia.de</a> (German)<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://www.schach-computer.info/wiki/index.php/TASC_ChessMachine">TASC ChessMachine</a> from <a href="https://www.schach-computer.info/wiki/index.php/Hauptseite_En">Schachcomputer.info Wiki</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/ARM2">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
