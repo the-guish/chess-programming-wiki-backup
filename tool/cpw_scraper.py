@@ -183,7 +183,9 @@ class State:
 
     def next_pending(self) -> str | None:
         row = self.db.execute(
-            "SELECT path FROM urls WHERE status='pending' ORDER BY rowid LIMIT 1"
+            "SELECT path FROM urls WHERE status='pending'"
+            # backlink lists can be rebuilt from the pages, so they go last
+            " ORDER BY path LIKE '/Special:WhatLinksHere/%', rowid LIMIT 1"
         ).fetchone()
         return row[0] if row else None
 
