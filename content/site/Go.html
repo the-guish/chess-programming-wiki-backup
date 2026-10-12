@@ -1,0 +1,846 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Go - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Go</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Games">Games</a> * Go</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/2/2e/Go_board.jpg" alt="19*19 Go board 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">19</span></span>19 Go board <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>*</p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://en.wikipedia.org/wiki/The_Age_of_Intelligent_Machines">The Age of Intelligent Machines</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p>The game of <strong>Go</strong> has attracted game researchers and programmers as an ambitious <a href="/Artificial_Intelligence">AI-challenge</a>. <a href="/Albert_Zobrist">Albert Zobrist</a> was a pioneer, who wrote the first Go program in 1968 as part of his Ph.D. Thesis on <a href="/Pattern_Recognition">pattern recognition</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. Chess programmers, beside others, <a href="/Rémi_Coulom">Rémi Coulom</a> and <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a> became successful Go programmers with their programs CrazyStone and Leela respectively. Competitive computer Go, as organized by the <a href="/ICGA">ICGA</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>, is played on boards with 9x9 as well with default 19x19 <a href="https://en.wikipedia.org/wiki/Grid_graph">grids</a>. Since Go lacks a simple <a href="/Evaluation">evaluation</a> function mainly based on counting <a href="/Material">material</a>, attempts to apply similar techniques and algorithms as in chess were less successful. The breakthrough in computer Go was accomplished by <a href="/Monte-Carlo_Tree_Search">Monte-Carlo tree search</a> and <a href="/Deep_Learning">deep learning</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#progress">Progress</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#monte-carlo-go">Monte-Carlo Go</a></li>
+<li><a href="#cnns">CNNs</a></li>
+<li><a href="#alphago">AlphaGo</a></li>
+<li><a href="#alphago-zero--alphazero">AlphaGo Zero &amp;amp; AlphaZero</a></li>
+<li><a href="#fine-art">Fine Art</a></li>
+</ol>
+</details></li>
+<li><a href="#quotes">Quotes</a></li>
+<li><a href="#computer-olympiads">Computer Olympiads</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#see-also">See also</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#search">Search</a></li>
+<li><a href="#learning">Learning</a></li>
+<li><a href="#misc">Misc</a></li>
+<li><a href="#videos-on-go">Videos on Go</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#selected-publications">Selected Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1960-">1960 ...</a></li>
+<li><a href="#1970-">1970 ...</a></li>
+<li><a href="#1980-">1980 ...</a></li>
+<li><a href="#1990">1990</a></li>
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2005--1">2005 ...</a></li>
+<li><a href="#2010--1">2010 ...</a></li>
+<li><a href="#2015--1">2015 ...</a></li>
+<li><a href="#2020--1">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#tournaments">Tournaments</a></li>
+<li><a href="#computer-go-archives">Computer Go Archives</a></li>
+<li><a href="#computer-go-pages">Computer Go Pages</a></li>
+<li><a href="#open-source">Open Source</a></li>
+<li><a href="#misc-1">Misc</a></li>
+<li><a href="#go-challenge">Go Challenge</a></li>
+<li><a href="#alphago-1">AlphaGo</a></li>
+<li><a href="#fine-art-1">Fine Art</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="progress">Progress</h2>
+<h3 id="monte-carlo-go">Monte-Carlo Go</h3>
+<p>After early trials to apply <a href="https://en.wikipedia.org/wiki/Monte_Carlo_method">Monte Carlo methods</a> to a Go playing program by <a href="/Bernd_Brügmann">Bernd Brügmann</a> in 1993 <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>, recent developments since the mid 2000s by <a href="/Bruno_Bouzy">Bruno Bouzy</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>, and by <a href="/Rémi_Coulom">Rémi Coulom</a>, who coined the term <a href="/Monte-Carlo_Tree_Search">Monte-Carlo Tree Search</a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>, in conjunction with <a href="/UCT">UCT</a> (Upper Confidence bounds applied to Trees) introduced by <a href="/Levente_Kocsis">Levente Kocsis</a> and <a href="/Csaba_Szepesvári">Csaba Szepesvári</a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>, led to a breakthrough in computer Go <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>. <span id="CNN"></span></p>
+<h3 id="cnns">CNNs</h3>
+<p>As mentioned by <a href="/Ilya_Sutskever">Ilya Sutskever</a> and Vinod Nair in 2008 <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a>, <a href="/Neural_Networks">convolutional neural networks</a> are well suited for problems with a <a href="https://en.wikipedia.org/wiki/Translational_symmetry">natural translation invariance</a>, such as <a href="https://en.wikipedia.org/wiki/Outline_of_object_recognition">object recognition</a>. Go has some translation invariance, because if all the pieces on a hypothetical Go board are shifted to the left, then the best move will also shift (with the exception of pieces that are on the boundary of the board). Many applications of neural networks to Go have already used convolutional neural networks, such as <a href="/Nicol_N._Schraudolph">Nicol N. Schraudolph</a> et al. <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a>, <a href="/Erik_van_der_Werf">Erik van der Werf</a> et al. <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a>, and <a href="/Markus_Enzenberger">Markus Enzenberger</a> <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a>, among others.</p>
+<p>In 2014, two teams independently investigated whether deep convolutional neural networks <a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a> could be used to directly represent and <a href="/Learning">learn</a> a move evaluation function for the game of Go. <a href="/Christopher_Clark">Christopher Clark</a> and <a href="/Amos_Storkey">Amos Storkey</a> trained an 8-layer convolutional neural network by <a href="/Supervised_Learning">supervised learning</a> from a database of human professional games, which without any <a href="/Search">search</a>, defeated the traditional search program Gnu Go in 86% of the games <a href="#fn13" class="footnote-ref" id="fnref13" role="doc-noteref"><sup>13</sup></a> <a href="#fn14" class="footnote-ref" id="fnref14" role="doc-noteref"><sup>14</sup></a> <a href="#fn15" class="footnote-ref" id="fnref15" role="doc-noteref"><sup>15</sup></a> <a href="#fn16" class="footnote-ref" id="fnref16" role="doc-noteref"><sup>16</sup></a> <a href="#fn17" class="footnote-ref" id="fnref17" role="doc-noteref"><sup>17</sup></a>. In their paper <em>Move Evaluation in Go Using Deep Convolutional Neural Networks</em> <a href="#fn18" class="footnote-ref" id="fnref18" role="doc-noteref"><sup>18</sup></a>, <a href="/Chris_J._Maddison">Chris J. Maddison</a>, <a href="/Shih-Chieh_Huang">Aja Huang</a>, <a href="/Ilya_Sutskever">Ilya Sutskever</a>, and <a href="/David_Silver">David Silver</a> report they trained a large 12-layer convolutional neural network in a similar way, to beat Gnu Go in 97% of the games, and matched the performance of a state-of-the-art <a href="/Monte-Carlo_Tree_Search">Monte-Carlo Tree Search</a> that simulates a million positions per move <a href="#fn19" class="footnote-ref" id="fnref19" role="doc-noteref"><sup>19</sup></a>. <span id="AlphaGo"></span></p>
+<h3 id="alphago">AlphaGo</h3>
+<p>In 2015, a team affiliated with Google DeepMind around <a href="/David_Silver">David Silver</a>, <a href="/Shih-Chieh_Huang">Aja Huang</a>, <a href="/Chris_J._Maddison">Chris J. Maddison</a>, and <a href="/Demis_Hassabis">Demis Hassabis</a>, supported by Google researchers John Nham and <a href="/Ilya_Sutskever">Ilya Sutskever</a>, build a Go playing program dubbed AlphaGo, combining Monte-Carlo tree search with their 12-layer networks <a href="#fn20" class="footnote-ref" id="fnref20" role="doc-noteref"><sup>20</sup></a>, the “policy network,” to select the next move, the “value network,” to predict the winner of the game. The neural networks were trained on 30 million moves from games played by human experts, until it could predict the human move 57 percent of the time. AlphaGo achieved a huge winning rate against other Go programs, and defeated <a href="https://en.wikipedia.org/wiki/European_Go_Federation">European Go</a> champion <a href="https://fr.wikipedia.org/wiki/Fan_Hui">Fan Hui</a> <a href="#fn21" class="footnote-ref" id="fnref21" role="doc-noteref"><sup>21</sup></a> in October 2015 with a 5 - 0 score <a href="#fn22" class="footnote-ref" id="fnref22" role="doc-noteref"><sup>22</sup></a> On March 9 to 15, 2016, AlphaGo won a $1M <a href="https://en.wikipedia.org/wiki/AlphaGo_versus_Lee_Sedol">5-game challenge match</a> in <a href="https://en.wikipedia.org/wiki/Seoul">Seoul</a> versus <a href="https://en.wikipedia.org/wiki/Lee_Sedol">Lee Sedol</a> with 4 - 1 <a href="#fn23" class="footnote-ref" id="fnref23" role="doc-noteref"><sup>23</sup></a> <a href="#fn24" class="footnote-ref" id="fnref24" role="doc-noteref"><sup>24</sup></a> <a href="#fn25" class="footnote-ref" id="fnref25" role="doc-noteref"><sup>25</sup></a>. During <a href="/Go">The Future of Go Summit</a> from May 23 to 27, 2017 in <a href="https://en.wikipedia.org/wiki/Wuzhen">Wuzhen</a>, <a href="https://en.wikipedia.org/wiki/China">China</a>, AlphaGo <a href="https://en.wikipedia.org/wiki/AlphaGo_versus_Ke_Jie">won a three-game match</a> versus current world No. 1 ranking player <a href="https://en.wikipedia.org/wiki/Ke_Jie">Ke Ji</a>. After the Summit, AlphaGo is now retired from competitive play while DeepMind continues AI research in other areas <a href="#fn26" class="footnote-ref" id="fnref26" role="doc-noteref"><sup>26</sup></a>.</p>
+<h3 id="alphago-zero--alphazero">AlphaGo Zero &amp; AlphaZero</h3>
+<p>However, in October 2017, AlphaGo Zero, an evolution of AlphaGo was introduced. While previous versions were initially trained on thousands of human amateur and professional games to learn how to play Go, AlphaGo Zero learns exclusively by playing games against itself, starting from completely random play, to quickly surpass human level of play and defeated the previously published champion-defeating version of AlphaGo by 100 games to 0 <a href="#fn27" class="footnote-ref" id="fnref27" role="doc-noteref"><sup>27</sup></a> <a href="#fn28" class="footnote-ref" id="fnref28" role="doc-noteref"><sup>28</sup></a>. AlphaGo Zero was further improved and even generalized for other games now dubbed <a href="/AlphaZero">AlphaZero</a>, as published in December 2017 <a href="#fn29" class="footnote-ref" id="fnref29" role="doc-noteref"><sup>29</sup></a>. <span id="FineArt"></span></p>
+<h3 id="fine-art">Fine Art</h3>
+<p><strong>Fine Art</strong> is a Go playing entity developed since 2016 under the patronage of the Chinese media company <a href="https://en.wikipedia.org/wiki/Tencent">Tencent</a> by a team around Liu Yongsheng, along with Ma Bo, Tang Shanmin, Wu Guangyu, and Zhang Kaixu. It won the <a href="https://en.wikipedia.org/wiki/Computer_Go_UEC_Cup">Computer Go UEC Cup</a> at the <a href="https://en.wikipedia.org/wiki/University_of_Electro-Communications">University of Electro-Communications</a>, <a href="https://en.wikipedia.org/wiki/Ch%C5%8Dfu,_Tokyo">Chōfu, Tokyo</a>, Japan, in March 2017 against a field of 27 other programs including DeepZenGo and Crazy Stone <a href="#fn30" class="footnote-ref" id="fnref30" role="doc-noteref"><sup>30</sup></a>. In January 2018, it defeated <a href="https://en.wikipedia.org/wiki/Ke_Jie">Ke Jie</a> 9P in 77 moves after giving two stones <a href="https://en.wikipedia.org/wiki/Handicap_(go)">handicap</a> <a href="#fn31" class="footnote-ref" id="fnref31" role="doc-noteref"><sup>31</sup></a> on <em>Fox Weiqi</em> <a href="#fn32" class="footnote-ref" id="fnref32" role="doc-noteref"><sup>32</sup></a> server <a href="#fn33" class="footnote-ref" id="fnref33" role="doc-noteref"><sup>33</sup></a>.</p>
+<h2 id="quotes">Quotes</h2>
+<p>Quote by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a> in 2010 <a href="#fn34" class="footnote-ref" id="fnref34" role="doc-noteref"><sup>34</sup></a>:</p>
+<p><code>There is no significant difference between an </code><a href="/Alpha-Beta"><code>alpha-beta search</code></a><code> with heavy </code><a href="/Late_Move_Reductions"><code>LMR</code></a><code>  and a </code><a href="/Evaluation"><code>static evaluator</code></a><code> (current state of the art in chess) and an </code><a href="/UCT"><code>UCT</code></a><code> searcher with a small exploration constant that does playouts (state of the art in go).</code></p>
+<p><code>The shape of the </code><a href="/Search_Tree"><code>tree</code></a><code> they search is very similar. The main breakthrough in Go the last few years was how to backup an uncertain Monte Carlo score. This was solved. For chess this same problem was solved around the time </code><a href="/Quiescence_Search"><code>quiescent search</code></a><code> was developed.</code></p>
+<p><code>Both are producing strong programs and we've proven for both the methods that they scale in strength as hardware speed goes up.</code></p>
+<p><code>So I would say that we've successfully adopted the simple, brute force methods for chess to Go and they already work without increases in computer speed. The increases will make them progressively stronger though, and with further software tweaks they will eventually surpass humans. </code></p>
+<h2 id="computer-olympiads"><a href="/Computer_Olympiad">Computer Olympiads</a></h2>
+<ul>
+<li><a href="/1st_Computer_Olympiad">1st Computer Olympiad, London 1989</a></li>
+<li><a href="/2nd_Computer_Olympiad">2nd Computer Olympiad, London 1990</a></li>
+<li><a href="/3rd_Computer_Olympiad">3rd Computer Olympiad, Maastricht 1991</a></li>
+<li><a href="/4th_Computer_Olympiad">4th Computer Olympiad, London 1992</a></li>
+<li><a href="/5th_Computer_Olympiad">5th Computer Olympiad, London 2000</a></li>
+<li><a href="/7th_Computer_Olympiad">7th Computer Olympiad, Maastricht 2002</a></li>
+<li><a href="/8th_Computer_Olympiad">8th Computer Olympiad, Graz 2003</a></li>
+<li><a href="/9th_Computer_Olympiad">9th Computer Olympiad, Ramat Gan 2004</a></li>
+<li><a href="/10th_Computer_Olympiad">10th Computer Olympiad, Taipei 2005</a></li>
+<li><a href="/11th_Computer_Olympiad">11th Computer Olympiad, Turin 2006</a></li>
+<li><a href="/12th_Computer_Olympiad">12th Computer Olympiad, Amsterdam 2007</a></li>
+<li><a href="/13th_Computer_Olympiad">13th Computer Olympiad, Beijing 2008</a></li>
+<li><a href="/14th_Computer_Olympiad">14th Computer Olympiad, Pamplona 2009</a></li>
+<li><a href="/15th_Computer_Olympiad">15th Computer Olympiad, Kanazawa 2010</a></li>
+<li><a href="/16th_Computer_Olympiad">16th Computer Olympiad, Tilburg 2011</a></li>
+<li><a href="/17th_Computer_Olympiad">17th Computer Olympiad, Yokohama 2013</a></li>
+<li><a href="/18th_Computer_Olympiad">18th Computer Olympiad, Leiden 2015</a></li>
+<li><a href="/19th_Computer_Olympiad">19th Computer Olympiad, Leiden 2016</a></li>
+<li><a href="/20th_Computer_Olympiad">20th Computer Olympiad, Leiden 2017</a></li>
+</ul>
+<h2 id="see-also">See also</h2>
+<h3 id="search">Search</h3>
+<ul>
+<li><a href="/Monte-Carlo_Tree_Search">Monte-Carlo Tree Search</a></li>
+<li><a href="/UCT">UCT</a></li>
+</ul>
+<h3 id="learning">Learning</h3>
+<ul>
+<li><a href="/Neural_Networks">Neural Networks</a></li>
+<li><a href="/Deep_Learning">Deep Learning</a></li>
+</ul>
+<h3 id="misc">Misc</h3>
+<ul>
+<li><a href="/Go_%28Programming_Language%29">Go (Programming Language)</a></li>
+<li><a href="/Matthieu_Walraet">A googolplex of Go games</a></li>
+<li><a href="/Phantom_Go">Phantom Go</a></li>
+</ul>
+<h3 id="videos-on-go">Videos on Go</h3>
+<ul>
+<li><a href="/Elwyn_Berlekamp">Mathematics and Go</a> by <a href="/Elwyn_Berlekamp">Elwyn Berlekamp</a>, February 06, 2006</li>
+<li><a href="/Yizao_Wang">Yizao Wang Interview</a> at the <a href="/12th_Computer_Olympiad">12th Computer Olympiad</a> June 2007</li>
+<li><a href="/Sylvain_Gelly">Sylvain Gelly Interview</a> at the <a href="/12th_Computer_Olympiad">12th Computer Olympiad</a> June 2007</li>
+<li><a href="/Edward_de_Grijs">Edward de Grijs Interview</a> at the <a href="/12th_Computer_Olympiad">12th Computer Olympiad </a> June 2007</li>
+<li><a href="/Jaap_van_den_Herik">Jaap van den Herik Interview</a> at the <a href="/12th_Computer_Olympiad">12th Computer Olympiad</a> June 2007</li>
+<li><a href="/Go">Ground-breaking AlphaGo masters the game of Go</a> January 2016</li>
+<li><a href="/Go">The computer that mastered Go</a> Januar 2016</li>
+<li><a href="/Rémi_Coulom">Rémi Coulom Interview on AlphaGo</a>, February 2016</li>
+<li><a href="/CG_2016">Keynote Lecture CG 2016 Conference by Aja Huang</a> July 2016</li>
+<li><a href="/David_Silver">David Silver on AlphaGo Zero</a></li>
+<li>Petr Baudiš on AlphaGo Zero</li>
+</ul>
+<h2 id="selected-publications">Selected Publications</h2>
+<p><a href="#fn35" class="footnote-ref" id="fnref35" role="doc-noteref"><sup>35</sup></a></p>
+<h3 id="1960-">1960 ...</h3>
+<ul>
+<li><a href="/Jack_Good">Jack Good</a> (<strong>1965</strong>). <em><a href="http://www.chilton-computing.org.uk/acl/literature/reports/p019.htm">The Mystery of Go</a></em>. <a href="http://www.chilton-computing.org.uk/acl/literature/reports/overview.htm">Literature: Reports</a> hosted by <a href="/Atlas_Computer_Laboratory">Atlas Computer Laboratory</a></li>
+</ul>
+<h3 id="1970-">1970 ...</h3>
+<ul>
+<li><a href="/Albert_Zobrist">Albert Zobrist</a> (<strong>1970</strong>). <em>Feature Extraction and Representation for Pattern Recognition and the Game of Go</em>. Ph.D. Thesis (152 pp.), <a href="https://en.wikipedia.org/wiki/University_of_Wisconsin%E2%80%93Madison">University of Wisconsin</a>, also published as technical report, <a href="http://www.cs.wisc.edu/techreports/1970/TR85.pdf">pdf</a></li>
+<li><a href="/Walter_R._Reitman">Walter R. Reitman</a>, James Kerwin, Robert Nado, Judith S. Reitman, Bruce Wilcox (<strong>1974</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=810391">Goals and Plans in a Program for Playing Go</a></em>. Proceedings of the 29th <a href="/ACM">ACM</a> Conference, reprinted in <a href="/David_Levy">David Levy</a> (ed.) (<strong>1988</strong>). <em><a href="http://www.springer.com/computer/ai/book/978-1-4613-8756-5">Computer Games II</a></em>. <a href="https://books.google.com/books?id=aaoqAAAAMAAJ&amp;lpg=RA1-PA18&amp;ots=BJ98MzIWZ2&amp;dq=Robert%20Nado%2C%20University%20of%20Michigan&amp;hl=de&amp;pg=RA1-PA18#v=onepage&amp;q&amp;f=true">google books</a></li>
+<li><a href="/Walter_R._Reitman">Walter R. Reitman</a>, Bruce Wilcox (<strong>1975</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=810263&amp;dl=ACM&amp;coll=DL&amp;CFID=431288258&amp;CFTOKEN=32228685">Perception and representation of spatial relations in a program for playing Go</a></em>. Proceedings of the 30th <a href="/ACM">ACM</a> Conference, reprinted in <a href="/David_Levy">David Levy</a> (ed.) (<strong>1988</strong>). <em><a href="http://www.springer.com/computer/ai/book/978-1-4613-8756-5">Computer Games II</a></em>.</li>
+<li>David B. Benson (<strong>1976</strong>). <em>Life in the Game of Go</em>. <a href="https://en.wikipedia.org/wiki/Information_Sciences_(journal)">Information Sciences</a>, Vol. 10, <a href="https://webdocs.cs.ualberta.ca/~games/go/seminar/2002/020717/benson.pdf">pdf</a></li>
+<li>Judith S. Reitman (<strong>1976</strong>). <em><a href="http://deepblue.lib.umich.edu/handle/2027.42/21741">Skilled Perception in Go: Deducing Memory Structures from Inter-Response Times</a></em>. <a href="http://www.journals.elsevier.com/cognitive-psychology/">Cognitive Psychology</a>, Vol. 8, No, 3</li>
+<li><a href="/Walter_R._Reitman">Walter R. Reitman</a>, Bruce Wilcox (<strong>1977</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=1045396">Pattern Recognition and Pattern-Directed Inference in a Program for Playing Go</a></em>. <a href="/ACM">ACM SIGART Bulletin</a>, No. 63, reprinted in <a href="/David_Levy">David Levy</a> (ed.) (<strong>1988</strong>). <em><a href="http://www.springer.com/computer/ai/book/978-1-4613-8756-5">Computer Games II</a></em>.</li>
+<li>Editor (<strong>1979</strong>). <em>Computer GO Has Come</em>. <a href="/Personal_Computing">Personal Computing, Vol. 3, No. 5</a>, pp. 55</li>
+<li><a href="/Walter_R._Reitman">Walter R. Reitman</a>, Bruce Wilcox (<strong>1979</strong>). <em>Modelling Tactical Analysis and Problem Solving in Go</em>. Proceedings of the Tenth Annual Pittsburgh Conference on Modelling and Simulation</li>
+<li><a href="/Walter_R._Reitman">Walter R. Reitman</a>, Bruce Wilcox (<strong>1979</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=1623078">The Structure and Performance of the INTERIM.2 Go Program</a></em>. <a href="/Conferences">IJCAI 1979</a>, reprinted in <a href="/David_Levy">David Levy</a> (ed.) (<strong>1988</strong>). <em><a href="http://www.springer.com/computer/ai/book/978-1-4613-8756-5">Computer Games II</a></em>.</li>
+</ul>
+<h3 id="1980-">1980 ...</h3>
+<ul>
+<li>Editor (<strong>1980</strong>). <em>The Challenge of Computer Go</em>. <a href="/Personal_Computing">Personal Computing, Vol. 4, No. 8</a>, pp. 79</li>
+<li>Editor (<strong>1980</strong>). <em>Zobrist Program in Action</em>. <a href="/Personal_Computing">Personal Computing, Vol. 4, No. 8</a>, pp. 81 » <a href="/Albert_Zobrist">Albert Zobrist</a></li>
+<li>Bruce Wilcox (<strong>1985</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=1056318">Reflections on building two Go programs</a></em>. <a href="/ACM">ACM SIGART</a> Bulletin, No. 94</li>
+<li><a href="/Anders_Kierulf">Anders Kierulf</a> (<strong>1985</strong>). <em>Smart Go Board: Algorithms for the Tactical Calculator</em>. Diploma thesis (unpublished), <a href="/ETH_Zurich">ETH Zurich</a>.</li>
+<li><a href="/David_Levy">David Levy</a> (ed.) (<strong>1988</strong>). <em><a href="http://www.springer.com/computer/ai/book/978-1-4613-8756-5">Computer Games II</a></em>. <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a>, ISBN: 978-1-4613-8756-5, Chapter 5 - Go</li>
+<li>Janusz Kraszek (<strong>1988</strong>). <em>Heuristics in the life and death algorithm of a Go playing program</em>. Computer Go 9 (Winter 1988-89)</li>
+<li><a href="/Anders_Kierulf">Anders Kierulf</a>, <a href="/Jürg_Nievergelt">Jürg Nievergelt</a> (<strong>1989</strong>). <em>Swiss Explorer blunders its way into winning the first computer Go Olympiad</em>. <a href="/1st_Computer_Olympiad">Heuristic Programming in AI 1</a></li>
+<li><a href="/Keh-Hsun_Chen">Ken Chen</a> (<strong>1989</strong>). <em>Group Identification in Computer Go</em>. <a href="/1st_Computer_Olympiad">Heuristic Programming in AI 1</a></li>
+</ul>
+<h3 id="1990">1990</h3>
+<ul>
+<li><a href="/Keh-Hsun_Chen">Ken Chen</a> (<strong>1990</strong>). <em>The Move Decision Process of Go Intellect</em>, Computer Go, No.14, pp. 9-17.</li>
+<li><a href="/Keh-Hsun_Chen">Ken Chen</a>, <a href="/Anders_Kierulf">Anders Kierulf</a>, <a href="/Martin_Müller">Martin Müller</a>, <a href="/Jürg_Nievergelt">Jürg Nievergelt</a> (<strong>1990</strong>). <em>The Design and Evolution of Go Explorer</em>. <a href="/Computers,_Chess,_and_Cognition">Computers, Chess, and Cognition</a></li>
+<li>Kiyoshi Shirayanagi (<strong>1990</strong>). <em>Knowledge Representation and its Refinement in Go Programs</em>. <a href="/Computers,_Chess,_and_Cognition">Computers, Chess, and Cognition</a></li>
+</ul>
+<p><strong>1991</strong></p>
+<ul>
+<li>David Wolfe (<strong>1991</strong>). <em>Mathematics of Go: Chilling Corridors</em>. Ph.D. thesis, <a href="/University_of_California,_Berkeley">University of California, Berkeley</a>, advisor <a href="/Elwyn_Berlekamp">Elwyn Berlekamp</a></li>
+<li>Herbert D. Enderton (<strong>1991</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=865074">The Golem Go Program</a></em>. Technical Report CMU-CS-92-101, <a href="/Carnegie_Mellon_University">Carnegie Mellon University</a></li>
+<li><a href="/Keh-Hsun_Chen">Ken Chen</a> (<strong>1991</strong>). <em>Go Intellect wins two Gold Medals</em>. <a href="/2nd_Computer_Olympiad">Heuristic Programming in AI 2</a></li>
+<li><a href="/Barney_Pell">Barney Pell</a> (<strong>1991</strong>). <em>Exploratory Learning in the Game of GO</em>. <a href="/2nd_Computer_Olympiad">Heuristic Programming in AI 2</a></li>
+<li>Thomas Wolf (<strong>1991</strong>). <em>Investigating Tsumego Problems with "RisiKo"</em>. <a href="/2nd_Computer_Olympiad">Heuristic Programming in AI 2</a></li>
+</ul>
+<p><strong>1992</strong></p>
+<ul>
+<li><a href="/Warren_D._Smith">Warren D. Smith</a> (<strong>1992</strong>). <em>Hash functions for Binary and Ternary Words</em>. <a href="https://en.wikipedia.org/wiki/NEC_Corporation_of_America">NEC Research Institute</a>, <a href="http://scorevoting.net/WarrenSmithPages/homepage/gohash.ps">ps</a></li>
+<li>Thomas Wolf (<strong>1992</strong>). <em>Generating tsume go problems with GoTools</em>. <a href="/4th_Computer_Olympiad">Heuristic Programming in AI 4</a> <a href="#fn36" class="footnote-ref" id="fnref36" role="doc-noteref"><sup>36</sup></a></li>
+</ul>
+<p><strong>1993</strong></p>
+<ul>
+<li><a href="/David_Fotland">David Fotland</a> (<strong>1993</strong>). <em><a href="http://www.smart-games.com/knowpap.txt">Knowledge representation in the Many Faces of Go</a></em>.</li>
+<li><a href="/Bernd_Brügmann">Bernd Brügmann</a> (<strong>1993</strong>). <em>Monte Carlo Go</em>. <a href="http://www.ideanest.com/vegos/MonteCarloGo.pdf">pdf</a> <a href="#fn37" class="footnote-ref" id="fnref37" role="doc-noteref"><sup>37</sup></a></li>
+<li><a href="/Nicol_N._Schraudolph">Nicol N. Schraudolph</a>, <a href="/Peter_Dayan">Peter Dayan</a>, <a href="/Terrence_J._Sejnowski">Terrence J. Sejnowski</a> (<strong>1993</strong>). <em><a href="https://papers.nips.cc/paper/820-temporal-difference-learning-of-position-evaluation-in-the-game-of-go">Temporal Difference Learning of Position Evaluation in the Game of Go</a></em>. <a href="https://papers.nips.cc/book/advances-in-neural-information-processing-systems-6-1993">NIPS 1993</a> <a href="#fn38" class="footnote-ref" id="fnref38" role="doc-noteref"><sup>38</sup></a></li>
+</ul>
+<p><strong>1994</strong></p>
+<ul>
+<li><a href="/Elwyn_Berlekamp">Elwyn Berlekamp</a>, David Wolfe (<strong>1994</strong>). <em><a href="https://math.berkeley.edu/~berlek/cgt/gobook.html">Mathematical Go - Chilling Gets the Last Point</a></em>. [<a href="https://en.wikipedia.org/wiki/A_K_Peters,_Ltd">https://en.wikipedia.org/wiki/A_K_Peters,_Ltd</a>. A K Peters Ltd.], also in paperback as <em>Mathematical Go Endgames: Nightmares For the Professional Go Player</em>. <a href="https://en.wikipedia.org/wiki/Ishi_Press">Ishi Press</a> <a href="#fn39" class="footnote-ref" id="fnref39" role="doc-noteref"><sup>39</sup></a></li>
+</ul>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li><span id="CSTR339"></span>Jay Burmeister, Janet Wiles (<strong>1995</strong>). <em><a href="http://staff.itee.uq.edu.au/janetw/Computer%20Go/CS-TR-339.html">CS-TR-339 Computer Go Tech Report</a></em>. Departments of Computer Science and Psychology, <a href="https://en.wikipedia.org/wiki/University_of_Queensland">The University of Queensland</a>, <a href="https://en.wikipedia.org/wiki/St_Lucia,_Queensland">QLD 4072</a>, <a href="https://en.wikipedia.org/wiki/Australia">Australia</a> (permanently - under construction)</li>
+<li>Jay Burmeister, Janet Wiles (<strong>1995</strong>). <em>The Challenge of Go as a Domain for AI Research: A Comparison Between Go and Chess</em>. In Proceedings of the Third Australian and New Zealand Conference on Intelligent Information Systems, <a href="http://ewh.ieee.org/r10/w_australia/">IEEE Western Australia Section</a>, <a href="http://staff.itee.uq.edu.au/janetw/Computer%20Go/go-vs-chess.pdf">pdf</a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>1995</strong>). <em>Learning and Problem Solving in Gogol, a Go playing program</em>. <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/cazenave95learning.pdf">pdf</a></li>
+</ul>
+<p><strong>1996</strong></p>
+<ul>
+<li>Bruce Wilcox, <a href="http://brilligunderstanding.com/aboutus.html">Sue Wilcox</a> (<strong>1996</strong>). <em><a href="http://webpages.charter.net/suewilcox/EZGobook.htm">EZ-GO-Oriental Strategy in a Nutshell</a></em>. KI Press, ISBN13 978-0965223546 <a href="#fn40" class="footnote-ref" id="fnref40" role="doc-noteref"><sup>40</sup></a></li>
+<li><a href="/Markus_Enzenberger">Markus Enzenberger</a> (<strong>1996</strong>). <em><a href="http://webdocs.cs.ualberta.ca/~emarkus/neurogo/neurogo1996.html">The Integration of A Priori Knowledge into a Go Playing Neural Network</a></em>.</li>
+<li><a href="/Martin_Müller">Martin Müller</a>, <a href="/Ralph_Gasser">Ralph Gasser</a> (<strong>1996</strong>). <em>Experiments in Computer Go Endgames</em>. <a href="http://library.msri.org/books/Book29/index.html">Games of No Chance</a> edited by <a href="/Richard_J._Nowakowski">Richard J. Nowakowski</a></li>
+<li><a href="/Martin_Müller">Martin Müller</a>, <a href="/Elwyn_Berlekamp">Elwyn Berlekamp</a>, Bill Spight (<strong>1996</strong>). <em>Generalized thermography: Algorithms, implementation, and application to Go endgames</em>. Technical Report 96-030, ICSI Berkeley, 1996. <a href="http://webdocs.cs.ualberta.ca/~mmueller/ps/tr-96-030a.ps.gz">postscript</a></li>
+<li><a href="/Bruno_Bouzy">Bruno Bouzy</a>, <a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>1996</strong>). <em>Shared concepts between complex systems and the game of Go</em>. <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/shared96.pdf">pdf</a></li>
+</ul>
+<p><strong>1997</strong></p>
+<ul>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>1997</strong>). <em>Gogol (an Analytical Learning Program)</em>. <a href="http://www.ijcai.org/past/ijcai-97/">IJCAI'97</a>, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/fost97.pdf">pdf</a></li>
+<li><a href="/Bruno_Bouzy">Bruno Bouzy</a>, <a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>1997</strong>). <em>Using the Object Oriented Paradigm to Model Context in Computer Go</em>. Context'97, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/context97.pdf">pdf</a></li>
+<li><a href="/David_Fotland">David Fotland</a>, Atsushi Yoshikawa (<strong>1997</strong>). <em>The 3rd Fost-Cup World-Open Computer-Go Championship</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 20, No. 4</a></li>
+</ul>
+<p><strong>1998</strong></p>
+<ul>
+<li><a href="/Keh-Hsun_Chen">Ken Chen</a> (<strong>1998</strong>). <em>Heuristic Search in Go Game Tree</em>, Proceedings of Joint Conference on Information Sciences ’98, Vol. II, pp. 274-278. The Association for Intelligent Machinery, Inc. ISBN 0-9643456-7-6.</li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>1998</strong>). <em>Integration of Different Reasoning Modes in a Go Playing and Learning System</em>. <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/multimodal98.pdf">pdf</a></li>
+<li>Bill Spight (<strong>1998</strong>). <em><a href="http://link.springer.com/chapter/10.1007/3-540-48957-6_16">Extended Thermography for Multiple Kos in Go</a></em>. <a href="/CG_1998">CG 1998</a></li>
+<li><a href="/Martin_Müller">Martin Müller</a> (<strong>1998</strong>). <em><a href="http://link.springer.com/chapter/10.1007/3-540-48957-6_17">Computer Go: A Research Agenda</a></em>. <a href="/CG_1998">CG 1998</a></li>
+<li>Shinichi Sei, Toshiaki Kawashima (<strong>1998</strong>). <em>Memory-Based Approach in Go-program KATSUNARI</em>. Fujitsu Social Science Laboratory, <a href="http://usapyon.game.coocan.jp/katsunari/paper/cg98ws.pdf">pdf</a></li>
+<li>Morihiko Tajima, Noriaki Sanechika (<strong>1998</strong>). <em><a href="http://link.springer.com/chapter/10.1007/3-540-48957-6_18">Estimating the Possible Omission Number for Groups in Go by the Number of n -th Dame</a></em>. <a href="/CG_1998">CG 1998</a></li>
+<li>Norman Richards, <a href="/David_E._Moriarty">David E. Moriarty</a>, <a href="/Risto_Miikkulainen">Risto Miikkulainen</a> (<strong>1998</strong>). <em><a href="http://nn.cs.utexas.edu/?richards:apin98">Evolving Neural Networks to Play Go</a></em>. <a href="https://www.springer.com/journal/10489">Applied Intelligence</a>, Vol. 8, No. 1</li>
+</ul>
+<p><strong>1999</strong></p>
+<ul>
+<li><a href="/Keh-Hsun_Chen">Ken Chen</a>, Zhixing Chen (<strong>1999</strong>). <em>Static Analysis of Life and Death in the Game of Go</em>. <a href="https://www.journals.elsevier.com/information-sciences">Information Sciences</a>, Vol. 121, Nos. 1-2, <a href="https://webdocs.cs.ualberta.ca/~games/go/seminar/2002/020703/ld.pdf">pdf</a></li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li>Thomas Thomsen (<strong>2000</strong>). <em><a href="http://link.springer.com/chapter/10.1007/3-540-45579-5_2">Lambda-Search in Game Trees - with Application to Go</a></em>. <a href="/CG_2000">CG 2000</a> also published in <a href="/ICGA_Journal">ICGA Journal, Vol. 23, No. 4</a>, winning the 2001 <a href="/ICGA_Journal">ICGA Journal Award</a>, <a href="http://www.t-t.dk/publications/lambda_icga.pdf">preprint as pdf</a> » Lambda-Search</li>
+<li>Jan Ramon, Tom Francis, Hendrik Blockeel (<strong>2000</strong>). <em><a href="http://link.springer.com/chapter/10.1007/3-540-45579-5_10">Learning a Go Heuristic with Tilde</a></em>. <a href="/CG_2000">CG 2000</a></li>
+<li><a href="/Martin_Müller">Martin Müller</a> (<strong>2000</strong>). <em><a href="http://link.springer.com/chapter/10.1007/3-540-45579-5_27">Review: Computer Go 1984–2000</a></em>. <a href="/CG_2000">CG 2000</a></li>
+<li>Jay Burmeister (<strong>2000</strong>). <em>Studies in Human and Computer Go: Assessing the Game of Go as a Research Domain for Cognitive Science</em>. Ph.D. thesis, School of Computer Science and Electrical Engineering and School of Psychology, <a href="https://en.wikipedia.org/wiki/University_of_Queensland">The University of Queensland</a>, <a href="https://en.wikipedia.org/wiki/Australia">Australia</a>, <a href="http://staff.itee.uq.edu.au/janetw/Computer%20Go/PhD_thesis.pdf">pdf</a></li>
+<li>Jay Burmeister, Yasuki Saito, Atsushi Yoshikawa, Janet Wiles (<strong>2000</strong>) <em>Memory Performance of Master Go Players</em>. in <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Hiroyuki_Iida">Hiroyuki Iida</a> (eds.) (<strong>2000</strong>). <em>Games in AI Research</em>. pp. 271-286</li>
+<li><a href="/Keh-Hsun_Chen">Ken Chen</a> (<strong>2000</strong>). <em>Some Practical Techniques for Global Search in Go</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 23, No. 2</a></li>
+<li><a href="/Kuo-Yuan_Kao">Kuo-Yuan Kao</a> (<strong>2000</strong>). <em><a href="http://www.sciencedirect.com/science/article/pii/S0020025599000948">Mean and Temperature Search for Go Endgames</a></em>. <a href="http://www.informatik.uni-trier.de/%7Eley/db/journals/isci/isci122.html#Kao00">Information Sciences, Vol. 122, No. 1</a></li>
+<li>Marcel Crâsmaru, <a href="/John_Tromp">John Tromp</a> (<strong>2000</strong>). <em>Ladders Are PSPACE-Complete</em>. <a href="/CG_2000">CG 2000</a></li>
+<li>Shinichi Sei, Toshiaki Kawashima (<strong>2000</strong>). <em><a href="http://usapyon.game.coocan.jp/katsunari/paper/4x4e.txt">A Solution of Go on 4x4 Board by Game Tree Search Program</a></em>. Fujitsu Social Science Laboratory, <a href="http://usapyon.game.coocan.jp/katsunari/paper/4x4.pdf">Japanese pdf</a></li>
+<li>Thomas Wolf (<strong>2000</strong>). <em>Forward Pruning and Other Heuristic Search Techniques in Tsume Go</em>. Special Issue of <a href="https://www.journals.elsevier.com/information-sciences">Information Sciences</a>, Vol. 122, No. 1, <a href="http://citeseerx.ist.psu.edu/viewdoc/citations;jsessionid=655E3C3AD2BA97A6C4957AC83CE6D59D?doi=10.1.1.45.5593">CiteSeerX</a></li>
+</ul>
+<p><strong>2001</strong></p>
+<ul>
+<li><a href="/Bruno_Bouzy">Bruno Bouzy</a> (<strong>2001</strong>). <em>Go Patterns Generated by Retrograde Analysis</em>. <a href="/6th_Computer_Olympiad">6th Computer Olympiad Workshop</a>, <a href="http://www.mi.parisdescartes.fr/~bouzy/publications/RAGO.pdf">pdf</a></li>
+<li><a href="/Erik_van_der_Werf">Erik van der Werf</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2001</strong>). <em>Visual Learning in Go</em>. <a href="/6th_Computer_Olympiad">6th Computer Olympiad Workshop</a>, <a href="http://erikvanderwerf.tengen.nl/pubdown/visual_learning_in_go.pdf">pdf</a></li>
+<li><a href="/Nicol_N._Schraudolph">Nicol N. Schraudolph</a>, <a href="/Peter_Dayan">Peter Dayan</a>, <a href="/Terrence_J._Sejnowski">Terrence J. Sejnowski</a> (<strong>2001</strong>). <em><a href="http://nic.schraudolph.org/bib2html/b2hd-SchDaySej01.html">Learning to Evaluate Go Positions via Temporal Difference Methods</a></em>. <a href="http://jasss.soc.surrey.ac.uk/7/1/reviews/takama.html">Computational Intelligence in Games, Studies in Fuzziness and Soft Computing</a>, <a href="http://www.springer.com/economics?SGWID=1-165-6-73481-0">Physica-Verlag</a>, revised version of <a href="/Nicol_N._Schraudolph">1993 paper</a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2001</strong>). <em>Generating Patterns with External Conditions for the Game of Go</em>. <a href="/Advances_in_Computer_Games_9">Advances in Computer Games 9</a>, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/acg9-final.pdf">pdf</a></li>
+<li>Jeng-Chi Yan, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a> (<strong>2001</strong>). <em>A Positional Judgment System for computer Go</em>. <a href="/Advances_in_Computer_Games_9">Advances in Computer Games 9</a></li>
+<li><a href="/Bruno_Bouzy">Bruno Bouzy</a>, <a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2001</strong>). <em>Computer Go: an AI-oriented Survey</em>. Artificial Intelligence Journal, Vol. 132, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/APS-final.pdf">pdf</a></li>
+<li>Alex B. Meijer, <a href="/Henk_Koppelaar">Henk Koppelaar</a> (<strong>2001</strong>). <em><a href="http://www.kbs.twi.tudelft.nl/Publications/Conference/2001/2001-MeijerKoppelaar-GAMEON01.html">A learning architecture for the game of Go</a></em>. <a href="https://www.informs.org/Attend-a-Conference/Conference-Calendar/Game-On-2001">Game-On 2001</a></li>
+<li>Alex B. Meijer, <a href="/Henk_Koppelaar">Henk Koppelaar</a> (<strong>2001</strong>). <em><a href="http://www.kbs.twi.tudelft.nl/Publications/Conference/2001/2001-MeijerKoppelaar-BNAIC01.html">Pursuing abstract goals in the game of Go</a></em>. <a href="http://hcs.science.uva.nl/bnaic01/">BNAIC 2001</a></li>
+<li><a href="/Keh-Hsun_Chen">Ken Chen</a> (<strong>2001</strong>). <em>Computer Go: Knowledge, Search, and Move Decision</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 24, No. 4</a>, <a href="http://www.coit.uncc.edu/drchen/Papers/ComputerGo.pdf">pdf</a></li>
+</ul>
+<p><strong>2002</strong></p>
+<ul>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2002</strong>). <em>Admissible Moves in Two-Player Games</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/sara/sara2002.html#Cazenave02">SARA 2002</a>, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/admissibleSARA2002.pdf">pdf</a></li>
+<li><a href="/Keh-Hsun_Chen">Ken Chen</a> (<strong>2002</strong>). <em>GO4++ wins 19x19 Go tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 25, No. 3</a> » <a href="/7th_Computer_Olympiad">7th Computer Olympiad</a></li>
+<li><a href="/Erik_van_der_Werf">Erik van der Werf</a> (<strong>2002</strong>). <em>GO4++ wins 9x9 Go tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 25, No. 3</a> » <a href="/7th_Computer_Olympiad">7th Computer Olympiad</a></li>
+<li><a href="/Erik_van_der_Werf">Erik van der Werf</a> (<strong>2002</strong>). <em>Solving Ponnuki-Go on Small Boards</em>. <a href="/7th_Computer_Olympiad">7th Computer Olympiad Workshop</a></li>
+<li><a href="/Erik_van_der_Werf">Erik van der Werf</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2002</strong>). <em>Solving Ponnuki-Go on Small Boards</em>. BNAIC’02, <a href="http://erikvanderwerf.tengen.nl/pubdown/Solving_Ponnuki-Go_BNAIC2002.pdf">pdf</a></li>
+<li><a href="/Bruno_Bouzy">Bruno Bouzy</a> (<strong>2002</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-40031-8_25">A Small Go Board Study of Metric and Dimensional Evaluation Functions</a></em>. <a href="/CG_2002">CG 2002</a></li>
+<li><a href="/Erik_van_der_Werf">Erik van der Werf</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Eric_Postma">Eric Postma</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2002</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-40031-8_26">Local Move Prediction in Go</a></em>. <a href="/CG_2002">CG 2002</a></li>
+<li>Bill Spight (<strong>2002</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-40031-8_27">Evaluating Kos in a Neutral Threat Environment: Preliminary Results</a></em>. <a href="/CG_2002">CG 2002</a></li>
+<li>Teigo Nakamura, <a href="/Elwyn_Berlekamp">Elwyn Berlekamp</a> (<strong>2002</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-40031-8_15">Analysis of Composite Corridors</a></em>. <a href="/CG_2002">CG 2002</a></li>
+<li><a href="/David_Fotland">David Fotland</a> (<strong>2002</strong>). <em><a href="http://ilk.uvt.nl/icga/journal/contents/content25-4.htm#STATIC%20EYE">Static Eye in "The Many Faces of Go"</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 25, No. 4</a></li>
+<li>Zhixing Chen (<strong>2002</strong>). <em>Semi-Empirical Quantitative Theory of Go Part I: Estimation of the Influence of a Wall</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 25, No. 4</a></li>
+<li><a href="/Martin_Müller">Martin Müller</a> (<strong>2002</strong>). <em>Position Evaluation in Computer Go</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 25, No. 4</a></li>
+<li>David Wolfe (<strong>2002</strong>). <em>Go endgames are PSPACE-hard</em>. in <a href="/Richard_J._Nowakowski">Richard J. Nowakowski</a> (ed) (<strong>2002</strong>). <em><a href="http://library.msri.org/books/Book42/">More Games of No Chance</a></em>. <a href="https://en.wikipedia.org/wiki/Cambridge_University_Press">Cambridge University Press</a></li>
+</ul>
+<p><strong>2003</strong></p>
+<ul>
+<li>Matthew Pratola, Thomas Wolf (<strong>2003</strong>). <em><a href="http://ilk.uvt.nl/icga/journal/contents/content26-1.htm#GOTOOLS">Optimizing GOTOOLS' Search Heuristics using Genetic Algorithms</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 26, No. 1</a>, also <a href="https://arxiv.org/abs/cs/0302002">arXiv:cs/0302002</a> » <a href="/Genetic_Programming">Genetic Programming</a></li>
+<li><a href="/Keh-Hsun_Chen">Ken Chen</a> (<strong>2003</strong>). <em>Soft decomposition search and binary game forest model for move decision in Go</em>, Information Sciences, Vol. 154, Issues 3-4, 157-172, <a href="http://www.coit.uncc.edu/drchen/Papers/SoftDecomposition.pdf">pdf</a></li>
+<li><a href="/Markus_Enzenberger">Markus Enzenberger</a> (<strong>2003</strong>). <em><a href="http://webdocs.cs.ualberta.ca/~emarkus/neurogo/neurogo3/index.html">Evaluation in Go by a Neural Network using Soft Segmentation</a></em>. <a href="/Advances_in_Computer_Games_10">Advances in Computer Games 10</a>, <a href="http://webdocs.cs.ualberta.ca/~emarkus/publications/neurogo3.pdf">pdf</a></li>
+<li><a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Martin_Müller">Martin Müller</a>. (<strong>2003</strong>). <em>Df-pn in Go: An Application to the One-Eye Problem</em>. <a href="/Advances_in_Computer_Games_10">Advances in Computer Games 10</a>, <a href="http://www.fun.ac.jp/%7Ekishi/pdf_file/acg_kishimoto_mueller.pdf">pdf</a> » <a href="/Proof-Number_Search">Proof-Number Search</a> <a href="#fn41" class="footnote-ref" id="fnref41" role="doc-noteref"><sup>41</sup></a></li>
+<li><a href="/Erik_van_der_Werf">Erik van der Werf</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a> (<strong>2003</strong>). <em>Learning to Score Final Positions in the Game of Go</em>. <a href="/Advances_in_Computer_Games_10">Advances in Computer Games 10</a>, <a href="http://erikvanderwerf.tengen.nl/pubdown/learning_to_score.pdf">pdf</a></li>
+<li><a href="/Bruno_Bouzy">Bruno Bouzy</a>, <a href="/Bernard_Helmstetter">Bernard Helmstetter</a> (<strong>2003</strong>). <em>Monte Carlo Go Developments</em>. <a href="/Advances_in_Computer_Games_10">Advances in Computer Games 10</a>, <a href="http://www.ai.univ-paris8.fr/~bh/articles/acg10-mcgo.pdf">pdf</a></li>
+<li><a href="/Bruno_Bouzy">Bruno Bouzy</a> (<strong>2003</strong>). <em>Mathematical morphology applied to computer go</em>. IJPRAI Vol. 17, No. 2</li>
+<li><a href="/Bruno_Bouzy">Bruno Bouzy</a> (<strong>2003</strong>). <em>The move decision strategy of Indigo</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 26, No. 1</a></li>
+<li><a href="/Keh-Hsun_Chen">Ken Chen</a> (<strong>2003</strong>). <em>The Way to Go is Bottom Up</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 26, No. 2</a></li>
+<li><a href="/Erik_van_der_Werf">Erik van der Werf</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a> (<strong>2003</strong>). <em>Solving Go on Small Boards</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 26, No. 2</a>, <a href="http://erikvanderwerf.tengen.nl/pubdown/solving_go_on_small_boards.pdf">pdf</a></li>
+<li><a href="/Keh-Hsun_Chen">Ken Chen</a> (<strong>2003</strong>). <em>GNUGo wins 19x19 Go tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 26, No. 4</a> » <a href="/8th_Computer_Olympiad">8th Computer Olympiad</a></li>
+<li><a href="/Erik_van_der_Werf">Erik van der Werf</a> (<strong>2003</strong>). <em>Aya wins 9x9 Go tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 26, No. 4</a> » <a href="/8th_Computer_Olympiad">8th Computer Olympiad</a></li>
+<li>Alex B. Meijer, <a href="/Henk_Koppelaar">Henk Koppelaar</a> (<strong>2003</strong>). <em>Towards Multi-Objective Game Theory - with Application to Go</em>. <a href="http://www.eurosis.org/conf/gameon/gameon2003/">Game-On 2003</a>, <a href="http://www.mmi.tudelft.nl/pub/alex/meijer-gameon03.pdf">pdf</a></li>
+</ul>
+<p><strong>2004</strong></p>
+<ul>
+<li><a href="/Bruno_Bouzy">Bruno Bouzy</a> (<strong>2004</strong>). <em><a href="http://link.springer.com/chapter/10.1007/11674399_5">Associating Shallow and Selective Global Tree Search with Monte Carlo for 9 × 9 Go</a></em>. <a href="/CG_2004">CG 2004</a></li>
+<li><a href="/Erik_van_der_Werf">Erik van der Werf</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a> (<strong>2004</strong>). <em><a href="http://link.springer.com/chapter/10.1007/11674399_6">Learning to Estimate Potential Territory in the Game of Go</a></em>. <a href="/CG_2004">CG 2004</a>, <a href="http://erikvanderwerf.tengen.nl/pubdown/predicting_territory.pdf">pdf</a></li>
+<li>Xiaozhen Niu, <a href="/Martin_Müller">Martin Müller</a> (<strong>2004</strong>). <em><a href="http://link.springer.com/chapter/10.1007/11674399_7">An Improved Safety Solver for Computer Go</a></em>. <a href="/CG_2004">CG 2004</a></li>
+<li>Jan Ramon, Tom Croonenborghs (<strong>2004</strong>). <em><a href="http://link.springer.com/chapter/10.1007/11674399_8">Searching for Compound Goals Using Relevancy Zones in the Game of Go</a></em>. <a href="/CG_2004">CG 2004</a></li>
+<li><a href="/David_Fotland">David Fotland</a> (<strong>2004</strong>). <em>Go Intellect wins 19x19 Go tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 27, No. 3</a> » <a href="/9th_Computer_Olympiad">9th Computer Olympiad</a></li>
+<li><a href="/Bruno_Bouzy">Bruno Bouzy</a> (<strong>2004</strong>). <em>Go Intellect wins 9x9 Go tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 27, No. 3</a> » <a href="/9th_Computer_Olympiad">9th Computer Olympiad</a></li>
+<li><a href="/Erik_van_der_Werf">Erik van der Werf</a> (<strong>2004</strong>). <em>AI techniques for the game of Go.</em> Ph.D. thesis, <a href="/Maastricht_University">Universiteit Maastricht</a>, Maastricht, The Netherlands. ISBN 90 5278 445 0, <a href="http://erikvanderwerf.tengen.nl/pubdown/thesis_erikvanderwerf.pdf">pdf</a></li>
+<li><a href="/Bruno_Bouzy">Bruno Bouzy</a> (<strong>2004</strong>). <em>Toward a go player computational model.</em> Habilitation to Supervise Research document, <a href="https://en.wikipedia.org/wiki/Paris_VI_University">Paris 6 University</a></li>
+<li>Kenneth O. Stanley, <a href="/Risto_Miikkulainen">Risto Miikkulainen</a> (<strong>2004</strong>). <em><a href="http://nn.cs.utexas.edu/?stanley:gecco04">Evolving a Roving Eye for Go</a></em>. <a href="https://dblp.uni-trier.de/db/conf/gecco/gecco2004-2.html">GECCO 2004</a></li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a>, <a href="/Bernard_Helmstetter">Bernard Helmstetter</a> (<strong>2005</strong>). <em>Combining tactical search and Monte-Carlo in the game of Go</em>. IEEE <a href="http://www.informatik.uni-trier.de/~ley/db/conf/cig/cig2005.html#CazenaveH05">CIG 2005</a>, <a href="http://www.ai.univ-paris8.fr/~bh/articles/searchmcgo.pdf">pdf</a>, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/searchmcgo.pdf">pdf</a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2005</strong>). <em>The separation game</em>. JCIS 2005, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/separation.pdf">pdf</a></li>
+<li><a href="/Shi-Jim_Yen">Shi-Jim Yen</a>, <a href="/Jr-Chang_Chen">Jr-Chang Chen</a> (<strong>2005</strong>). <em>Handtalk III wins 19x19 Go tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 28, No. 3</a> » <a href="/10th_Computer_Olympiad">10th Computer Olympiad</a></li>
+<li><a href="/Shi-Jim_Yen">Shi-Jim Yen</a>, Jeng-Chi Yan (<strong>2005</strong>). <em>Go Intellect wins 9x9 Go tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 28, No. 3</a> » <a href="/10th_Computer_Olympiad">10th Computer Olympiad</a></li>
+<li>Xiaozhen Niu, <a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Martin_Müller">Martin Müller</a> (<strong>2005</strong>). <em><a href="http://link.springer.com/chapter/10.1007/11922155_7">Recognizing Seki in Computer Go</a></em>. <a href="/Advances_in_Computer_Games_11">Advances in Computer Games 11</a></li>
+<li><a href="/Bruno_Bouzy">Bruno Bouzy</a> (<strong>2005</strong>). <em><a href="http://link.springer.com/chapter/10.1007/11922155_8">Move-Pruning Techniques for Monte-Carlo Go</a></em>. <a href="/Advances_in_Computer_Games_11">Advances in Computer Games 11</a></li>
+<li><a href="/Bruno_Bouzy">Bruno Bouzy</a> (<strong>2005</strong>). <em>Associating domain-dependent knowledge and Monte Carlo approaches within a go program</em>. Information Sciences, Heuristic Search and Computer Game Playing IV</li>
+<li><a href="/Thomas_Philip_Runarsson">Thomas Philip Runarsson</a>, <a href="/Simon_Lucas">Simon Lucas</a> (<strong>2005</strong>). <em>Coevolution versus self-play temporal difference learning for acquiring position evaluation in small-board go</em>. <a href="/IEEE">IEEE Transactions on Evolutionary Computation</a>, Vol. 9, No. 6</li>
+<li><a href="/Erik_van_der_Werf">Erik van der Werf</a>, <a href="/Mark_Winands">Mark Winands</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a> (<strong>2005</strong>). <em>Learning to predict life and death from Go game records</em>. <a href="https://en.wikipedia.org/wiki/Information_Sciences_(journal)">Information Sciences</a>, Vol. 175, No. 4</li>
+<li><a href="/Erik_van_der_Werf">Erik van der Werf</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a> (<strong>2005</strong>). <em>Learning to score final positions in the game of Go</em>. <a href="https://en.wikipedia.org/wiki/Theoretical_Computer_Science_(journal)">Theoretical Computer Science</a>, Vol. 349, No. 2, <a href="http://erikvanderwerf.tengen.nl/pubdown/learning_to_score_extended.pdf">pdf preprint</a></li>
+</ul>
+<p><strong>2006</strong></p>
+<ul>
+<li><a href="/Keh-Hsun_Chen">Ken Chen</a>, Peigang Zhang (<strong>2006</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-75538-8_3">A New Heuristic Search Algorithm for Capturing Problems in Go</a></em>. <a href="/CG_2006">CG 2006</a></li>
+<li>Xiaozhen Niu, <a href="/Martin_Müller">Martin Müller</a> (<strong>2006</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-75538-8_4">An Open Boundary Safety-of-Territory Solver for the Game of Go</a></em>. <a href="/CG_2006">CG 2006</a></li>
+<li><a href="/Jahn-Takeshi_Saito">Jahn-Takeshi Saito</a>, <a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2006</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-75538-8_5">Monte-Carlo Proof-Number Search for Computer Go</a></em>. <a href="/CG_2006">CG 2006</a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2006</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-75538-8_6">Virtual Global Search: Application to 9×9 Go</a></em>. <a href="/CG_2006">CG 2006</a></li>
+<li><a href="/Rémi_Coulom">Rémi Coulom</a> (<strong>2006</strong>). <em><a href="http://remi.coulom.free.fr/CG2006/">Efficient Selectivity and Backup Operators in Monte-Carlo Tree Search</a></em>. <a href="/CG_2006">CG 2006</a>, <a href="http://remi.coulom.free.fr/CG2006/CG2006.pdf">pdf</a></li>
+<li><a href="/John_Tromp">John Tromp</a>, <a href="/Gunnar_Farnebäck">Gunnar Farnebäck</a> (<strong>2006</strong>). <em><a href="https://link.springer.com/chapter/10.1007/978-3-540-75538-8_8">Combinatorics of Go</a></em>. <a href="/CG_2006">CG 2006</a></li>
+<li><a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/Keh-Hsun_Chen">Ken Chen</a> (<strong>2006</strong>). <em>Crazy Stone wins 9x9 Go tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 29, No. 2</a> » <a href="/11th_Computer_Olympiad">11th Computer Olympiad</a></li>
+<li><a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/Keh-Hsun_Chen">Ken Chen</a> (<strong>2006</strong>). <em>Gnu Go wins 19x19 Go tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 29, No. 2</a> » <a href="/11th_Computer_Olympiad">11th Computer Olympiad</a></li>
+<li><a href="/Bruno_Bouzy">Bruno Bouzy</a> (<strong>2006</strong>). <em>History and Territory Heuristics for Monte-Carlo Go</em>. New Mathematics and Natural Computation</li>
+<li>Haruhiro Yoshimoto, Kazuki Yoshizoe, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a>, <a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, Kenjiro Taura (<strong>2006</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=1597359">Monte Carlo Go Has a Way to Go</a></em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/aaai/aaai2006.html#YoshimotoYKKT06">AAAI 2006</a>, <a href="http://www.aaai.org/Papers/AAAI/2006/AAAI06-168.pdf">pdf</a></li>
+<li><a href="/Julio_César_Hernández-Castro">Julio César Hernández-Castro</a>, Ignacio Blasco-López, Juan M. Estevez-Tapiador, Arturo Ribagorda-Garnacho (<strong>2006</strong>). <em>Steganography in games: A general methodology and its application to the game of Go</em>. <a href="http://www.journals.elsevier.com/computers-and-security/">Computers &amp; Security</a>, Vol. 25, <a href="http://www.azlaha.com/stegogo.pdf">pdf</a> <a href="#fn42" class="footnote-ref" id="fnref42" role="doc-noteref"><sup>42</sup></a></li>
+</ul>
+<p><strong>2007</strong></p>
+<ul>
+<li>Kazuki Yoshizoe, <a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/Martin_Müller">Martin Müller</a> (<strong>2007</strong>). <em>Lambda Depth-First Proof-Number Search and Its Application to Go</em>. <a href="/Conferences">20th IJCAI</a>, <a href="http://www.fun.ac.jp/%7Ekishi/pdf_file/yoshizoe-ijcai07.pdf">pdf</a> » <a href="/Proof-Number_Search">Proof-Number Search</a></li>
+<li><a href="/David_Silver">David Silver</a>, <a href="/Richard_Sutton">Richard Sutton</a>, <a href="/Martin_Müller">Martin Müller</a> (<strong>2007</strong>). <em>Reinforcement learning of local shape in the game of Go</em>. <a href="/Conferences">20th IJCAI</a>, <a href="http://webdocs.cs.ualberta.ca/~mmueller/ps/silver-ijcai2007.pdf">pdf</a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2007</strong>). <em>Playing the Right Atari</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 30, No. 1</a>, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/twoliberties.pdf">pdf</a></li>
+<li><a href="/Erik_van_der_Werf">Erik van der Werf</a> (<strong>2007</strong>). <em>Steenvreter wins 9x9 Go tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 30, No. 2</a> » <a href="/12th_Computer_Olympiad">12th Computer Olympiad#Go9x9</a></li>
+<li><a href="/Sylvain_Gelly">Sylvain Gelly</a>, <a href="/Yizao_Wang">Yizao Wang</a> (<strong>2007</strong>). <em>MoGo wins 19x19 Go tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 30, No. 2</a> » <a href="/12th_Computer_Olympiad">12th Computer Olympiad#Go</a></li>
+<li><a href="/Keh-Hsun_Chen">Ken Chen</a>, Peigang Zhang (<strong>2007</strong>). <em>Monte-Carlo Go with Knowledge-Guided Simulations</em>. <a href="/CGW_2007">CGW 2007</a></li>
+<li>Esa A. Seuranen (<strong>2007</strong>). <em>Introducing Playing Style to Computer Go</em>. <a href="/CGW_2007">CGW 2007</a>, <a href="http://lib.tkk.fi/Diss/2011/isbn9789526043708/article5.pdf">pdf</a></li>
+<li>Thomas Wolf, Lei Shen (<strong>2007</strong>). <em>Checking Life &amp; Death Problems in Go. I: The Program SCANLD</em>. <a href="/CGW_2007">CGW 2007</a>, <a href="https://pdfs.semanticscholar.org/1d5a/ad6844f61286d1954a67a28f970ed364d2f5.pdf">pdf</a></li>
+<li><a href="/Rémi_Coulom">Rémi Coulom</a> (<strong>2007</strong>). <em><a href="http://remi.coulom.free.fr/Amsterdam2007/">Computing Elo Ratings of Move Patterns in the Game of Go</a></em>. <a href="/CGW_2007">CGW 2007</a></li>
+<li><a href="/Rémi_Coulom">Rémi Coulom</a> (<strong>2007</strong>). <em>Computing Elo Ratings of Move Patterns in the Game of Go</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 30, No. 4</a>, <a href="http://remi.coulom.free.fr/Amsterdam2007/icgaj.pdf">pdf</a></li>
+<li><a href="/Nobuo_Araki">Nobuo Araki</a>, Kazuhiro Yoshida, <a href="/Yoshimasa_Tsuruoka">Yoshimasa Tsuruoka</a>, <a href="https://en.wikipedia.org/wiki/Jun&#39;ichi_Tsujii">Jun'ichi Tsujii</a> (<strong>2007</strong>). <em>Move Prediction in Go with the Maximum Entropy Method</em>. <a href="http://cswww.essex.ac.uk/cig/2007/index.jsp?page=papers.html">CIG 2007</a>, <a href="http://cswww.essex.ac.uk/cig/2007/papers/2070.pdf">pdf</a></li>
+<li><a href="/Feng-hsiung_Hsu">Feng-hsiung Hsu</a> (<strong>2007</strong>). <em><a href="https://ieeexplore.ieee.org/abstract/document/4337666/">Cracking GO</a></em>. <a href="/IEEE">IEEE Spectrum</a>, Vol. 44, No, 10 » <a href="/Go">Go</a></li>
+</ul>
+<p><strong>2008</strong></p>
+<ul>
+<li><a href="/Keh-Hsun_Chen">Ken Chen</a>, Peigang Zhang (<strong>2008</strong>). <em>Monte-Carlo Go with Knowledge-Guided Simulations</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 31, No. 2</a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_5">Multi-player Go</a></em>. <a href="/CG_2008">CG 2008</a></li>
+<li>Ling Zhao, <a href="/Martin_Müller">Martin Müller</a> (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_8">Using Artificial Boundaries in the Game of Go</a></em>. <a href="/CG_2008">CG 2008</a></li>
+<li><a href="/Keh-Hsun_Chen">Ken Chen</a>, Dawei Du, Peigang Zhang (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_9">A Fast Indexing Method for Monte-Carlo Go</a></em>. <a href="/CG_2008">CG 2008</a></li>
+<li>Xiaozhen Niu, <a href="/Martin_Müller">Martin Müller</a> (<strong>2008</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-87608-3_10">An Improved Safety Solver in Go Using Partial Regions</a></em>. <a href="/CG_2008">CG 2008</a></li>
+<li><a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, <a href="/Jean-Baptiste_Hoock">Jean-Baptiste Hoock</a>, Arpad Rimmel, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, <a href="/Chang-Shing_Lee">Chang-Shing Lee</a>, <a href="/Mei-Hui_Wang">Mei-Hui Wang</a>, Shang-Rong Tsai, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a> (<strong>2008</strong>). <em>Human-Computer Go Revolution 2008</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 31, No. 3</a></li>
+<li><a href="/Shogo_Takeuchi">Shogo Takeuchi</a>, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a>, <a href="/Kazunori_Yamaguchi">Kazunori Yamaguchi</a> (<strong>2008</strong>). <em>Evaluation of Monte Carlo tree search and the application to Go</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/cig/cig2008.html">CIG 2008</a></li>
+<li>Peigang Zhang, <a href="/Keh-Hsun_Chen">Ken Chen</a> (<strong>2008</strong>). <em><a href="http://www.worldscientific.com/doi/abs/10.1142/S1793005708001136">Monte-Carlo Go Capturing Tactic Search</a></em>. <a href="https://en.wikipedia.org/wiki/New_Mathematics_and_Natural_Computation">New Mathematics and Natural Computation</a>, Vol. 4, No. 3</li>
+<li><a href="/Ilya_Sutskever">Ilya Sutskever</a>, Vinod Nair (<strong>2008</strong>). <em>Mimicking Go Experts with Convolutional Neural Networks</em>. <a href="http://dblp.uni-trier.de/db/conf/icann/icann2008-2.html#SutskeverN08">ICANN 2008</a>, <a href="http://www.cs.utoronto.ca/~ilya/pubs/2008/go_paper.pdf">pdf</a></li>
+<li>Thomas Wolf (<strong>2008</strong>). <em><a href="http://senseis.xmp.net/?MasteringLadders">Mastering Ladders</a></em>. <a href="http://senseis.xmp.net/?SlateAndShell">Slate &amp; Shell</a></li>
+</ul>
+<p><strong>2009</strong></p>
+<ul>
+<li>Esa A. Seuranen (<strong>2009</strong>). <em>Entropy in Go</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 32, No. 1</a></li>
+<li><a href="/Mark_Winands">Mark Winands</a> (<strong>2009</strong>). <em>Many Faces of Go wins 9x9 and 19x19 Go tournaments</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 32, No. 1</a> » <a href="/13th_Computer_Olympiad">13th Computer Olympiad</a></li>
+<li><a href="/Markus_Enzenberger">Markus Enzenberger</a>, <a href="/Martin_Müller">Martin Müller</a> (<strong>2009</strong>). <em>Fuego - An Open-source Framework for Board Games and Go Engine Based on Monte-Carlo Tree Search</em>. Technical Report TR 09-08, <a href="/University_of_Alberta">University of Alberta</a></li>
+<li><a href="/Martin_Müller">Martin Müller</a> (<strong>2009</strong>). <em><a href="https://era.library.ualberta.ca/items/d5526cc7-d4c6-4e31-bdfc-6845def21e9e">Fuego at the Computer Olympiad in Pamplona 2009: A Tournament Report</a></em>. TR09-09</li>
+<li><a href="/Rémi_Coulom">Rémi Coulom</a> (<strong>2009</strong>). <em>The Monte-Carlo Revolution in Go</em>. JFFoS'2008: Japanese-French Frontiers of Science Symposium, <a href="http://remi.coulom.free.fr/JFFoS/JFFoS.pdf">slides as pdf</a></li>
+<li><a href="/Chang-Shing_Lee">Chang-Shing Lee</a>, <a href="/Mei-Hui_Wang">Mei-Hui Wang</a>, <a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, <a href="/Jean-Baptiste_Hoock">Jean-Baptiste Hoock</a>, Arpad Rimmel, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, Shang-Rong Tsai, <a href="/Shun-Chin_Hsu">Shun-Chin Hsu</a>, Tzung-Pei Hong (<strong>2009</strong>). <em><a href="http://hal.inria.fr/inria-00369786/">The Computational Intelligence of MoGo Revealed in Taiwan's Computer Go Tournaments</a></em>. <a href="http://hal.inria.fr/docs/00/36/97/86/PDF/TCIAIG-2008-0010_Accepted_.pdf">pdf</a></li>
+<li><a href="/Chang-Shing_Lee">Chang-Shing Lee</a>, <a href="/Mei-Hui_Wang">Mei-Hui Wang</a>, Tzung-Pei Hong, <a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, <a href="/Jean-Baptiste_Hoock">Jean-Baptiste Hoock</a>, Arpad Rimmel, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, Yau-Hwang Kuo (<strong>2009</strong>). <em>A Novel Ontology for Computer Go Knowledge Management</em>. IEEE FUZZ (2009), <a href="http://hal.inria.fr/docs/00/38/64/76/PDF/fuzz.pdf">pdf</a></li>
+<li>Vincent Berthier, Amine Bourki, Matthieu Coulm, <a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, Christophe Fiter, <a href="/Sylvain_Gelly">Sylvain Gelly</a>, <a href="/Jean-Baptiste_Hoock">Jean-Baptiste Hoock</a>, <a href="/Rémi_Munos">Rémi Munos</a>, Julien Pérez, Arpad Rimmel, Philippe Rolet, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, Paul Vayssière, <a href="/Yizao_Wang">Yizao Wang</a>, Ziqin Yu (et al.) (<strong>2009</strong>). <em>Computer-Go is not only for Go</em>. Korea, August 2009 <a href="http://www.lri.fr/~teytaud/korea.pdf">slides as pdf</a></li>
+<li><a href="/Erik_van_der_Werf">Erik van der Werf</a>, <a href="/Mark_Winands">Mark Winands</a> (<strong>2009</strong>). <em>Solving Go for Rectangular Boards</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 32, No. 2</a></li>
+<li><a href="/Keh-Hsun_Chen">Ken Chen</a> (<strong>2009</strong>). <em>Fuego wins 9x9 Go tournaments</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 32, No. 2</a> » <a href="/14th_Computer_Olympiad">14th Computer Olympiad</a></li>
+<li><a href="/Keh-Hsun_Chen">Ken Chen</a> (<strong>2009</strong>). <em>Zen wins 19x19 Go tournaments</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 32, No. 2</a> » <a href="/14th_Computer_Olympiad">14th Computer Olympiad</a></li>
+<li><a href="/Keh-Hsun_Chen">Ken Chen</a>, Dawei Du, Peigang Zhang (<strong>2009</strong>). <em>Monte-Carlo Tree Search and Computer Go</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/series/sci/sci251.html#ChenDZ09">Advances in Information and Intelligent Systems 2009</a></li>
+<li>Seth Pellegrino, Andrew Hubbard, Jason Galbraith, Peter D. Drake, Yung-Pin Chen (<strong>2009</strong>). <em>Localizing Search in Monte-Carlo Go using Statistical Covariance.</em> <a href="/ICGA_Journal">ICGA Journal, Vol. 32, No. 3</a></li>
+<li>Thomas Wolf (<strong>2009</strong>). <em>A library of eyes in Go, I: A life &amp; death definition consistent with `bent-4</em>. in Michael H. Albert, <a href="/Richard_J._Nowakowski">Richard J. Nowakowski</a> (eds) (<strong>2009</strong>). <em><a href="https://www.goodreads.com/book/show/11519909-games-of-no-chance-3">Games of No Chance 3</a></em>. <a href="https://en.wikipedia.org/wiki/Cambridge_University_Press">Cambridge University Press</a>, <a href="http://library.msri.org/books/Book56/files/26wolf.pdf">pdf</a></li>
+<li>Thomas Wolf, Matthew Pratola (<strong>2009</strong>). <em>A library of eyes in Go, II: Monolithic eyes</em>. in Michael H. Albert, <a href="/Richard_J._Nowakowski">Richard J. Nowakowski</a> (eds) (<strong>2009</strong>). <em><a href="https://www.goodreads.com/book/show/11519909-games-of-no-chance-3">Games of No Chance 3</a></em>. <a href="https://en.wikipedia.org/wiki/Cambridge_University_Press">Cambridge University Press</a>, <a href="http://library.msri.org/books/Book56/files/27wolf.pdf">pdf</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li>Frank Karger, Michael Babar (<strong>2010</strong>). <em>MyGoFriend wins Go 9x9 Tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 33, No. 3</a> » <a href="/15th_Computer_Olympiad">15th Computer Olympiad</a></li>
+<li><a href="/Shih-Chieh_Huang">Shih-Chieh Huang</a>, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a> (<strong>2010</strong>). <em>Many Faces of Go wins Go 13x13 Tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 33, No. 3</a> » <a href="/15th_Computer_Olympiad">15th Computer Olympiad</a></li>
+<li><a href="/David_Fotland">David Fotland</a> (<strong>2010</strong>). <em>Erica wins Go 19x19 Tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 33, No. 3</a> » <a href="/15th_Computer_Olympiad">15th Computer Olympiad</a></li>
+<li><a href="/Shih-Chieh_Huang">Shih-Chieh Huang</a>, <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/Shun-Shii_Lin">Shun-Shii Lin</a> (<strong>2010</strong>). <em>Monte-Carlo Simulation Balancing applied to 9x9 Go</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 33, No. 4</a></li>
+<li><a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a>, <a href="/Marcin_Szubert">Marcin Szubert</a> (<strong>2010</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=5586054">Coevolutionary Temporal Difference Learning for small-board Go</a></em>. <a href="/IEEE">IEEE Congress on Evolutionary Computation</a></li>
+<li><a href="/Hendrik_Baier">Hendrik Baier</a> (<strong>2010</strong>). <em>Adaptive Playout Policies for Monte-Carlo Go</em>. Master's thesis, <a href="https://en.wikipedia.org/wiki/University_of_Osnabr%C3%BCck">University of Osnabrück</a>, <a href="http://www.ke.tu-darmstadt.de/lehre/arbeiten/master/2010/Baier_Hendrik.pdf">pdf</a></li>
+<li><a href="/Hendrik_Baier">Hendrik Baier</a>, Peter D. Drake (<strong>2010</strong>). <em>The power of forgetting: Improving the last-good-reply policy in Monte Carlo Go</em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 2, No. 4</li>
+<li><a href="/Chang-Shing_Lee">Chang-Shing Lee</a>, <a href="/Mei-Hui_Wang">Mei-Hui Wang</a>, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a>, Yu-Jen Chen, <a href="/Cheng-Wei_Chou">Cheng-Wei Chou</a>, <a href="/Guillaume_Chaslot">Guillaume Chaslot</a>, <a href="/Jean-Baptiste_Hoock">Jean-Baptiste Hoock</a>, Arpad Rimmel, Hassen Doghmen (<strong>2010</strong>). <em>An ontology-based fuzzy inference system for computer Go applications</em>. <a href="http://www.ijfs.org.tw/">International Journal of Fuzzy Systems</a>, Vol. 12, No. 2, <a href="https://www.researchgate.net/profile/Cheng_Wei_Chou/publication/265231387_An_Ontology-based_Fuzzy_Inference_System_for_Computer_Go_Applications/links/5498343f0cf2c5a7e342a903.pdf">pdf</a></li>
+<li><a href="/Jean-Baptiste_Hoock">Jean-Baptiste Hoock</a>, <a href="/Chang-Shing_Lee">Chang-Shing Lee</a>, Arpad Rimmel, <a href="/Fabien_Teytaud">Fabien Teytaud</a>, <a href="/Mei-Hui_Wang">Mei-Hui Wang</a>, <a href="/Olivier_Teytaud">Olivier Teytaud</a> (<strong>2010</strong>). <em>Intelligent Agents for the Game of Go</em>. <a href="/IEEE">IEEE Computational Intelligence Magazine</a>, Vol. 5, <a href="https://hal.inria.fr/inria-00544758v2/document">pdf</a></li>
+</ul>
+<p><strong>2011</strong></p>
+<ul>
+<li><a href="/Markus_Enzenberger">Markus Enzenberger</a>, <a href="/Martin_Müller">Martin Müller</a>, Broderick Arneson, Richard Segal (<strong>2011</strong>). <em>Fuego - An Open-source Framework for Board Games and Go Engine Based on Monte-Carlo Tree Search</em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 2, No. 4, <a href="https://webdocs.cs.ualberta.ca/~mmueller/ps/fuego-TCIAIG.pdf">pdf</a></li>
+<li><a href="/Abdallah_Saffidine">Abdallah Saffidine</a> (<strong>2011</strong>). <em>Moccos wins the Panthom-Go Tournament</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 34, No. 1</a> » <a href="/15th_Computer_Olympiad">15th Computer Olympiad</a></li>
+<li><a href="/Ingo_Althöfer">Ingo Althöfer</a> (<strong>2011</strong>). <em>John Tromp in the Style of David Levy: 4-0 win in the Go bet</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 34, No. 2</a> » <a href="/John_Tromp">John Tromp</a> <a href="#fn43" class="footnote-ref" id="fnref43" role="doc-noteref"><sup>43</sup></a></li>
+<li><a href="/Shih-Chieh_Huang">Shih-Chieh Huang</a>, <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="/Shun-Shii_Lin">Shun-Shii Lin</a> (<strong>2011</strong>). <em>Time Management for Monte-Carlo Tree Search Applied to the Game of Go</em>. TAAI 2010, <a href="http://remi.coulom.free.fr/Publications/TimeManagement.pdf">pdf</a></li>
+<li><a href="/Shih-Chieh_Huang">Shih-Chieh Huang</a> (<strong>2011</strong>). <em>New Heuristics for Monte Carlo Tree Search Applied to the Game of Go</em>. Ph.D. thesis, <a href="http://www.grappa.univ-lille3.fr/~coulom/Aja_PhD_Thesis.pdf">pdf</a></li>
+<li><a href="/Hendrik_Baier">Hendrik Baier</a>, <a href="/Mark_Winands">Mark Winands</a> (<strong>2011</strong>). <em>Active Opening Book Application for Monte-Carlo Tree Search in 19x19 Go</em>. <a href="http://allserv.kahosl.be/bnaic2011/">BNAIC 2011</a>, <a href="https://dke.maastrichtuniversity.nl/m.winands/documents/bnaic2011Baier.pdf">pdf</a></li>
+<li>Petr Baudiš, Jean-Loup Gailly (<strong>2011</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-642-31866-5_3">Pachi: State of the Art Open Source Go Program</a></em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a></li>
+<li><a href="/Hendrik_Baier">Hendrik Baier</a>, <a href="/Mark_Winands">Mark Winands</a> (<strong>2011</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-642-31866-5_4">Time Management for Monte-Carlo Tree Search in Go</a></em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a></li>
+<li><a href="/Cheng-Wei_Chou">Cheng-Wei Chou</a>, Ping-Chiang Chou, Hassen Doghmen, <a href="/Chang-Shing_Lee">Chang-Shing Lee</a>, Tsan-Cheng Su, <a href="/Fabien_Teytaud">Fabien Teytaud</a>, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, Hui-Ming Wang, <a href="/Mei-Hui_Wang">Mei-Hui Wang</a>, Li-Wen Wu, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a> (<strong>2011</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-642-31866-5_8">Towards a Solution of 7x7 Go with Meta-MCTS</a></em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a></li>
+<li>Henry Brausen, <a href="/Ryan_Hayward">Ryan B. Hayward</a>, <a href="/Martin_Müller">Martin Müller</a>, Abdul Qadir, David Spies (<strong>2011</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-642-31866-5_19">Blunder Cost in Go and Hex</a></em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a></li>
+<li><a href="/Jiao_Wang">Jiao Wang</a>, Shiyuan Li, Jitong Chen, Xin Wei, Huizhan Lv, <a href="/Xinhe_Xu">Xinhe Xu</a> (<strong>2011</strong>). <em><a href="http://link.springer.com/chapter/10.1007%2F978-3-642-31866-5_10?LI=true#page-1">4*4-Pattern and Bayesian Learning in Monte-Carlo Go</a></em>. <a href="/Advances_in_Computer_Games_13">Advances in Computer Games 13</a></li>
+<li><a href="/Sylvain_Gelly">Sylvain Gelly</a>, <a href="/David_Silver">David Silver</a> (<strong>2011</strong>). <em>Monte-Carlo tree search and rapid action value estimation in computer Go</em>. <a href="https://en.wikipedia.org/wiki/Artificial_Intelligence_%28journal%29">Artificial Intelligence</a>, Vol. 175, No. 11</li>
+<li>Łukasz Lew (<strong>2011</strong>). <em>Modeling Go Game as a Large Decomposable Decision Process</em>. Ph.D. thesis, <a href="/University_of_Warsaw">University of Warsaw</a></li>
+<li><a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a>, <a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Marcin_Szubert">Marcin Szubert</a> (<strong>2011</strong>). <em><a href="http://www.degruyter.com/view/j/amcs.2011.21.issue-4/v10006-011-0057-3/v10006-011-0057-3.xml">Evolving small-board Go players using Coevolutionary Temporal Difference Learning with Archives</a></em>. <a href="http://www.degruyter.com/view/j/amcs">Applied Mathematics and Computer Science</a>, Vol. 21, No. 4</li>
+<li>Thomas Wolf (<strong>2011</strong>). <em>A Dynamical Systems Approach for Static Evaluation in Go</em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 3, No 2, also <a href="https://arxiv.org/abs/1108.4220">arXiv:1108.4220</a> <a href="#fn44" class="footnote-ref" id="fnref44" role="doc-noteref"><sup>44</sup></a></li>
+</ul>
+<p><strong>2012</strong></p>
+<ul>
+<li><a href="/Sylvain_Gelly">Sylvain Gelly</a>, <a href="/Marc_Schoenauer">Marc Schoenauer</a>, <a href="/Michèle_Sebag">Michèle Sebag</a>, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, <a href="/Levente_Kocsis">Levente Kocsis</a>, <a href="/David_Silver">David Silver</a>, <a href="/Csaba_Szepesvári">Csaba Szepesvári</a> (<strong>2012</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=2093548.2093574">The Grand Challenge of Computer Go: Monte Carlo Tree Search and Extensions</a></em>. <a href="/ACM">Communications of the ACM</a>, Vol. 55, No. 3, <a href="http://www0.cs.ucl.ac.uk/staff/D.Silver/web/Applications_files/grand-challenge.pdf">pdf preprint</a></li>
+<li><a href="/Chang-Shing_Lee">Chang-Shing Lee</a>, <a href="/Mei-Hui_Wang">Mei-Hui Wang</a>, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a> (<strong>2012</strong>). <em>Human vs. Machine Go Competitions in IEEE WCCI 2012</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 35, No. 4</a></li>
+<li>Ching-Nung Lin, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a> (<strong>2012</strong>). <em>The Computer Go Tournaments in TCGA 2012</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 35, No. 4</a></li>
+<li>Ping-Chiang Chou, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a>, <a href="/Cheng-Wei_Chou">Cheng-Wei Chou</a>, Ching-Nung Lin, <a href="/Chang-Shing_Lee">Chang-Shing Lee</a>, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, Hassen Doghmen (<strong>2012</strong>). <em><a href="https://hal.inria.fr/hal-00766190">A simple Tsumego Generator</a></em>. <a href="/Conferences">GPW 2012</a></li>
+</ul>
+<p><strong>2013</strong></p>
+<ul>
+<li><a href="/Cheng-Wei_Chou">Cheng-Wei Chou</a>, Ching-Nung Lin, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a>, <a href="/Hideki_Kato">Hideki Kato</a>, <a href="/Jr-Chang_Chen">Jr-Chang Chen</a> (<strong>2013</strong>). <em>The 6th GPW Cup 9x9 and 13x13 Computer Go Tournaments</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 36, No. 1</a></li>
+<li>Ching-Nung Lin, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a> (<strong>2013</strong>). <em>The TAAI 2012 Computer Go Tournaments and Human vs. Computer Go Competition</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 36, No. 1</a></li>
+<li>Mark Boon (<strong>2013</strong>). <em><a href="http://www.ai-express.net/?p=6">The Beginning of Computer-Go Programs</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 36, No. 2</a></li>
+<li><a href="/Kokolo_Ikeda">Kokolo Ikeda</a>, <a href="/Simon_Viennot">Simon Viennot</a> (<strong>2013</strong>). <em>Production of various strategies and position control for Monte-Carlo Go - Entertaining human players</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/cig/cig2013.html#IkedaV13">CIG 2013</a></li>
+<li><a href="/Shih-Chieh_Huang">Shih-Chieh Huang</a>, <a href="/Martin_Müller">Martin Müller</a> (<strong>2013</strong>). <em>Investigating the Limits of Monte Carlo Tree Search Methods in Computer Go</em>. <a href="/CG_2013">CG 2013</a></li>
+<li>Tobias Graf, Lars Schaefers, Marco Platzner (<strong>2013</strong>). <em>On Semeai Detection in Monte-Carlo Go</em>. <a href="/CG_2013">CG 2013</a>, <a href="http://www.cs.uni-paderborn.de/fileadmin/Informatik/AG-Platzner/publications/graf13_cg/graf13_cg.pdf">pdf</a> <a href="#fn45" class="footnote-ref" id="fnref45" role="doc-noteref"><sup>45</sup></a></li>
+<li>Sumudo Fernando, <a href="/Martin_Müller">Martin Müller</a> (<strong>2013</strong>). <em>Analyzing Simulations in Monte-Carlo Tree Search for the Game of Go</em>. <a href="/CG_2013">CG 2013</a></li>
+<li><a href="/David_Silver">David Silver</a>, <a href="/Richard_Sutton">Richard Sutton</a>, <a href="/Martin_Müller">Martin Mueller</a> (<strong>2013</strong>). <em>Temporal-Difference Search in Computer Go</em>. Proceedings of the <a href="http://icaps13.icaps-conference.org/technical-program/workshop-program/planning-and-learning/">ICAPS-13 Workshop on Planning and Learning</a>, <a href="http://webdocs.cs.ualberta.ca/~sutton/papers/SSM-ICAPS-13.pdf">pdf</a></li>
+<li>Katja Grace (<strong>2013</strong>). <em>Algorithmic Progress in Six Domains</em>. Technical report 2013-3, <a href="https://en.wikipedia.org/wiki/Machine_Intelligence_Research_Institute">Machine Intelligence Research Institute</a>, <a href="https://en.wikipedia.org/wiki/Berkeley,_California">Berkeley, CA</a>, <a href="http://intelligence.org/files/AlgorithmicProgress.pdf">pdf</a>, 5 <a href="/Games">Game Playing</a>, 5.1 <a href="/Chess">Chess</a>, 5.2 <a href="/Go">Go</a>, 9 <a href="/Learning">Machine Learning</a></li>
+<li>Chun-Hsiang Hsieh, Jeng-Chi Yan (<strong>2013</strong>). <em><a href="http://www.ijiet.org/show-39-348-1.html">The Design and Development of a 9 by 9 GO Opening Game Knowledge Base System</a></em>. <a href="http://www.ijiet.org/">International Journal of Information and Education Technology</a>, Vol. 3, No. 4</li>
+<li><a href="/Chang-Shing_Lee">Chang-Shing Lee</a>, <a href="/Mei-Hui_Wang">Mei-Hui Wang</a>, Yu-Jen Chen, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a> (<strong>2013</strong>). <em>Apply Fuzzy Markup Language to Knowledge Representation for Game of Computer Go</em>. in <a href="https://dblp.uni-trier.de/pers/hd/a/Acampora:Giovanni">Giovanni Acampora</a>, <a href="https://dblp.uni-trier.de/pers/hd/l/Loia:Vincenzo">Vincenzo Loia</a>, <a href="/Chang-Shing_Lee">Chang-Shing Lee</a>, <a href="/Mei-Hui_Wang">Mei-Hui Wang</a> (eds.) (<strong>2013</strong>). <em><a href="https://link.springer.com/book/10.1007%2F978-3-642-35488-5">On the Power of Fuzzy Markup Language</a></em>. <a href="https://link.springer.com/bookseries/2941">Studies in Fuzziness and Soft Computing</a>, Vol. 296, <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a> <a href="#fn46" class="footnote-ref" id="fnref46" role="doc-noteref"><sup>46</sup></a></li>
+</ul>
+<p><strong>2014</strong></p>
+<ul>
+<li>Lars Schaefers (<strong>2014</strong>). <em>Parallel Monte-Carlo Tree Search for HPC Systems and its Application to Computer Go</em>. Ph.D. thesis, <a href="/Paderborn_University">Paderborn University</a>, advisors Marco Platzner, <a href="/Ulf_Lorenz">Ulf Lorenz</a>, <a href="http://www.althofer.de/phd-thesis-schaefers.pdf">pdf</a>, <a href="https://www.dropbox.com/s/x0lh7ky5lvj6c1y/PhdThesisSchaefers.pdf">pdf</a></li>
+<li><a href="/S._Ali_Mirsoleimani">S. Ali Mirsoleimani</a>, <a href="/Aske_Plaat">Aske Plaat</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Jos_Vermaseren">Jos Vermaseren</a> (<strong>2014</strong>). <em>Performance analysis of a 240 thread tournament level MCTS Go program on the Intel Xeon Phi</em>. <a href="http://arxiv.org/abs/1409.4297">CoRR abs/1409.4297</a> » <a href="/Monte-Carlo_Tree_Search">MCTS</a>, <a href="/Parallel_Search">Parallel Search</a>, <a href="/X86-64">x86-64</a></li>
+<li><a href="/Christopher_Clark">Christopher Clark</a>, <a href="/Amos_Storkey">Amos Storkey</a> (<strong>2014</strong>). <em>Teaching Deep Convolutional Neural Networks to Play Go</em>. <a href="http://arxiv.org/abs/1412.3409">arXiv:1412.3409</a> » <a href="/Go">DCNN in Go</a></li>
+<li><a href="/Chris_J._Maddison">Chris J. Maddison</a>, <a href="/Shih-Chieh_Huang">Aja Huang</a>, <a href="/Ilya_Sutskever">Ilya Sutskever</a>, <a href="/David_Silver">David Silver</a> (<strong>2014</strong>). <em>Move Evaluation in Go Using Deep Convolutional Neural Networks</em>. <a href="http://arxiv.org/abs/1412.6564v1">arXiv:1412.6564v1</a> » <a href="/Go">DCNN in Go</a></li>
+<li><a href="/Ingo_Althöfer">Ingo Althöfer</a>, Raymond Georg Snatzke (<strong>2014</strong>). <em>The codecentric Go Challenge 2014: Franz-Josef Dickhut vs. CRAZY STONE</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 37, No. 4</a> <a href="#fn47" class="footnote-ref" id="fnref47" role="doc-noteref"><sup>47</sup></a> <a href="#fn48" class="footnote-ref" id="fnref48" role="doc-noteref"><sup>48</sup></a> <a href="#fn49" class="footnote-ref" id="fnref49" role="doc-noteref"><sup>49</sup></a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="/Olivier_Teytaud">Olivier Teytaud</a>, <a href="/Abdallah_Saffidine">Abdallah Saffidine</a>, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a> (<strong>2015</strong>). <em>The complexities of Go</em>. <a href="/Advances_in_Computer_Games_14">Advances in Computer Games 14</a></li>
+<li><a href="/Kokolo_Ikeda">Kokolo Ikeda</a>, Takanari Shishido, <a href="/Simon_Viennot">Simon Viennot</a> (<strong>2015</strong>). <em>Machine-Learning of Shape Names for the Game of Go</em>. <a href="/Advances_in_Computer_Games_14">Advances in Computer Games 14</a></li>
+<li>Yuandong Tian, Yan Zhu (<strong>2015</strong>). <em>Better Computer Go Player with Neural Network and Long-term Prediction</em>. <a href="http://arxiv.org/abs/1511.06410">arXiv:1511.06410</a> <a href="#fn50" class="footnote-ref" id="fnref50" role="doc-noteref"><sup>50</sup></a> <a href="#fn51" class="footnote-ref" id="fnref51" role="doc-noteref"><sup>51</sup></a> » <a href="/Neural_Networks">Neural Networks</a></li>
+<li>Thomas Wolf (<strong>2015</strong>). <em>A Classification of Semeai with Approach Moves</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 38, No. 4</a>, <a href="https://arxiv.org/abs/1608.02890">arXiv:1608.02890</a></li>
+<li>Peter H. Jin, Kurt Keutzer (<strong>2015</strong>). <em>Convolutional Monte Carlo Rollouts in Go</em>. <a href="http://arxiv.org/abs/1512.03375">arXiv:1512.03375</a></li>
+<li>Lars Schaefers, Marco Platzner (<strong>2015</strong>). <em><a href="http://ieeexplore.ieee.org/document/6876158/">Distributed Monte Carlo Tree Search: A Novel Technique and its Application to Computer Go</a></em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 7, No. 4 <a href="#fn52" class="footnote-ref" id="fnref52" role="doc-noteref"><sup>52</sup></a></li>
+<li><a href="/Martin_Müller">Martin Müller</a> (<strong>2015</strong>). <em><a href="https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=7317659">Keynote speech III Computer go research - The challenges ahead</a></em>. <a href="/IEEE">CIG 2015</a></li>
+</ul>
+<p><strong>2016</strong></p>
+<ul>
+<li><a href="/John_Tromp">John Tromp</a>, <a href="/Gunnar_Farnebäck">Gunnar Farnebäck</a> (<strong>2016</strong>). <em><a href="https://slidelegend.com/combinatorics-of-go-john-tromp_59e6582d1723dd4ae3fc8239.html">Combinatorics of Go</a></em>. Revised Version of the CG 2006 Paper</li>
+<li><a href="/David_Silver">David Silver</a>, <a href="/Shih-Chieh_Huang">Aja Huang</a>, <a href="/Chris_J._Maddison">Chris J. Maddison</a>, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Laurent_Sifre">Laurent Sifre</a>, George van den Driessche, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, Veda Panneershelvam, <a href="/Marc_Lanctot">Marc Lanctot</a>, Sander Dieleman, Dominik Grewe, John Nham, Nal Kalchbrenner, <a href="/Ilya_Sutskever">Ilya Sutskever</a>, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, Madeleine Leach, <a href="/Koray_Kavukcuoglu">Koray Kavukcuoglu</a>, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Demis_Hassabis">Demis Hassabis</a> (<strong>2016</strong>). <em><a href="http://www.nature.com/nature/journal/v529/n7587/full/nature16961.html">Mastering the game of Go with deep neural networks and tree search</a></em>. <a href="https://en.wikipedia.org/wiki/Nature_%28journal%29">Nature</a>, Vol. 529 » AlphaGo</li>
+<li>Tobias Graf, Marco Platzner (<strong>2016</strong>). <em>Using Deep Convolutional Neural Networks in Monte Carlo Tree Search</em>. <a href="/CG_2016">CG 2016</a></li>
+<li><a href="/John_Tromp">John Tromp</a> (<strong>2016</strong>). <em>The number of legal Go positions</em>. <a href="/CG_2016">CG 2016</a></li>
+<li><a href="/John_Tromp">John Tromp</a>, <a href="/Matthieu_Walraet">Matthieu Walraet</a> (<strong>2016</strong>). <em>A googolplex of Go games</em>. <a href="/CG_2016">CG 2016</a></li>
+<li><a href="/Shih-Chieh_Huang">Aja Huang</a> (<strong>2016</strong>). <em><a href="/CG_2016">AlphaGo: Combining Deep Neural Networks with Tree Search</a></em>. <a href="/CG_2016">CG 2016</a>, Keynote Lecture</li>
+<li><a href="/Ingo_Althöfer">Ingo Althöfer</a> (<strong>2016</strong>). <em>Computer-Aided Go: Chess as a Role Model</em>. <a href="/CG_2016">CG 2016</a></li>
+<li>Peter H. Jin , Kurt Keutzer (<strong>2016</strong>). <em>Convolutional Monte Carlo Rollouts for Computer Go</em>. <a href="/CG_2016">CG 2016</a></li>
+<li><a href="/Chang-Shing_Lee">Chang-Shing Lee</a>, <a href="/Mei-Hui_Wang">Mei-Hui Wang</a>, <a href="/Shi-Jim_Yen">Shi-Jim Yen</a>, <a href="/Ting-Han_Wei">Ting-Han Wei</a>, <a href="/I-Chen_Wu">I-Chen Wu</a>, Ping-Chiang Chou, Chun-Hsun Chou, Ming-Wan Wang, Tai-Hsiung Yang (<strong>2016</strong>). <em>Human vs. Computer Go: Review and Prospect</em>. <a href="https://arxiv.org/abs/1606.02032">arXiv:1606.02032</a></li>
+<li><a href="/Jonathan_Rosenthal">Jonathan Rosenthal</a> (<strong>2016</strong>). <em><a href="https://www.research-collection.ethz.ch/handle/20.500.11850/156354">Deep Learning for Go</a></em>. B.Sc. thesis, <a href="/ETH_Zurich">ETH Zurich</a></li>
+<li><a href="/Kokolo_Ikeda">Kokolo Ikeda</a>, <a href="/Simon_Viennot">Simon Viennot</a>, Naoyuki Sato (<strong>2016</strong>). <em>Detection and labeling of bad moves for coaching go</em>. <a href="https://dblp.uni-trier.de/db/conf/cig/cig2016.html">CIG 2016</a></li>
+<li>Chenjun Xiao, <a href="/Martin_Müller">Martin Müller</a> (<strong>2016</strong>). <em>Factorization Ranking Model for Move Prediction in the Game of Go</em>. <a href="/Conferences">AAAI 2016</a></li>
+</ul>
+<p><strong>2017</strong></p>
+<ul>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2017</strong>). <em><a href="http://ieeexplore.ieee.org/document/7875402/">Residual Networks for Computer Go</a></em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. PP, No. 99, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/resnet.pdf">pdf</a></li>
+<li><a href="/Ti-Rong_Wu">Ti-Rong Wu</a>, <a href="/I-Chen_Wu">I-Chen Wu</a>, <a href="/Guan-Wun_Chen">Guan-Wun Chen</a>, <a href="/Ting-Han_Wei">Ting-Han Wei</a>, Tung-Yi Lai, Hung-Chun Wu, Li-Cheng Lan (<strong>2017</strong>). <em>Multi-Labelled Value Networks for Computer Go</em>. <a href="https://arxiv.org/abs/1705.10701">arXiv:1705.10701</a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a> (<strong>2017</strong>). <em>Improved Policy Networks for Computer Go</em>. <a href="/Advances_in_Computer_Games_15">Advances in Computer Games 15</a>, <a href="http://www.lamsade.dauphine.fr/~cazenave/papers/gofairsbn.pdf">pdf</a></li>
+<li>Thomas Wolf (<strong>2017</strong>). <em>Seki with 2 Liberties per Chain in the Game of Go</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 39, No. 2</a></li>
+<li>Jon Diamond (<strong>2017</strong>). <em>A History of Go-playing Programs</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 39, No. 2</a></li>
+<li><a href="/Chang-Shing_Lee">Chang-Shing Lee</a>, <a href="/Mei-Hui_Wang">Mei-Hui Wang</a>, <a href="/Chia-Hsiu_Kao">Chia-Hsiu Kao</a>, Sheng-Chi Yang, Yusuke Nojima, Ryosuke Saga, Nan Shuo, <a href="/Naoyuki_Kubota">Naoyuki Kubota</a> (<strong>2017</strong>). <em>FML-based Prediction Agent and Its Application to Game of Go</em>. <a href="https://arxiv.org/abs/1704.04719">arXiv:1704.04719</a></li>
+<li><a href="/Chang-Shing_Lee">Chang-Shing Lee</a>, <a href="/Mei-Hui_Wang">Mei-Hui Wang</a>, Sheng-Chi Yang, Pi-Hsia Hung, Su-Wei Lin, Nan Shuo, <a href="/Naoyuki_Kubota">Naoyuki Kubota</a>, Chun-Hsun Chou, Ping-Chiang Chou, <a href="/Chia-Hsiu_Kao">Chia-Hsiu Kao</a> (<strong>2017</strong>). <em>FML-based Dynamic Assessment Agent for Human-Machine Cooperative System on Game of Go</em>. <a href="https://arxiv.org/abs/1707.04828">arXiv:1707.04828</a></li>
+<li><a href="/David_Silver">David Silver</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Karen_Simonyan">Karen Simonyan</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, <a href="/Shih-Chieh_Huang">Aja Huang</a>, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, Lucas Baker, <a href="/Matthew_Lai">Matthew Lai</a>, Adrian Bolton, Yutian Chen, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, Fan Hui, <a href="/Laurent_Sifre">Laurent Sifre</a>, George van den Driessche, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Demis_Hassabis">Demis Hassabis</a> (<strong>2017</strong>). <em><a href="https://www.nature.com/nature/journal/v550/n7676/full/nature24270.html">Mastering the game of Go without human knowledge</a></em>. <a href="https://en.wikipedia.org/wiki/Nature_%28journal%29">Nature</a>, Vol. 550, <a href="https://www.gwern.net/docs/rl/2017-silver.pdf">pdf</a></li>
+<li><a href="/David_Silver">David Silver</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Marc_Lanctot">Marc Lanctot</a>, <a href="/Laurent_Sifre">Laurent Sifre</a>, <a href="/Dharshan_Kumaran">Dharshan Kumaran</a>, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, <a href="/Karen_Simonyan">Karen Simonyan</a>, <a href="/Demis_Hassabis">Demis Hassabis</a> (<strong>2017</strong>). <em>Mastering Chess and Shogi by Self-Play with a General Reinforcement Learning Algorithm</em>. <a href="https://arxiv.org/abs/1712.01815">arXiv:1712.01815</a> » <a href="/AlphaZero">AlphaZero</a></li>
+</ul>
+<p><strong>2018</strong></p>
+<ul>
+<li><a href="/Chang-Shing_Lee">Chang-Shing Lee</a>, <a href="/Mei-Hui_Wang">Mei-Hui Wang</a>, Li-Wei Ko, <a href="/Naoyuki_Kubota">Naoyuki Kubota</a>, Lu-An Lin, Shinya Kitaoka, Yu-Te Wang, Shun-Feng Su (<strong>2018</strong>). <em>Human and Smart Machine Co-Learning with Brain Computer Interface</em>. <a href="https://arxiv.org/abs/1802.06521">arXiv:1802.06521</a></li>
+<li><a href="/David_Silver">David Silver</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Marc_Lanctot">Marc Lanctot</a>, <a href="/Laurent_Sifre">Laurent Sifre</a>, <a href="/Dharshan_Kumaran">Dharshan Kumaran</a>, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, <a href="/Karen_Simonyan">Karen Simonyan</a>, <a href="/Demis_Hassabis">Demis Hassabis</a> (<strong>2018</strong>). <em><a href="http://science.sciencemag.org/content/362/6419/1140">A general reinforcement learning algorithm that masters chess, shogi, and Go through self-play</a></em>. <a href="https://en.wikipedia.org/wiki/Science_(journal)">Science</a>, Vol. 362, No. 6419 <a href="#fn53" class="footnote-ref" id="fnref53" role="doc-noteref"><sup>53</sup></a></li>
+<li>Yuuto Kosaka, <a href="/Takeshi_Ito">Takeshi Ito</a> (<strong>2018</strong>). <em>Examination of Indicators for Estimating Players’ Strength by using Computer Go</em>. <a href="/TAAI_2018">TAAI 2018</a></li>
+<li>Chung-Chin Shih, An-Jen Liu, <a href="/I-Chen_Wu">I-Chen Wu</a> (<strong>2018</strong>). <em>2017 “CITIC Securities Cup” – The 1st World AI Go Open</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 40, No. 4</a></li>
+</ul>
+<p><strong>2019</strong></p>
+<ul>
+<li><a href="/Chang-Shing_Lee">Chang-Shing Lee</a>, <a href="/Mei-Hui_Wang">Mei-Hui Wang</a>, Li-Wei Ko, Bo-Yu Tsai, Yi-Lin Tsai, Sheng-Chi Yang, Lu-An Lin, Yi-Hsiu Lee, Hirofumi Ohashi, <a href="/Naoyuki_Kubota">Naoyuki Kubota</a>, Nan Shuo (<strong>2019</strong>). <em>PFML-based Semantic BCI Agent for Game of Go Learning and Prediction</em>. <a href="https://arxiv.org/abs/1901.02999">arXiv:1901.02999</a></li>
+<li><a href="/Chang-Shing_Lee">Chang-Shing Lee</a>, <a href="/Mei-Hui_Wang">Mei-Hui Wang</a>, Li-Chuang Chen, Yusuke Nojima, Tzong-Xiang Huang, Jinseok Woo, <a href="/Naoyuki_Kubota">Naoyuki Kubota</a>, Eri Sato-Shimokawara, Toru Yamaguchi (<strong>2019</strong>). <em>A GFML-based Robot Agent for Human and Machine Cooperative Learning on Game of Go</em>. <a href="http://export.arxiv.org/abs/1901.07191">arXiv:1901.07191</a></li>
+<li>Yuandong Tian, Jerry Ma, Qucheng Gong, Shubho Sengupta, Zhuoyuan Chen, James Pinkerton, C. Lawrence Zitnick (<strong>2019</strong>). <em>ELF OpenGo: An Analysis and Open Reimplementation of AlphaZero</em>. <a href="https://arxiv.org/abs/1902.04522">arXiv:1902.04522</a> <a href="#fn54" class="footnote-ref" id="fnref54" role="doc-noteref"><sup>54</sup></a> <a href="#fn55" class="footnote-ref" id="fnref55" role="doc-noteref"><sup>55</sup></a></li>
+<li><a href="/David_J._Wu">David J. Wu</a> (<strong>2019</strong>). <em>Accelerating Self-Play Learning in Go</em>. <a href="https://arxiv.org/abs/1902.10565">arXiv:1902.10565</a> <a href="#fn56" class="footnote-ref" id="fnref56" role="doc-noteref"><sup>56</sup></a></li>
+<li>Yusaku Mandai, <a href="/Tomoyuki_Kaneko">Tomoyuki Kaneko</a> (<strong>2019</strong>). <em>RankNet for evaluation functions of the game of Go</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 41, No. 2</a></li>
+<li><a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Karen_Simonyan">Karen Simonyan</a>, <a href="/Laurent_Sifre">Laurent Sifre</a>, Simon Schmitt, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Edward_Lockhart">Edward Lockhart</a>, <a href="/Demis_Hassabis">Demis Hassabis</a>, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, <a href="/David_Silver">David Silver</a> (<strong>2019</strong>). <em>Mastering Atari, Go, Chess and Shogi by Planning with a Learned Model</em>. <a href="https://arxiv.org/abs/1911.08265">arXiv:1911.08265</a> <a href="#fn57" class="footnote-ref" id="fnref57" role="doc-noteref"><sup>57</sup></a></li>
+<li>Hsiao-Chung Hsieh, <a href="/Ti-Rong_Wu">Ti-Rong Wu</a>, <a href="/Ting-Han_Wei">Ting-Han Wei</a>, <a href="/I-Chen_Wu">I-Chen Wu</a> (<strong>2019</strong>). <em>Net2Net Extension for the AlphaGo Zero Algorithm</em>. <a href="/Advances_in_Computer_Games_16">Advances in Computer Games 16</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Karen_Simonyan">Karen Simonyan</a>, <a href="/Laurent_Sifre">Laurent Sifre</a>, Simon Schmitt, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Edward_Lockhart">Edward Lockhart</a>, <a href="/Demis_Hassabis">Demis Hassabis</a>, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, <a href="/David_Silver">David Silver</a> (<strong>2020</strong>). <em><a href="https://www.nature.com/articles/s41586-020-03051-4">Mastering Atari, Go, chess and shogi by planning with a learned model</a></em>. <a href="https://en.wikipedia.org/wiki/Nature_%28journal%29">Nature</a>, Vol. 588 <a href="#fn58" class="footnote-ref" id="fnref58" role="doc-noteref"><sup>58</sup></a></li>
+<li><a href="/Tristan_Cazenave">Tristan Cazenave</a>, Julien Sentuc, Mathurin Videau (<strong>2021</strong>). <em>Cosine Annealing, Mixnet and Swish Activation for Computer Go</em>. <a href="/Advances_in_Computer_Games_17">Advances in Computer Games 17</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2005--1">2005 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=17341">Ongoing GO programming?</a> by Shivkumar Shivaji, <a href="/CCC">CCC</a>, October 25, 2007</li>
+<li><a href="https://groups.google.com/d/msg/computer-go-archive/iZmzbavlbsI/oLGjUFelN3UJ">A thought about ratings</a> by Dave Dyer, <a href="https://groups.google.com/forum/#!forum/computer-go-archive">Computer Go Archive</a>, December 10, 2007 » <a href="/Playing_Strength">Playing Strength</a></li>
+</ul>
+<p><a href="https://groups.google.com/d/msg/computer-go-archive/iZmzbavlbsI/1EJf4q2L4HIJ">Re: A thought about ratings</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="https://groups.google.com/forum/#!forum/computer-go-archive">Computer Go Archive</a>, December 10, 2007</p>
+<p><a href="https://groups.google.com/d/msg/computer-go-archive/iZmzbavlbsI/Z2AsWFaUu-EJ">Re: A thought about ratings</a> by <a href="/Edward_de_Grijs">Edward de Grijs</a>, <a href="https://groups.google.com/forum/#!forum/computer-go-archive">Computer Go Archive</a>, December 10, 2007</p>
+<p><a href="https://groups.google.com/d/msg/computer-go-archive/iZmzbavlbsI/K-5UMaK_CsYJ">Re: A thought about ratings</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="https://groups.google.com/forum/#!forum/computer-go-archive">Computer Go Archive</a>, December 10, 2007</p>
+<h3 id="2010--1">2010 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/d/msg/computer-go-archive/JrrSovvgTV0/UbPOufyTApQJ">[Computer-go</a> learning patterns for mc go] by <a href="/Hendrik_Baier">Hendrik Baier</a>, <a href="https://groups.google.com/forum/#!forum/computer-go-archive">Computer Go Archive</a>, April 26, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?start=0&amp;t=37634">WinBoard, exotic version</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, January 15, 2011 » <a href="/WinBoard">WinBoard</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=42444">Go questions</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, February 13, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52312">Wired Article on Computer GO</a> by <a href="/Edmund_Moshammer">Edmund Moshammer</a>, <a href="/CCC">CCC</a>, May 13, 2014 <a href="#fn59" class="footnote-ref" id="fnref59" role="doc-noteref"><sup>59</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53262">How many chess programmers are turning to Go?</a> by Eelco de Groot, <a href="/CCC">CCC</a>, August 12, 2014</li>
+<li><a href="http://computer-go.org/pipermail/computer-go/2014-December/007010.html">Teaching Deep Convolutional Neural Networks to Play Go</a> by <a href="/Hiroshi_Yamashita">Hiroshi Yamashita</a>, <a href="http://computer-go.org/pipermail/computer-go/">The Computer-go Archives</a>, December 14, 2014 » <a href="/Go">DCNN in Go</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54663">Teaching Deep Convolutional Neural Networks to Play Go</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, <a href="/CCC">CCC</a>, December 16, 2014</li>
+<li><a href="http://computer-go.org/pipermail/computer-go/2014-December/007046.html">Move Evaluation in Go Using Deep Convolutional Neural Networks</a> by <a href="/Shih-Chieh_Huang">Aja Huang</a>, <a href="http://computer-go.org/pipermail/computer-go/">The Computer-go Archives</a>, December 19, 2014 » <a href="/Go">DCNN in Go</a></li>
+</ul>
+<h3 id="2015--1">2015 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/d/msg/computer-go-archive/jlVCk9IRGEY/us3LHpTPCgAJ">Number of Go positions computed at last</a> by <a href="/John_Tromp">John Tromp</a>, <a href="http://computer-go.org/pipermail/computer-go/">The Computer-go Archives</a>, January 22, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59072">Go has fallen to computer domination?</a> by Isaac Haïk Dunn, <a href="/CCC">CCC</a>, January 27, 2016 » <a href="/Go">AlphaGo</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59073">Computer Go at master level?</a> by <a href="/Nicu_Ionita">Nicu Ionita</a>, <a href="/CCC">CCC</a>, January 27, 2016</li>
+<li><a href="https://groups.google.com/d/msg/computer-go-archive/_eCHs8_rMfs/Jx9kVfOCDAAJ">Game Over</a> by <a href="/Rémi_Coulom">Rémi Coulom</a>, <a href="http://computer-go.org/pipermail/computer-go/">The Computer-go Archives</a>, January 27, 2016 » <a href="/Go">AlphaGo</a></li>
+<li><a href="https://groups.google.com/d/msg/computer-go-archive/v2EhkOwqz6I/8lv3LNmHDAAJ">Mastering the Game of Go with Deep Neural Networks and Tree Search</a> by <a href="/Shih-Chieh_Huang">Aja Huang</a>, <a href="http://computer-go.org/pipermail/computer-go/">The Computer-go Archives</a>, January 27, 2016</li>
+<li><a href="https://www.game-ai-forum.org/viewtopic.php?f=2&amp;t=87">AlphaGo</a> by <a href="/Alvaro_Cardoso">Alvaro</a>, <a href="/Computer_Chess_Forums">Game-AI Forum</a>, January 29, 2016 » <a href="/Go">AlphaGo</a></li>
+<li><a href="https://groups.google.com/d/msg/computer-go-archive/sTHY0pBpm0o/3s_YkoUlBQAJ">longest 3x3 game</a> by <a href="/John_Tromp">John Tromp</a>, <a href="https://groups.google.com/forum/#!forum/computer-go-archive">Computer Go Archive</a>, February 18, 2016</li>
+<li><a href="http://www.lifein19x19.com/forum/viewtopic.php?p=199532">Deep Zen Go - A new Zen to counter AlphaGo</a> by pookpooi, <a href="http://www.lifein19x19.com/forum/viewforum.php?f=18">Computer Go</a>, February 29, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59451">Lee Sedol vs. AlphaGo [link to live feed</a>] by Jesse Gersenson, <a href="/CCC">CCC</a>, March 07, 2016</li>
+<li><a href="https://groups.google.com/d/msg/computer-go-archive/eFwYBP2_1Gg/F-aoYLRZCwAJ">AlphaGo won first game!</a> by <a href="/Hiroshi_Yamashita">Hiroshi Yamashita</a>, <a href="http://computer-go.org/pipermail/computer-go/">The Computer-go Archives</a>, March 09, 2016</li>
+<li><a href="https://groups.google.com/d/msg/computer-go-archive/iUYPRSYRtVo/ggKEAB5HDAAJ">Congratulations to AlphaGo</a> by Lukas van de Wiel, <a href="http://computer-go.org/pipermail/computer-go/">The Computer-go Archives</a>, March 12, 2016</li>
+<li><a href="https://groups.google.com/d/msg/computer-go-archive/-GcbtddZDmw/3k2-3pN-DgAJ">UEC cup 1st day result</a> by <a href="/Hiroshi_Yamashita">Hiroshi Yamashita</a>, <a href="https://groups.google.com/forum/#!forum/computer-go-archive">Computer Go Archive</a>, March 19, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59575">Animation : Ratings of go players since 1974 !</a> by Vincent Lejeune, <a href="/CCC">CCC</a>, March 20, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=60394">World #1 Go Player Ke Jie accepts Google Alpha Go Match..</a> by AA Ross, <a href="/CCC">CCC</a>, June 07, 2016 » ... <a href="/Go">Re: World #1 ...</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61801">The scaling of Deep Learning MCTS Go engines</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, October 23, 2016 » <a href="/Deep_Learning">Deep Learning</a>, <a href="/Go">Go</a>, <a href="/Monte-Carlo_Tree_Search">MCTS</a></li>
+</ul>
+<p><strong>2017</strong></p>
+<ul>
+<li><a href="https://groups.google.com/d/msg/computer-go-archive/0lbCSpxozos/vUsnILL3BwAJ">mini-max with Policy and Value network</a> by <a href="/Hiroshi_Yamashita">Hiroshi Yamashita</a>, <a href="https://groups.google.com/forum/#!forum/computer-go-archive">Computer Go Archive</a>, May 20, 2017</li>
+<li><span id="ReAlphaGo"></span><a href="http://www.talkchess.com/forum/viewtopic.php?t=60394&amp;start=11">Re: World #1 Go Player Ke Jie accepts Google Alpha Go Match.</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, May 22, 2017 » <a href="/Go">The Future of Go Summit</a></li>
+<li><a href="https://groups.google.com/d/msg/computer-go-archive/WImAk15gRN4/bhA7kSAnBgAJ">Neural nets for Go - chain pooling?</a> by <a href="/David_J._Wu">David Wu</a>, <a href="https://groups.google.com/forum/#!forum/computer-go-archive">Computer Go Archive</a>, August 18, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65481">We are doomed - AlphaGo Zero, learning only from basic rules</a> by Vincent Lejeune, <a href="/CCC">CCC</a>, October 18, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65484">AlphaGo Zero</a> by <a href="/Alberto_Sanjuan">Alberto Sanjuan</a>, <a href="/CCC">CCC</a>, October 19, 2017</li>
+<li><a href="https://groups.google.com/d/msg/computer-go-archive/9DNayZWKXfk/Pk9yBx1lAgAJ">Zero performance</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, <a href="https://groups.google.com/forum/#!forum/computer-go-archive">Computer Go Archive</a>, October 20, 2017</li>
+<li><a href="https://groups.google.com/d/msg/computer-go-archive/ulsErJxW3jc/hMIhtiBYAgAJ">Re: AlphaGo Zero</a> by <a href="/Hendrik_Baier">Hendrik Baier</a>, <a href="https://groups.google.com/forum/#!forum/computer-go-archive">Computer Go Archive</a>, October 20, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65829">AlphaGo's evaluation function</a> by Jens Kipper, <a href="/CCC">CCC</a>, November 26, 2017</li>
+</ul>
+<p><strong>2018</strong></p>
+<ul>
+<li><a href="https://groups.google.com/d/msg/computer-go-archive/zu4rkk38MKY/euwgDm1ADAAJ">Breakthrough: FineArt beating Ke Jie with 2 Handicap Stones</a> by <a href="/Ingo_Althöfer">Ingo Althöfer</a>, <a href="https://groups.google.com/forum/#!forum/computer-go-archive">Computer Go Archive</a>, January 20, 2018 » <a href="/Go">Fine Art</a></li>
+</ul>
+<p><strong>2019</strong></p>
+<ul>
+<li><a href="https://groups.google.com/d/msg/computer-go-archive/xE30UZaOpZc/Y17gA0-zFwAJ">GCP passing on the staff ...</a> by <a href="/Ingo_Althöfer">Ingo Althöfer</a>, <a href="https://groups.google.com/forum/#!forum/computer-go-archive">Computer Go Archive</a>, January 28, 2019</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69895">ELF OpenGo: An Open Reimplementation of AlphaZero</a> by Carl Lumma, <a href="/CCC">CCC</a>, February 13, 2019</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=70899">Why are super top professional Go players so stupid?</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, June 02, 2019</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=72197">Some words on Leela Go Zero</a> by <a href="/Kai_Laskos">Kai Laskos</a>, <a href="/CCC">CCC</a>, October 28, 2019 » Leela Zero</li>
+</ul>
+<h3 id="2020--1">2020 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/g/lczero/c/gecAk5DflmE/m/lUGWpjZXBwAJ">KataGo</a> by <a href="/Warren_D._Smith">Warren D. Smith</a>, <a href="/Computer_Chess_Forums">LCZero Forum</a>, March 16, 2021</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="http://icga.leidenuniv.nl/icga/games/go/">ICGA: Go</a> by <a href="/Martin_Müller">Martin Müller</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Go_%28game%29">Go (game) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Computer_Go">Computer Go from Wikipedia</a></li>
+<li><a href="https://www.britgo.org/computergo/history">History of Go-playing Programs</a> | <a href="https://en.wikipedia.org/wiki/British_Go_Association">British Go Association</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Go_and_mathematics">Go and mathematics from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Ing_Chang-ki">Ing Chang-ki from Wikipedia</a></li>
+<li><a href="https://www.youtube.com/watch?v=UkSOVnbC2Y8">2008-2016 Human vs. Computer Go</a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/UkSOVnbC2Y8" title="YouTube video UkSOVnbC2Y8" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=UkSOVnbC2Y8">Watch on YouTube</a></p>
+<h3 id="tournaments">Tournaments</h3>
+<ul>
+<li><a href="http://www.smart-games.com/worldcompgo.html">World Computer Go Championships</a></li>
+<li><a href="https://www.game-ai-forum.org/icga-tournaments/game.php?id=12">Go (ICGA Tournaments)</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Computer_Go_UEC_Cup">Computer Go UEC Cup from Wikipedia</a></li>
+<li><a href="http://www.computer-go.jp/uec/public_html/eng/index.shtml">The Tenth Computer Go UEC Cup</a></li>
+</ul>
+<h3 id="computer-go-archives">Computer Go Archives</h3>
+<ul>
+<li><a href="https://groups.google.com/forum/#!forum/computer-go-archive">Computer Go Archive</a></li>
+<li><a href="http://computer-go.org/pipermail/computer-go/">The Computer-go Archives</a></li>
+<li><a href="http://www.computer-go.jp/">The Official Page for Computer Go Forum</a></li>
+<li>[<a href="https://groups.google.com/group/computer-go-archive/topics">http://groups.google.com/group/computer-go-archive/topics</a>? Google Groups - Computer Go Archive]</li>
+<li><a href="http://www.computer-go.info/">computer-go.info</a></li>
+</ul>
+<p><a href="http://www.computer-go.info/db/oproglist.php">Program database - Program list</a></p>
+<p><a href="http://www.computer-go.info/db/oprogrammerlist.php">Program database - Programmer list</a></p>
+<p><a href="http://www.computer-go.info/events/acorn/1984/index.html">Computer Go - Past Events - Acorn 1984</a> » <a href="/BBC_Micro">BBC Micro</a></p>
+<p><a href="http://www.computer-go.info/events/ing/1998/archive/gen.html">1998 Ing Computer Goe Cup - Stories</a></p>
+<p><a href="http://www.computer-go.info/h-c/">Human-Computer Go Challenges</a></p>
+<h3 id="computer-go-pages">Computer Go Pages</h3>
+<ul>
+<li><a href="http://senseis.xmp.net/?StartingPoints">Sensei's Library: Starting Points</a></li>
+</ul>
+<p><a href="https://senseis.xmp.net/?GoServers">Go Servers at Sensei's Library</a></p>
+<ul>
+<li><a href="http://tromp.github.io/go.html">John's Go Page</a> by <a href="/John_Tromp">John Tromp</a></li>
+</ul>
+<p><a href="https://tromp.github.io/go/legal.html">Counting Legal Positions in Go</a> by <a href="/John_Tromp">John Tromp</a>, January 20, 2016</p>
+<ul>
+<li><a href="http://webdocs.cs.ualberta.ca/~mmueller/cgo/index.html">Computer Go Research</a> by <a href="/Martin_Müller">Martin Müller</a></li>
+<li><a href="https://smartgo.com/index.html">SmartGo Blog</a> by <a href="/Anders_Kierulf">Anders Kierulf</a></li>
+</ul>
+<h3 id="open-source">Open Source</h3>
+<ul>
+<li><a href="https://github.com/gcp/leela-zero">GitHub - gcp/leela-zero: Go engine with no human-provided knowledge, modeled after the AlphaGo Zero paper</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a> et al.</li>
+<li><a href="https://github.com/Tencent/PhoenixGo">GitHub - Tencent/PhoenixGo: Go AI program which implements the AlphaGo Zero paper</a></li>
+<li><a href="https://github.com/pytorch/ELF">GitHub - pytorch/ELF: ELF: a platform for game research with AlphaGoZero/AlphaZero reimplementation</a> <a href="#fn60" class="footnote-ref" id="fnref60" role="doc-noteref"><sup>60</sup></a></li>
+<li><a href="https://github.com/lightvector/KataGo">GitHub - lightvector/KataGo: GTP engine and self-play learning in Go</a></li>
+</ul>
+<h3 id="misc-1">Misc</h3>
+<ul>
+<li><a href="http://www.win.tue.nl/~engels/go/variants.html">Go Variants</a></li>
+<li><a href="http://www.lysator.liu.se/~gunnar/gtp/">GTP - Go Text Protocol</a></li>
+<li><a href="http://www.wired.com/2014/05/the-world-of-computer-go/">The Mystery of Go, the Ancient Game That Computers Still Can’t Win</a> by <a href="https://www.jmu.edu/philrel/people/faculty/levinovitz-alan.shtml">Alan Levinovitz</a>, <a href="https://de.wikipedia.org/wiki/Wired">Wired</a>, May 12, 2014 » <a href="/Rémi_Coulom">Rémi Coulom</a> <a href="#fn61" class="footnote-ref" id="fnref61" role="doc-noteref"><sup>61</sup></a></li>
+<li><a href="http://spectrum.ieee.org/robotics/artificial-intelligence/ais-have-mastered-chess-will-go-be-next">AIs Have Mastered Chess. Will Go Be Next?</a> by <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, <a href="/Martin_Müller">Martin Müller</a> &amp; <a href="/Akihiro_Kishimoto">Akihiro Kishimoto</a>, <a href="/IEEE">IEEE Spectrum</a>, June 25, 2014</li>
+<li><a href="http://www.bbc.co.uk/news/technology-35419141">Facebook trains AI to beat humans at Go board game</a> by <a href="https://www.linkedin.com/in/leo-kelion-1ba40a8">Leo Kelion</a>, <a href="https://en.wikipedia.org/wiki/BBC_News">BBC News</a>, January 27, 2016</li>
+</ul>
+<h3 id="go-challenge">Go Challenge</h3>
+<ul>
+<li><a href="https://go.codecentric.de/">codecentric go challenge</a></li>
+</ul>
+<h3 id="alphago-1">AlphaGo</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/AlphaGo">AlphaGo from Wikipedia</a></li>
+<li><a href="https://www.youtube.com/channel/UCP7jMXSY2xbc3KCAE0MHQ-A/">DeepMind - YouTube Channel</a></li>
+<li><a href="http://www.usgo.org/news/2016/01/alphago-beats-pro-5-0-in-major-ai-advance/">Game Over? AlphaGo Beats Pro 5-0 in Major AI Advance</a> « <a href="http://www.usgo.org/news/">American Go E-Journal</a>, January 27, 2016 » <a href="/Go">AlphaGo</a></li>
+<li><a href="https://smartgo.com/blog/google-alphago.html">Google’s AlphaGo Beats Professional Go Player</a> by <a href="/Anders_Kierulf">Anders Kierulf</a>, <a href="https://smartgo.com/index.html">SmartGo Blog</a>, January 27, 2016</li>
+<li><a href="http://www.scientificamerican.com/article/computer-beats-go-champion-for-first-time/">Computer Beats Go Champion for the First Time</a> by <a href="http://www.scientificamerican.com/author/annie-sneed/">Annie Sneed</a>, <a href="/Scientific_American">Scientific American</a>, January 27, 2016</li>
+<li><a href="http://blogs.discovermagazine.com/crux/2016/01/27/artificial-intelligence-go-game/">Artificial Intelligence Just Mastered Go, But One Game Still Gives AI Trouble</a> by <a href="https://www.linkedin.com/in/carl-engelking-56066714">Carl Engelking</a>, <a href="http://blogs.discovermagazine.com/crux/">The Crux</a>, January 27, 2016 » Poker, <a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a>, <a href="/Bart_Selman">Bart Selman</a></li>
+<li><a href="https://googleblog.blogspot.de/2016/01/alphago-machine-learning-game-go.html">Official Google Blog: AlphaGo: using machine learning to master the ancient game of Go</a> by <a href="/Demis_Hassabis">Demis Hassabis</a>, January 27, 2016</li>
+<li><span id="TheComputerThatMasteredGo"></span><a href="http://deepmind.com/alpha-go.html">AlphaGo | Google DeepMind</a> » <a href="/Go">AlphaGo</a></li>
+</ul>
+<p>The computer that mastered Go, with <a href="/Demis_Hassabis">Demis Hassabis</a> and <a href="/David_Silver">David Silver</a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/g-dKXOlsf98" title="YouTube video g-dKXOlsf98" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=g-dKXOlsf98">Watch on YouTube</a></p>
+<ul>
+<li><span id="AlphaGoHassabisVideo"></span>Google DeepMind: Ground-breaking AlphaGo masters the game of Go, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/SUbqykXVx0A" title="YouTube video SUbqykXVx0A" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=SUbqykXVx0A">Watch on YouTube</a></p>
+<ul>
+<li><a href="http://althofer.de/lee-sedol-alphago-round-1.html">Match: Lee Sedol vs AlphaGo</a>, Photo Report by <a href="/Ingo_Althöfer">Ingo Althöfer</a>, March 09, 2016</li>
+<li><a href="http://www.bbc.com/news/technology-35761246">Google’s AI beats world Go champion in first of five matches</a>, <a href="https://en.wikipedia.org/wiki/BBC_News">BBC News</a>, March 09, 2016</li>
+<li><a href="http://www.bbc.com/news/technology-35771705">Google AI wins second Go game against world champion</a>, <a href="https://en.wikipedia.org/wiki/BBC_News">BBC News</a>, March 10, 2016</li>
+<li><a href="http://en.chessbase.com/post/computer-beating-top-human-go-professional">Computer beating top human Go professional</a> by <a href="/Frederic_Friedel">Frederic Friedel</a>, <a href="/ChessBase">ChessBase News</a>, March 10, 2016</li>
+<li><a href="http://www.bbc.co.uk/news/technology-35785875">Artificial intelligence: Google's AlphaGo beats Go master Lee Se-dol</a>, <a href="https://en.wikipedia.org/wiki/BBC_News">BBC News</a>, March 12, 2016</li>
+<li><a href="http://en.chessbase.com/post/alphago-vs-lee-sedol-history-in-the-making">AlphaGo vs Lee Sedol: history in the making</a> by <a href="/Albert_Silver">Albert Silver</a>, <a href="/ChessBase">ChessBase News</a>, March 13, 2016</li>
+<li><a href="http://www.bbc.co.uk/news/technology-35797102">Artificial intelligence: Go master Lee Se-dol wins against AlphaGo program</a>, <a href="https://en.wikipedia.org/wiki/BBC_News">BBC News</a>, March 13, 2016</li>
+<li><a href="http://www.bbc.com/news/technology-35810133">Google's AI wins final Go challenge</a>, <a href="https://en.wikipedia.org/wiki/BBC_News">BBC News</a>, March 15, 2016</li>
+<li><a href="http://www.nature.com/news/what-google-s-winning-go-algorithm-will-do-next-1.19573">What Google’s winning Go algorithm will do next</a> by <a href="https://www.linkedin.com/in/elizabeth-gibney-787b731">Elizabeth Gibney</a>, <a href="http://www.nature.com/index.html">Nature | News</a>, March 15, 2016</li>
+<li><a href="https://deepmind.com/blog/exploring-mysteries-alphago/">Exploring the mysteries of Go with AlphaGo and China's top players</a> by <a href="/Demis_Hassabis">Demis Hassabis</a>, DeepMind, April 10, 2017</li>
+<li><span id="TheFutureofGoSummit"></span><a href="https://events.google.com/alphago2017/">The Future of Go Summit</a>, May 23 - 27, <a href="https://en.wikipedia.org/wiki/Wuzhen">Wuzhen</a>, China <a href="#fn62" class="footnote-ref" id="fnref62" role="doc-noteref"><sup>62</sup></a> <a href="#fn63" class="footnote-ref" id="fnref63" role="doc-noteref"><sup>63</sup></a></li>
+<li><a href="https://www.theguardian.com/technology/2017/may/25/alphago-google-ai-victory-world-go-number-one-china-ke-jie">Google's Go-playing AI still undefeated with victory over world number one</a> by <a href="https://www.theguardian.com/profile/alex-hern">Alex Hern</a>, <a href="https://en.wikipedia.org/wiki/The_Guardian">The Guardian</a>, May 25, 2017</li>
+<li><a href="https://www.wired.com/2017/05/googles-alphago-continues-dominance-second-win-china/">Google’s AlphaGo Continues Dominance With Second Win in China</a> by <a href="https://www.wired.com/author/cade_metz/">Cade Metz</a>, <a href="https://en.wikipedia.org/wiki/Wired_(magazine)">Wired</a>, May 25, 2017</li>
+<li><a href="https://www.wired.com/2017/05/googles-alphago-trounces-humans-also-gives-boost/">Google’s AlphaGo Trounces Humans—But It Also Gives Them a Boost</a> by <a href="https://www.wired.com/author/cade_metz/">Cade Metz</a>, <a href="https://en.wikipedia.org/wiki/Wired_(magazine)">Wired</a>, May 26, 2017</li>
+<li><a href="https://www.wired.com/2017/05/win-china-alphagos-designers-explore-new-ai/">AlphaGo’s Designers Explore New AI After Winning Big in China</a> by <a href="https://www.wired.com/author/cade_metz/">Cade Metz</a>, <a href="https://en.wikipedia.org/wiki/Wired_(magazine)">Wired</a>, May 27, 2017</li>
+<li><a href="https://deepmind.com/blog/alphagos-next-move/">AlphaGo's next move</a> by <a href="/Demis_Hassabis">Demis Hassabis</a> and <a href="/David_Silver">David Silver</a>, DeepMind, May 27, 2017</li>
+<li><a href="https://deepmind.com/blog/alphago-zero-learning-scratch/">AlphaGo Zero: Learning from scratch</a> by <a href="/Demis_Hassabis">Demis Hassabis</a> and <a href="/David_Silver">David Silver</a>, DeepMind, October 18, 2017</li>
+</ul>
+<h3 id="fine-art-1">Fine Art</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Fine_Art_(software)">Fine Art (software) from Wikipedia</a></li>
+<li><a href="http://www.intergofed.org/igf-news-feed/two-stones-fineart-defeated-ke-jie-9p-after-giving-two-stones-handicap.html">Two stones! Fine Art defeated Ke Jie 9P after giving two stones handicap. – Website of The International Go Federation</a>, January 19, 2018 » <a href="/Go">Fine Art</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Games">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Albert_Zobrist">Albert Zobrist</a> (<strong>1970</strong>). <em>Feature Extraction and Representation for Pattern Recognition and the Game of Go</em>. Ph.D. thesis , University of Wisconsin, also published as technical report, <a href="http://www.cs.wisc.edu/techreports/1970/TR85.pdf">pdf</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://www.game-ai-forum.org/icga-tournaments/game.php?id=12">Go</a> at the <a href="/Computer_Olympiad">Computer Olympiad</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="/Bernd_Brügmann">Bernd Brügmann</a> (<strong>1993</strong>). <em>Monte Carlo Go</em>. <a href="http://www.ideanest.com/vegos/MonteCarloGo.pdf">pdf</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="/Bruno_Bouzy">Bruno Bouzy</a> (<strong>2005</strong>). <em>Associating domain-dependent knowledge and Monte Carlo approaches within a go program</em>. Information Sciences, Heuristic Search and Computer Game Playing IV<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="/Rémi_Coulom">Rémi Coulom</a> (<strong>2006</strong>). <em><a href="http://remi.coulom.free.fr/CG2006/">Efficient Selectivity and Backup Operators in Monte-Carlo Tree Search</a></em>. <a href="/CG_2006">CG 2006</a>, <a href="http://remi.coulom.free.fr/CG2006/CG2006.pdf">pdf</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="/Levente_Kocsis">Levente Kocsis</a>, <a href="/Csaba_Szepesvári">Csaba Szepesvári</a> (<strong>2006</strong>). <em><a href="http://www.computer-go.info/resources/bandit.html">Bandit based Monte-Carlo Planning</a></em>. ECML-06, LNCS/LNAI 4212, <a href="http://www.sztaki.hu/%7Eszcsaba/papers/ecml06.pdf">pdf</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="/Sylvain_Gelly">Sylvain Gelly</a>, <a href="/Marc_Schoenauer">Marc Schoenauer</a>, <a href="/Michèle_Sebag">Michèle Sebag</a>, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, <a href="/Levente_Kocsis">Levente Kocsis</a>, <a href="/David_Silver">David Silver</a>, <a href="/Csaba_Szepesvári">Csaba Szepesvári</a> (<strong>2012</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=2093548.2093574">The Grand Challenge of Computer Go: Monte Carlo Tree Search and Extensions</a></em>. <a href="/ACM">Communications of the ACM</a>, Vol. 55, No. 3, <a href="http://www0.cs.ucl.ac.uk/staff/D.Silver/web/Applications_files/grand-challenge.pdf">pdf preprint</a><a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="/Ilya_Sutskever">Ilya Sutskever</a>, Vinod Nair (<strong>2008</strong>). <em>Mimicking Go Experts with Convolutional Neural Networks</em>. <a href="http://dblp.uni-trier.de/db/conf/icann/icann2008-2.html#SutskeverN08">ICANN 2008</a>, <a href="http://www.cs.utoronto.ca/~ilya/pubs/2008/go_paper.pdf">pdf</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="/Nicol_N._Schraudolph">Nicol N. Schraudolph</a>, <a href="/Peter_Dayan">Peter Dayan</a>, <a href="/Terrence_J._Sejnowski">Terrence J. Sejnowski</a> (<strong>1993</strong>). <em><a href="https://papers.nips.cc/paper/820-temporal-difference-learning-of-position-evaluation-in-the-game-of-go">Temporal Difference Learning of Position Evaluation in the Game of Go</a></em>. <a href="https://papers.nips.cc/book/advances-in-neural-information-processing-systems-6-1993">NIPS 1993</a><a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="/Erik_van_der_Werf">Erik van der Werf</a>, <a href="/Jos_Uiterwijk">Jos Uiterwijk</a>, <a href="/Eric_Postma">Eric Postma</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a> (<strong>2002</strong>). <em><a href="http://link.springer.com/chapter/10.1007%2F978-3-540-40031-8_26">Local Move Prediction in Go</a></em>. <a href="/CG_2002">CG 2002</a><a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="/Markus_Enzenberger">Markus Enzenberger</a> (<strong>2003</strong>). <em><a href="http://webdocs.cs.ualberta.ca/~emarkus/neurogo/neurogo3/index.html">Evaluation in Go by a Neural Network using Soft Segmentation</a></em>. <a href="/Advances_in_Computer_Games_10">Advances in Computer Games 10</a>, <a href="http://webdocs.cs.ualberta.ca/~emarkus/publications/neurogo3.pdf">pdf</a><a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p><a href="https://en.wikipedia.org/wiki/Convolutional_neural_network">Convolutional neural network from Wikipedia</a><a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn13"><p><a href="/Christopher_Clark">Christopher Clark</a>, <a href="/Amos_Storkey">Amos Storkey</a> (<strong>2014</strong>). <em>Teaching Deep Convolutional Neural Networks to Play Go</em>. <a href="http://arxiv.org/abs/1412.3409">arXiv:1412.3409</a><a href="#fnref13" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn14"><p><a href="http://erikbern.com/2014/12/11/deep-learning-for-go/">Deep learning for… Go</a> by <a href="/Erik_Bernhardsson">Erik Bernhardsson</a>, December 11, 2014<a href="#fnref14" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn15"><p><a href="http://computer-go.org/pipermail/computer-go/2014-December/007010.html">Teaching Deep Convolutional Neural Networks to Play Go</a> by <a href="/Hiroshi_Yamashita">Hiroshi Yamashita</a>, <a href="http://computer-go.org/pipermail/computer-go/">The Computer-go Archives</a>, December 14, 2014<a href="#fnref15" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn16"><p><a href="http://www.technologyreview.com/view/533496/why-neural-networks-look-set-to-thrash-the-best-human-go-players-for-the-first-time/">Why Neural Networks Look Set to Thrash the Best Human Go Players for the First Time</a> | <a href="https://en.wikipedia.org/wiki/MIT_Technology_Review">MIT Technology Review</a>, December 15, 2014<a href="#fnref16" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn17"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=54663">Teaching Deep Convolutional Neural Networks to Play Go</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, <a href="/CCC">CCC</a>, December 16, 2014<a href="#fnref17" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn18"><p><a href="/Chris_J._Maddison">Chris J. Maddison</a>, <a href="/Shih-Chieh_Huang">Aja Huang</a>, <a href="/Ilya_Sutskever">Ilya Sutskever</a>, <a href="/David_Silver">David Silver</a> (<strong>2014</strong>). <em>Move Evaluation in Go Using Deep Convolutional Neural Networks</em>. <a href="http://arxiv.org/abs/1412.6564v1">arXiv:1412.6564v1</a><a href="#fnref18" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn19"><p><a href="http://computer-go.org/pipermail/computer-go/2014-December/007046.html">Move Evaluation in Go Using Deep Convolutional Neural Networks</a> by <a href="/Shih-Chieh_Huang">Aja Huang</a>, <a href="http://computer-go.org/pipermail/computer-go/">The Computer-go Archives</a>, December 19, 2014<a href="#fnref19" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn20"><p><a href="/David_Silver">David Silver</a>, <a href="/Shih-Chieh_Huang">Aja Huang</a>, <a href="/Chris_J._Maddison">Chris J. Maddison</a>, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Laurent_Sifre">Laurent Sifre</a>, George van den Driessche, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, Veda Panneershelvam, <a href="/Marc_Lanctot">Marc Lanctot</a>, Sander Dieleman, Dominik Grewe, John Nham, Nal Kalchbrenner, <a href="/Ilya_Sutskever">Ilya Sutskever</a>, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, Madeleine Leach, <a href="/Koray_Kavukcuoglu">Koray Kavukcuoglu</a>, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Demis_Hassabis">Demis Hassabis</a> (<strong>2016</strong>). <em><a href="http://www.nature.com/nature/journal/v529/n7587/full/nature16961.html">Mastering the game of Go with deep neural networks and tree search</a></em>. <a href="https://en.wikipedia.org/wiki/Nature_%28journal%29">Nature</a>, Vol. 529<a href="#fnref20" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn21"><p><a href="http://senseis.xmp.net/?FanHui">Fan Hui at Sensei's Library</a><a href="#fnref21" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn22"><p><a href="http://www.usgo.org/news/2016/01/alphago-beats-pro-5-0-in-major-ai-advance/">Game Over? AlphaGo Beats Pro 5-0 in Major AI Advance</a> « <a href="http://www.usgo.org/news/">American Go E-Journal</a>, January 27, 2016<a href="#fnref22" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn23"><p><a href="https://www.youtube.com/channel/UCP7jMXSY2xbc3KCAE0MHQ-A/">DeepMind - YouTube Channel</a><a href="#fnref23" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn24"><p><a href="/Rémi_Coulom">Video Interview with Rémi Coulom on AlphaGo, February 2016</a><a href="#fnref24" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn25"><p><a href="http://www.bbc.co.uk/news/technology-35785875">Artificial intelligence: Google's AlphaGo beats Go master Lee Se-dol</a>, <a href="https://en.wikipedia.org/wiki/BBC_News">BBC News</a>, March 12, 2016<a href="#fnref25" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn26"><p><a href="https://www.wired.com/2017/05/win-china-alphagos-designers-explore-new-ai/">AlphaGo’s Designers Explore New AI After Winning Big in China</a> by <a href="https://www.wired.com/author/cade_metz/">Cade Metz</a>, <a href="https://en.wikipedia.org/wiki/Wired_(magazine)">Wired</a>, May 27, 2017<a href="#fnref26" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn27"><p><a href="https://deepmind.com/blog/alphago-zero-learning-scratch/">AlphaGo Zero: Learning from scratch</a> by <a href="/Demis_Hassabis">Demis Hassabis</a> and <a href="/David_Silver">David Silver</a>, DeepMind, October 18, 2017<a href="#fnref27" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn28"><p><a href="/David_Silver">David Silver</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Karen_Simonyan">Karen Simonyan</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, <a href="/Shih-Chieh_Huang">Aja Huang</a>, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, Lucas Baker, <a href="/Matthew_Lai">Matthew Lai</a>, Adrian Bolton, Yutian Chen, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, Fan Hui, <a href="/Laurent_Sifre">Laurent Sifre</a>, George van den Driessche, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Demis_Hassabis">Demis Hassabis</a> (<strong>2017</strong>). <em><a href="https://www.nature.com/nature/journal/v550/n7676/full/nature24270.html">Mastering the game of Go without human knowledge</a></em>. <a href="https://en.wikipedia.org/wiki/Nature_%28journal%29">Nature</a>, Vol. 550<a href="#fnref28" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn29"><p><a href="/David_Silver">David Silver</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a>, <a href="/Ioannis_Antonoglou">Ioannis Antonoglou</a>, <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/Arthur_Guez">Arthur Guez</a>, <a href="/Marc_Lanctot">Marc Lanctot</a>, <a href="/Laurent_Sifre">Laurent Sifre</a>, <a href="/Dharshan_Kumaran">Dharshan Kumaran</a>, <a href="/Thore_Graepel">Thore Graepel</a>, <a href="/Timothy_Lillicrap">Timothy Lillicrap</a>, <a href="/Karen_Simonyan">Karen Simonyan</a>, <a href="/Demis_Hassabis">Demis Hassabis</a> (<strong>2017</strong>). <em>Mastering Chess and Shogi by Self-Play with a General Reinforcement Learning Algorithm</em>. <a href="https://arxiv.org/abs/1712.01815">arXiv:1712.01815</a><a href="#fnref29" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn30"><p><a href="https://en.wikipedia.org/wiki/Fine_Art_(software)">Fine Art (software) from Wikipedia</a><a href="#fnref30" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn31"><p><a href="http://www.intergofed.org/igf-news-feed/two-stones-fineart-defeated-ke-jie-9p-after-giving-two-stones-handicap.html">Two stones! Fine Art defeated Ke Jie 9P after giving two stones handicap. – Website of The International Go Federation</a>, January 19, 2018<a href="#fnref31" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn32"><p><a href="https://senseis.xmp.net/?GoServers#toc13">Go Servers at Sensei's Library - Fox Weiqi</a><a href="#fnref32" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn33"><p><a href="https://groups.google.com/d/msg/computer-go-archive/zu4rkk38MKY/euwgDm1ADAAJ">Breakthrough: Fine Art beating Ke Jie with 2 Handicap Stones</a> by <a href="/Ingo_Althöfer">Ingo Althöfer</a>, <a href="https://groups.google.com/forum/#!forum/computer-go-archive">Computer Go Archive</a>, January 20, 2018<a href="#fnref33" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn34"><p><a href="http://computer-go.org/pipermail/computer-go/2010-June/000376.html">Re: Chess vs Go // AI vs IA</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, June 02, 2010<a href="#fnref34" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn35"><p><a href="http://webdocs.cs.ualberta.ca/~games/go/compgo_biblio/compgo_biblio.html">Computer Go Bibliography</a>, <a href="/University_of_Alberta">University of Alberta</a><a href="#fnref35" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn36"><p><a href="http://lie.ac.brocku.ca/gotools/index.php?content=papers">GoTools - TsumeGo Solving Software</a><a href="#fnref36" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn37"><p><a href="http://www.cgl.ucsf.edu/home/pett/go/Programs/Gobble.html">Gobble</a><a href="#fnref37" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn38"><p><a href="http://satirist.org/learn-game/systems/go-net.html">Nici Schraudolph’s go networks</a>, review by <a href="/Jay_Scott">Jay Scott</a><a href="#fnref38" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn39"><p><a href="http://senseis.xmp.net/?MathematicalGo">Mathematical Go</a> from <a href="http://senseis.xmp.net/?About">Sensei's Library</a><a href="#fnref39" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn40"><p><a href="http://senseis.xmp.net/?EZGo">EZ-GO at Sensei's Library</a><a href="#fnref40" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn41"><p><a href="http://senseis.xmp.net/?Tsumego">Tsumego at Sensei's Library</a><a href="#fnref41" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn42"><p><a href="https://en.wikipedia.org/wiki/Steganography">steganography from Wikipedia</a><a href="#fnref42" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn43"><p><a href="http://dcook.org/gobet/">The Shodan Go Bet</a><a href="#fnref43" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn44"><p><a href="http://computer-go.org/pipermail/computer-go/2014-December/007016.html">Re: Teaching Deep Convolutional Neural Networks to Play Go</a> by <a href="/Erik_van_der_Werf">Erik van der Werf</a>, <a href="http://computer-go.org/pipermail/computer-go/">The Computer-go Archives</a>, December 15, 2014<a href="#fnref44" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn45"><p><a href="https://en.wikipedia.org/wiki/Capturing_race">Capturing race from Wikipedia</a><a href="#fnref45" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn46"><p><a href="https://en.wikipedia.org/wiki/Fuzzy_markup_language">Fuzzy markup language (FML) from Wikipedia</a><a href="#fnref46" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn47"><p><a href="https://en.wikipedia.org/wiki/Franz-Josef_Dickhut">Franz-Josef Dickhut from Wikipedia</a>, <a href="/Rémi_Coulom">Rémi Coulom</a><a href="#fnref47" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn48"><p><a href="https://blog.codecentric.de/en/2014/10/codecentric-go-challenge-2014-interviews-franz-josef-dickhut-remi-coulom/">codecentric go challenge 2014: Interviews with Franz-Josef Dickhut and Rémi Coulom - codecentric Blog</a> by Raymond Georg Snatzke, October 1, 2014<a href="#fnref48" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn49"><p><a href="https://blog.codecentric.de/en/2014/11/codecentric-go-challenge-2014-final-interviews/">codecentric go challenge 2014: Final Interviews - codecentric Blog</a> by Raymond Georg Snatzke, November 27, 2014 (German)<a href="#fnref49" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn50"><p><a href="http://www.technologyreview.com/view/544181/how-facebooks-ai-researchers-built-a-game-changing-go-engine/?utm_campaign=socialsync&amp;utm_medium=social-post&amp;utm_source=facebook">How Facebook’s AI Researchers Built a Game-Changing Go Engine | MIT Technology Review</a>, December 04, 2015<a href="#fnref50" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn51"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=58514">Combining Neural Networks and Search techniques (GO)</a> by Michael Babigian, <a href="/CCC">CCC</a>, December 08, 2015<a href="#fnref51" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn52"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=66125&amp;start=18">Re: Minmax backup operator for MCTS</a> by Brahim Hamadicharef, <a href="/CCC">CCC</a>, December 30, 2017<a href="#fnref52" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn53"><p><a href="https://deepmind.com/blog/alphazero-shedding-new-light-grand-games-chess-shogi-and-go/">AlphaZero: Shedding new light on the grand games of chess, shogi and Go</a> by <a href="/David_Silver">David Silver</a>, <a href="/Thomas_Hubert">Thomas Hubert</a>, <a href="/Julian_Schrittwieser">Julian Schrittwieser</a> and <a href="/Demis_Hassabis">Demis Hassabis</a>, DeepMind, December 03, 2018<a href="#fnref53" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn54"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=69895">ELF OpenGo: An Open Reimplementation of AlphaZero</a> by Carl Lumma, <a href="/CCC">CCC</a>, February 13, 2019<a href="#fnref54" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn55"><p><a href="https://github.com/pytorch/ELF">GitHub - pytorch/ELF: ELF: a platform for game research with AlphaGoZero/AlphaZero reimplementation</a><a href="#fnref55" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn56"><p><a href="https://groups.google.com/g/lczero/c/gecAk5DflmE/m/lUGWpjZXBwAJ">KataGo</a> by <a href="/Warren_D._Smith">Warren D. Smith</a>, <a href="/Computer_Chess_Forums">LCZero Forum</a>, March 16, 2021<a href="#fnref56" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn57"><p><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=72381">New DeepMind paper</a> by GregNeto, <a href="/CCC">CCC</a>, November 21, 2019<a href="#fnref57" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn58"><p><a href="https://deepmind.com/blog/article/muzero-mastering-go-chess-shogi-and-atari-without-rules?fbclid=IwAR3mSwrn1YXDKr9uuGm2GlFKh76wBilex7f8QvBiQecwiVmAvD6Bkyjx-rE">MuZero: Mastering Go, chess, shogi and Atari without rules</a><a href="#fnref58" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn59"><p><a href="http://www.wired.com/2014/05/the-world-of-computer-go/">The Mystery of Go, the Ancient Game That Computers Still Can’t Win</a> by <a href="https://www.jmu.edu/philrel/people/faculty/levinovitz-alan.shtml">Alan Levinovitz</a>, <a href="https://de.wikipedia.org/wiki/Wired">Wired</a>, May 12, 2014<a href="#fnref59" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn60"><p>Yuandong Tian, Jerry Ma, Qucheng Gong, Shubho Sengupta, Zhuoyuan Chen, James Pinkerton, C. Lawrence Zitnick (<strong>2019</strong>). <em>ELF OpenGo: An Analysis and Open Reimplementation of AlphaZero</em>- <a href="https://arxiv.org/abs/1902.04522">arXiv:1902.04522</a><a href="#fnref60" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn61"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=52312">Wired Article on Computer GO</a> by <a href="/Edmund_Moshammer">Edmund Moshammer</a>, <a href="/CCC">CCC</a>, May 13, 2014<a href="#fnref61" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn62"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=60394">World #1 Go Player Ke Jie accepts Google Alpha Go Match..</a> by AA Ross, <a href="/CCC">CCC</a>, June 07, 2016<a href="#fnref62" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn63"><p><a href="https://en.wikipedia.org/wiki/Ke_Jie">Ke Jie from Wikipedia</a><a href="#fnref63" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Videos">Videos</a> · <a href="/Category:Quotes">Quotes</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Go">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

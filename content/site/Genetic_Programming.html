@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Genetic Programming - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Genetic Programming</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Learning">Learning</a> * Genetic Programming</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="http://www.genetic-programming.org/" target="_blank" rel="noopener noreferrer"><img src="/assets/Evolve1at.jpg" alt="Genetic Programming 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Genetic Programming <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://www.genetic-programming.org/">genetic-programming.org-Home-Page</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Genetic Programming</strong> (GP),<br />
+an <a href="https://en.wikipedia.org/wiki/Evolution">evolutionary</a> based methodology inspired by <a href="https://en.wikipedia.org/wiki/Biological_evolution">biological evolution</a> to <a href="https://en.wikipedia.org/wiki/Optimization_%28mathematics%29">optimize</a> computer programs, in particular game playing programs. It is a <a href="/Learning">machine learning</a> technique used to optimize a population of programs, for instance to maximize the winning rate versus a set of opponents, after modifying <a href="/Evaluation">evaluation</a> weights or <a href="/Search">search</a> parameter. <span id="EvolutionaryProgramming"></span></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#evolutionary-programming">Evolutionary Programming</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#supersets">Supersets</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#genetic-algorithms">Genetic Algorithms</a></li>
+<li><a href="#pbil">PBIL</a></li>
+<li><a href="#evolutionary-algorithms">Evolutionary Algorithms</a></li>
+<li><a href="#evolutionary-computation">Evolutionary Computation</a></li>
+<li><a href="#computational-intelligence">Computational Intelligence</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#publications">Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1950-">1950 ...</a></li>
+<li><a href="#1960-">1960 ...</a></li>
+<li><a href="#1970-">1970 ...</a></li>
+<li><a href="#1980-">1980 ...</a></li>
+<li><a href="#1990-">1990 ...</a></li>
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000-">2000 ....</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1996-">1996 ...</a></li>
+<li><a href="#2010--1">2010 ...</a></li>
+<li><a href="#2015--1">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#genetic-programming">Genetic Programming</a></li>
+<li><a href="#evolutionary-programming-1">Evolutionary Programming</a></li>
+<li><a href="#genetic-algorithms-1">Genetic Algorithms</a></li>
+<li><a href="#evolutionary-algorithms-1">Evolutionary Algorithms</a></li>
+<li><a href="#evolutionary-computation-1">Evolutionary Computation</a></li>
+<li><a href="#misc">Misc</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="evolutionary-programming">Evolutionary Programming</h2>
+<p><a href="https://en.wikipedia.org/wiki/Evolutionary_programming">Evolutionary programming</a> is similar to genetic programming, but the structure of the program to be optimized is fixed, while its numerical parameters are allowed to evolve. The term was coined by <a href="https://en.wikipedia.org/wiki/Lawrence_J._Fogel">Lawrence J. Fogel</a> in 1960.</p>
+<h2 id="supersets">Supersets</h2>
+<p>Genetic Programming is subset of a chain of subsequent fields in <a href="/Artificial_Intelligence">Artificial Intelligence</a>. <span id="GeneticAlgorithm"></span></p>
+<h3 id="genetic-algorithms">Genetic Algorithms</h3>
+<p>Genetic Programming is a specialization of <a href="https://en.wikipedia.org/wiki/Genetic_algorithms">genetic algorithms</a> (GA) where individuals are computer programs. This heuristic is routinely used to generate useful solutions to <a href="https://en.wikipedia.org/wiki/Optimization_%28mathematics%29">optimization</a> and search problems. A genetic algorithm requires:</p>
+<ol type="1">
+<li><a href="https://en.wikipedia.org/wiki/Genetic_representation">Genetic representation</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Fitness_function">Fitness function</a></li>
+</ol>
+<p>performing the <a href="https://en.wikipedia.org/wiki/Genetic_operator">Genetic operations</a> of</p>
+<ol type="1">
+<li><a href="https://en.wikipedia.org/wiki/Selection_%28genetic_algorithm%29">Selection (genetic algorithm)</a>
+<ol type="1">
+<li><a href="https://en.wikipedia.org/wiki/Fitness_proportionate_selection">Fitness proportionate selection</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Reward-based_selection">Reward-based selection</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Stochastic_universal_sampling">Stochastic universal sampling</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Tournament_selection">Tournament selection</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Truncation_selection">Truncation selection</a></li>
+</ol></li>
+<li><a href="https://en.wikipedia.org/wiki/Crossover_%28genetic_algorithm%29">Crossover (genetic algorithm)</a></li>
+</ol>
+<h3 id="pbil">PBIL</h3>
+<p><a href="https://en.wikipedia.org/wiki/Population-based_incremental_learning">Population-based incremental learning</a> (PBIL) is a type of of genetic algorithm where the <a href="https://en.wikipedia.org/wiki/Genotype">genotype</a> of an entire population (probability vector) is evolved rather than individual members. The algorithm was proposed by <a href="/Mathematician">Shumeet Baluja</a> in 1994 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. The algorithm is simpler than a standard genetic algorithm, and in many cases leads to better results than a standard genetic algorithm <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>. <span id="EvolutionaryAlgorithms"></span></p>
+<h3 id="evolutionary-algorithms">Evolutionary Algorithms</h3>
+<p>Genetic algorithms belong to the larger class of <a href="https://en.wikipedia.org/wiki/Evolutionary_algorithm">evolutionary algorithms</a> (EA). An EA uses some mechanisms inspired by <a href="https://en.wikipedia.org/wiki/Biological_evolution">biological evolution</a>: <a href="https://en.wikipedia.org/wiki/Reproduction">reproduction</a>, <a href="https://en.wikipedia.org/wiki/Mutation">mutation</a>, <a href="https://en.wikipedia.org/wiki/Genetic_recombination">recombination</a>, and <a href="https://en.wikipedia.org/wiki/Natural_selection">selection</a>. EAs are individual components that participate in an artificial evolution (AE). <span id="EvolutionaryComputation"></span></p>
+<h3 id="evolutionary-computation">Evolutionary Computation</h3>
+<p>An evolutionary algorithm (EA) is subset of <a href="https://en.wikipedia.org/wiki/Evolutionary_computation">evolutionary computation</a>, a generic population-based <a href="https://en.wikipedia.org/wiki/Metaheuristic">metaheuristic</a> optimization algorithm. Evolutionary computation, introduced by <a href="/Mathematician">John Henry Holland</a> in the 1970s and more popular since 1990s mimics the population-based sexual evolution through reproduction of generations. <span id="ComputationalIntelligence"></span></p>
+<h3 id="computational-intelligence">Computational Intelligence</h3>
+<p><a href="https://en.wikipedia.org/wiki/Computational_intelligence">Computational Intelligence</a> (CI) is a set of Nature-inspired computational methodologies and approaches and field of <a href="/Artificial_Intelligence">Artificial Intelligence</a>. It primarily includes <a href="https://en.wikipedia.org/wiki/Many-valued_logic">many-valued logic</a> or <a href="https://en.wikipedia.org/wiki/Fuzzy_logic">Fuzzy logic</a>, <a href="/Neural_Networks">Neural Networks</a>, Evolutionary Computation, <a href="https://en.wikipedia.org/wiki/Swarm_intelligence">swarm intelligence</a> and <a href="https://en.wikipedia.org/wiki/Artificial_immune_system">Artificial immune system</a>.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Artificial_Intelligence">Artificial Intelligence</a></li>
+<li><a href="/Automated_Tuning">Automated Tuning</a></li>
+<li><a href="/BBChess_%28SI%29">Differential Evolution in BBChess</a></li>
+<li><a href="/Deep_Learning">Deep Learning</a></li>
+<li><a href="/Dynamic_Programming">Dynamic Programming</a></li>
+<li><a href="/Falcon">GA in Falcon</a></li>
+<li><a href="/David_E._Moriarty">SANE</a></li>
+<li><a href="/Simulated_Annealing">Simulated Annealing</a></li>
+<li><a href="/Trial_and_Error">Trial and Error</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<h3 id="1950-">1950 ...</h3>
+<ul>
+<li><a href="/Nils_Barricelli">Nils Barricelli</a> (<strong>1954</strong>). <em>Esempi numerici di processi di evoluzione</em>, Methodos, pp. 45-68, 1954</li>
+<li><a href="/Nils_Barricelli">Nils Barricelli</a> (<strong>1957</strong>). <em>Symbiogenetic evolution processes realized by artificial methods</em>. Methodos: 143–182.</li>
+</ul>
+<h3 id="1960-">1960 ...</h3>
+<ul>
+<li><a href="/Nils_Barricelli">Nils Barricelli</a> (<strong>1961</strong>). <em><a href="http://www.springerlink.com/content/y502315688024453/">Numerical testing of evolution theories. Part I Theoretical introduction and basic tests</a></em>. Department of Biology, Division of Molecular Biology, <a href="https://en.wikipedia.org/wiki/Vanderbilt_University">Vanderbilt University</a>, Nashville, Tennessee, <a href="http://www.springer.com/philosophy/philosophy+of+sciences/journal/10441">Acta Biotheoretica</a>, Springer Netherlands, ISSN: 0001-5342</li>
+<li><a href="/Woodrow_W._Bledsoe">Woodrow W. Bledsoe</a> (<strong>1962</strong>). <em>An Analysis of Genetic Populations</em>. Technical Report, Panoramic Research Inc., Palo Alto, California.</li>
+<li><a href="/Woodrow_W._Bledsoe">Woodrow W. Bledsoe</a> (<strong>1962</strong>). <em>The Evolutionary Method in Hill Climbing: Convergence Rates</em>. Technical Report, Panoramic Research, Inc., Palo Alto, California. » Hill Climbing</li>
+<li><a href="/Nils_Barricelli">Nils Barricelli</a> (<strong>1963</strong>). <em><a href="http://www.springerlink.com/content/h85817217u25w6q7/">Numerical testing of evolution theories. Part II preliminary tests of performance. symbiogenesis and terrestrial life</a></em>. Department of Biology, Division of Molecular Biology, <a href="https://en.wikipedia.org/wiki/Vanderbilt_University">Vanderbilt University</a>, Nashville, Tennessee, <a href="http://www.springer.com/philosophy/philosophy+of+sciences/journal/10441">Acta Biotheoretica</a>, Springer Netherlands, ISSN: 0001-5342</li>
+</ul>
+<h3 id="1970-">1970 ...</h3>
+<ul>
+<li><a href="/Mathematician">John Henry Holland</a> (<strong>1975</strong>). <em>Adaptation in Natural and Artificial Systems: An Introductory Analysis with Applications to Biology, Control, and Artificial Intelligence</em>. <a href="https://www.amazon.com/Adaptation-Natural-Artificial-Systems-Introductory/dp/0262581116">amazon.com</a></li>
+</ul>
+<h3 id="1980-">1980 ...</h3>
+<ul>
+<li><a href="/John_Maynard_Smith">John Maynard Smith</a> (<strong>1982</strong>). <em><a href="https://en.wikipedia.org/wiki/Evolution_and_the_Theory_of_Games">Evolution and the Theory of Games</a></em>. Cambridge; New York, Cambridge University Press.</li>
+<li><a href="/Mathematician">Robert Axelrod</a> (<strong>1987</strong>). <em>The Evolution of Strategies in the Iterated Prisoner’s Dilemma</em>. in <a href="http://www.cs.bham.ac.uk/~wbl/biblio/gp-html/LawrenceDavidDavis.html">Lawrence D. Davis</a> (ed.) <em><a href="http://dl.acm.org/citation.cfm?id=535531">Genetic Algorithms and Simulated Annealing</a></em>. <a href="http://www-personal.umich.edu/~axe/research/Evolving.pdf">2001 reprint as pdf</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></li>
+<li><a href="/David_E._Goldberg">David E. Goldberg</a>, <a href="/Mathematician">John H. Holland</a> (<strong>1988</strong>). <em><a href="https://link.springer.com/article/10.1023/A:1022602019183">Genetic Algorithms and Machine Learning</a></em>. <a href="https://www.springer.com/journal/10994">Machine Learning</a>, Vol. 3</li>
+<li><a href="/David_E._Goldberg">David E. Goldberg</a> (<strong>1989</strong>). <em>Genetic Algorithms in Search, Optimization and Machine Learning</em>. <a href="https://en.wikipedia.org/wiki/Addison-Wesley">Addison-Wesley</a></li>
+<li><a href="/John_Maynard_Smith">John Maynard Smith</a> (<strong>1989</strong>). <em>Evolutionary Genetics</em>. Oxford; New York, Oxford University Press.</li>
+<li>Greg M. Gupton (<strong>1989</strong>). <em>Genetic Learning Algorithm Applied to the Game of Othello</em>. <a href="/1st_Computer_Olympiad">Heuristic Programming in AI 1</a></li>
+</ul>
+<h3 id="1990-">1990 ...</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/John_Koza">John Koza</a> (<strong>1990</strong>). <em>Genetic Programming: A Paradigm for Genetically Breeding Populations of Computer Programs to Solve Problems</em>. Stanford University Computer Science Department technical report STAN-CS-90-1314, <a href="http://www.genetic-programming.com/jkpdf/tr1314.pdf">pdf</a></li>
+<li><a href="/David_E._Goldberg">David E. Goldberg</a> (<strong>1991</strong>). <em><a href="https://www.complex-systems.com/abstracts/v05_i02_a02/">Real-coded Genetic Algorithms, Virtual Alphabets, and Blocking</a></em>. <a href="https://en.wikipedia.org/wiki/Complex_Systems_(journal)">Complex Systems</a>, Vol. 5, No. 2</li>
+<li><a href="/William_Tunstall-Pedoe">William Tunstall-Pedoe</a> (<strong>1991</strong>). <em>Genetic Algorithms Optimizing Evaluation Functions</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 14, No. 3</a></li>
+<li><a href="https://en.wikipedia.org/wiki/John_Koza">John Koza</a> (<strong>1992</strong>). <em>Genetic Programming: On the Programming of Computers by Means of Natural Selection</em>. <a href="https://en.wikipedia.org/wiki/MIT_Press">MIT Press</a>, <a href="https://en.wikipedia.org/wiki/Special:BookSources/0262111705">ISBN 0-262-11170-5</a></li>
+<li><a href="/Byoung-Tak_Zhang">Byoung-Tak Zhang</a>, <a href="/Mathematician">Heinz Mühlenbein</a> (<strong>1993</strong>). <em>Evolving Optimal Neural Networks Using Genetic Algorithms with Occam's Razor</em>. <a href="https://en.wikipedia.org/wiki/Complex_Systems_(journal)">Complex Systems</a>, Vol. 7, <a href="http://www.complex-systems.com/pdf/07-3-2.pdf">pdf</a></li>
+<li><a href="/Mathematician">Shumeet Baluja</a> (<strong>1994</strong>). <em><a href="http://www.ri.cmu.edu/publication_view.html?pub_id=1444">Population-Based Incremental Learning: A Method for Integrating Genetic Search Based Function Optimization and Competitive Learning</a></em>. Technical Report <a href="/Carnegie_Mellon_University">Carnegie Mellon University</a> (CMU–CS–94–163)</li>
+<li><a href="https://en.wikipedia.org/wiki/John_Koza">John Koza</a> (<strong>1994</strong>). <em>Genetic Programming II: Automatic Discovery of Reusable Programs</em>. <a href="https://en.wikipedia.org/wiki/MIT_Press">MIT Press</a>, <a href="https://en.wikipedia.org/wiki/Special:BookSources/0262111896">ISBN 0-262-11189-6</a></li>
+<li><a href="/Deniz_Yuret">Deniz Yuret</a> (<strong>1994</strong>). <em><a href="http://home.ku.edu.tr/%7Edyuret/pub/aitr1569/index.html">From Genetic Algorithms To Efficient Optimization</a></em>. Ms.C. Thesis, Supervisor: <a href="/Patrick_Winston">Patrick Henry Winston</a></li>
+<li><a href="/Kurt_Thearling">Kurt Thearling</a>, <a href="https://en.wikipedia.org/wiki/Thomas_S._Ray">Thomas S. Ray</a> (<strong>1994</strong>). <em><a href="http://www.thearling.com/text/alife4/alife4.htm">Evolving Multi-cellular Artificial Life</a></em>. <a href="http://mitpress.mit.edu/catalog/item/default.asp?ttype=2&amp;tid=8335">Artificial Life IV</a>, <a href="https://en.wikipedia.org/wiki/Rodney_Brooks">R. Brooks</a> and <a href="http://web.media.mit.edu/%7Epattie/">P. Maes</a> (eds.), <a href="https://en.wikipedia.org/wiki/MIT_Press">MIT Press</a></li>
+<li><a href="/David_E._Moriarty">David E. Moriarty</a>, <a href="/Risto_Miikkulainen">Risto Miikkulainen</a> (<strong>1994</strong>). <em><a href="http://nn.cs.utexas.edu/?moriarty:aaai94">Evolving Neural Networks to focus Minimax Search</a></em>. <a href="/Conferences">AAAI-94</a> » <a href="/Othello">Othello</a></li>
+</ul>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li><a href="/David_E._Moriarty">David E. Moriarty</a>, <a href="/Risto_Miikkulainen">Risto Miikkulainen</a> (<strong>1995</strong>). <em><a href="http://nn.cs.utexas.edu/?moriarty:connsci95">Discovering Complex Othello Strategies Through Evolutionary Neural Networks</a></em>. <a href="https://www.scimagojr.com/journalsearch.php?q=24173&amp;tip=sid">Connection Science</a>, Vol. 7</li>
+<li><a href="/Omar_Syed">Omar Syed</a> (<strong>1995</strong>). <em><a href="http://arimaa.com/arimaa/about/Thesis/">Applying Genetic Algorithms to Recurrent Neural Networks for Learning Network Parameters and Architecture</a></em>, Masters Thesis, <a href="https://en.wikipedia.org/wiki/Case_Western_Reserve_University">Case Western Reserve University</a></li>
+<li><a href="/Eric_B._Baum">Eric B. Baum</a>, <a href="https://en.wikipedia.org/wiki/Dan_Boneh">Dan Boneh</a>, Charles Garrett (<strong>1995</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=225326">On Genetic Algorithms</a></em>. <a href="http://dblp.uni-trier.de/db/conf/colt/colt1995.html#BaumBG95">COLT 1995</a></li>
+<li><a href="/Christopher_D._Rosin">Christopher D. Rosin</a>, <a href="https://scholar.google.com/citations?user=vqrY_hgAAAAJ&amp;hl=en">Richard K. Belew</a> (<strong>1995</strong>). <em>Methods for Competitive Co-Evolution: Finding Opponents Worth Beating</em>. <a href="https://dblp.uni-trier.de/db/conf/icga/icga1995.html">ICGA 1995</a>, <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.52.9359">CiteSeerX</a></li>
+<li><a href="/Jean-Marc_Alliot">Jean-Marc Alliot</a>, <a href="/Mathematician">Nicolas Durand</a> (<strong>1995</strong>). <em><a href="https://hal-enac.archives-ouvertes.fr/hal-00937682">A Genetic Algorithm to Improve an Othello Program</a></em>. <a href="https://link.springer.com/book/10.1007/3-540-61108-8">Artificial Evolution</a>, <a href="https://en.wikipedia.org/wiki/Lecture_Notes_in_Computer_Science">LNCS</a> 1063, <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a></li>
+<li><a href="/Pieter_Spronck">Pieter Spronck</a> (<strong>1996</strong>). <em>Elegance: Genetic Algorithms in Neural Reinforcement Control</em>. Master thesis, <a href="/Delft_University_of_Technology">Delft University of Technology</a>, <a href="http://ticc.uvt.nl/~pspronck/pubs/Elegance.pdf">pdf</a></li>
+<li><a href="/Christopher_D._Rosin">Christopher D. Rosin</a>, <a href="https://scholar.google.com/citations?user=vqrY_hgAAAAJ&amp;hl=en">Richard K. Belew</a> (<strong>1996</strong>). <em>A Competitive Approach in Game Learning</em>. <a href="https://dblp.uni-trier.de/db/conf/colt/colt1996.html">COLT 1996</a>, <a href="http://www.sci.brooklyn.cuny.edu/~sklar/teaching/f05/alife/papers/rosin-96competitive.pdf">pdf</a></li>
+<li><a href="/Bjørnar_Tessem">Bjørnar Tessem</a> (<strong>1997</strong>). <em>Genetic Algorithms for Analogical Mapping</em>. In <a href="http://home.earthlink.net/%7Edwaha/">David W. Aha</a> and <a href="http://www.informatik.uni-trier.de/%7Eley/db/indices/a-tree/w/Wettschereck:Dietrich.html">Dietrich Wettschereck</a> (eds.) Beyond Classification of Feature Vectors. <a href="http://www.informatik.uni-trier.de/%7Eley/db/conf/ecml/ecml97.html">ECML-97</a>, <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.53.851">CiteSeerX</a></li>
+<li><a href="/Kurt_Thearling">Kurt Thearling</a>, <a href="https://en.wikipedia.org/wiki/Thomas_S._Ray">Thomas S. Ray</a> (<strong>1997</strong>). <em><a href="http://www.thearling.com/text/evpar/evpar.htm">Evolving Parallel Computation</a></em>. <a href="https://en.wikipedia.org/wiki/Complex_Systems_%28journal%29">Complex Systems</a>, Vol. 10, No. 3</li>
+<li><a href="http://www2.inf.uos.de/alumni/schnecke/">Volker Schnecke</a>, <a href="/Oliver_Vornberger">Oliver Vornberger</a> (<strong>1997</strong>). <em>Hybrid genetic algorithms for constrained placement problems</em>. <a href="/IEEE">IEEE Transactions on Evolutionary Computation</a>, <a href="http://www2.inf.uos.de/papers_pdf/ieee_ec.pdf">pdf</a></li>
+<li><a href="/Christopher_D._Rosin">Christopher D. Rosin</a> (<strong>1997</strong>). <em>Coevolutionary Search Among Adversaries</em>. Ph.D. thesis, <a href="https://en.wikipedia.org/wiki/University_of_California,_San_Diego">University of California, San Diego</a>, <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.26.6404">CiteSeerX</a></li>
+<li><a href="https://en.wikipedia.org/wiki/John_Koza">John Koza</a> et al. (Eds.) (<strong>1998</strong>). <em>Genetic Programming</em>. <a href="https://en.wikipedia.org/wiki/Morgan_Kaufmann_Publishers">Morgan Kaufmann Publishers</a>, <a href="https://en.wikipedia.org/wiki/Special:BookSources/1558605487">ISBN 1-55860-548-7</a></li>
+<li>Norman Richards, <a href="/David_E._Moriarty">David E. Moriarty</a>, <a href="/Risto_Miikkulainen">Risto Miikkulainen</a> (<strong>1998</strong>). <em><a href="http://nn.cs.utexas.edu/?richards:apin98">Evolving Neural Networks to Play Go</a></em>. <a href="https://www.springer.com/journal/10489">Applied Intelligence</a>, Vol. 8, No. 1</li>
+<li><a href="https://en.wikipedia.org/wiki/John_Koza">John Koza</a> et al. (<strong>1999</strong>). <em>Genetic Programming III: Darwinian Invention and Problem Solving</em>. <a href="https://en.wikipedia.org/wiki/Morgan_Kaufmann_Publishers">Morgan Kaufmann</a>, <a href="https://en.wikipedia.org/wiki/Special:BookSources/1558605436">ISBN 1-55860-543-6</a></li>
+<li>Kumar Chellapilla, <a href="/David_B._Fogel">David B. Fogel</a> (<strong>1999</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/freeabs_all.jsp?arnumber=784222">Evolution, Neural Networks, Games, and Intelligence</a></em>. <a href="/IEEE">Proceedings of the IEEE</a></li>
+<li><a href="http://www.tim-taylor.com/">Tim Taylor</a> (<strong>1999</strong>). <em><a href="http://www.tim-taylor.com/papers/thesis/html/main.html">From Artificial Evolution to Artificial Life</a></em>. Ph.D. Thesis, <a href="/University_of_Edinburgh">University of Edinburgh</a></li>
+<li>Philip G. K. Reiser, Patricia J. Riddle (<strong>1999</strong>). <em><a href="http://link.springer.com/chapter/10.1007%2F3-540-48873-1_19">Evolving Logic Programs to Classify Chess-Endgame Positions</a></em>. <a href="http://link.springer.com/book/10.1007%2F3-540-48873-1">Simulated Evolution and Learning</a>, <a href="https://en.wikipedia.org/wiki/Canberra">Canberra</a>, Australia. <a href="http://www.springer.com/series/1244">Lecture Notes in Artificial Intelligence</a>, No. 1585, <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a>, <a href="http://stancomb.co.uk/Papers/seal98.pdf">pdf</a> » <a href="/Learning">Learning</a>, <a href="/Endgame">Endgame</a></li>
+</ul>
+<h3 id="2000-">2000 ....</h3>
+<ul>
+<li><a href="/Ryszard_Michalski">Ryszard Michalski</a> (<strong>2000</strong>). <em>LEARNABLE EVOLUTION MODEL: Evolutionary Processes Guided by Machine Learning</em>. Machine Learning 38 <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a></li>
+<li><a href="/Thomas_Philip_Runarsson">Thomas Philip Runarsson</a>, <a href="/Mathematician">Xin Yao</a> (<strong>2000</strong>). <em>Stochastic ranking for constrained evolutionary optimization</em>. <a href="/IEEE">IEEE Transactions on Evolutionary Computation</a>, Vol. 4, No. 3</li>
+</ul>
+<p><strong>2001</strong></p>
+<ul>
+<li><a href="/Eric_B._Baum">Eric B. Baum</a>, <a href="https://en.wikipedia.org/wiki/Dan_Boneh">Dan Boneh</a>, Charles Garrett (<strong>2001</strong>). <em><a href="http://www.mitpressjournals.org/doi/abs/10.1162/10636560151075130#.VfGaSZdpluM">Where Genetic Algorithms Excel</a></em>. <a href="https://en.wikipedia.org/wiki/Evolutionary_Computation_%28journal%29">Evolutionary Computation</a>, Vol. 9, No. 1</li>
+<li>Lothar M. Schmitt (<strong>2001</strong>). <em>Theory of Genetic Algorithms</em>. <a href="https://en.wikipedia.org/wiki/Theoretical_Computer_Science_%28journal%29">Theoretical Computer Science</a>, Vol. 259, Nos. 1-2</li>
+<li><a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a> (<strong>2001</strong>). <em><a href="http://link.springer.com/chapter/10.1007/3-540-44692-3_26">Genetic Programming with Local Improvement for Visual Learning from Examples</a></em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/caip/caip2001.html#Krawiec01">CAIP 2001</a></li>
+</ul>
+<p><strong>2002</strong></p>
+<ul>
+<li><a href="/Yngvi_Björnsson">Yngvi Björnsson</a>, <a href="/Tony_Marsland">Tony Marsland</a> (<strong>2002</strong>). <em>Learning Control of Search Extensions</em>. Proceedings of the 6th Joint Conference on Information Sciences (JCIS 2002), pp. 446-449. <a href="http://www.ru.is/faculty/yngvi/pdf/BjornssonM02.pdf">pdf</a></li>
+<li><a href="/David_E._Goldberg">David E. Goldberg</a> (<strong>2002</strong>). <em><a href="https://www.springer.com/gp/book/9781475736458">The Design of Innovation: Lessons from and for Competent Genetic Algorithms</a></em>. <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Kluwer Academic Publishers</a></li>
+<li>Roderich Groß, Keno Albrecht, Wolfgang Kantschik, Wolfgang Banzhaf (<strong>2002</strong>). <em>Evolving Chess Playing Programs</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/gecco/gecco2002.html#GrossAKB02">GECCO 2002</a>, <a href="http://naturalrobotics.group.shef.ac.uk/publications/gecco02.pdf">pdf</a></li>
+<li><a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a> (<strong>2002</strong>). <em><a href="http://link.springer.com/article/10.1023/A:1020984725014">Genetic Programming-based Construction of Features for Machine Learning and Knowledge Discovery Tasks</a></em>. <a href="http://www.informatik.uni-trier.de/~ley/db/journals/gpem/gpem3.html#Krawiec02">Genetic Programming and Evolvable Machines, Vol. 3</a>, No. 4</li>
+<li>Kenneth O. Stanley, <a href="/Risto_Miikkulainen">Risto Miikkulainen</a> (<strong>2002</strong>). <em><a href="http://nn.cs.utexas.edu/?stanley:ec02">Evolving Neural Networks Through Augmenting Topologies</a></em>. <a href="https://en.wikipedia.org/wiki/Evolutionary_Computation_(journal)">Evolutionary Computation</a>, Vol. 10, No. 2</li>
+</ul>
+<p><strong>2003</strong></p>
+<ul>
+<li>Matthew Pratola, Thomas Wolf (<strong>2003</strong>). <em><a href="http://ilk.uvt.nl/icga/journal/contents/content26-1.htm#GOTOOLS">Optimizing GOTOOLS' Search Heuristics using Genetic Algorithms</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 26, No. 1</a> » <a href="/Go">Go</a></li>
+<li><a href="https://en.wikipedia.org/wiki/John_Koza">John Koza</a> et al. (<strong>2003</strong>). <em>Genetic Programming IV: Routine Human-Competitive Machine Intelligence</em>. Springer, <a href="https://en.wikipedia.org/wiki/Special:BookSources/1402074468">ISBN 1-4020-7446-8</a></li>
+<li><a href="/David_B._Fogel">David B. Fogel</a>, <a href="/Timothy_J._Hays">Timothy J. Hays</a> (<strong>2003</strong>). <em><a href="http://spie.org/x648.html?product_id=512624">New Results on Evolving Strategies in Chess</a></em>. <a href="http://spie.org/x648.html?product_id=485971&amp;origin_id=x648">Applications and Science of Neural Networks, Fuzzy Systems, and Evolutionary Computation VI</a></li>
+<li>David Gleich (<strong>2003</strong>). <em>Machine Learning in Computer Chess: Genetic Programming and KRK</em>. <a href="https://en.wikipedia.org/wiki/Harvey_Mudd_College">Harvey Mudd College</a>, <a href="http://www.cs.purdue.edu/homes/dgleich/publications/Gleich%202003%20-%20Machine%20Learning%20in%20Computer%20Chess.pdf">pdf</a></li>
+<li><a href="/Wee-Chong_Oon">Wee-Chong Oon</a>, <a href="/Yew_Jin_Lim">Yew Jin Lim</a> (<strong>2003</strong>). <em>An Investigation on Piece Differential Information in Co-Evolution on Games Using Kalah.</em> CEC2003, Vol. 3, <a href="http://www.yewjin.com/storage/papers/Kalah_CEC2003.pdf">pdf</a></li>
+<li>Lothar M. Schmitt (<strong>2003</strong>). <em>Theory of Coevolutionary Genetic Algorithms</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/ispa/ispa2003.html#Schmitt03">ISPA 2003</a></li>
+<li><a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a>, <a href="http://vislab.ucr.edu/PEOPLE/BIR_BHANU/index.php">Bir Bhanu</a> (<strong>2003</strong>). <em><a href="http://link.springer.com/chapter/10.1007/3-540-45105-6_39">Coevolution and Linear Genetic Programming for Visual Learning</a></em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/gecco/gecco2003-1.html#KrawiecB03">GECCO 2003</a></li>
+</ul>
+<p><strong>2004</strong></p>
+<ul>
+<li>Adam Marczyk (<strong>2004</strong>) <em><a href="http://www.talkorigins.org/faqs/genalg/genalg.html">Genetic Algorithms and Evolutionary Computation</a></em>. <a href="https://en.wikipedia.org/wiki/TalkOrigins_Archive">TalkOrigins Archive</a></li>
+<li>Petr Aksenov (<strong>2004</strong>). <em><a href="http://joypub.joensuu.fi/publications/masters_thesis/aksenov_genetic/index_en.html">Genetic algorithms for optimising chess position scoring</a></em>. Masters thesis, <a href="ftp://cs.joensuu.fi/pub/Theses/2004_MSc_Aksenov_Petr.pdf">pdf</a></li>
+<li><a href="/David_B._Fogel">David B. Fogel</a>, <a href="/Timothy_J._Hays">Timothy J. Hays</a>, <a href="/Sarah_L._Hahn">Sarah L. Hahn</a>, <a href="/James_Quon">James Quon</a> (<strong>2004</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/freeabs_all.jsp?arnumber=1360168">A Self-Learning Evolutionary Chess Program</a></em>. <a href="/IEEE">Proceedings of the IEEE</a>, Vol. 92 No. 12, pp. 1947-1954, <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.72.4267">CiteSeerX</a></li>
+<li>Mathieu Autonès, Aryel Beck, Phillippe Camacho, Nicolas Lassabe, Hervé Luga, François Scharffe (<strong>2004</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-540-24650-3_1">Evaluation of Chess Position by Modular Neural network Generated by Genetic Algorithm</a></em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/eurogp/eurogp2004.html#AutonesBCLLS04">EuroGP 2004</a></li>
+<li><a href="/Shan-Tai_Chen">Shan-Tai Chen</a>, <a href="/Shun-Shii_Lin">Shun-Shii Lin</a>, <a href="/Li-Te_Huang">Li-Te Huang</a>, <a href="https://dblp.uni-trier.de/pers/hd/w/Wei:Chun=Jen">Chun-Jen Wei</a> (<strong>2004</strong>) <em><a href="https://link.springer.com/article/10.1023/B:HEUR.0000026899.63797.f9">Towards the Exact Minimization of BDDs-An Elitism-Based Distributed Evolutionary Algorithm</a></em>. <a href="https://dblp.uni-trier.de/db/journals/heuristics/heuristics10.html">Journal of Heuristics, Vol. 10</a>, No. 3 <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a></li>
+<li>Kenneth O. Stanley, <a href="/Risto_Miikkulainen">Risto Miikkulainen</a> (<strong>2004</strong>). <em><a href="http://nn.cs.utexas.edu/?stanley:gecco04">Evolving a Roving Eye for Go</a></em>. <a href="https://dblp.uni-trier.de/db/conf/gecco/gecco2004-2.html">GECCO 2004</a></li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li>Ami Hauptman, Moshe Sipper (<strong>2005</strong>). <em><a href="https://www.researchgate.net/publication/228780904_Analyzing_the_intelligence_of_a_genetically_programmed_chess_player">Analyzing the Intelligence of a Genetically Programmed Chess Player</a></em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/gecco/gecco2005.html">GECCO 2005</a></li>
+<li>Ami Hauptman, Moshe Sipper (<strong>2005</strong>). <em>GP-EndChess: Using Genetic Programming to Evolve Chess Endgame Players</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/eurogp/eurogp2005.html#HauptmanS05">EuroGP 2005</a>, <a href="http://www.cs.bgu.ac.il/~sipper/papabs/eurogpchess-final.pdf">pdf</a></li>
+<li><a href="/David_B._Fogel">David B. Fogel</a>, <a href="/Timothy_J._Hays">Timothy J. Hays</a>, <a href="/Sarah_L._Hahn">Sarah L. Hahn</a>, <a href="/James_Quon">James Quon</a> (<strong>2005</strong>). <em>Further Evolution of a Self-Learning Chess Program</em>. <a href="/IEEE">IEEE Symposium on Computational Intelligence &amp; Games</a>, <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.112.5288">CiteSeerX</a></li>
+<li><a href="https://dblp.uni-trier.de/pers/hd/s/Sastry:Kumara">Kumara Sastry</a>, <a href="/David_E._Goldberg">David E. Goldberg</a>, <a href="/Graham_Kendall">Graham Kendall</a> (<strong>2005</strong>). <em><a href="https://link.springer.com/chapter/10.1007/0-387-28356-0_4">Genetic Algorithms</a></em>. <a href="https://link.springer.com/book/10.1007/0-387-28356-0">Search Methodologies</a>, <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a></li>
+<li><a href="/Kokolo_Ikeda">Kokolo Ikeda</a> (<strong>2005</strong>). <em>Exemplar-based direct policy search with evolutionary optimization</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/cec/cec2005.html#Ikeda05">CEC 2005</a></li>
+<li><a href="/Thomas_Philip_Runarsson">Thomas Philip Runarsson</a>, <a href="/Mathematician">Xin Yao</a> (<strong>2005</strong>). <em>Search biases in constrained evolutionary optimization</em>. <a href="/IEEE">IEEE Transactions on Systems, Man, and Cybernetics</a>, Vol. 35, No. 2, <a href="https://www.researchgate.net/profile/Thomas_Runarsson/publication/3421612_Search_Biases_in_Constrained_Evolutionary_Optimization/links/543fa8810cf21227a11a4b5d.pdf">pdf</a></li>
+<li>Aguston E. Eiben, <a href="/Marc_Schoenauer">Marc Schoenauer</a> (<strong>2005</strong>). <em>Evolutionary Computing</em>. <a href="https://arxiv.org/abs/cs/0511004">arXiv:cs/0511004</a></li>
+</ul>
+<p><strong>2006</strong></p>
+<ul>
+<li><a href="/Sylvain_Gelly">Sylvain Gelly</a>, <a href="/Olivier_Teytaud">Olivier Teytaud</a>, Nicolas Bredèche, <a href="/Marc_Schoenauer">Marc Schoenauer</a> (<strong>2006</strong>). <em>Universal Consistency and Bloat in GP</em>. <a href="https://hal.inria.fr/inria-00112840/document">pdf</a></li>
+<li>Nicolas Lassabe, Stéphane Sanchez, Hervé Luga, Yves Duthen (<strong>2006</strong>). <em><a href="http://www.sciweavers.org/publications/genetically-programmed-strategies-chess-endgame">Genetically Programmed Strategies For Chess Endgame</a></em>. <a href="http://www.sigevo.org/gecco-2006/">GECCO 2006</a>, <a href="http://www.cs.york.ac.uk/rts/docs/GECCO_2006/docs/p831.pdf">pdf</a></li>
+<li><a href="/Borko_Bošković">Borko Bošković</a>, <a href="/Sašo_Greiner">Sašo Greiner</a>, <a href="/Janez_Brest">Janez Brest</a>, <a href="/Viljem_Žumer">Viljem Žumer</a> (<strong>2006</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/freeabs_all.jsp?arnumber=1688532">A Differential Evolution for the Tuning of a Chess Evaluation Function</a></em>. <a href="/IEEE">IEEE</a> Congress on Evolutionary Computation, 2006</li>
+<li>Wolfgang Kantschik (<strong>2006</strong>). <em>Genetische Programmierung und Schach</em>. Ph.D. thesis, <a href="/University_of_Dortmund">University of Dortmund</a>, <a href="https://eldorado.tu-dortmund.de/bitstream/2003/25798/1/Kantschik_Neu.pdf">pdf</a> (German)</li>
+<li><a href="/Simon_Lucas">Simon Lucas</a>, <a href="/Thomas_Philip_Runarsson">Thomas Philip Runarsson</a> (<strong>2006</strong>). <em><a href="https://scholar.google.is/citations?view_op=view_citation&amp;hl=en&amp;user=4eWdc_sAAAAJ&amp;citation_for_view=4eWdc_sAAAAJ:qjMakFHDy7sC">Temporal Difference Learning versus Co-Evolution for Acquiring Othello Position Evaluation</a></em>. <a href="/IEEE">IEEE CIG 2006</a></li>
+</ul>
+<p><strong>2007</strong></p>
+<ul>
+<li>Ami Hauptman, Moshe Sipper (<strong>2007</strong>). <em>Evolution of an Efficient Search Algorithm for the Mate-In-N Problem in Chess</em>. <a href="http://www.informatik.uni-trier.de/~%20LEY/db/conf/eurogp/eurogp2007.html">EuroGP 2007</a>, <a href="http://www.cs.bgu.ac.il/~sipper/papabs/gpsearch.pdf">pdf</a> » <a href="/Mate_Search">Mate Search</a></li>
+<li>Moshe Sipper, <a href="http://www.informatik.uni-trier.de/~ley/pers/hd/a/Azaria:Yaniv.html">Yaniv Azaria</a>, Ami Hauptman, <a href="http://www.informatik.uni-trier.de/~ley/pers/hd/s/Shichel:Yehonatan.html">Yehonatan Shichel</a> (<strong>2007</strong>). <em>Designing an Evolutionary Strategizing Machine for Game Playing and Beyond</em>. <a href="/IEEE">IEEE Transactions on Systems, Man, and Cybernetics</a>, Part C, <a href="http://www.cs.bgu.ac.il/~sipper/papabs/gpgames-final.pdf">pdf</a></li>
+<li>Ami Hauptman (<strong>2007</strong>). <em><a href="https://scholar.google.co.il/citations?view_op=view_citation&amp;hl=en&amp;user=T5aZ-skAAAAJ&amp;citation_for_view=T5aZ-skAAAAJ:Tyk-4Ss8FVUC">Evolving Machine Chess Players</a></em>. EvoPhD 2007</li>
+<li><a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a> (<strong>2007</strong>). <em><a href="http://www.sciencedirect.com/science/article/pii/S0167865507002462">Generative Learning of Visual Concepts using Multiobjective Genetic Programming</a></em>. <a href="https://en.wikipedia.org/wiki/Pattern_Recognition_Letters">Pattern Recognition Letters</a>, Vol. 28, No. 16</li>
+<li><a href="/Alan_J._Lockett">Alan J. Lockett</a>, Charles L. Chen, <a href="/Risto_Miikkulainen">Risto Miikkulainen</a> (<strong>2007</strong>). <em><a href="http://nn.cs.utexas.edu/?lockett:gecco07">Evolving Explicit Opponent Models for Game Play</a></em>. <a href="https://dblp.uni-trier.de/db/conf/gecco/gecco2007c.html">GECCO 2007</a></li>
+<li>Joseph Reisinger, Erkin Bahçeci, Igor Karpov, <a href="/Risto_Miikkulainen">Risto Miikkulainen</a> (<strong>2007</strong>). <em><a href="https://www.semanticscholar.org/paper/Coevolving-Strategies-for-General-Game-Playing-Reisinger-Bah%C3%A7eci/9a39c1411b6e68457ece391b057dcc26142c23a7">Coevolving Strategies for General Game Playing</a></em>. <a href="https://dblp.uni-trier.de/db/conf/cig/cig2007.html">CIG 2007</a></li>
+</ul>
+<p><strong>2008</strong></p>
+<ul>
+<li><a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a>, <a href="/Bartosz_Wieloch">Bartosz Wieloch</a> (<strong>2008</strong>). <em>Evolving Strategy for a Probabilistic Game of Imperfect Information using Genetic Programming</em>. Genetic Programming and Evolvable Machines, Vol. 9, No. 4, <a href="http://www.cs.put.poznan.pl/wjaskowski/pub/papers/jaskowski08evolving.pdf">pdf</a></li>
+<li><a href="/Borko_Bošković">Borko Bošković</a>, <a href="/Sašo_Greiner">Sašo Greiner</a>, <a href="/Janez_Brest">Janez Brest</a>, <a href="/Aleš_Zamuda">Aleš Zamuda</a>, <a href="/Viljem_Žumer">Viljem Žumer</a> (<strong>2008</strong>). <em>An Adaptive Differential Evolution Algorithm with Opposition-Based Mechanisms, Applied to the Tuning of a Chess Program</em>. <a href="http://www.springer.com/engineering/computational+intelligence+and+complexity/book/978-3-540-68827-3">Advances in Differential Evolution</a>, Studies in Computational Intelligence, ISBN: 978-3-540-68827-3</li>
+<li><a href="/Eli_David">Omid David</a>, <a href="/Moshe_Koppel">Moshe Koppel</a>, <a href="/Nathan_S._Netanyahu">Nathan S. Netanyahu</a> (<strong>2008</strong>). <em>Genetic Algorithms for Mentor-Assisted Evaluation Function Optimization</em>. <a href="http://www.sigevo.org/gecco-2008/">GECCO '08</a>, <a href="https://arxiv.org/abs/1711.06839">arXiv:1711.06839</a></li>
+<li><a href="/Pieter_Spronck">Pieter Spronck</a>, <a href="/Ida_Sprinkhuizen-Kuyper">Ida Sprinkhuizen-Kuyper</a>, <a href="/Eric_Postma">Eric Postma</a> (<strong>2008</strong>). <em>Deca: the doping-Driven Evolutionary Control Algorithm</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/journals/aai/aai22.html#SpronckSP08">Applied Artificial Intelligence, Vol. 22</a></li>
+</ul>
+<p><strong>2009</strong></p>
+<ul>
+<li><a href="/Eli_David">Omid David</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Moshe_Koppel">Moshe Koppel</a>, <a href="/Nathan_S._Netanyahu">Nathan S. Netanyahu</a> (<strong>2009</strong>). <em>Simulating Human Grandmasters: Evolution and Coevolution of Evaluation Functions</em>. <a href="http://www.sigevo.org/gecco-2009/">GECCO '09</a>, <a href="https://arxiv.org/abs/1711.06840">arXiv:1711.06840</a></li>
+<li><a href="/Eli_David">Omid David</a> (<strong>2009</strong>). <em>Genetic Algorithms Based Learning for Evolving Intelligent Organisms</em>. Ph.D. Thesis <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a></li>
+<li>Ami Hauptman (<strong>2009</strong>). <em>Evolving Search Heuristics for Combinatorial Games with Genetic Programming</em>. <a href="https://en.wikipedia.org/wiki/Ben-Gurion_University_of_the_Negev">Ben-Gurion University of the Negev</a></li>
+<li>Nur Merve Amil, Nicolas Bredèche, Christian Gagné, <a href="/Sylvain_Gelly">Sylvain Gelly</a>, <a href="/Marc_Schoenauer">Marc Schoenauer</a>, <a href="/Olivier_Teytaud">Olivier Teytaud</a> (<strong>2009</strong>). <em>A Statistical Learning Perspective of Genetic Programming</em>. EuroGP 2009, <a href="http://hal.inria.fr/docs/00/36/97/82/PDF/eurogp.pdf">pdf</a></li>
+<li><a href="http://www.informatik.uni-trier.de/~ley/db/indices/a-tree/s/Stewart:Ian.html">Ian Stewart</a>, <a href="http://people.trentu.ca/wfeng/">Wenying Feng</a>, <a href="/Selim_Akl">Selim Akl</a> (<strong>2009</strong>). <em><a href="http://www.computer.org/portal/web/csdl/doi/10.1109/ITNG.2009.240">A Further Improvement on a Genetic Algorithm</a></em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/itng/itng2009.html#StewartFA09">ITNG 2009</a></li>
+<li><a href="http://www.informatik.uni-trier.de/~ley/pers/hd/c/Chen:Gang.html">Gang Chen</a>, <a href="http://www.informatik.uni-trier.de/~ley/pers/hd/l/Low:Chor_Ping.html">Chor Ping Low</a>, Zhonghua Yang (<strong>2009</strong>). <em>Preserving and Exploiting Genetic Diversity in Evolutionary Programming Algorithms</em>. <a href="/IEEE">IEEE Transactions Evolutionary Computation</a>, Vol. 13, No. 3, pp. 661-673</li>
+<li>Yun Bao, <a href="http://dblp.uni-trier.de/pers/hd/z/Zhao:Erbo">Erbo Zhao</a>, Xiaocong Gan, <a href="http://dblp.uni-trier.de/pers/hd/l/Luo:Dan">Dan Luo</a>, Zhangang Han (<strong>2009</strong>). <em>A Review on Cutting-Edge Techniques in Evolutionary Algorithms</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/icnc/icnc2009-5.html#BaoZGLH09">5. ICNC 2009</a></li>
+<li><a href="/Marcin_Szubert">Marcin Szubert</a> (<strong>2009</strong>). <em>Coevolutionary Reinforcement Learning and its Application to Othello</em>. M.Sc. thesis, <a href="https://en.wikipedia.org/wiki/Pozna%C5%84_University_of_Technology">Poznań University of Technology</a>, supervisor <a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a>, <a href="https://mszubert.github.io/papers/Szubert_2009_MSC.pdf">pdf</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li>Dmitry Batenkov (<strong>2010</strong>). <em><a href="http://xrds.acm.org/article.cfm?aid=1836558">Hands-on introduction to genetic programming</a></em>. <a href="/ACM">ACM Crossroads</a>, Vol. 17, No. 1</li>
+<li><a href="/Eli_David">Omid David</a>, <a href="/Nathan_S._Netanyahu">Nathan S. Netanyahu</a>, Yoav Rosenberg, Moshe Shimoni (<strong>2010</strong>). <em>Genetic Algorithms for Automatic Classification of Moving Objects</em>. <a href="/ACM">ACM</a> Genetic and Evolutionary Computation Conference (<a href="http://www.sigevo.org/gecco-2010/">GECCO '10</a>), <a href="https://en.wikipedia.org/wiki/Portland,_Oregon">Portland, OR</a></li>
+<li><a href="/Eli_David">Omid David</a>, <a href="/Moshe_Koppel">Moshe Koppel</a>, <a href="/Nathan_S._Netanyahu">Nathan S. Netanyahu</a> (<strong>2010</strong>). <em>Genetic Algorithms for Automatic Search Tuning</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 33, No. 2</a></li>
+<li><a href="/Eli_David">Omid David</a>, <a href="/Moshe_Koppel">Moshe Koppel</a>, <a href="/Nathan_S._Netanyahu">Nathan S. Netanyahu</a> (<strong>2010</strong>). <em>Optimizing Selective Search in Chess</em>. <a href="https://icml.cc/Conferences/2010/program.html">ICML Workshop on Machine Learning and Games</a>, <a href="https://arxiv.org/abs/1009.0550">arXiv:1009.0550</a></li>
+<li><a href="/Jean-Baptiste_Hoock">Jean-Baptiste Hoock</a>, <a href="/Olivier_Teytaud">Olivier Teytaud</a> (<strong>2010</strong>). <em><a href="http://hal.inria.fr/inria-00452887/en/">Bandit-Based Genetic Programming</a></em>. 13th European Conference on Genetic Programming (2010), <a href="http://hal.inria.fr/docs/00/45/28/87/PDF/pattern.pdf">pdf</a></li>
+<li><a href="/Borko_Bošković">Borko Bošković</a> (<strong>2010</strong>). <em><a href="http://labraj.uni-mb.si/en/PhD_Thesis_Defence_%28Borko_Bo%C5%A1kovi%C4%87%29">Differential evolution for the Tuning of a Chess Evaluation Function</a></em>. Ph.D. thesis, <a href="/University_of_Maribor">University of Maribor</a></li>
+<li><a href="/James_Glenn">James Glenn</a> (<strong>2010</strong>). <em>Optimizing genetic algorithm parameters for a stochastic game</em>. <a href="http://www.icec.ijcci.org/ICEC2010/">ICEC 2010</a>, pp. 199-206. SciTePress, ISBN 978-989-8425-31-7</li>
+<li>Tomohiko Mitsuta, Lothar M. Schmitt (<strong>2010</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=1994517">Optimizing the Performance of GNU-chess with a Genetic Algorithm</a></em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/hcce/hc2010.html#MitsutaS10">HC 2010</a>, <a href="http://www.wlu.ca/science/physcomp/kotsireas/468/RAP_DStu.pdf">pdf</a> » <a href="/GNU_Chess">GNU Chess</a></li>
+<li><a href="/Kokolo_Ikeda">Kokolo Ikeda</a>, <a href="http://www.informatik.uni-trier.de/~ley/pers/hd/k/Kobayashi:Shigenobu.html">Shigenobu Kobayashi</a>, <a href="http://www.informatik.uni-trier.de/~ley/pers/hd/k/Kita:Hajime.html">Hajime Kita</a> (<strong>2010</strong>). <em>[<a href="http://adsabs.harvard.edu/abs/2010TJSAI">http://adsabs.harvard.edu/abs/2010TJSAI</a>..25..351I Exemplar-Based Policy with Selectable Strategies and its Optimization Using GA]</em>. <a href="https://www.jstage.jst.go.jp/browse/tjsai/25/2/_contents">Transactions of the Japanese Society for Artificial Intelligence, Vol. 25, No. 2</a></li>
+<li><a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a>, <a href="/Marcin_Szubert">Marcin Szubert</a> (<strong>2010</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=5586054">Coevolutionary Temporal Difference Learning for small-board Go</a></em>. <a href="/IEEE">IEEE Congress on Evolutionary Computation</a></li>
+<li>Edward P. Manning (<strong>2010</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=5409565">Using Resource-Limited Nash Memory to Improve an Othello Evaluation Function</a></em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 2, No. 1 » <a href="/Othello">Othello</a></li>
+<li>Edward P. Manning (<strong>2010</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=1830667">Coevolution in a Large Search Space using Resource-limited Nash Memory</a></em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/gecco/gecco2010.html#Manning10">GECCO '10</a> » <a href="/Othello">Othello</a></li>
+<li><a href="/Ilya_Loshchilov">Ilya Loshchilov</a>, <a href="/Marc_Schoenauer">Marc Schoenauer</a>, <a href="/Michèle_Sebag">Michèle Sebag</a> (<strong>2010</strong>). <em>A mono surrogate for multiobjective optimization</em>. <a href="https://dblp.org/db/conf/gecco/gecco2010.html">GECCO 2010</a>, <a href="https://hal.inria.fr/inria-00483948/document">pdf</a></li>
+</ul>
+<p><strong>2011</strong></p>
+<ul>
+<li><a href="https://dblp.uni-trier.de/pers/hd/f/Fogel:Gary_B=">Gary B. Fogel</a>, <a href="/David_B._Fogel">David B. Fogel</a>, <a href="https://dblp.uni-trier.de/pers/hd/f/Fogel:Lawrence_J=">Lawrence J. Fogel</a> (<strong>2011</strong>). <em><a href="http://www.scholarpedia.org/article/Evolutionary_programming">Evolutionary programming</a></em>. <a href="https://en.wikipedia.org/wiki/Scholarpedia">Scholarpedia</a>, Vol. 6, No. 4</li>
+<li><a href="/Borko_Bošković">Borko Bošković</a>, <a href="/Janez_Brest">Janez Brest</a> (<strong>2011</strong>). <em><a href="http://www.informatica.si/index.php/informatica/article/view/353">Tuning Chess Evaluation Function Parameters using Differential Evolution</a></em>. Algorithm. Informatica, 35, No. 2</li>
+<li><a href="/Borko_Bošković">Borko Bošković</a>, <a href="/Janez_Brest">Janez Brest</a>, <a href="/Aleš_Zamuda">Aleš Zamuda</a>, <a href="/Sašo_Greiner">Sašo Greiner</a>, <a href="/Viljem_Žumer">Viljem Žumer</a> (<strong>2011</strong>). <em><a href="http://www.springerlink.com/content/y62h14743364x2l7/">History mechanism supported differential evolution for chess evaluation function tuning</a></em>. <a href="http://www.springer.com/engineering/computational+intelligence+and+complexity/journal/500">Soft Computing</a>, Vol. 15, No. 4</li>
+<li><a href="/Eli_David">Omid David</a>, <a href="/Moshe_Koppel">Moshe Koppel</a>, <a href="/Nathan_S._Netanyahu">Nathan S. Netanyahu</a> (<strong>2011</strong>). <em><a href="https://link.springer.com/article/10.1007/s10710-010-9103-4">Expert-Driven Genetic Algorithms for Simulating Evaluation Functions</a></em>. <a href="https://www.springer.com/journal/10710">Genetic Programming and Evolvable Machines</a>, Vol. 12, No. 1, <a href="https://arxiv.org/abs/1711.06841">arXiv:1711.06841</a></li>
+<li>Eduardo Vázquez-Fernández, Carlos Artemio Coello Coello, Feliú Davino Sagols Troncoso (<strong>2011</strong>). <em>An Evolutionary Algorithm for Tuning a Chess Evaluation Function</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/cec/cec2011.html#Vazquez-FernandezCT11">CEC 2011</a>, <a href="http://delta.cs.cinvestav.mx/~ccoello/conferences/eduardo-cec2011-final.pdf.gz">pdf</a></li>
+<li>Eduardo Vázquez-Fernández, Carlos Artemio Coello Coello, Feliú Davino Sagols Troncoso (<strong>2011</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=2001882">An Adaptive Evolutionary Algorithm Based on Typical Chess Problems for Tuning a Chess Evaluation Function</a></em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/gecco/gecco2011c.html#Vazquez-FernandezCT11">GECCO 2011</a>, <a href="http://delta.cs.cinvestav.mx/~ccoello/conferences/vazquez-gecco2011.pdf.gz">pdf</a></li>
+<li><a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a>, <a href="/Marcin_Szubert">Marcin Szubert</a> (<strong>2011</strong>). <em>Learning N-Tuple Networks for Othello by Coevolutionary Gradient Search</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/gecco/gecco2011.html#KrawiecS11">GECCO 2011</a>, <a href="http://www.cs.put.poznan.pl/mszubert/pub/krawiec2011gecco.pdf">pdf</a></li>
+<li><a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a>, <a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Marcin_Szubert">Marcin Szubert</a> (<strong>2011</strong>). <em><a href="http://www.degruyter.com/view/j/amcs.2011.21.issue-4/v10006-011-0057-3/v10006-011-0057-3.xml">Evolving small-board Go players using Coevolutionary Temporal Difference Learning with Archives</a></em>. <a href="http://www.degruyter.com/view/j/amcs">Applied Mathematics and Computer Science</a>, Vol. 21, No. 4</li>
+<li>Moshe Sipper (<strong>2011</strong>). <em><a href="http://www.moshesipper.com/etw/">Evolved to Win</a></em>. <a href="https://en.wikipedia.org/wiki/Lulu_%28company%29">Lulu</a></li>
+<li><a href="/Alan_J._Lockett">Alan J. Lockett</a>, <a href="/Risto_Miikkulainen">Risto Miikkulainen</a> (<strong>2011</strong>). <em><a href="http://www.cs.utexas.edu/users/ai-lab/?lockett:gecco11">Real-Space Evolutionary Annealing</a></em>. <a href="https://dblp.uni-trier.de/db/conf/gecco/gecco2011.html">GECCO 2011</a></li>
+</ul>
+<p><strong>2012</strong></p>
+<ul>
+<li><a href="http://www.informatik.uni-trier.de/~ley/pers/hd/o/Orlov:Michael.html">Michael Orlov</a>, Moshe Sipper, Ami Hauptman (<strong>2012</strong>). <em><a href="http://link.springer.com/content/pdf/10.1007/978-1-4614-1800-9_81.pdf">Genetic and evolutionary algorithms and programming: General introduction and application to game playing</a></em>. <a href="http://www.springer.com/birkhauser/computer+science/journal/37">Computational Complexity</a>, <a href="https://en.wikipedia.org/wiki/Springer_Publishing">Springer New York</a></li>
+<li><a href="/Kokolo_Ikeda">Kokolo Ikeda</a>, <a href="/Simon_Viennot">Simon Viennot</a>, et al. (<strong>2012</strong>). <em>Adaptation of game AIs using Genetic Algorithm: Keeping variety and suitable strength</em>. <a href="http://ieeexplore.ieee.org/xpl/mostRecentIssue.jsp?punumber=6495582">ISIS 2012</a></li>
+<li><a href="/Paweł_Liskowski">Paweł Liskowski</a> (<strong>2012</strong>). <em>Co-Evolution versus Evolution with Random Sampling for Acquiring Othello Position Evaluation</em>. master's thesis, <a href="https://en.wikipedia.org/wiki/Pozna%C5%84_University_of_Technology">Poznań University of Technology</a>, supervisor <a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="http://www.cs.put.poznan.pl/wjaskowski/pub/var/pliskowski_msc.pdf">pdf</a> » <a href="/Othello">Othello</a></li>
+<li><a href="/Marcin_Szubert">Marcin Szubert</a>, <a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a> (<strong>2012</strong>). <em><a href="http://link.springer.com/chapter/10.1007/978-3-642-32964-7_22">Autonomous Shaping via Coevolutionary Selection of Training Experience</a></em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/ppsn/ppsn2012-2.html#SzubertK12">12. PPSN</a></li>
+<li><a href="/Ilya_Loshchilov">Ilya Loshchilov</a>, <a href="/Marc_Schoenauer">Marc Schoenauer</a>, <a href="/Michèle_Sebag">Michèle Sebag</a> (<strong>2012</strong>). <em>Self-Adaptive Surrogate-Assisted Covariance Matrix Adaptation Evolution Strategy</em>. <a href="https://arxiv.org/abs/1204.2356">arXiv:1204.2356</a></li>
+<li><a href="/Ilya_Loshchilov">Ilya Loshchilov</a>, <a href="/Marc_Schoenauer">Marc Schoenauer</a>, <a href="/Michèle_Sebag">Michèle Sebag</a> (<strong>2012</strong>). <em>Alternative Restart Strategies for CMA-ES</em>. <a href="https://arxiv.org/abs/1207.0206">arXiv:1207.0206</a></li>
+<li><a href="/Alan_J._Lockett">Alan J. Lockett</a> (<strong>2012</strong>). <em>General-Purpose Optimization Through Information Maximization</em>. Ph.D. thesis, <a href="https://en.wikipedia.org/wiki/University_of_Texas_at_Austin">University of Texas at Austin</a>, advisor <a href="/Risto_Miikkulainen">Risto Miikkulainen</a>, <a href="http://www.alockett.com/static/pdf/lockett-thesis.pdf">pdf</a></li>
+</ul>
+<p><strong>2013</strong></p>
+<ul>
+<li><a href="/Marcin_Szubert">Marcin Szubert</a>, <a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a> (<strong>2013</strong>). <em><a href="http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=6504736">On Scalability, Generalization, and Hybridization of Coevolutionary Learning: a Case Study for Othello</a></em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 5, No. 3 » <a href="/Othello">Othello</a></li>
+<li><a href="/Paweł_Liskowski">Paweł Liskowski</a> (<strong>2013</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=2482752">Quantitative Analysis of the Hall of Fame Coevolutionary Archives</a></em>. <a href="http://www.sigevo.org/gecco-2013/">GECCO '13</a> Companion Proceedings</li>
+<li><a href="/Marcin_Szubert">Marcin Szubert</a>, <a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Paweł_Liskowski">Paweł Liskowski</a>, <a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a> (<strong>2013</strong>). <em>Shaping Fitness Function for Evolutionary Learning of Game Strategies</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/gecco/gecco2013.html#SzubertJLK13">GECCO 2013</a>, <a href="http://www.cs.put.poznan.pl/wjaskowski/pub/papers/szubert2013shaping.pdf">pdf</a></li>
+<li><a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Paweł_Liskowski">Paweł Liskowski</a>, <a href="/Marcin_Szubert">Marcin Szubert</a>, <a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a> (<strong>2013</strong>). <em>Improving Coevolution by Random Sampling</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/gecco/gecco2013.html#JaskowskiLSK13">GECCO 2013</a>, <a href="http://www.cs.put.poznan.pl/mszubert/pub/jaskowski2013gecco.pdf">pdf</a></li>
+<li><a href="/S._Ali_Mirsoleimani">S. Ali Mirsoleimani</a>, <a href="http://dblp.uni-trier.de/pers/hd/k/Karami:Ali">Ali Karami</a>, <a href="http://dblp.uni-trier.de/pers/hd/k/Khunjush:Farshad">Farshad Khunjush</a> (<strong>2013</strong>). <em><a href="https://scholar.google.de/citations?view_op=view_citation&amp;hl=en&amp;user=VvkRESgAAAAJ&amp;citation_for_view=VvkRESgAAAAJ:ufrVoPGSRksC">A parallel memetic algorithm on GPU to solve the task scheduling problem in heterogeneous environments</a></em>. <a href="http://www.sigevo.org/gecco-2013/program.html">GECCO '13</a>, <a href="https://www.lri.fr/~hansen/proceedings/2013/GECCO/proceedings/p1181.pdf">pdf</a></li>
+<li><a href="/Bartosz_Wieloch">Bartosz Wieloch</a> (<strong>2013</strong>). <em>Semantic Extensions for Genetic Programming</em>. Ph.D. thesis, <a href="https://en.wikipedia.org/wiki/Pozna%C5%84_University_of_Technology">Poznań University of Technology</a>, supervisor <a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a>, <a href="http://www.cs.put.poznan.pl/bwieloch/papers/Wieloch_PhD.pdf">pdf</a></li>
+<li><a href="/Ilya_Loshchilov">Ilya Loshchilov</a> (<strong>2013</strong>). <em><a href="http://loshchilov.com/phd.html">Surrogate-Assisted Evolutionary Algorithms</a></em>. Ph.D. thesis, <a href="/University_of_Paris">Paris-Sud 11 University</a>, advisors <a href="/Marc_Schoenauer">Marc Schoenauer</a> and <a href="/Michèle_Sebag">Michèle Sebag</a></li>
+<li><a href="/Risto_Miikkulainen">Risto Miikkulainen</a> (<strong>2013</strong>). <em>Evolving Neural Networks</em>. <a href="https://dblp.org/db/conf/ijcnn/ijcnn2013">IJCNN 2013</a>, <a href="http://nn.cs.utexas.edu/downloads/slides/miikkulainen.ijcnn13.pdf">pdf</a></li>
+</ul>
+<p><strong>2014</strong></p>
+<ul>
+<li><a href="/Eli_David">Omid David</a>, <a href="/Jaap_van_den_Herik">Jaap van den Herik</a>, <a href="/Moshe_Koppel">Moshe Koppel</a>, <a href="/Nathan_S._Netanyahu">Nathan S. Netanyahu</a> (<strong>2014</strong>). <em>Genetic Algorithms for Evolving Computer Chess Programs</em>. <a href="/IEEE">IEEE Transactions on Evolutionary Computation</a>, <a href="https://arxiv.org/abs/1711.08337">arXiv:1711.08337</a></li>
+<li><a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Marcin_Szubert">Marcin Szubert</a>, <a href="/Paweł_Liskowski">Paweł Liskowski</a> (<strong>2014</strong>). <em>Multi-Criteria Comparison of Coevolution and Temporal Difference Learning on Othello</em>. <a href="http://www.evostar.org/2014/">EvoApplications 2014</a>, <a href="http://www.springer.com/computer/theoretical+computer+science/book/978-3-662-45522-7">Springer, volume 8602</a> » <a href="/Othello">Othello</a></li>
+<li><a href="http://people.csail.mit.edu/ignacioarnaldo/">Ignacio Arnaldo</a>, <a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a>, <a href="http://people.csail.mit.edu/unamay/">Una-May O'Reilly</a> (<strong>2014</strong>). <em>Multiple Regression Genetic Programming</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/gecco/gecco2014.html#ArnaldoKO14">GECCO 2014</a>, <a href="http://www.cs.put.poznan.pl/kkrawiec/wiki/uploads/Site/2015GeccoMRGP.pdf">pdf</a></li>
+<li><a href="/Rahul_Aralikatte">Rahul Aralikatte</a> (<strong>2014</strong>). <em>Phoenix : A Self Learning Chess Engine</em>. for the Award of M. Tech in Information Technology, <a href="https://en.wikipedia.org/wiki/International_Institute_of_Information_Technology,_Bangalore">International Institute of Information Technology, Bangalore</a>, <a href="https://en.wikipedia.org/wiki/Bangalore">Bangalore</a>, advisor <a href="/Gopalakrishnan_Srinivasaraghavan">G. Srinivasaraghavan</a>, <a href="https://github.com/rahular/phoenix/blob/master/docs/ThesisReport.pdf">pdf</a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a></li>
+<li><a href="/Alan_J._Lockett">Alan J. Lockett</a>, <a href="/Risto_Miikkulainen">Risto Miikkulainen</a> (<strong>2014</strong>). <em><a href="http://nn.cs.utexas.edu/?lockett:jogo13">Evolutionary Annealing: Global Optimization in Arbitrary Measure Spaces</a></em>. <a href="https://www.springer.com/journal/10898">Journal of Global Optimization</a>, Vol. 58</li>
+<li><a href="/Simon_Lucas">Simon Lucas</a>, Spyridon Samothrakis, Diego Perez (<strong>2014</strong>). <em><a href="https://link.springer.com/chapter/10.1007/978-3-662-45523-4_29">Fast Evolutionary Adaptation for Monte Carlo Tree Search</a></em>. <a href="https://dblp.uni-trier.de/db/conf/evoW/evoappl2014.html">EvoApplications 2014</a>, <a href="http://www.diego-perez.net/papers/FastEvoMCTS.pdf">pdf</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="/Rahul_Aralikatte">Rahul Aralikatte</a>, <a href="/Gopalakrishnan_Srinivasaraghavan">G. Srinivasaraghavan</a> (<strong>2016</strong>). <em>Phoenix: A Self-Optimizing Chess Engine</em>. <a href="http://arxiv.org/abs/1603.09051">arXiv:1603.09051</a></li>
+<li><a href="/Ilya_Loshchilov">Ilya Loshchilov</a>, <a href="/Frank_Hutter">Frank Hutter</a> (<strong>2016</strong>). <em>CMA-ES for Hyperparameter Optimization of Deep Neural Networks</em>. <a href="https://arxiv.org/abs/1604.07269">arXiv:1604.07269</a> <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a></li>
+<li><a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Marcin_Szubert">Marcin Szubert</a> (<strong>2016</strong>). <em><a href="https://ieeexplore.ieee.org/document/7180338">Coevolutionary CMA-ES for Knowledge-Free Learning of Game Position Evaluation</a></em>. <a href="/IEEE">IEEE Transactions on Computational Intelligence and AI in Games</a>, Vol. 8, No. 4</li>
+<li><a href="/Wojciech_Jaśkowski">Wojciech Jaśkowski</a>, <a href="/Paweł_Liskowski">Paweł Liskowski</a>, <a href="/Marcin_Szubert">Marcin Szubert</a>, <a href="/Krzysztof_Krawiec">Krzysztof Krawiec</a> (<strong>2016</strong>). <em><a href="https://content.sciendo.com/view/journals/amcs/26/1/article-p215.xml">The performance profile: A multi–criteria performance evaluation method for test–based problems</a></em>. <a href="https://en.wikipedia.org/wiki/International_Journal_of_Applied_Mathematics_and_Computer_Science">International Journal of Applied Mathematics and Computer Science</a>, Vol. 26, No. 1</li>
+<li><a href="/Risto_Miikkulainen">Risto Miikkulainen</a>, et al. (<strong>2017</strong>). <em>Evolving Deep Neural Networks</em>. <a href="https://arxiv.org/abs/1703.00548">arXiv:1703.00548</a></li>
+<li>Aditya Rawal, <a href="/Risto_Miikkulainen">Risto Miikkulainen</a> (<strong>2018</strong>). <em>From Nodes to Networks: Evolving Recurrent Neural Networks</em>. <a href="https://arxiv.org/abs/1803.04439">arXiv:1803.04439</a></li>
+<li><a href="/Risto_Miikkulainen">Risto Miikkulainen</a> (<strong>2019</strong>). <em>Creative AI Through Evolutionary Computation</em>. <a href="https://arxiv.org/abs/1901.03775">arXiv:1901.03775</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1996-">1996 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/BKZ6hUP3XUs/ng2Nh1xxerEJ">Genetic Algorithms for Chess Evaluation Functions</a> by Chris Mayer, <a href="/Computer_Chess_Forums">rgcc</a>, July 01, 1996</li>
+</ul>
+<p><a href="https://groups.google.com/d/msg/rec.games.chess.computer/BKZ6hUP3XUs/-7K1ov9xi58J">Re: Genetic Algorithms for Chess Evaluation Functions</a> by <a href="/Jay_Scott">Jay Scott</a>, <a href="/Computer_Chess_Forums">rgcc</a>, July 01, 1996</p>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess.computer/d_EPBy6QcwI/b8c6piRlRlUJ">Evolutionary Evaluation</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/Computer_Chess_Forums">rgcc</a>, September 09, 1997</li>
+</ul>
+<h3 id="2010--1">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=31445">Revisiting GA's for tuning evaluation weights</a> by <a href="/Ilari_Pihlajisto">Ilari Pihlajisto</a>, <a href="/CCC">CCC</a>, January 03, 2010 » <a href="/Automated_Tuning">Automated Tuning</a></li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=2191">Training a Genetic algorithm?</a> by BlueAce, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, December 25, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50799">Chessiverse @HGM</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, January 06, 2014 <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54545">Eval tuning - any open source engines with GA or PBIL?</a> by Hrvoje Horvatic, <a href="/CCC">CCC</a>, December 04, 2014 » <a href="/Automated_Tuning">Automated Tuning</a></li>
+</ul>
+<h3 id="2015--1">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57246">Genetical tuning</a> by <a href="/Stefano_Gemma">Stefano Gemma</a>, <a href="/CCC">CCC</a>, August 11, 2015 » <a href="/Automated_Tuning">Automated Tuning</a></li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?t=57246&amp;start=34">Re: Genetical tuning</a> by <a href="/Ferdinand_Mosca">Ferdinand Mosca</a>, <a href="/CCC">CCC</a>, August 20, 2015</p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59738">Genetical learning (again)</a> by <a href="/Stefano_Gemma">Stefano Gemma</a>, <a href="/CCC">CCC</a>, April 03, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66105">Genetic optimization re-started</a> by <a href="/Stefano_Gemma">Stefano Gemma</a>, December 23, 2017</li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=75342">Determining evaluation by a genetic algorithm</a> by <a href="/Marcel_Vanthoor">Marcel Vanthoor</a>, <a href="/CCC">CCC</a>, October 09, 2020</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<h3 id="genetic-programming">Genetic Programming</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Genetic_programming">Genetic programming from Wikipedia</a></li>
+<li><a href="http://www.genetic-programming.org/">genetic-programming.org-Home-Page</a></li>
+<li><a href="http://www.cs.bham.ac.uk/~wbl/biblio/gp-html/MicheleSebag.html">Genetic Programming Bibliography entries</a> for <a href="/Michèle_Sebag">Michèle Sebag</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Gene">Gene from Wikipedia</a></li>
+<li><a href="http://www.geneticprogramming.com/Tutorial/">The GP Tutorial</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Cartesian_genetic_programming">Cartesian genetic programming from Wikipedia</a></li>
+<li><a href="https://github.com/connormcmonigle/cartesian-gp-chess-engine">GitHub - connormcmonigle/cartesian-gp-chess-engine: Experiment involving evolving cartesian genetic programs to evaluate chess positions</a> by <a href="/Connor_McMonigle">Connor McMonigle</a></li>
+</ul>
+<h3 id="evolutionary-programming-1">Evolutionary Programming</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Evolutionary_programming">Evolutionary programming from Wikipedia</a></li>
+</ul>
+<h3 id="genetic-algorithms-1">Genetic Algorithms</h3>
+<ul>
+<li><a href="http://chaos4.phy.ohiou.edu/~thomas/complex/ga.html">Genetic algorithms</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Genetic_algorithms">Genetic algorithms from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Genetic_representation">Genetic representation from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Fitness_function">Fitness function from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Genetic_operator">Genetic operator from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Selection_%28genetic_algorithm%29">Selection (genetic algorithm) from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/Fitness_proportionate_selection">Fitness proportionate selection from Wikipedia</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Reward-based_selection">Reward-based selection from Wikipedia</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Stochastic_universal_sampling">Stochastic universal sampling from Wikipedia</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Tournament_selection">Tournament selection from Wikipedia</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Truncation_selection">Truncation selection from Wikipedia</a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Crossover_%28genetic_algorithm%29">Crossover (genetic algorithm) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Population-based_incremental_learning">Population-based incremental learning from Wikipedia</a></li>
+<li><a href="http://illigal.org/">llinois Genetic Algorithms Lab | Life, Liberty, and the Pursuit of Genetic Algorithm</a></li>
+<li><a href="http://intelligence.worldofcomputing.net/machine-learning/genetic-algorithms.html">Genetic Algorithms</a> from <a href="http://intelligence.worldofcomputing.net/">Articles On Artificial Intelligence</a></li>
+</ul>
+<h3 id="evolutionary-algorithms-1">Evolutionary Algorithms</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Evolutionary_algorithm">Evolutionary algorithms from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Evolutionary_programming">Evolutionary programming from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Evolution_strategy">Evolution strategy from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/CMA-ES">CMA-ES from Wikipedia</a></li>
+<li><a href="http://home.hccnet.nl/h.g.muller/chessivers.html">The Chessiverse: Evolution of Chess Programs</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a> <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a></li>
+</ul>
+<h3 id="evolutionary-computation-1">Evolutionary Computation</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Evolutionary_computation">Evolutionary computation from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Computational_intelligence">Computational intelligence from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Biological_evolution">Biological evolution from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Symbiogenesis">Symbiogenesis from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Category:Biological_evolution">Category: Biological evolution from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Differential_evolution">Differential evolution from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Memetic_algorithm">Memetic algorithms from Wikipedia</a></li>
+</ul>
+<h3 id="misc">Misc</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Optimization_%28mathematics%29">Optimization from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Simulated_annealing">Simulated annealing from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Artificial_life">Artificial life from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Digital_organism">Digital organism from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Survival_of_the_fittest">Survival of the fittest from Wikipedia</a></li>
+<li><a href="/Category:The_Headhunters">The Headhunters</a> - If You Got It, You'll Get It, <a href="https://en.wikipedia.org/wiki/Survival_of_the_Fittest_%28The_Headhunters_album%29">Survival of the Fittest</a>, <a href="https://en.wikipedia.org/wiki/Winterland_Ballroom">Winterland</a>, May 09, 1975, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p>feat.: <a href="/Category:Bennie_Maupin">Bennie Maupin</a>, <a href="https://en.wikipedia.org/wiki/Bill_Summers_(musician)">Bill Summers</a>, <a href="https://en.wikipedia.org/wiki/Paul_Jackson_(bassist)">Paul Jackson</a>, <a href="https://en.wikipedia.org/wiki/Mike_Clark_(jazz_musician)">Mike Clark</a> and <a href="https://en.wikipedia.org/wiki/DeWayne_McKnight">Blackbird McKnight</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/6gB8ZvUjPFA" title="YouTube video 6gB8ZvUjPFA" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=6gB8ZvUjPFA">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Learning">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Mathematician">Shumeet Baluja</a> (<strong>1994</strong>). <em><a href="http://www.ri.cmu.edu/publication_view.html?pub_id=1444">Population-Based Incremental Learning: A Method for Integrating Genetic Search Based Function Optimization and Competitive Learning</a></em>. Technical Report <a href="/Carnegie_Mellon_University">Carnegie Mellon University</a> (CMU–CS–94–163)<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://en.wikipedia.org/wiki/Population-based_incremental_learning">Population-based incremental learning from Wikipedia</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://en.wikipedia.org/wiki/Prisoner%27s_dilemma">Prisoner's dilemma from Wikipedia</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://en.wikipedia.org/wiki/Learnable_Evolution_Model">Learnable Evolution Model from Wikipedia</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="https://en.wikipedia.org/wiki/Binary_decision_diagram">Binary decision diagram from Wikipedia</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="/Dap_Hartmann">Dap Hartmann</a> (<strong>2010</strong>). <em>Mimicking the Black Box - Genetically evolving evaluation functions and search algorithms</em>. Review on Omid David's Ph.D. Thesis, <a href="/ICGA_Journal">ICGA Journal, Vol. 33, No. 1</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=55476&amp;start=4">Re: PHOENIX=CuckooChess with learning function in Falcon style</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, March 20, 2016<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="https://en.wikipedia.org/wiki/CMA-ES">CMA-ES from Wikipedia</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="http://home.hccnet.nl/h.g.muller/chessivers.html">The Chessiverse: Evolution of Chess Programs</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a><a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=50799">Chessiverse @HGM</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, January 06, 2014<a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:The_Headhunters">The Headhunters</a> · <a href="/Category:Bennie_Maupin">Bennie Maupin</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Genetic_Programming">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

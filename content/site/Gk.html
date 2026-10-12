@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gk - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Gk</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Engines">Engines</a> * Gk</strong></p>
+<p><strong>Gk</strong>, (GKJunior)<br />
+a <a href="/Chess_Engine_Communication_Protocol">Chess Engine Communication Protocol</a> compliant <a href="/Category:Open_Source">open source chess engine</a> under the <a href="/Free_Software_Foundation">GNU General Public License</a>, written by Tijs van Dam in <a href="/Cpp">C++</a>, first released in May 2003, while its private forerunner GKJunior already played at Internet Chess Club in the late 90s <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#description">Description</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#bitboard-infrastructure">Bitboard Infrastructure</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#rotated-indices">Rotated Indices</a></li>
+<li><a href="#bitscan">BitScan</a></li>
+</ol>
+</details></li>
+<li><a href="#search">Search</a></li>
+<li><a href="#evaluation">Evaluation</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#chess-engine">Chess Engine</a></li>
+<li><a href="#misc">Misc</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="description">Description</h2>
+<h3 id="bitboard-infrastructure">Bitboard Infrastructure</h3>
+<p>As <a href="/Bitboards">bitboard</a> engine, Gk <a href="/Move_Generation">generates moves</a> with the typical <a href="/Bitboard_Serialization">serialization loops</a> on move target sets, and uses <a href="/Population_Count">Brian Kernighan's population count</a> to determine the cardinality of sets. <span id="SlidingAttacks"></span></p>
+<h4 id="rotated-indices">Rotated Indices</h4>
+<p>Gk applies <a href="/Rotated_Indices">rotated indices</a> with 1/2 MiB pre-initialized lookup tables to determine <a href="/Sliding_Piece_Attacks">sliding piece attacks</a>, indexed by square and <a href="/Occupancy_of_any_Line">8-bit line occupancy</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>:</p>
+<pre><code>BitBoard diag_h1_attack[64][256];
+BitBoard diag_a1_attack[64][256];
+BitBoard diag_file_attack[64][256];
+BitBoard diag_rank_attack[64][256];</code></pre>
+<p>Rather than keeping the <a href="/Flipping_Mirroring_and_Rotating">rotated</a> <a href="/Occupancy">occupancies</a> inside <a href="/Rotated_Bitboards">rotated bitboards</a>, a deconcentrated data structure of unsigned integer arrays is used keeping 8-bit occupancies for each enumerated line of either 8 <a href="/Ranks">ranks</a> / <a href="/Files">files</a> or 15 <a href="/Diagonals">diagonals</a> / <a href="/Anti-Diagonals">anti-diagonals</a>, <a href="/Incremental_Updates">incrementally updated</a> during <a href="/Make_Move">make</a> and <a href="/Unmake_Move">unmake move</a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>:</p>
+<pre><code>unsigned diag_h1_occ[15];
+unsigned diag_a1_occ[15];
+unsigned diag_file_occ[8];
+unsigned diag_rank_occ[8];
+
+INLINE BitBoard AttacksDiagA1(int square) {
+  return diag_a1_attack[square][diag_a1_occ[DiagA1DiagNum(square)]];
+}
+
+INLINE int DiagA1DiagNum(int square) {
+  return 7-Rank(square)+File(square);
+}</code></pre>
+<p><span id="BitScan"></span></p>
+<h4 id="bitscan">BitScan</h4>
+<p><a href="/BitScan">BitScan</a> is either implemented in 32-bit <a href="/X86">x86</a> <a href="/Assembly">Assembly</a>, or with 16-bit indexed, 64K int lookup tables of 1/2 MiB and conditions for other architectures. FirstOne scans reverse, LastOne forward <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>:</p>
+<pre><code>int first_ones[65536];
+int last_ones[65536];
+
+INLINE int FirstOne(BitBoard b) {
+#ifdef USE_ASM
+ASM {
+   bsr     edx, dword ptr b+4 // is there a 1 in the high word?
+   mov     eax, 32
+   jnz     l1                 // return FirstOne(hiword(b))+32
+   bsr     edx, dword ptr b   // else return FirstOne(loword(b))
+   xor     eax, eax
+l1:add     eax, edx
+  }
+#else
+  register U16 *x=(U16 *)(&amp;b);
+  if(x[3]) return first_ones[x[3]]+48;
+  if(x[2]) return first_ones[x[2]]+32;
+  if(x[1]) return first_ones[x[1]]+16;
+  return first_ones[x[0]];
+#endif
+}
+
+INLINE int LastOne(BitBoard b) {
+#ifdef USE_ASM
+__asm {
+   bsf    eax, dword ptr b   // is there a 1 in the low word
+   jnz    l1                 // then return LastOne(loword(b))
+   bsf    eax, dword ptr b+4 // else return LastOne(hiword(b))+32
+   add    eax,32
+l1:
+   }
+#else
+  register U16 *x=(U16 *)(&amp;b);
+  if(x[0]) return last_ones[x[0]];
+  if(x[1]) return last_ones[x[1]]+16;
+  if(x[2]) return last_ones[x[2]]+32;
+  return last_ones[x[3]]+48;
+#endif
+}</code></pre>
+<h3 id="search">Search</h3>
+<p>The <a href="/Search">search</a> is <a href="/Principal_Variation_Search">PVS</a> <a href="/Alpha-Beta">alpha-beta</a> with <a href="/Transposition_Table">transposition table</a> inside an <a href="/Iterative_Deepening">iterative deepening</a> framework without <a href="/Aspiration_Windows">aspiration</a>, maintaining the <a href="/Principal_Variation">principal variations</a> inside a "quadratic" <a href="/Triangular_PV-Table">PV-table</a>. <a href="/Selectivity">Selectivity</a> is realized by <a href="/Null_Move_Pruning">null move Pruning</a>, <a href="/Check_Extensions">check extensions</a>, and <a href="/Delta_Pruning">delta pruning</a> in <a href="/Quiescence_Search">quiescence search</a>. <a href="/History_Heuristic">History heuristic</a>, <a href="/Internal_Iterative_Deepening">IID</a>, <a href="/MVV-LVA">MVV-LVA</a> in conjunction with a <a href="/SEE_-_The_Swap_Algorithm">SEE swap routine</a> improve <a href="/Move_Ordering">move ordering</a> and delta pruning.</p>
+<h3 id="evaluation">Evaluation</h3>
+<p>Gk's <a href="/Evaluation">evaluation</a> is rudimentary and restricts positional <a href="/Score">scores</a> in the range of plus-minus one <a href="/Pawn">pawn</a> <a href="/Point_Value">value</a> - at least it is very <a href="/Lazy_Evaluation">lazy</a> if the <a href="/Material">material balance</a> is outside the <a href="/Window">alpha-beta window</a> by that margin. It considers <a href="/Center_Control">center control</a>, <a href="/Mobility">mobility</a>, <a href="/Development">development</a> and <a href="/Evaluation_of_Pieces">too early queen</a>, and some <a href="/King_Safety">pawn shield</a> and <a href="/Castling_Rights">castling right</a> related <a href="/King_Safety">king safety</a> stuff. The <a href="/Pawn_Hash_Table">cached</a> <a href="/Pawn_Structure">pawn structure</a> evaluation takes <a href="/Passed_Pawn">passers</a>, <a href="/Doubled_Pawn">doubled</a> and <a href="/Isolated_Pawn">isolated pawns</a>, and <a href="/Defended_Pawns_%28Bitboards%29">pawns protecting each other</a> into account.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Fortress_%28Engine%29">Fortress</a></li>
+<li><a href="/GK_2100">GK 2100</a></li>
+<li><a href="/PK">PK</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=85839">Re: ICC Green List - Jan 3</a> by Tijs van Dam, <a href="/CCC">CCC</a>, January 04, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=93810">Re: Can we use hash table at root?</a> by Tijs van Dam, <a href="/CCC">CCC</a>, February 01, 2000 » <a href="/Transposition_Table">Transposition Table</a>, <a href="/Root">Root</a></li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=18&amp;t=45776#p173920">Re: More programs added to my tournament</a> by Sergio Martinez, <a href="/Computer_Chess_Forums">Winboard Forum</a>, December 27, 2003</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<h3 id="chess-engine">Chess Engine</h3>
+<ul>
+<li><a href="http://tijsvd.home.xs4all.nl/old_software/">Tijs van Dam - Software</a></li>
+</ul>
+<h3 id="misc">Misc</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/GK">GK (disambiguation) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Garry_Kasparov">Garry Kasparov from Wikipedia</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Engines">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://www.stmintz.com/ccc/index.php?id=79887">ICC Green List - Nov 29</a> by <a href="/Will_Singleton">Will Singleton</a>, <a href="/CCC">CCC</a>, November 29, 1999<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://www.stmintz.com/ccc/index.php?id=85701">ICC Green List - Jan 3</a> by <a href="/Will_Singleton">Will Singleton</a>, <a href="/CCC">CCC</a>, January 03, 2000<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://tijsvd.home.xs4all.nl/old_software/">Tijs van Dam - Software</a>, gk-0.90.tar.gz / global.cpp<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://tijsvd.home.xs4all.nl/old_software/">Tijs van Dam - Software</a>, gk-0.90.tar.gz / position.h<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://tijsvd.home.xs4all.nl/old_software/">Tijs van Dam - Software</a>, gk-0.90.tar.gz / bitboard.h<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Open_Source">Open Source</a> · <a href="/Category:GPL">GPL</a> · <a href="/Category:Mac">Mac</a> · <a href="/Category:WinBoard">WinBoard</a> · <a href="/Category:XBoard">XBoard</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Gk">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

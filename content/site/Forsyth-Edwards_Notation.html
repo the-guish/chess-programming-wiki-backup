@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forsyth-Edwards Notation - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Forsyth-Edwards Notation</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Chess">Chess</a> * <a href="/Chess_Position">Position</a> * Forsyth-Edwards Notation</strong></p>
+<p><strong>Forsyth-Edwards Notation</strong> (<strong>FEN</strong>) describes a <a href="/Chess_Position">Chess Position</a>. It is an one-line <a href="https://en.wikipedia.org/wiki/ASCII">ASCII</a>-string. <strong>FEN</strong> is based on a system created by Scotsman <a href="/David_Forsyth">David Forsyth</a> in the 19th century. <a href="/Steven_Edwards">Steven Edwards</a> specified the <strong>FEN standard</strong> for computer chess applications as part of the <a href="/Portable_Game_Notation">Portable Game Notation</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> .</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#fen-syntax">FEN Syntax</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#piece-placement">Piece Placement</a></li>
+<li><a href="#side-to-move">Side to move</a></li>
+<li><a href="#castling-ability">Castling ability</a></li>
+<li><a href="#en-passant-target-square">En passant target square</a></li>
+<li><a href="#halfmove-clock">Halfmove Clock</a></li>
+<li><a href="#fullmove-counter">Fullmove counter</a></li>
+</ol>
+</details></li>
+<li><a href="#samples">Samples</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#chess960">Chess960</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#shredder-fen">Shredder-FEN</a></li>
+<li><a href="#x-fen">X-FEN</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1993-">1993 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="fen-syntax">FEN Syntax</h2>
+<p>One FEN string or record consists of <strong>six</strong> fields separated by a space character. The first four fields of the FEN specification are the same as the first four fields of the <a href="/Extended_Position_Description">EPD</a> specification.</p>
+<p><em><a href="https://en.wikipedia.org/wiki/Terminal_and_nonterminal_symbols">Terminal and nonterminal symbols</a> of a variant of <a href="https://en.wikipedia.org/wiki/Backus%E2%80%93Naur_form">BNF</a> below are embedded in ' ' resp. &lt; &gt;.</em></p>
+<pre><code>&lt;FEN&gt; ::=  &lt;Piece Placement&gt;
+       &#39; &#39; &lt;Side to move&gt;
+       &#39; &#39; &lt;Castling ability&gt;
+       &#39; &#39; &lt;En passant target square&gt;
+       &#39; &#39; &lt;Halfmove clock&gt;
+       &#39; &#39; &lt;Fullmove counter&gt;</code></pre>
+<p><span id="PiecePlacement"></span></p>
+<h3 id="piece-placement">Piece Placement</h3>
+<p>The Piece Placement is determined rank by rank in <a href="/Big-endian">big-endian</a> order, that is starting at the 8th rank down to the first rank. Each rank is separated by the terminal symbol '/' (slash). One rank, scans piece placement in <a href="/Little-endian">little-endian</a> file-order from the A to H.</p>
+<p>A decimal digit counts consecutive empty squares, the pieces are identified by a single letter from standard English names for chess pieces as used in the <a href="/Algebraic_Chess_Notation">Algebraic Chess Notation</a>. Uppercase letters are for white pieces, lowercase letters for black pieces.</p>
+<pre><code>&lt;Piece Placement&gt; ::= &lt;rank8&gt;&#39;/&#39;&lt;rank7&gt;&#39;/&#39;&lt;rank6&gt;&#39;/&#39;&lt;rank5&gt;&#39;/&#39;&lt;rank4&gt;&#39;/&#39;&lt;rank3&gt;&#39;/&#39;&lt;rank2&gt;&#39;/&#39;&lt;rank1&gt;
+&lt;ranki&gt;       ::= [&lt;digit17&gt;]&lt;piece&gt; {[&lt;digit17&gt;]&lt;piece&gt;} [&lt;digit17&gt;] | &#39;8&#39;
+&lt;piece&gt;       ::= &lt;white Piece&gt; | &lt;black Piece&gt;
+&lt;digit17&gt;     ::= &#39;1&#39; | &#39;2&#39; | &#39;3&#39; | &#39;4&#39; | &#39;5&#39; | &#39;6&#39; | &#39;7&#39;
+&lt;white Piece&gt; ::= &#39;P&#39; | &#39;N&#39; | &#39;B&#39; | &#39;R&#39; | &#39;Q&#39; | &#39;K&#39;
+&lt;black Piece&gt; ::= &#39;p&#39; | &#39;n&#39; | &#39;b&#39; | &#39;r&#39; | &#39;q&#39; | &#39;k&#39;</code></pre>
+<p><span id="Sidetomove"></span></p>
+<h3 id="side-to-move">Side to move</h3>
+<p><a href="/Side_to_move">Side to move</a> is one lowercase letter for either White ('w') or Black ('b').</p>
+<pre><code>&lt;Side to move&gt; ::= {&#39;w&#39; | &#39;b&#39;}</code></pre>
+<p><span id="Castling"></span></p>
+<h3 id="castling-ability">Castling ability</h3>
+<p>If neither side can castle, the symbol '-' is used, otherwise each of four individual <a href="/Castling_Rights">castling rights</a> for king and queen castling for both sides are indicated by a sequence of one to four letters.</p>
+<pre><code>&lt;Castling ability&gt; ::= &#39;-&#39; | [&#39;K&#39;] [&#39;Q&#39;] [&#39;k&#39;] [&#39;q&#39;] (1..4)</code></pre>
+<p><span id="Enpassanttargetsquare"></span></p>
+<h3 id="en-passant-target-square">En passant target square</h3>
+<p>The <a href="/En_passant">en passant</a> target square is specified after a double push of a pawn, no matter whether an en passant capture is really possible or not <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> . Other moves than double pawn pushes imply the symbol '-' for this FEN field.</p>
+<pre><code>&lt;En passant target square&gt; ::= &#39;-&#39; | &lt;epsquare&gt;
+&lt;epsquare&gt;   ::= &lt;fileLetter&gt; &lt;eprank&gt;
+&lt;fileLetter&gt; ::= &#39;a&#39; | &#39;b&#39; | &#39;c&#39; | &#39;d&#39; | &#39;e&#39; | &#39;f&#39; | &#39;g&#39; | &#39;h&#39;
+&lt;eprank&gt;     ::= &#39;3&#39; | &#39;6&#39;</code></pre>
+<p><span id="HalfmoveClock"></span></p>
+<h3 id="halfmove-clock">Halfmove Clock</h3>
+<p>The <a href="/Halfmove_Clock">halfmove clock</a> specifies a decimal number of half moves with respect to the <a href="/Fifty-move_Rule">50 move draw rule</a>. It is reset to zero after a capture or a pawn move and incremented otherwise.</p>
+<pre><code>&lt;Halfmove Clock&gt; ::= &lt;digit&gt; {&lt;digit&gt;}
+&lt;digit&gt; ::= &#39;0&#39; | &#39;1&#39; | &#39;2&#39; | &#39;3&#39; | &#39;4&#39; | &#39;5&#39; | &#39;6&#39; | &#39;7&#39; | &#39;8&#39; | &#39;9&#39;</code></pre>
+<p><span id="Fullmovecounter"></span></p>
+<h3 id="fullmove-counter">Fullmove counter</h3>
+<p>The number of the full moves in a game. It starts at 1, and is incremented after each Black's move.</p>
+<pre><code>&lt;Fullmove counter&gt; ::= &lt;digit19&gt; {&lt;digit&gt;}
+&lt;digit19&gt; ::= &#39;1&#39; | &#39;2&#39; | &#39;3&#39; | &#39;4&#39; | &#39;5&#39; | &#39;6&#39; | &#39;7&#39; | &#39;8&#39; | &#39;9&#39;
+&lt;digit&gt;   ::= &#39;0&#39; | &lt;digit19&gt;</code></pre>
+<h2 id="samples">Samples</h2>
+<p>FEN strings of Starting Position and after 1.e4 c5 2.Nf3: <div class="chess-fen" data-fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"><code>rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR</code></div></p>
+<p><code>rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1</code></p>
+<div class="chess-fen" data-fen="rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR"><code>rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR</code></div> 1.e4
+
+<p><code>rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1</code></p>
+<div class="chess-fen" data-fen="rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR"><code>rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR</code></div> 1.e4 c5
+
+<p><code>rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2</code></p>
+<div class="chess-fen" data-fen="rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R"><code>rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R</code></div> 1.e4 c5 2.Nf3
+
+<p><code>rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2 </code></p>
+<h2 id="chess960">Chess960</h2>
+<h3 id="shredder-fen">Shredder-FEN</h3>
+<p><strong>Shredder-FEN</strong> or <strong>SMK-FEN</strong> is an extension of FEN covering <a href="/Chess960">Chess960</a>, introduced by <a href="/Shredder">Shredder</a> author <a href="/Stefan_Meyer-Kahlen">Stefan Meyer-Kahlen</a> (SMK) in 2005. Shredder-FEN uses different <a href="/Castling_Rights">castling right</a> characters, that is instead of <strong>KQkq</strong>, upper case and lower case <a href="/Files">file characters</a> of the affected rooks for white and black castling rights, and became a <a href="https://en.wikipedia.org/wiki/De_facto_standard">de facto standard</a> supported by most <a href="/GUI">GUIs</a> and <a href="/Protocols">protocols</a>.</p>
+<h3 id="x-fen">X-FEN</h3>
+<p>The earlier <a href="https://en.wikipedia.org/wiki/X-FEN">X-FEN</a> extension was introduced by <a href="/Reinhard_Scharnagl">Reinhard Scharnagl</a> in 2003, and covers not only <a href="/Chess960">Chess960</a> but also 10x8 variants. Its author dogmatically claimed upward compatibility with standard chess <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>, still using the <strong>KQkq</strong> <a href="/Castling_Rights">castling right</a> characters for all Chess960 positions. Further, X-FEN introduced a changed <a href="/En_passant">en passant</a> target square semantic, which is only specified after a double pawn push was made beside an opponent pawn that might capture en passant if legal, that is not leaving its king in check.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Extended_Position_Description">Extended Position Description</a> (EPD)</li>
+<li>Forsyth-Edwards Expanded Notation (FEEN)</li>
+<li><a href="/Portable_Game_Notation">Portable Game Notation</a> (PGN)</li>
+<li><a href="/BMI2">BMI2 FEN Compression</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1993-">1993 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess/MkLV6dIwGU4/GfbtTyR6o6sJ">Revised PGN standard available</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/Computer_Chess_Forums">rgc</a>, December 20, 1993 » <a href="/Portable_Game_Notation">Portable Game Notation</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=53266">Full definition for FEN</a> by <a href="/Dann_Corbit">Dann Corbit</a>, <a href="/CCC">CCC</a>, May 27, 1999</li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=138460">File name extensions</a> by <a href="/Leen_Ammeraal">Leen Ammeraal</a>, <a href="/CCC">CCC</a>, November 14, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=314898">Ten years later: revising EPD/FEN/PGN</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, September 09, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=323898">Making positions in eps</a> by <a href="/Jan_Renze_Steenhuisen">Renze Steenhuisen</a>, <a href="/CCC">CCC</a>, October 27, 2003 » <a href="/Forsyth-Edwards_Notation">Fen2eps</a></li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=437213">Why to use compatible X-FEN (in Chess960)</a> by <a href="/Reinhard_Scharnagl">Reinhard Scharnagl</a>, <a href="/CCC">CCC</a>, July 17, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=439792">Chess960: X-FEN rules international</a> by <a href="/Reinhard_Scharnagl">Reinhard Scharnagl</a>, <a href="/CCC">CCC</a>, August 03, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=439995">contradicting FEN and SMK-FEN</a> by <a href="/Reinhard_Scharnagl">Reinhard Scharnagl</a>, <a href="/CCC">CCC</a>, August 04, 2005</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=459898">Chess960: Arena castle vs X-FEN castle</a> by <a href="/Matthias_Gemuh">Matthias Gemuh</a>, <a href="/CCC">CCC</a>, November 05, 2005</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=13923">fen to fen functions</a> by <a href="/Uri_Blass">Uri Blass</a>, <a href="/CCC">CCC</a>, May 21, 2007</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=31521">where FEN is not consistent</a> by <a href="/Reinhard_Scharnagl">Reinhard Scharnagl</a>, <a href="/CCC">CCC</a>, January 06, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=37879">FEN string</a> by colin, <a href="/CCC">CCC</a>, January 30, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=396838&amp;t=37879">No more pseudolegal en passant target foolishness</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, February 27, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=38488">What's wrong with this EPD?</a> by <a href="/Jouni_Uski">Jouni Uski</a>, <a href="/CCC">CCC</a>, March 20, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=43417">Question about Shredder FEN and X-FEN</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, April 22, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=47622&amp;start=6">Re: Causes for inconsistent benchmark signatures</a> by <a href="/Evert_Glebbeek">Evert Glebbeek</a>, <a href="/CCC">CCC</a>, March 27, 2013 » <a href="/En_passant">En passant</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=49083">The maximum character length of a FEN string</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, August 24, 2013</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53120">Is 79 maximal?</a> by <a href="/Louis_Zulli">Louis Zulli</a>, <a href="/CCC">CCC</a>, July 29, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54779">PGN to FEN (with Evaluation)?</a> by <a href="/Steve_Maughan">Steve Maughan</a>, <a href="/CCC">CCC</a>, December 28, 2014 » <a href="/Portable_Game_Notation">Portable Game Notation</a>, <a href="/Python">Python</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57065">Binary FEN</a> by J. Wesley Cleveland, <a href="/CCC">CCC</a>, July 24, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59255">Any tool to convert FEN strings to diagrams?</a> by Ted Wong, <a href="/CCC">CCC</a>, February 15, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=64003">FEN - Flipper for Windows</a> by <a href="/Matthias_Gemuh">Matthias Gemuh</a>, <a href="/CCC">CCC</a>, May 17, 2017 » <a href="/Color_Flipping">Color Flipping</a>, <a href="/Extended_Position_Description">EPD</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=2&amp;t=72308">50 move counter in FEN and GUIs</a> by <a href="/Jouni_Uski">Jouni Uski</a>, <a href="/CCC">CCC</a>, November 12, 2019</li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73552">FEN and 3rd repetition rule. No information?</a> by Luis Babboni, <a href="/CCC">CCC</a>, April 03, 2020 » <a href="/Repetitions">Repetitions</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=76892">FEN compression</a> by lucasart, <a href="/CCC">CCC</a>, March 17, 2021 » <a href="/BMI2">FEN Compression</a>, <a href="/NNUE">NNUE Training</a></li>
+<li><a href="https://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=79627">Required fields in Forsyth-Edwards Notation (FEN)</a> by <a href="/Niels_Abildskov">Niels Abildskov</a>, <a href="/CCC">CCC</a>, April 02, 2022</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Forsyth-Edwards_Notation">Forsyth-Edwards Notation from Wikipedia</a></li>
+<li><a href="http://www.fam-petzke.de/cp_fen_en.shtml">Chess Programming - Chess Board Implementation : A FEN parser</a> by <a href="/Thomas_Petzke">Thomas Petzke</a></li>
+<li><a href="http://mathieupage.com/?p=65">FEN Database</a> by <a href="/Mathieu_Pagé">Mathieu Pagé</a></li>
+<li><a href="http://www.gilith.com/chess/diagrams/">Gilith - Chess Diagram Maker</a> by <a href="/Joe_Leslie-Hurd">Joe Leslie-Hurd</a></li>
+</ul>
+<p><a href="http://www.gilith.com/software/fen2img/">fen2img Chess Diagram Maker</a> by <a href="/Joe_Leslie-Hurd">Joe Leslie-Hurd</a></p>
+<ul>
+<li><a href="http://webchess.freehostia.com/diag/index.php">Chess Diagram Generator</a></li>
+<li><a href="https://github.com/bagaturchess/ChessBoardScanner">GitHub - bagaturchess/ChessBoardScanner: Java based Chess Board Scanner, which converts 2D chess board image into a machine readable format a.k.a. Forsyth–Edwards Notation (FEN)</a> by <a href="/Krasimir_Topchiyski">Krasimir Topchiyski</a></li>
+<li><a href="http://chessforeva.blogspot.de/2009/10/3d-chess-diagram-from-fen.html">Chessforeva: 3D chess diagram from FEN</a> » <a href="/3D_Graphics_Board">3D Graphics Board</a></li>
+<li><span id="FEN2EPS"></span><a href="http://fen2eps.sourceforge.net/">Fen2eps</a> by Dirk Baechle <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Chess_Position">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.thechessdrum.net/PGN_Reference.txt">Standard: Portable Game Notation Specification and Implementation Guide</a> 16.1: FEN by <a href="/Steven_Edwards">Steven Edwards</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=219015&amp;t=23806">Re: Arasan test suite update</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, September 19, 2008<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=31521">where FEN is not consistent</a> by <a href="/Reinhard_Scharnagl">Reinhard Scharnagl</a>, <a href="/CCC">CCC</a>, January 06, 2010<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=396838&amp;t=37879">No more pseudolegal en passant target foolishness</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, February 27, 2011<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="https://www.stmintz.com/ccc/index.php?id=437213">Why to use compatible X-FEN (in Chess960)</a> by <a href="/Reinhard_Scharnagl">Reinhard Scharnagl</a>, <a href="/CCC">CCC</a>, July 17, 2005<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="https://en.wikipedia.org/wiki/Encapsulated_PostScript">Encapsulated PostScript from Wikipedia</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Forsyth-Edwards_Notation">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Incremental Updates - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Incremental Updates</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Chess">Chess</a> * <a href="/Chess_Position">Position</a> * Incremental Updates</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/d/d5/Kandinsky_-_Mouvement_I.jpg" alt="Wassily Kandinsky - Mouvement I 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Wassily_Kandinsky">Wassily Kandinsky</a> - Mouvement I <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://commons.wikimedia.org/wiki/File:Kandinsky_-_Mouvement_I.jpg">Wassily Kandinsky - Mouvement I</a>, <a href="https://en.wikipedia.org/wiki/Tretyakov_Gallery">Tretyakov Gallery</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Incremental updates</strong> keep global or shared structures up to date after <a href="/Make_Move">making</a> and <a href="/Unmake_Move">unmaking</a> <a href="/Moves">moves</a> on the <a href="/Board_Representation">internal board</a>, likely inside a <a href="/Depth-First">depth-first</a>, <a href="/Alpha-Beta">alpha-beta</a> like <a href="/Search">search-algorithm</a>. Incremental update on the same global or shared data ever and ever, will likely keep it in fast cache memory, and saves <a href="https://en.wikipedia.org/wiki/Memory_bandwidth">memory bandwidth</a> compared to a <a href="/Copy-Make">Copy-Make</a> approach, which needs a make-update on the copy as well, but no unmake-update rather than decrementing a <a href="/Ply">ply-index</a> or fetching a pointer.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#chess-position">Chess Position</a></li>
+<li><a href="#material-and-hash-keys">Material and Hash keys</a></li>
+<li><a href="#evaluation">Evaluation</a></li>
+<li><a href="#attack-table">Attack table</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="chess-position">Chess Position</h2>
+<p>Incremental updates by make/unmake are obligatory for square centric board <a href="/Array">arrays</a> like <a href="/Mailbox">mailbox</a> and <a href="/0x88">0x88</a> along with their <a href="/Piece-Lists">piece-lists</a>, as well for the classical <a href="/Bitboard_Board-Definition">bitboard board-definition</a>. A move only affects a small fraction of the complete board structure and the update cost is small compared to a copy of the whole board. Also one usually doesn't need an array of boards for random access, but only the current one.</p>
+<p>However, there are aspects of a <a href="/Chess_Position">chess position</a>, which can not generally restored from a child-position by unmaking a move, and which therefor need to be restored by either re-playing the whole game record from the root position, or to be memorized inside an <a href="/Array">array</a> indexed by <a href="/Ply">ply</a> or on a <a href="/Stack">stack</a> (<a href="https://en.wikipedia.org/wiki/LIFO_(computing)">LIFO</a>), most notably <a href="/En_passant">ep state</a>, <a href="/Castling_Rights">castling rights</a> and the <a href="/Halfmove_Clock">halfmove clock</a> enforcing the <a href="/Fifty-move_Rule">fify-move rule</a>. Also, if one doesn't keep a captured piece (if any) inside the move object, one has to memorize those pieces elsewhere as well, to restore the target square of the move about to unmake.</p>
+<h2 id="material-and-hash-keys">Material and Hash keys</h2>
+<p>Subject of incremental updates are further data which only change conditionally on certain move types, like <a href="/Material">material</a> signature, only affected by <a href="/Captures">captures</a> or <a href="/Promotions">promotions</a>, or for instance <a href="/Zobrist_Hashing">zobrist keys</a> for a <a href="/Pawn_Hash_Table">pawn hash table</a>, only affected by moving/capturing pawns. Standard zobrist keys for <a href="/Transposition_Table">TT purpose</a> and dependent on ep state and castling rights, are slightly more complicated to restore. If stored inside a record anyway to detect <a href="/Repetitions">repetitions</a>, one has the option to restore the key after unmake from that record.</p>
+<p>It is a good idea to compare incremental updated stuff like zobrist keys with its from scratch generated counterparts for <a href="/Debugging">debug</a> purposes.</p>
+<h2 id="evaluation">Evaluation</h2>
+<p>Other global structures or variables as candidates of an incremental update are related to <a href="/Evaluation">Evaluation</a>, beside the mentioned <a href="/Material">material</a> (balance), <a href="/Lazy_Evaluation">lazy evaluation</a> terms, like the sum of all <a href="/Piece-Square_Tables">piece-square values</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> .</p>
+<h2 id="attack-table">Attack table</h2>
+<p>Some programs keep <a href="/Attack_and_Defend_Maps">Attack and Defend Maps</a> up to date incrementally, which is runtime dependent on the number of squares whose attacks-to are influenced by the move. Due to its size and utilization, copy-make is no issue, but on the fly generation if actually needed.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Attack_and_Defend_Maps">Attack and Defend Maps</a></li>
+<li><a href="/BCH_Hashing">BCH Hashing</a></li>
+<li><a href="/General_Setwise_Operations">Bitboard Update By Move</a></li>
+<li><a href="/Color_Flipping">Color Flipping</a></li>
+<li><a href="/Copy-Make">Copy-Make</a></li>
+<li><a href="/Encoding_Moves">Encoding Moves</a></li>
+<li><a href="/Lazy_Evaluation">Lazy Evaluation</a></li>
+<li><a href="/Make_Move">Make Move</a></li>
+<li><a href="/Material">Material</a></li>
+<li><a href="/NNUE">NNUE</a></li>
+<li><a href="/Unmake_Move">Unmake Move</a></li>
+<li><a href="/Zobrist_Hashing">Zobrist Hashing</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/John_J._Scott">John J. Scott</a> (<strong>1969</strong>). <em>A chess-playing program</em>. <a href="http://www.doc.ic.ac.uk/~shm/MI/mi4.html">Machine Intelligence Vol. 4</a></li>
+<li><a href="/David_Slate">David Slate</a>, <a href="/Larry_Atkin">Larry Atkin</a> (<strong>1977</strong>). <em>Chess 4.5 - The Northwestern University Chess Program.</em> <a href="/Chess_Skill_in_Man_and_Machine">Chess Skill in Man and Machine</a>, reprinted (1988) in <a href="/Computer_Chess_Compendium">Computer Chess Compendium</a></li>
+<li><a href="/Peter_W._Frey">Peter W. Frey</a> (<strong>1983</strong>). <em>The Alpha-Beta Algorithm: Incremental Updating, Well-Behaved Evaluation Functions, and Non-Speculative Forward Pruning</em>. Computer Game-Playing (ed. <a href="/Max_Bramer">Max Bramer</a>), pp. 285-289. Ellis Horwood Limited</li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=20370">Incremental updating for positional evaluation</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, March 27, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=28523">Incremental Zobrist - slow?</a> by <a href="/Vlad_Stamate">Vlad Stamate</a>, <a href="/CCC">CCC</a>, June 20, 2009 » <a href="/Zobrist_Hashing">Zobrist Hashing</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=29770">undo move vs. Position Cloning</a> by BoldReceiver, <a href="/CCC">CCC</a>, September 16, 2009</li>
+</ul>
+<p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=291570&amp;t=29770">Re: undo move vs. Position Cloning</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, September 16, 2009 » <a href="/Doch">Doch</a></p>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=42167">Incremental or non-incremental PST evaluation calcs</a> by Mark Pearce, <a href="/CCC">CCC</a>, January 26, 2012 » <a href="/Piece-Square_Tables">Piece-Square Tables</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=50805">copy/make vs make/unmake</a> by <a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/CCC">CCC</a>, January 07, 2014</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=52085">Incrementally-updated attack map</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, April 21, 2014 » <a href="/Attack_and_Defend_Maps">Attack and Defend Maps</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=53502">Memory usage in make/unmake vs logic complexity</a> by <a href="/Matthew_Lai">Matthew Lai</a>, <a href="/CCC">CCC</a>, August 30, 2014</li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58628">Incremental update</a> by <a href="/Matthew_R._Brades">Matthew R. Brades</a>, <a href="/CCC">CCC</a>, December 19, 2015</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?t=63356">The Inferno thread</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, March 06, 2017 » <a href="/Shogi">Tenjiku Shogi</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=68995">How to incrementally update attack tables?</a> by <a href="/Maksim_Korzh">Maksim Korzh</a>, <a href="/CCC">CCC</a>, November 21, 2018 » <a href="/Attack_and_Defend_Maps">Attack and Defend Maps</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="http://www.top-5000.nl/authors/rebel/chess840.htm#LAZY%20EVAL">Search Techniques in REBEL (Lazy Eval)</a> from <a href="http://www.top-5000.nl/authors/rebel/chess840.htm">How Rebel Plays Chess</a> by <a href="/Ed_Schroder">Ed Schröder</a> » <a href="/Lazy_Evaluation">Lazy Evaluation</a>, <a href="/Rebel">Rebel</a></li>
+</ul>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Chess_Position">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.top-5000.nl/authors/rebel/chess840.htm#LAZY%20EVAL">Search Techniques in REBEL (Lazy Eval)</a> from <a href="http://www.top-5000.nl/authors/rebel/chess840.htm">How Rebel Plays Chess</a> by <a href="/Ed_Schroder">Ed Schröder</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=20370">Incremental updating for positional evaluation</a> by <a href="/Steven_Edwards">Steven Edwards</a>, <a href="/CCC">CCC</a>, March 27, 2008<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Wassily_Kandinsky">Wassily Kandinsky</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Incremental_Updates">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

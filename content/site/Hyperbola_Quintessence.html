@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hyperbola Quintessence - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Hyperbola Quintessence</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * <a href="/Sliding_Piece_Attacks">Sliding Piece Attacks</a> * Hyperbola Quintessence</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="/assets/SamuelBakReflexion.jpg" alt="Samuel Bak - Reflexion, 1990 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Samuel_Bak">Samuel Bak</a> - Reflexion, 1990 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://www.puckergallery.com/artists/#/samuel-bak/">Samuel Bak - represented by Pucker Gallery since 1969</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Hyperbola Quintessence</strong> applies the <a href="/Subtracting_a_Rook_from_a_Blocking_Piece">o^(o-2r)-trick</a> also for vertical or diagonal <a href="/On_an_empty_Board">negative Rays</a> - by reversing the bit-order of up to one bit per rank or <a href="/Byte">byte</a> with a <a href="/Flipping_Mirroring_and_Rotating">vertical flip</a> aka <a href="/X86-64">x86-64</a> <a href="/X86-64">bswap</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> . It is somehow a resurrection of the <a href="/Reverse_Bitboards">reverse bitboards</a> idea of <a href="/Ryan_Mack">Ryan Mack's</a> <em>Hyperbola Project</em> on the fly, and was created by <a href="/Gerd_Isenberg">Gerd Isenberg</a>. Improvements by <a href="/Aleks_Peshkov">Aleks Peshkov</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> made it applicable and competitive.</p>
+<table>
+<tbody>
+<tr>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6" style="--wiki-img-w:220px"><a href="/Square_Mapping_Considerations"><img src="/assets/Cpwmappinghint.JPG" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></a></span></td>
+<td><p><em>Code samples and bitboard diagrams rely on <a href="/Square_Mapping_Considerations">Little endian file and rank mapping</a></em>.</p></td>
+</tr>
+</tbody>
+</table>
+
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#reverse-math">Reverse Math</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#source-code">Source Code</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#c">C</a></li>
+<li><a href="#generalized-set-wise-attacks">Generalized Set-wise Attacks</a></li>
+<li><a href="#x86-64-assembly">x86-64 assembly</a></li>
+<li><a href="#java">Java</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#hyperbola">Hyperbola</a></li>
+<li><a href="#quintessence">Quintessence</a></li>
+<li><a href="#misc">Misc</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="reverse-math">Reverse Math</h2>
+<p>Assume following masked <a href="/Occupancy">occupancy</a> on a <a href="/Files">file</a>, <a href="/Diagonals">diagonal</a> or <a href="/Anti-Diagonals">anti-diagonal</a> - for simplicity as a flat byte (in a real bitboard with masked files or diagonals you have 6..8 scratch-bits between the bits of this byte). Thus, vertical flip reverses the bits of this byte.</p>
+<pre><code>o&#39; = reverse(o)
+r&#39; = reverse(r)
+
+       normal    reversed
+ o     11010101  10101011 o&#39; occupancy including slider
+ r     00010000  00001000 r&#39; slider
+ o-r   11000101  10100011 o&#39;-r&#39;  1. sub clears the slider
+ o-2r  10110101  10011011 o&#39;-2r&#39; 2. sub borrows &quot;one&quot; from next blocker
+......|  \....../
+normal 10110101   \..../
+       11011001 &lt;--XXXX   re-reverse
+single
+xor    01101100 -&gt; to get the attack set</code></pre>
+<p>The first subtraction of (o-2r) is done implicitly by masking off the line, removing the slider from the occupied set. The second subtraction borrows a "one" from the next nearest blocker in msb-direction, falling through all unset bits outside the line. Of course, if no blocker is available, it borrows a "one" in usual arithmetical manner from the hidden 2^N. Only the changed bits (from original o, o') are the appropriate sliding attacks, including the blocker but excluding the slider. The result finally needs to be intersected with the same line mask as previously the occupancy, to clear the wrapped borrow one bits outside the file or diagonal. The fine optimization by <a href="/Aleks_Peshkov">Aleks Peshkov</a> covers the final <a href="/General_Setwise_Operations">union</a> of <a href="/On_an_empty_Board">positive</a> and <a href="/On_an_empty_Board">negative ray-attacks</a>. Since opposed <a href="/Rays">ray-directions</a> are always disjoint sets, using <a href="/General_Setwise_Operations">xor</a> instead of <em>bitwise or</em> safes two instructions per line-attack. That is because bit-reversal or any <a href="/Flipping_Mirroring_and_Rotating">mirroring or flipping</a> is own inverse and distributive over xor.</p>
+<pre><code>reverse(a ^ b) == reverse (a) ^ reverse(b)</code></pre>
+<p>thus</p>
+<pre><code>lineAttacks = o^(o-2r) ^ reverse((o&#39;-2r&#39;)^o&#39;)
+lineAttacks = o^(o-2r) ^ reverse( o&#39;-2r&#39;) ^ reverse(o&#39;)
+lineAttacks = o^(o-2r) ^ reverse( o&#39;-2r&#39;) ^ o</code></pre>
+<p>and finally</p>
+<pre><code>lineAttacks =   (o-2r) ^ reverse( o&#39;-2r&#39;)</code></pre>
+<p>Beside shorter code this reduces register pressure - and clearly outperforms <a href="/Kindergarten_Bitboards">kindergarten bitboards</a> - <a href="https://en.wikipedia.org/wiki/Instructions_Per_Cycle">ipc</a>-wise, in code size and memory requirements.</p>
+<h2 id="source-code">Source Code</h2>
+<h3 id="c">C</h3>
+<p>The three <a href="/C">C</a>-routines only differ by the line-mask applied:</p>
+<pre><code>U64 diagonalAttacks(U64 occ, enumSquare sq) {
+   U64 forward, reverse;
+   forward = occ &amp; smsk[sq].diagonalMaskEx;
+   reverse  = _byteswap_uint64(forward);
+   forward -= smsk[sq].bitMask;
+   reverse -= _byteswap_uint64(smsk[sq].bitMask);
+   forward ^= _byteswap_uint64(reverse);
+   forward &amp;= smsk[sq].diagonalMaskEx;
+   return forward;
+}
+
+U64 antiDiagAttacks(U64 occ, enumSquare sq) {
+   U64 forward, reverse;
+   forward  = occ &amp; smsk[sq].antidiagMaskEx;
+   reverse  = _byteswap_uint64(forward);
+   forward -= smsk[sq].bitMask;
+   reverse -= _byteswap_uint64(smsk[sq].bitMask);
+   forward ^= _byteswap_uint64(reverse);
+   forward &amp;= smsk[sq].antidiagMaskEx;
+   return forward;
+}
+
+U64 fileAttacks(U64 occ, enumSquare sq) {
+   U64 forward, reverse;
+   forward  = occ &amp; smsk[sq].fileMaskEx;
+   reverse  = _byteswap_uint64(forward);
+   forward -= smsk[sq].bitMask;
+   reverse -= _byteswap_uint64(smsk[sq].bitMask);
+   forward ^= _byteswap_uint64(reverse);
+   forward &amp;= smsk[sq].fileMaskEx;
+   return forward;
+}
+
+U64 bishopAttacks(U64 occ, enumSquare sq) {
+   return diagonalAttacks (occ, sq)
+        + antiDiagAttacks (occ, sq);
+}</code></pre>
+<p><span id="ArrayOfStructs"></span> For better locality of the <a href="/On_an_empty_Board">line-attacks</a> on the otherwise empty board, we may use an properly aligned array of structs.</p>
+<pre><code>struct
+{
+   U64 bitMask;         // 1 &lt;&lt; sq for convenience
+   U64 diagonalMaskEx;
+   U64 antidiagMaskEx;
+   U64 fileMaskEx;
+} smsk[64]; // 2 KByte</code></pre>
+<p>Using <a href="/X86-64">x86-64</a> <a href="/X86-64">bswap</a> makes it quite competitive for bishops and files, on <a href="/AMD">AMD</a> <a href="https://en.wikipedia.org/wiki/Athlon_64">K8</a> or <a href="https://en.wikipedia.org/wiki/AMD_K10">K10</a> it has a latency of one cycle with a throughput of 1/3, like other cheap instructions. However, <a href="/Intel">Intel</a> is tad slower - while the recent <a href="https://en.wikipedia.org/wiki/Intel_Core_2">Core 2 duo</a> processors perform 128-bit SIMD-instructions with 128-bit alus, that is bitwise logical instructions with a latency of one cycle and throughput of 1/3, the general purpose bswap-instruction takes four cycles with a throughput of one. In <em>Intel 64 and IA32 Architectures Optimization Reference Manual</em> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> , it is therefor recommend (5.6.5. endian conversion) to use the <a href="/SSSE3">SSSE3</a> <a href="/SSSE3">pshufb</a> instruction to swap bytes, available through intrinsic <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> , see <a href="/SSSE3">SSSE3 Hyperbola Quintessence</a> for bishop attacks.</p>
+<p>As long there is no fast bit reversal instruction, there is no general solution for all four lines, and the rook attack-getter still needs some standard technique for the <a href="/First_Rank_Attacks">rank-attacks</a>. Tim Cooijmans proposed to map the rank to the main diagonal before applying HQ, and to re-map the calculated attacks back to the original rank <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> .</p>
+<h3 id="generalized-set-wise-attacks">Generalized Set-wise Attacks</h3>
+<p>Hyperbola quintessence can be generalized to work on whole sets of sliding pieces instead on individual pieces, whose ranks to be masked. The problem arising, when not masking the rank of the piece is that attacks wrap around the board during subtraction. This is shown below:</p>
+<pre><code>     ........       ........                            11111111
+     ........       ........                            11111111
+     ........       ........                            11111111
+ r = ........ , o = ........ this leads to   o - 2*r =  11111111
+     ........       ........                            11111111
+     ........       ........                            11111111
+     ....1...       ....1...                            11111...
+     ........       ........                            ........
+
+instead of
+
+........
+........
+........
+........
+........
+........
+11111...
+........</code></pre>
+<p>This is not the intended result. It can be avioded, by bitwise adding an overflow barrier on the right-hand side. Afterwards this barrier needs to be removed from the attack set:</p>
+<pre><code>u64 right = 0x0101010101010101ULL;
+
+     ......1.      1..1..1.                              1...1111
+     ....1...      1...1...                              .1111..1
+     ......1.      11....1.                              1.111111
+r =  .....1..  o = .11..1..   now: ((o | right) - 2*r) = .1.111.1
+     ........      ........                              ........
+     ......1.      ......1.                              1111111.
+     .......1      .......1                              1111111.
+     1.......      1.......                              1......1
+
+Note, that the 4th rank was not flooded by the subtraction! Next, the blockers are removed as usual:
+
+                          ...111.1
+                          1111...1
+                          .11111.1
+o ^ ((o | right) - 2*r) = ..111..1
+                          ........
+                          111111..
+                          11111111
+                          .......1
+
+The last step is to remove the barrier at the right side that became visible after the last operation.
+
+                                     ...111..
+                                     1111...
+                                     .11111..
+(o ^ ((o | right) - 2*r) &amp; ~right =  ..111...
+                                     ........
+                                     111111..
+                                     1111111.
+                                     ........
+
+This is the correct attack set for the left direction.</code></pre>
+<p>the complete algorithm for the left direction is therefore:</p>
+<pre><code>const u64 right = 0x0101010101010101ULL;
+
+u64 leftAttacks = ((o ^ ((o | right) - 2*r) &amp; ~right);</code></pre>
+<p>For the right-hand direction, the bits need to be reversed rank-wise.</p>
+<h3 id="x86-64-assembly">x86-64 assembly</h3>
+<p>The VC2005 generated <a href="/X86-64">x86-64</a> <a href="/Assembly">assembly</a> of bishopAttacks indicates what <a href="https://en.wikipedia.org/wiki/Instructions_Per_Cycle">ipc</a>-monster Hyperbola Quintessence is:</p>
+<pre><code>occ$ = 16
+sq$ = 24
+?bishopAttacks@@YA_K_KI@Z PROC
+  00000   40 53                push    rbx
+  00002   8b c2                mov    eax, edx
+  00004   4c 8d 15 00 00 00 00 lea    r10, OFFSET FLAT:?smsk
+  0000b   48 c1 e0 05          shl    rax, 5
+  0000f   4a 8b 5c 10 08       mov    rbx, QWORD PTR [rax+r10+8]  ; diagonalMaskEx
+  00014   4e 8b 4c 10 10       mov    r9,  QWORD PTR [rax+r10+16] ; antidiagMaskEx
+  00019   4e 8b 14 10          mov    r10, QWORD PTR [rax+r10]    ; r := 1 &lt;&lt; sq
+  0001d   4c 8b db             mov    r11, rbx                    ; diagonalMaskEx
+  00020   49 8b d1             mov    rdx, r9                     ; antidiagMaskEx
+  00023   4d 8b c2             mov    r8, r10                     ; r := 1 &lt;&lt; sq
+  00026   48 23 d1             and    rdx, rcx                    ; anti &amp; occ
+  00029   4c 23 d9             and    r11, rcx                    ; dia  &amp; occ
+  0002c   49 0f c8             bswap  r8                          ; r&#39;
+  0002f   48 8b c2             mov    rax, rdx                    ; ant
+  00032   49 8b cb             mov    rcx, r11                    ; dia
+  00035   49 2b d2             sub    rdx, r10                    ; ant - r
+  00038   48 0f c8             bswap  rax                         ; ant&#39;
+  0003b   48 0f c9             bswap  rcx                         ; dia&#39;
+  0003e   4d 2b da             sub    r11, r10                    ; dia - r
+  00041   49 2b c0             sub    rax, r8                     ; ant&#39; - r&#39;
+  00044   49 2b c8             sub    rcx, r8                     ; dia&#39; - r&#39;
+  00047   48 0f c8             bswap  rax                         ;(ant&#39; - r&#39;)&#39;
+  0004a   48 0f c9             bswap  rcx                         ;(dia&#39; - r&#39;)&#39;
+  0004d   48 33 c2             xor    rax, rdx                    ; ant := (ant&#39; - r&#39;)&#39; ^ (ant - r)
+  00050   49 33 cb             xor    rcx, r11                    ; dia := (dia&#39; - r&#39;)&#39; ^ (dia - r)
+  00053   49 23 c1             and    rax, r9                     ; ant &amp;= antidiagMaskEx
+  00056   48 23 cb             and    rcx, rbx                    ; dia &amp;= diagonalMaskEx
+  00059   48 03 c1             add    rax, rcx                    ; attacks := dia + ant
+  0005c   5b                   pop    rbx
+  0005d   c3                   ret    0
+?bishopAttacks@@YA_K_KI@Z ENDP</code></pre>
+<h3 id="java">Java</h3>
+<p><a href="/Java">Java</a> programmer may try <a href="http://java.sun.com/j2se/1.5.0/docs/api/java/lang/Long.html#reverseBytes%28long%29">Long.reverseBytes</a>:</p>
+<pre><code>    static private final long[] bitMask = {
+        0x0000000000000001, 0x0000000000000002, 0x0000000000000004, 0x0000000000000008,
+        0x0000000000000010, 0x0000000000000020, 0x0000000000000040, 0x0000000000000080,
+        ...
+    };
+
+    static private final long[] diagonalMaskEx = {
+        0x8040201008040200, 0x0080402010080400, 0x0000804020100800, 0x0000008040201000,
+        0x0000000080402000, 0x0000000000804000, 0x0000000000008000, 0x0000000000000000,
+        ...
+    };
+
+    /**
+     * @param occ - occupancy
+     *        sq  - from square
+     * @return diagonal attacks from sq with occupancy occ
+     */
+    static public long diagonalAttacks(long occ, int sq)
+    {
+       long forward = occ &amp; diagonalMaskEx[sq];
+       long reverse = Long.reverseBytes(forward);
+       forward -= bitMask[sq];
+       reverse -= bitMask[sq^56];
+       forward ^= Long.reverseBytes(reverse);
+       forward &amp;= diagonalMaskEx[sq];
+       return forward;
+    }</code></pre>
+<p><a href="http://java.sun.com/j2se/1.5.0/docs/api/java/lang/Long.html#reverse%28long%29">Long.reverse</a> for a generalized attack getter even for ranks is too expensive, except a <a href="https://en.wikipedia.org/wiki/Java_Virtual_Machine">JVM</a> can use a machine instruction rather than a <a href="/Flipping_Mirroring_and_Rotating">bit-reversal</a> routine:</p>
+<pre><code>    /**
+     * @param occ  - occupancy
+     *        line - {0..3} {rank, file, diagonal, antidiagonal}
+     *        sq   - from square
+     * @return attacks from sq on line with occupancy occ
+     */
+    static public long attacks(long occ, int line, int sq)
+    {
+       long forward = occ &amp; maskEx[sq][line];
+       long reverse = Long.reverse(forward);
+       forward -= bitMask[sq];
+       reverse -= bitMask[sq^63];
+       forward ^= Long.reverse(reverse);
+       forward &amp;= maskEx[sq][line];
+       return forward;
+    }</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Reverse_Bitboards">Reverse Bitboards</a></li>
+<li><a href="/Obstruction_Difference">Obstruction Difference</a></li>
+<li><a href="/SBAMG">SBAMG</a></li>
+<li><a href="/SSSE3">SSSE3 Hyperbola Quintessence</a></li>
+<li><a href="/Subtracting_a_Rook_from_a_Blocking_Piece">Subtracting a Rook from a Blocking Piece</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=140314">Re: BitBoard Tests Magic v Non-Rotated 32 Bits v 64 Bits</a> by <a href="/Aleks_Peshkov">Aleks Peshkov</a>, <a href="/CCC">CCC</a>, August 25, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=25979">Hyperbola Quiesscene: hardly any improvement</a> by trojanfoe, <a href="/CCC">CCC</a>, January 13, 2009</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58795">Comparison of bitboard attack-getter variants</a> by <a href="/Sven_Schüle">Sven Schüle</a>, <a href="/CCC">CCC</a>, January 04, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58667&amp;start=106">Re: The wrong way</a> by <a href="/Aleks_Peshkov">Aleks Peshkov</a>, <a href="/CCC">CCC</a>, January 05, 2016 » <a href="/SSSE3">SSSE3 Hyperbola Quintessence</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=71312">Understanding first rank attack state generation</a> by Kalyankumar Ramaseshan, <a href="/CCC">CCC</a>, July 18, 2019 » <a href="/First_Rank_Attacks">First Rank Attacks</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://github.com/abulmo/hqperft">GitHub - abulmo/hqperft: Chess move generation based on (H)yperbola (Q)uintessence &amp; range attacks</a> by <a href="/Richard_Delorme">Richard Delorme</a> » <a href="/Perft">Perft</a></li>
+<li><a href="https://www.youtube.com/watch?v=bCH4YK6oq8M&amp;list=SPQV5mozTHmacMeRzJCW_8K3qw2miYqd0c&amp;index=9">Sliding Pieces (Part 1) - Advanced Java Chess Engine Tutorial 8</a> by <a href="/Jonathan_Warkentin">Jonathan Warkentin</a></li>
+<li><a href="http://timcooijmans.blogspot.co.uk/2014/04/hyperbola-quintessence-for-rooks-along.html">Hyperbola Quintessence for rooks along ranks</a> by <a href="https://www.blogger.com/profile/11033414990764447420">Tim Cooijmans</a>, April 6, 2014 <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a></li>
+</ul>
+<h3 id="hyperbola">Hyperbola</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Hyperbola">Hyperbola from Wikipedia</a></li>
+<li><a href="http://www.paideiaschool.org/TeacherPages/Steve_Sigur/resources/Eulerian%20hyperbola/Eulerian%20hyperbola.html">The Eulerian Hyperbola</a></li>
+<li><a href="http://www.mathwords.com/f/foci_hyperbola.htm">Foci of a Hyperbola</a> from <a href="http://www.mathwords.com/">mathwords.com</a></li>
+</ul>
+<h3 id="quintessence">Quintessence</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Quintessence">Quintessence from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Quintessence_(physics)">Quintessence (physics) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Aether_(classical_element)#Fifth_element">Quintessence the Fifth Element from Wikipedia</a></li>
+</ul>
+<h3 id="misc">Misc</h3>
+<ul>
+<li><a href="/Category:Focus">Focus</a> - <a href="https://en.wikipedia.org/wiki/Hocus_Pocus_%28song%29">Hocus Pocus</a>, <a href="https://en.wikipedia.org/wiki/Pinkpop_Festival">Pinkpop Festival</a> 1972, <a href="https://en.wikipedia.org/wiki/Geleen">Geleen</a>, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/5-adsDeltaM" title="YouTube video 5-adsDeltaM" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=5-adsDeltaM">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Sliding_Piece_Attacks">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://msdn.microsoft.com/en-us/library/a3140177.aspx">_byteswap_uint64</a> Visual C++ Developer Center - Run-Time Library Reference<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=140314">Re: BitBoard Tests Magic v Non-Rotated 32 Bits v 64 Bits</a> by <a href="/Aleks_Peshkov">Aleks Peshkov</a>, <a href="/CCC">CCC</a>, August 25, <a href="/Timeline">2007</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://www.intel.com/assets/pdf/manual/248966.pdf">Intel 64 and IA32 Architectures Optimization Reference Manual</a> (pdf)<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://msdn.microsoft.com/en-us/library/bb531427.aspx">_mm_shuffle_epi8</a> Visual C++ Developer Center - Run-Time Library Reference<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://timcooijmans.blogspot.co.uk/2014/04/hyperbola-quintessence-for-rooks-along.html">Hyperbola Quintessence for rooks along ranks</a> by <a href="https://www.blogger.com/profile/11033414990764447420">Tim Cooijmans</a>, April 6, 2014<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=58795&amp;start=10">Re: Comparison of bitboard attack-getter variants</a> by <a href="/Matthew_R._Brades">Matthew R. Brades</a>, <a href="/CCC">CCC</a>, January 04, 2016<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Samuel_Bak">Samuel Bak</a> · <a href="/Category:Focus">Focus</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Hyperbola_Quintessence">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

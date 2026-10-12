@@ -1,0 +1,863 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flipping Mirroring and Rotating - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Flipping Mirroring and Rotating</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Board_Representation">Board Representation</a> * <a href="/Bitboards">Bitboards</a> * Flipping, Mirroring and Rotating</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="http://www.barbaramittman.com/Site/Fore_4.html" target="_blank" rel="noopener noreferrer"><img src="/assets/Forever_IV.jpg" alt="Barbara Mittman, Forever IV 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Barbara_Mittman">Barbara Mittman</a>, Forever IV <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://www.barbaramittman.com/Site/Figurative_Paintings.html">Figurative Paintings</a> by <a href="/Category:Barbara_Mittman">Barbara Mittman</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Flipping, Mirroring and Rotating</strong><br />
+might be useful to transform bitboards in various ways. Considering the <a href="/Chessboard">fourfold symmetry</a> of the <a href="/Chessboard">chessboard</a>, the first paragraph covers the whole bitboard performing <a href="/Bit-Twiddling">bit-twiddling</a>-techniques. Various multiplications to flip or mirror certain subsets of the bitboard like <a href="/Files">files</a>, <a href="/Ranks">ranks</a> and even <a href="/Diagonals">diagonals</a> and <a href="/Anti-Diagonals">anti-diagonals</a> are mentioned in the second section.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#the-whole-bitboard">The whole Bitboard</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#flip-and-mirror">Flip and Mirror</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#vertical">Vertical</a></li>
+<li><a href="#horizontal">Horizontal</a></li>
+<li><a href="#generalized">Generalized</a></li>
+<li><a href="#diagonal">Diagonal</a></li>
+<li><a href="#anti-diagonal">Anti-Diagonal</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#rotating">Rotating</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#by-180-degrees---bit-reversal">By 180 degrees - Bit-Reversal</a></li>
+<li><a href="#by-90-degrees-clockwise">By 90 degrees Clockwise</a></li>
+<li><a href="#by-90-degrees-anti-clockwise">By 90 degrees Anti-Clockwise</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#pseudo-rotation-by-45-degrees">Pseudo-Rotation by 45 degrees</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#clockwise">Clockwise</a></li>
+<li><a href="#anti-clockwise">Anti-Clockwise</a></li>
+</ol>
+</details></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#rank-file-and-diagonal">Rank, File and Diagonal</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#flip-about-the-anti-diagonal">Flip about the Anti-Diagonal</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#file-to-a-rank">File to a Rank</a></li>
+<li><a href="#rank-to-file">Rank to File</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#flip-about-the-diagonal">Flip about the Diagonal</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#file-to-a-rank-1">File to a Rank</a></li>
+</ol>
+</details></li>
+<li><a href="#diagonals-to-ranks">Diagonals to Ranks</a></li>
+<li><a href="#mirror-horizontally">Mirror Horizontally</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#flipping">Flipping</a></li>
+<li><a href="#mirroring">Mirroring</a></li>
+<li><a href="#rotation">Rotation</a></li>
+<li><a href="#reflection">Reflection</a></li>
+<li><a href="#smoke-n-mirrors">Smoke 'n' Mirrors</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="the-whole-bitboard">The whole Bitboard</h2>
+<p>Following <a href="/C">C</a>-routines perform <a href="/Parallel_Prefix_Algorithms">parallel prefix algorithms</a> to <a href="/General_Setwise_Operations">swap bits</a> in various ways. They are not intended to use extensively inside a chess program - e.g. to implement <a href="/Rotated_Bitboards">rotated</a> or <a href="/Reverse_Bitboards">reverse bitboards</a> on the fly - but may be used for initialization purposes. They may convert sets between the eight different <a href="/Square_Mapping_Considerations">square mappings</a>, considering rank-file or file-rank <a href="/Endianness">endianness</a>. An exception might be the vertical flipping, which could be done by one fast <a href="/X86-64">x86-64</a> byteswap (<a href="/X86-64">bswap</a>) instruction <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> . See the bswap-application of <a href="/Hyperbola_Quintessence">hyperbola quintessence</a> to determine vertical or diagonal sliding attacks. Flipping, mirroring and rotating is distributive over the basic bitwise operations such as intersection, union, one's complement and xor, as demonstrated in hyperbola quintessence as well.</p>
+<p>Beside portable routines, there are optimized routines taking advantage of compiler intrinsics, to use <a href="/X86-64">x86-64</a> processor instructions like byteswap (bswap) as mentioned and rotate (<a href="/X86-64">ror, rol</a>) <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> .</p>
+<h3 id="flip-and-mirror">Flip and Mirror</h3>
+<p>This is about</p>
+<ul>
+<li>flipping vertically</li>
+<li>mirroring horizontally</li>
+<li>flipping along the diagonal</li>
+<li>flipping along the antidiagonal</li>
+</ul>
+<!-- -->
+
+<pre><code>. 1 1 1 1 . . .   . 1 1 1 1 . . .   . 1 1 1 1 . . .   . 1 1 1 1 . . .
+. 1 . . . 1 . .   . 1 . . . 1 . .   . 1 . . . 1 . .   . 1 . . . 1 . .
+. 1 . . . 1 . .   . 1 . . . 1 . .   . 1 . . . 1 . .   . 1 . . . 1 . .
+. 1 . . 1 . . .   . 1 . . 1 . . .   . 1 . . 1 . . .   . 1 . . 1 . . .
+. 1 1 1 . . . .   . 1 1 1 . . . .   . 1 1 1 . . . .   . 1 1 1 . . . .
+. 1 . 1 . . . .   . 1 . 1 . . . .   . 1 . 1 . . . .   . 1 . 1 . . . .
+. 1 . . 1 . . .   . 1 . . 1 . . .   . 1 . . 1 . . .   . 1 . . 1 . . .
+. 1 . . . 1 . .   . 1 . . . 1 . .   . 1 . . . 1 . .   . 1 . . . 1 . .
+       -                 |                  /               \
+ flipVertical     mirrorHorizontal  flipDiagA1H8      flipDiagA8H1
+       -                 |                /                   \
+. 1 . . . 1 . .   . . . 1 1 1 1 .   . . . . . . . .   . . . . . . . .
+. 1 . . 1 . . .   . . 1 . . . 1 .   . . . . . . . .   1 1 1 1 1 1 1 1
+. 1 . 1 . . . .   . . 1 . . . 1 .   1 . . . . 1 1 .   1 . . . 1 . . .
+. 1 1 1 . . . .   . . . 1 . . 1 .   . 1 . . 1 . . 1   1 . . . 1 1 . .
+. 1 . . 1 . . .   . . . . 1 1 1 .   . . 1 1 . . . 1   1 . . 1 . . 1 .
+. 1 . . . 1 . .   . . . . 1 . 1 .   . . . 1 . . . 1   . 1 1 . . . . 1
+. 1 . . . 1 . .   . . . 1 . . 1 .   1 1 1 1 1 1 1 1   . . . . . . . .
+. 1 1 1 1 . . .   . . 1 . . . 1 .   . . . . . . . .   . . . . . . . .</code></pre>
+<p><span id="FlipVertically"></span></p>
+<h4 id="vertical">Vertical</h4>
+<pre><code>. 1 1 1 1 . . .     . 1 . . . 1 . .
+. 1 . . . 1 . .     . 1 . . 1 . . .
+. 1 . . . 1 . .     . 1 . 1 . . . .
+. 1 . . 1 . . .     . 1 1 1 . . . .
+. 1 1 1 . . . .     . 1 . . 1 . . .
+. 1 . 1 . . . .     . 1 . . . 1 . .
+. 1 . . 1 . . .     . 1 . . . 1 . .
+. 1 . . . 1 . .     . 1 1 1 1 . . .</code></pre>
+<p>Flipping a bitboard <strong>vertical</strong> reverses all eight bytes - it performs a little- big-endian conversion or vice versa. A scalar square may be flipped vertically by xor 56.</p>
+<pre><code>sq&#39; = sq ^ 56;</code></pre>
+<p>The obvious approach with 21 operations, note that the shifts by 56 don't need masks:</p>
+<pre><code>/**
+ * Flip a bitboard vertically about the centre ranks.
+ * Rank 1 is mapped to rank 8 and vice versa.
+ * @param x any bitboard
+ * @return bitboard x flipped vertically
+ */
+U64 flipVertical(U64 x) {
+    return  ( (x &lt;&lt; 56)                           ) |
+            ( (x &lt;&lt; 40) &amp; C64(0x00ff000000000000) ) |
+            ( (x &lt;&lt; 24) &amp; C64(0x0000ff0000000000) ) |
+            ( (x &lt;&lt;  8) &amp; C64(0x000000ff00000000) ) |
+            ( (x &gt;&gt;  8) &amp; C64(0x00000000ff000000) ) |
+            ( (x &gt;&gt; 24) &amp; C64(0x0000000000ff0000) ) |
+            ( (x &gt;&gt; 40) &amp; C64(0x000000000000ff00) ) |
+            ( (x &gt;&gt; 56) );
+}</code></pre>
+<p><span id="parallelPrefixFlip"></span> The <a href="/Parallel_Prefix_Algorithms">parallel prefix</a>-approach takes 13 operations, to swap bytes, words and double-words in a <a href="/SIMD_and_SWAR_Techniques">SWAR-wise</a> manner, performing three <a href="/General_Setwise_Operations">delta swaps</a>:</p>
+<pre><code>/**
+ * Flip a bitboard vertically about the centre ranks.
+ * Rank 1 is mapped to rank 8 and vice versa.
+ * @param x any bitboard
+ * @return bitboard x flipped vertically
+ */
+U64 flipVertical(U64 x) {
+   const U64 k1 = C64(0x00FF00FF00FF00FF);
+   const U64 k2 = C64(0x0000FFFF0000FFFF);
+   x = ((x &gt;&gt;  8) &amp; k1) | ((x &amp; k1) &lt;&lt;  8);
+   x = ((x &gt;&gt; 16) &amp; k2) | ((x &amp; k2) &lt;&lt; 16);
+   x = ( x &gt;&gt; 32)       | ( x       &lt;&lt; 32);
+   return x;
+}</code></pre>
+<p>Using the <a href="/X86-64">x86-64</a> <a href="/X86-64">_byteswap_uint64</a> or bswap64 intrinsics only takes one processor instruction in 64-bit mode.</p>
+<pre><code>/**
+ * Flip a bitboard vertically about the centre ranks.
+ * Rank 1 is mapped to rank 8 and vice versa.
+ * @param x any bitboard
+ * @return bitboard x flipped vertically
+ */
+U64 flipVertical(U64 x) {
+   return _byteswap_uint64(x);
+}</code></pre>
+<p><span id="MirrorHorizontally"></span></p>
+<h4 id="horizontal">Horizontal</h4>
+<pre><code>. 1 1 1|1 . . .     . . . 1 1 1 1 .
+. 1 . . . 1 . .     . . 1 . . . 1 .
+. 1 . . . 1 . .     . . 1 . . . 1 .
+. 1 . . 1 . . .     . . . 1 . . 1 .
+. 1 1 1 . . . .     . . . . 1 1 1 .
+. 1 . 1 . . . .     . . . . 1 . 1 .
+. 1 . . 1 . . .     . . . 1 . . 1 .
+. 1 . .|. 1 . .     . . 1 . . . 1 .</code></pre>
+<p>Horizontal mirroring reverses the bits of each byte. A scalar square may be mirrored horizontally by xor 7.</p>
+<pre><code>sq&#39; = sq ^ 7;</code></pre>
+<p>The <a href="/Parallel_Prefix_Algorithms">parallel prefix</a>-algorithm swaps bits, bit-duos and <a href="/Nibble">nibbles</a> in a <a href="/SIMD_and_SWAR_Techniques">SWAR-wise</a> manner, performing three <a href="/General_Setwise_Operations">delta swaps</a>, 15 operations:</p>
+<pre><code>/**
+ * Mirror a bitboard horizontally about the center files.
+ * File a is mapped to file h and vice versa.
+ * @param x any bitboard
+ * @return bitboard x mirrored horizontally
+ */
+U64 mirrorHorizontal (U64 x) {
+   const U64 k1 = C64(0x5555555555555555);
+   const U64 k2 = C64(0x3333333333333333);
+   const U64 k4 = C64(0x0f0f0f0f0f0f0f0f);
+   x = ((x &gt;&gt; 1) &amp; k1) | ((x &amp; k1) &lt;&lt; 1);
+   x = ((x &gt;&gt; 2) &amp; k2) | ((x &amp; k2) &lt;&lt; 2);
+   x = ((x &gt;&gt; 4) &amp; k4) | ((x &amp; k4) &lt;&lt; 4);
+   return x;
+}</code></pre>
+<p>Replacing bitwise 'or' of disjoint sets by 'add' and shift left by appropriate multiply - taking advantage of x86 lea instruction for multiplication with 2 and 4:</p>
+<pre><code>/**
+ * Mirror a bitboard horizontally about the center files.
+ * File a is mapped to file h and vice versa.
+ * @param x any bitboard
+ * @return bitboard x mirrored horizontally
+ */
+U64 mirrorHorizontal (U64 x) {
+   const U64 k1 = C64(0x5555555555555555);
+   const U64 k2 = C64(0x3333333333333333);
+   const U64 k4 = C64(0x0f0f0f0f0f0f0f0f);
+   x = ((x &gt;&gt; 1) &amp; k1) +  2*(x &amp; k1);
+   x = ((x &gt;&gt; 2) &amp; k2) +  4*(x &amp; k2);
+   x = ((x &gt;&gt; 4) &amp; k4) + 16*(x &amp; k4);
+   return x;
+}</code></pre>
+<p>Using <a href="/General_Setwise_Operations">rotates</a> instead of shifts in some clever way takes 13 operations (introduced by <a href="/Steffan_Westcott">Steffan Westcott</a>). Disadvantage is each operation depends on the previous one, while the lea-approach gains some parallelism with same number of instructions.</p>
+<pre><code>/**
+ * Mirror a bitboard horizontally about the center files.
+ * File a is mapped to file h and vice versa.
+ * @param x any bitboard
+ * @return bitboard x mirrored horizontally
+ */
+U64 mirrorHorizontal (U64 x) {
+   const U64 k1 = C64(0x5555555555555555);
+   const U64 k2 = C64(0x3333333333333333);
+   const U64 k4 = C64(0x0f0f0f0f0f0f0f0f);
+   x ^= k4 &amp; (x ^ rotateLeft(x, 8));
+   x ^= k2 &amp; (x ^ rotateLeft(x, 4));
+   x ^= k1 &amp; (x ^ rotateLeft(x, 2));
+   return rotateRight(x, 7);
+}</code></pre>
+<p><span id="Generalized"></span></p>
+<h4 id="generalized">Generalized</h4>
+<p>In <a href="/Donald_Knuth">Knuth's</a> <em><a href="http://www-cs-faculty.stanford.edu/%7Eknuth/taocp.html">The Art of Computer Programming</a>, Volume 4, Fascicle 1: Bitwise tricks &amp; techniques</em>, page 9, Knuth interprets the <em>magic masks</em> as 2-<a href="https://en.wikipedia.org/wiki/P-adic_number">adic</a> fractions <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> :</p>
+<pre><code>k1 = ...101010101010101010101010101010101 = -1/3
+k2 = ...100110011001100110011001100110011 = -1/5
+k4 = ...100001111000011110000111100001111 = -1/17</code></pre>
+<p>How the masks look on a chess board:</p>
+<pre><code>k1                  k2                  k4
+-1/3                -1/5                -1/17
+0x5555555555555555  0x3333333333333333  0x0F0F0F0F0F0F0F0F
+1 . 1 . 1 . 1 .     1 1 . . 1 1 . .     1 1 1 1 . . . .
+1 . 1 . 1 . 1 .     1 1 . . 1 1 . .     1 1 1 1 . . . .
+1 . 1 . 1 . 1 .     1 1 . . 1 1 . .     1 1 1 1 . . . .
+1 . 1 . 1 . 1 .     1 1 . . 1 1 . .     1 1 1 1 . . . .
+1 . 1 . 1 . 1 .     1 1 . . 1 1 . .     1 1 1 1 . . . .
+1 . 1 . 1 . 1 .     1 1 . . 1 1 . .     1 1 1 1 . . . .
+1 . 1 . 1 . 1 .     1 1 . . 1 1 . .     1 1 1 1 . . . .
+1 . 1 . 1 . 1 .     1 1 . . 1 1 . .     1 1 1 1 . . . .</code></pre>
+<p>A parametrized flip, mirror or reverse (mirror and flip) might be generalized to let the compiler produce mentioned routines with flip or mirror as constant (or template) parameter. Otherwise, without compile time constants, the division at runtime is too expensive.</p>
+<pre><code>/**
+ * Flip, mirror or reverse a bitboard
+ * @param x any bitboard
+ * @param flip the bitboard
+ * @param mirror the bitboard
+ * @return bitboard x flipped, mirrored or reversed
+ */
+U64 flipMirrorOrReverse(U64 x, bool flip, bool mirror)
+{
+   for (U32 i = 3*(1-mirror); i &lt; 3*(1+flip); i++) {
+      int s(      1  &lt;&lt; i);
+      U64 f( C64( 1) &lt;&lt; s);
+      U64 k( C64(-1) / (f+1) );
+      x = ((x &gt;&gt; s) &amp; k) + f*(x &amp; k);
+   }
+   return x;
+}</code></pre>
+<p>The loop variable 'i' runs from following ranges based on the boolean (0,1) parameters 'flip' and 'mirror':</p>
+<pre><code>mirror:   for (U32 i = 0; i &lt; 3; i++)
+flip:     for (U32 i = 3; i &lt; 6; i++)
+reverse := mirror &amp;&amp; flip
+          for (U32 i = 0; i &lt; 6; i++)</code></pre>
+<p>With following formula for the <a href="/General_Setwise_Operations">delta swaps</a> constants ...</p>
+<pre><code>shift(i)  := s(i) := 1 &lt;&lt; i
+factor(i) := f(i) := 1 &lt;&lt; s(i)
+mask(i)   := k(i) := -1 / (f(i) + 1)</code></pre>
+<p>... and therefor following values for i = 0...5:</p>
+<pre><code>s(0)  1
+f(0)  2
+k(0)  0x5555555555555555 = 0xffffffffffffffff / (2+1)
+
+s(1)  2
+f(1)  4
+k(1)  0x3333333333333333 = 0xffffffffffffffff / (4+1)
+
+s(2)  4
+f(2)  16
+k(2)  0x0f0f0f0f0f0f0f0f = 0xffffffffffffffff / (16+1)
+
+s(3)  8
+f(3)  256
+k(3)  0x00ff00ff00ff00ff = 0xffffffffffffffff / (256+1)
+
+s(4)  16
+f(4)  65536
+k(4)  0x0000ffff0000ffff = 0xffffffffffffffff / (65536+1)
+
+s(5)  32
+f(5)  4294967296
+k(5)  0x00000000ffffffff = 0xffffffffffffffff / (4294967296+1)</code></pre>
+<p><span id="FlipabouttheDiagonal"></span></p>
+<h4 id="diagonal">Diagonal</h4>
+<p><strong>Flip about the Diagonal</strong></p>
+<pre><code>. 1 1 1 1 . . /     . . . . . . . .
+. 1 . . . 1 . .     . . . . . . . .
+. 1 . . . 1 . .     1 . . . . 1 1 .
+. 1 . . 1 . . .     . 1 . . 1 . . 1
+. 1 1 1 . . . .     . . 1 1 . . . 1
+. 1 . 1 . . . .     . . . 1 . . . 1
+. 1 . . 1 . . .     1 1 1 1 1 1 1 1
+/ 1 . . . 1 . .     . . . . . . . .</code></pre>
+<p>A scalar square needs to swap rank and file.</p>
+<pre><code>sq&#39; = ((sq &gt;&gt; 3) | (sq &lt;&lt; 3)) &amp; 63;
+sq&#39; = (sq * 0x20800000) &gt;&gt;&gt; 26; // unsigned 32-bit shift, zeros no sign bits from left</code></pre>
+<p>Performing three <a href="/General_Setwise_Operations">delta swaps</a>:</p>
+<pre><code>/**
+ * Flip a bitboard about the diagonal a1-h8.
+ * Square h1 is mapped to a8 and vice versa.
+ * @param x any bitboard
+ * @return bitboard x flipped about diagonal a1-h8
+ */
+U64 flipDiagA1H8(U64 x) {
+   U64 t;
+   const U64 k1 = C64(0x5500550055005500);
+   const U64 k2 = C64(0x3333000033330000);
+   const U64 k4 = C64(0x0f0f0f0f00000000);
+   t  = k4 &amp; (x ^ (x &lt;&lt; 28));
+   x ^=       t ^ (t &gt;&gt; 28) ;
+   t  = k2 &amp; (x ^ (x &lt;&lt; 14));
+   x ^=       t ^ (t &gt;&gt; 14) ;
+   t  = k1 &amp; (x ^ (x &lt;&lt;  7));
+   x ^=       t ^ (t &gt;&gt;  7) ;
+   return x;
+}</code></pre>
+<p>How the masks look on a chess board:</p>
+<pre><code>k1                  k2                  k4
+0x5500550055005500  0x3333000033330000  0x0F0F0F0F00000000
+1 . 1 . 1 . 1 .     1 1 . . 1 1 . .     1 1 1 1 . . . .
+. . . . . . . .     1 1 . . 1 1 . .     1 1 1 1 . . . .
+1 . 1 . 1 . 1 .     . . . . . . . .     1 1 1 1 . . . .
+. . . . . . . .     . . . . . . . .     1 1 1 1 . . . .
+1 . 1 . 1 . 1 .     1 1 . . 1 1 . .     . . . . . . . .
+. . . . . . . .     1 1 . . 1 1 . .     . . . . . . . .
+1 . 1 . 1 . 1 .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .</code></pre>
+<p><span id="FlipabouttheAntidiagonal"></span></p>
+<h4 id="anti-diagonal">Anti-Diagonal</h4>
+<p><strong>Flip about the Anti-Diagonal</strong></p>
+<pre><code>\ 1 1 1 1 . . .     . . . . . . . .
+. 1 . . . 1 . .     1 1 1 1 1 1 1 1
+. 1 . . . 1 . .     1 . . . 1 . . .
+. 1 . . 1 . . .     1 . . . 1 1 . .
+. 1 1 1 . . . .     1 . . 1 . . 1 .
+. 1 . 1 . . . .     . 1 1 . . . . 1
+. 1 . . 1 . . .     . . . . . . . .
+. 1 . . . 1 . \     . . . . . . . .</code></pre>
+<p>Flip about the <a href="/Anti-Diagonals">Anti-Diagonal</a> results in the bit-reversal of flip about the Diagonal. Thus, a scalar square needs not only swap rank and file, but also xor 63.</p>
+<pre><code>sq&#39; = (((sq &gt;&gt; 3) | (sq &lt;&lt; 3)) &amp; 63) ^ 63;
+sq&#39; = ((sq * 0x20800000) &gt;&gt;&gt; 26) ^ 63;  // unsigned 32-bit shift</code></pre>
+<p>Performing three <a href="/General_Setwise_Operations">delta swaps</a>:</p>
+<pre><code>/**
+ * Flip a bitboard about the antidiagonal a8-h1.
+ * Square a1 is mapped to h8 and vice versa.
+ * @param x any bitboard
+ * @return bitboard x flipped about antidiagonal a8-h1
+ */
+U64 flipDiagA8H1(U64 x) {
+   U64 t;
+   const U64 k1 = C64(0xaa00aa00aa00aa00);
+   const U64 k2 = C64(0xcccc0000cccc0000);
+   const U64 k4 = C64(0xf0f0f0f00f0f0f0f);
+   t  =       x ^ (x &lt;&lt; 36) ;
+   x ^= k4 &amp; (t ^ (x &gt;&gt; 36));
+   t  = k2 &amp; (x ^ (x &lt;&lt; 18));
+   x ^=       t ^ (t &gt;&gt; 18) ;
+   t  = k1 &amp; (x ^ (x &lt;&lt;  9));
+   x ^=       t ^ (t &gt;&gt;  9) ;
+   return x;
+}</code></pre>
+<p>How the masks look on a chess board:</p>
+<pre><code>k1                  k2                  k4
+0xAA00AA00AA00AA00  0xCCCC0000CCCC0000  0xF0F0F0F00F0F0F0F
+. 1 . 1 . 1 . 1     . . 1 1 . . 1 1     . . . . 1 1 1 1
+. . . . . . . .     . . 1 1 . . 1 1     . . . . 1 1 1 1
+. 1 . 1 . 1 . 1     . . . . . . . .     . . . . 1 1 1 1
+. . . . . . . .     . . . . . . . .     . . . . 1 1 1 1
+. 1 . 1 . 1 . 1     . . 1 1 . . 1 1     1 1 1 1 . . . .
+. . . . . . . .     . . 1 1 . . 1 1     1 1 1 1 . . . .
+. 1 . 1 . 1 . 1     . . . . . . . .     1 1 1 1 . . . .
+. . . . . . . .     . . . . . . . .     1 1 1 1 . . . .</code></pre>
+<p><span id="Rotation"></span></p>
+<h3 id="rotating">Rotating</h3>
+<p>This is about</p>
+<ul>
+<li>Rotation by 180 degrees</li>
+<li>Rotation by 90 degrees Clockwise</li>
+<li>Rotation by 90 degrees Anti-Clockwise</li>
+</ul>
+<p>Rotation can be deduced from flipping and mirroring in various ways.</p>
+<pre><code>                    mirrorHorizontal     flipDiagA1H8        flipDiagA8H1
+. 1 1 1 1 . . .     . . . 1 1 1 1 .     . . . . . . . .     . . . . . . . .
+. 1 . . . 1 . .     . . 1 . . . 1 .     . . . . . . . .     1 1 1 1 1 1 1 1
+. 1 . . . 1 . .     . . 1 . . . 1 .     1 . . . . 1 1 .     1 . . . 1 . . .
+. 1 . . 1 . . .     . . . 1 . . 1 .     . 1 . . 1 . . 1     1 . . . 1 1 . .
+. 1 1 1 . . . .     . . . . 1 1 1 .     . . 1 1 . . . 1     1 . . 1 . . 1 .
+. 1 . 1 . . . .     . . . . 1 . 1 .     . . . 1 . . . 1     . 1 1 . . . . 1
+. 1 . . 1 . . .     . . . 1 . . 1 .     1 1 1 1 1 1 1 1     . . . . . . . .
+. 1 . . . 1 . .     . . 1 . . . 1 .     . . . . . . . .     . . . . . . . .
+ flipVertical         rotate180        rotate90clockwise rotate90antiClockwise
+. 1 . . . 1 . .     . . 1 . . . 1 .     . . . . . . . .     . . . . . . . .
+. 1 . . 1 . . .     . . . 1 . . 1 .     1 1 1 1 1 1 1 1     . . . . . . . .
+. 1 . 1 . . . .     . . . . 1 . 1 .     . . . 1 . . . 1     . 1 1 . . . . 1
+. 1 1 1 . . . .     . . . . 1 1 1 .     . . 1 1 . . . 1     1 . . 1 . . 1 .
+. 1 . . 1 . . .     . . . 1 . . 1 .     . 1 . . 1 . . 1     1 . . . 1 1 . .
+. 1 . . . 1 . .     . . 1 . . . 1 .     1 . . . . 1 1 .     1 . . . 1 . . .
+. 1 . . . 1 . .     . . 1 . . . 1 .     . . . . . . . .     1 1 1 1 1 1 1 1
+. 1 1 1 1 . . .     . . . 1 1 1 1 .     . . . . . . . .     . . . . . . . .</code></pre>
+<p><span id="Rotationby180degrees"></span></p>
+<h4 id="by-180-degrees---bit-reversal">By 180 degrees - Bit-Reversal</h4>
+<pre><code>. 1 1 1 1 . . .     . . 1 . . . 1 .
+. 1 . . . 1 . .     . . . 1 . . 1 .
+. 1 . . . 1 . .     . . . . 1 . 1 .
+. 1 . . 1 . . .     . . . . 1 1 1 .
+. 1 1 1 . . . .     . . . 1 . . 1 .
+. 1 . 1 . . . .     . . 1 . . . 1 .
+. 1 . . 1 . . .     . . 1 . . . 1 .
+. 1 . . . 1 . .     . . . 1 1 1 1 .</code></pre>
+<p>Rotating by 180 degrees reverses all bits in a bitboard. A scalar square may be reversed by xor 63:</p>
+<pre><code>sq&#39; = sq ^ 63; // 63 - sq;</code></pre>
+<p>Deduced from flipping vertically and mirroring horizontally. Both operation may be applied in different orders.</p>
+<pre><code>/**
+ * Rotate a bitboard by 180 degrees.
+ * Square a1 is mapped to h8, and a8 is mapped to h1.
+ * @param x any bitboard
+ * @return bitboard x rotated 180 degrees
+ */
+U64 rotate180 (U64 x) {
+   return mirrorHorizontal (flipVertical (x) );
+}</code></pre>
+<p>The resulting code applies six <a href="/General_Setwise_Operations">delta swaps</a>:</p>
+<pre><code>/**
+ * Rotate a bitboard by 180 degrees.
+ * Square a1 is mapped to h8, and a8 is mapped to h1.
+ * @param x any bitboard
+ * @return bitboard x rotated 180 degrees
+ */
+U64 rotate180 (U64 x) {
+   const U64 h1 = C64 (0x5555555555555555);
+   const U64 h2 = C64 (0x3333333333333333);
+   const U64 h4 = C64 (0x0F0F0F0F0F0F0F0F);
+   const U64 v1 = C64 (0x00FF00FF00FF00FF);
+   const U64 v2 = C64 (0x0000FFFF0000FFFF);
+   x = ((x &gt;&gt;  1) &amp; h1) | ((x &amp; h1) &lt;&lt;  1);
+   x = ((x &gt;&gt;  2) &amp; h2) | ((x &amp; h2) &lt;&lt;  2);
+   x = ((x &gt;&gt;  4) &amp; h4) | ((x &amp; h4) &lt;&lt;  4);
+   x = ((x &gt;&gt;  8) &amp; v1) | ((x &amp; v1) &lt;&lt;  8);
+   x = ((x &gt;&gt; 16) &amp; v2) | ((x &amp; v2) &lt;&lt; 16);
+   x = ( x &gt;&gt; 32)       | ( x       &lt;&lt; 32);
+   return x;
+}</code></pre>
+<p><span id="Rotationby90degreesClockwise"></span></p>
+<h4 id="by-90-degrees-clockwise">By 90 degrees Clockwise</h4>
+<pre><code>. 1 1 1 1 . . .     . . . . . . . .
+. 1 . . . 1 . .     1 1 1 1 1 1 1 1
+. 1 . . . 1 . .     . . . 1 . . . 1
+. 1 . . 1 . . .     . . 1 1 . . . 1
+. 1 1 1 . . . .     . 1 . . 1 . . 1
+. 1 . 1 . . . .     1 . . . . 1 1 .
+. 1 . . 1 . . .     . . . . . . . .
+. 1 . . . 1 . .     . . . . . . . .</code></pre>
+<p>A scalar square swaps rank and file plus xor 56:</p>
+<pre><code>sq&#39; = (((sq &gt;&gt; 3) | (sq &lt;&lt; 3)) &amp; 63) ^ 56;
+sq&#39; = ((sq * 0x20800000) &gt;&gt;&gt; 26) ^ 56; // unsigned 32-bit shift</code></pre>
+<p>Deduced from flipping vertically and flipping along the antidiagonal.</p>
+<pre><code>/**
+ * Rotate a bitboard by 90 degrees clockwise.
+ * @param x any bitboard
+ * @return bitboard x rotated 90 degrees clockwise
+ */
+U64 rotate90clockwise (U64 x) {
+   return flipVertical (flipDiagA1H8 (x) );
+}</code></pre>
+<p>Note that</p>
+<pre><code>flipVertical (flipDiagA1H8 (x) ) == flipDiagA8H1 (flipVertical (x) )</code></pre>
+<p><span id="Rotationby90degreesAnticlockwise"></span></p>
+<h4 id="by-90-degrees-anti-clockwise">By 90 degrees Anti-Clockwise</h4>
+<pre><code>. 1 1 1 1 . . .     . . . . . . . .
+. 1 . . . 1 . .     . . . . . . . .
+. 1 . . . 1 . .     . 1 1 . . . . 1
+. 1 . . 1 . . .     1 . . 1 . . 1 .
+. 1 1 1 . . . .     1 . . . 1 1 . .
+. 1 . 1 . . . .     1 . . . 1 . . .
+. 1 . . 1 . . .     1 1 1 1 1 1 1 1
+. 1 . . . 1 . .     . . . . . . . .</code></pre>
+<p>A scalar square swaps rank and file plus xor 7:</p>
+<pre><code>sq&#39; = (((sq &gt;&gt; 3) | (sq &lt;&lt; 3)) &amp; 63) ^ 7;
+sq&#39; = ((sq * 0x20800000) &gt;&gt;&gt; 26) ^ 7;  // unsigned 32-bit shift</code></pre>
+<p>Deduced from flipping vertically and flipping along the diagonal.</p>
+<pre><code>/**
+ * Rotate a bitboard by 90 degrees anticlockwise.
+ * @param x any bitboard
+ * @return bitboard x rotated 90 degrees anticlockwise
+ */
+U64 rotate90antiClockwise (U64 x) {
+   return flipDiagA1H8 (flipVertical (x) );
+}</code></pre>
+<p>Note that</p>
+<pre><code>flipDiagA1H8 (flipVertical (x) ) == flipVertical (flipDiagA8H1 (x) )</code></pre>
+<p><span id="PseudoRotationby45degrees"></span></p>
+<h3 id="pseudo-rotation-by-45-degrees">Pseudo-Rotation by 45 degrees</h3>
+<p>The chess-board is four-fold symmetry - thus there is no real 45 degree rotation in the mathematical sense. Anyway we may map <a href="/Diagonals">diagonals</a> and <a href="/Anti-Diagonals">anti-diagonals</a> to <a href="/Ranks">ranks</a>, similar to <a href="/Rotated_Bitboards">rotated bitboards</a>.</p>
+<h4 id="clockwise">Clockwise</h4>
+<p>The 15 <a href="/Diagonals">diagonals</a> are enumerated by (file - rank) - <a href="/Nibble">nibble</a> wise <a href="/General_Setwise_Operations">two's complement</a> F == (16) -1, 9 == (16) -7. Two shorter diagonals are file-aligned packed into one rank each. Note that the three lower bits are equal in each rank and bit three (the sign-bit inside a signed nibble) indicates a "negative" diagonal north the main diagonal.</p>
+<pre><code>9 A B C D E F 0     9 1 1 1 1 1 1 1
+A B C D E F 0 1     A A 2 2 2 2 2 2
+B C D E F 0 1 2     B B B 3 3 3 3 3
+C D E F 0 1 2 3     C C C C 4 4 4 4
+D E F 0 1 2 3 4     D D D D D 5 5 5
+E F 0 1 2 3 4 5     E E E E E E 6 6
+F 0 1 2 3 4 5 6     F F F F F F F 7
+0 1 2 3 4 5 6 7     0 0 0 0 0 0 0 0</code></pre>
+<p>We need to rotate the A-H files vertically by 0 to 7 ranks - done parallel prefix wise. One square is therefor mapped by:</p>
+<pre><code>sq&#39; = (sq + 8*(sq&amp;7)) &amp; 63;</code></pre>
+<p>The main-diagonal is rotated clockwise to the first rank - thus 45 degrees.</p>
+<p>On using xor, see <a href="/General_Setwise_Operations">bits from two sources by a mask</a>. See <a href="/General_Setwise_Operations">rotate</a> for the intrinsic routines.</p>
+<pre><code>/**
+ * Pseudo rotate a bitboard 45 degree clockwise.
+ * Main Diagonal is mapped to 1st rank
+ * @param x any bitboard
+ * @return bitboard x rotated
+ */
+U64 pseudoRotate45clockwise (U64 x) {
+   const U64 k1 = C64(0xAAAAAAAAAAAAAAAA);
+   const U64 k2 = C64(0xCCCCCCCCCCCCCCCC);
+   const U64 k4 = C64(0xF0F0F0F0F0F0F0F0);
+   x ^= k1 &amp; (x ^ rotateRight(x,  8));
+   x ^= k2 &amp; (x ^ rotateRight(x, 16));
+   x ^= k4 &amp; (x ^ rotateRight(x, 32));
+   return x;
+}</code></pre>
+<p>Another pseudo rotation scheme was introduced by <a href="/Robert_Hyatt">Robert Hyatt's</a> <a href="/Rotated_Bitboards">rotated bitboards</a> approach. While the 45 degree rotation looks more natural at the first glance, the calculations of this mapping is more complicated.</p>
+<pre><code>normal chess board bitmap          45 clockwise               45 clockwise crafty
+
+A8 B8 C8 D8 E8 F8 G8 H8                                       C7 D8|A6 B7 C8|A7 B8|A8|
+A7 B7 C7 D7 E7 F7 G7 H7                  A8                   F8|A4 B5 C6 D7 E8|A5 B6
+A6 B6 C6 D6 E6 F6 G6 H6                A7  B8                 E6 F7 G8|A3 B4 C5 D6 E7
+A5 B5 C5 D5 E5 F5 G5 H5              A6  B7  C8               E5 F6 G7 H8|A2 B3 C4 D5
+A4 B4 C4 D4 E4 F4 G4 H4            A5  B6  C7  D8             E4 F5 G6 H7|A1 B2 C3 D4
+A3 B3 C3 D3 E3 F3 G3 H3          A4  B5  C6  D7  E8           D2 E3 F4 G5 H6|B1 C2 D3
+A2 B2 C2 D2 E2 F2 G2 H2        A3  B4  C5  D6  E7  F8        |G3 H4|D1 E2 F3 G4 H5|C1
+A1 B1 C1 D1 E1 F1 G1 H1      A2  B3  C4  D5  E6  F7  G8       H1|G1 H2|F1 G2 H3|E1 F2
+                           A1  B2  C3  D4  E5  F6  G7  H8
+A8|B1 C2 D3 E4 F5 G6 H7      B1  C2  D3  E4  F5  G6  H7       A8|B1 C2 D3 E4 F5 G6 H7
+A7 B8|C1 D2 E3 F4 G5 H6        C1  D2  E3  F4  G5  H6         A7 B8|C1 D2 E3 F4 G5 H6
+A6 B7 C8|D1 E2 F3 G4 H5          D1  E2  F3  G4  H5           A6 B7 C8|D1 E2 F3 G4 H5
+A5 B6 C7 D8|E1 F2 G3 H4            E1  F2  G3  H4             A5 B6 C7 D8|E1 F2 G3 H4
+A4 B5 C6 D7 E8|F1 G2 H3              F1  G2  H3               A4 B5 C6 D7 E8|F1 G2 H3
+A3 B4 C5 D6 E7 F8|G1 H2                G1  H2                 A3 B4 C5 D6 E7 F8|G1 H2
+A2 B3 C4 D5 E6 F7 G8|H1                  H1                   A2 B3 C4 D5 E6 F7 G8|H1
+A1 B2 C3 D4 E5 F6 G7 H8                                       A1 B2 C3 D4 E5 F6 G7 H8
+
+45 clockwise                                                  45 clockwise</code></pre>
+<p>A parallel prefix solution to map the normal occupancy to the visual rotated approach is left to the ambitious reader.</p>
+<h4 id="anti-clockwise">Anti-Clockwise</h4>
+<p>We enumerate the 15 <a href="/Anti-Diagonals">anti-diagonals</a> by 7 ^ (file + rank), a <a href="/Nibble">nibble</a> wise <a href="/General_Setwise_Operations">two's complement</a> F == -1.</p>
+<pre><code>0 F E D C B A 9     1 1 1 1 1 1 1 9
+1 0 F E D C B A     2 2 2 2 2 2 A A
+2 1 0 F E D C B     3 3 3 3 3 B B B
+3 2 1 0 F E D C     4 4 4 4 C C C C
+4 3 2 1 0 F E D     5 5 5 D D D D D
+5 4 3 2 1 0 F E     6 6 E E E E E E
+6 5 4 3 2 1 0 F     7 F F F F F F F
+7 6 5 4 3 2 1 0     0 0 0 0 0 0 0 0</code></pre>
+<p>We need to rotate the A-H files vertically by 7 to 0 ranks - done parallel prefix wise. One square is therefor mapped by:</p>
+<pre><code>sq&#39; = (sq + 8*((sq&amp;7)^7)) &amp; 63;</code></pre>
+<p>The main anti-diagonal is rotated anti-clockwise to the first rank - thus 45 degrees. The shorter anti-diagonals are pairwise and properly file aligned packed into further ranks.</p>
+<p>On using xor see <a href="/General_Setwise_Operations">bits from two sources by a mask</a>. See <a href="/General_Setwise_Operations">rotate</a> for the intrinsic routines.</p>
+<pre><code>/**
+ * Pseudo rotate a bitboard 45 degree anti clockwise.
+ * Main AntiDiagonal is mapped to 1st rank
+ * @param x any bitboard
+ * @return bitboard x rotated
+ */
+U64 pseudoRotate45antiClockwise (U64 x) {
+   const U64 k1 = C64(0x5555555555555555);
+   const U64 k2 = C64(0x3333333333333333);
+   const U64 k4 = C64(0x0f0f0f0f0f0f0f0f);
+   x ^= k1 &amp; (x ^ rotateRight(x,  8));
+   x ^= k2 &amp; (x ^ rotateRight(x, 16));
+   x ^= k4 &amp; (x ^ rotateRight(x, 32));
+   return x;
+}</code></pre>
+<hr />
+<p><span id="RankFileAndDiagonal"></span></p>
+<h2 id="rank-file-and-diagonal">Rank, File and Diagonal</h2>
+<p>Those subsets may be flipped or mirrored in a more efficient way by multiplication-techniques with disjoint intermediate sums and no internal overflows. Unlike the whole board techniques, multiplication doesn't swap bits, but maps file to a rank or vice versa in different steps, which can not be combined in one step. Main application is to map file- or diagonal occupancies to ranks, to dense the line-occupancy to consecutive bits, further elaborated in <a href="/Occupancy_of_any_Line">Occupancy of any Line</a> or <a href="/Kindergarten_Bitboards">Kindergarten Bitboards</a>.</p>
+<h3 id="flip-about-the-anti-diagonal">Flip about the Anti-Diagonal</h3>
+<p>Flipping about the anti-diagonal multiplies with the main-diagonal. Note that the set bits in the main-diagonal have a distance of 9 (2^0, 2^9,2^18,...,2^54, 2^63). We can therefor safely multiply it with a rank-pattern with 8 consecutive neighboring bits without overflows. <span id="FiletoaRank"></span></p>
+<h4 id="file-to-a-rank">File to a Rank</h4>
+<p>Multiplying the masked A-file with the main-diagonal, maps the file-bits to the 8th rank, similar to a flip about the anti-diagonal A8-H1. Shifting down to the 1st rank, leaves the bits like a 90-degree anti clockwise rotation.</p>
+<pre><code>masked bits                             mapped to 8th rank
+bits on A-file   *  main-diagonal    =  with garbage     -&gt; 1st rank
+A . . . . . . .     . . . . . . . 1     A B C D E F G H     . . . . . . . .
+B . . . . . . .     . . . . . . 1 .     B C D E F G H .     . . . . . . . .
+C . . . . . . .     . . . . . 1 . .     C D E F G H . .     . . . . . . . .
+D . . . . . . .     . . . . 1 . . .     D E F G H . . .  &gt;&gt; . . . . . . . .
+E . . . . . . .  *  . . . 1 . . . .  =  E F G H . . . .  56 . . . . . . . .
+F . . . . . . .     . . 1 . . . . .     F G H . . . . .     . . . . . . . .
+G . . . . . . .     . 1 . . . . . .     G H . . . . . .     . . . . . . . .
+H . . . . . . .     1 . . . . . . .     H . . . . . . .     A B C D E F G H</code></pre>
+<h4 id="rank-to-file">Rank to File</h4>
+<p>Multiplying the masked 1st rank with the main-diagonal, maps the rank-bits to the H-file, similar to a flip about the anti-diagonal A8-H1. Shifting the H-file to the A-file plus mask acts like a 90-degree clockwise rotation.</p>
+<pre><code>masked bits                             mapped to H-file
+bits on 1st rank *  main-diagonal    =  with garbage     -&gt; masked A-file
+. . . . . . . .     . . . . . . . 1     C D E F G H . A     A . . . . . . .
+. . . . . . . .     . . . . . . 1 .     D E F G H . A B     B . . . . . . .
+. . . . . . . .     . . . . . 1 . .     E F G H . A B C  &gt;&gt; C . . . . . . .
+. . . . . . . .     . . . . 1 . . .     F G H . A B C D  7  D . . . . . . .
+. . . . . . . .  *  . . . 1 . . . .  =  G H . A B C D E  &amp;  E . . . . . . .
+. . . . . . . .     . . 1 . . . . .     H . A B C D E F  A  F . . . . . . .
+. . . . . . . .     . 1 . . . . . .     . A B C D E F G     G . . . . . . .
+A B C D E F G H     1 . . . . . . .     A B C D E F G H     H . . . . . . .</code></pre>
+<p><span id="FlipAbouttheDiagonal"></span></p>
+<h3 id="flip-about-the-diagonal">Flip about the Diagonal</h3>
+<p>Flipping about the Diagonal is a bit more tricky. Since the Anti-Diagonal pattern as factor has the set bits with distance of 7 only (2^0,2^7, 2^14,...2^49, 2^56) with possible overflows, if multiplied with rank pattern of eight neighboring bits. Thus it can only be used to flip the H-file about the diagonal.</p>
+<h4 id="file-to-a-rank-1">File to a Rank</h4>
+<p>Multiplying the masked H-file with the 7-bit right shifted (board left shifted) anti-diagonal, maps the file-bits to the 8th rank, similar to a flip about the diagonal A1-H8. Shifting it down to the 1st rank, leaves the bits like flip about the diagonal. Shifting down to the 1st rank, leaves the bits like a 90-degree clockwise rotation.</p>
+<pre><code>masked bits         Shifted             mapped to 8th rank
+bits on H-file   *  anti-diagonal    =  with garbage     -&gt; 1st rank
+. . . . . . . A     . . . . . . . .     H G F E D C B A     . . . . . . . .
+. . . . . . . B     . 1 . . . . . .     . H G F E D C B     . . . . . . . .
+. . . . . . . C     . . 1 . . . . .     . . H G F E D C     . . . . . . . .
+. . . . . . . D     . . . 1 . . . .     . . . H G F E D  &gt;&gt; . . . . . . . .
+. . . . . . . E  *  . . . . 1 . . .  =  . . . . H G F E  56 . . . . . . . .
+. . . . . . . F     . . . . . 1 . .     . . . . . H G F     . . . . . . . .
+. . . . . . . G     . . . . . . 1 .     . . . . . . H G     . . . . . . . .
+/ . . . . . . H     1 . . . . . . 1     . . . . . . . H     H G F E D C B A</code></pre>
+<p><span id="DiagonalstoRanks"></span></p>
+<h3 id="diagonals-to-ranks">Diagonals to Ranks</h3>
+<p>That is straight forward multiplication of a masked diagonal or anti-diagonal with the A-file. To mask the garbage off, we further shift down by 7 ranks.</p>
+<pre><code>masked diagonal  *  A-file              mapped
+                                        to 8th rank      -&gt;  1st rank
+. . . . . . . H     1 . . . . . . .     A B C D E F G H     . . . . . . . .
+. . . . . . G .     1 . . . . . . .     A B C D E F G .     . . . . . . . .
+. . . . . F . .     1 . . . . . . .     A B C D E F . .  &gt;&gt; . . . . . . . .
+. . . . E . . .     1 . . . . . . .     A B C D E . . .  56 . . . . . . . .
+. . . D . . . .  *  1 . . . . . . .  =  A B C D . . . .     . . . . . . . .
+. . C . . . . .     1 . . . . . . .     A B C . . . . .     . . . . . . . .
+. B . . . . . .     1 . . . . . . .     A B . . . . . .     . . . . . . . .
+A . . . . . . .     1 . . . . . . .     A . . . . . . .     A B C D E F G H</code></pre>
+<h3 id="mirror-horizontally">Mirror Horizontally</h3>
+<p>This is about bit-reversal of a byte.</p>
+<pre><code>rank1mirrored = (((rank1 * 0x80200802) &amp; 0x0884422110) * 0x0101010101010101) &gt;&gt; 56;</code></pre>
+<p>This is how it works on a chessboard:</p>
+<pre><code>rank1            *  0x80200802          flipped
+. . . . . . . .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .     B C D E F G H .
+. . . . . . . .  *  . . . . . . . 1  =  D E F G H . . A
+. . . . . . . .     . . . . . 1 . .     F G H . . A B C
+. . . . . . . .     . . . 1 . . . .     H . . A B C D E
+A B C D E F G H     . 1 . . . . . .     . A B C D E F G
+
+flipped          &amp;  0x0884422110        reversedOnFiles
+. . . . . . . .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .
+. . . . . . . .     . . . . . . . .     . . . . . . . .
+B C D E F G H .     . . . 1 . . . .     . . . E . . . .
+D E F G H . . A  &amp;  . . 1 . . . . 1  =  . . F . . . . A
+F G H . . A B C     . 1 . . . . 1 .     . G . . . . B .
+H . . A B C D E     1 . . . . 1 . .     H . . . . C . .
+. A B C D E F G     . . . . 1 . . .     . . . . D . . .
+
+reversedOnFiles  *  A-file              reversedOn8         reversed
+. . . . . . . .     1 . . . . . . .     H G F E D C B A     . . . . . . . .
+. . . . . . . .     1 . . . . . . .     H G F E D C B A     . . . . . . . .
+. . . . . . . .     1 . . . . . . .     H G F E D C B A     . . . . . . . .
+. . . E . . . .     1 . . . . . . .     H G F E D C B A  &gt;&gt; . . . . . . . .
+. . F . . . . A  *  1 . . . . . . .  =  H G F . D C B A  56 . . . . . . . .
+. G . . . . B .     1 . . . . . . .     H G . . D C B .     . . . . . . . .
+H . . . . C . .     1 . . . . . . .     H . . . D C . .     . . . . . . . .
+. . . . D . . .     1 . . . . . . .     . . . . D . . .     H G F E D C B A</code></pre>
+<p>A 32 bit solution:</p>
+<pre><code>rank1mirrored = ( (rank1 * 0x0802 &amp; 0x22110)
+(rank1 * 0x8020 &amp; 0x88440) )
+                * 0x10101000 &gt;&gt; 24;</code></pre>
+<p>Or a simple lookup:</p>
+<pre><code>rank1mirrored = reverseByteLookup256[rank1];</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/BMI2">BMI2 PEXT instruction</a></li>
+<li><a href="/Color_Flipping">Color Flipping</a></li>
+<li><a href="/Diagonal_Mirroring">Diagonal Mirroring</a></li>
+<li><a href="/Horizontal_Mirroring">Horizontal Mirroring</a></li>
+<li><a href="/Kindergarten_Bitboards">Kindergarten Bitboards</a></li>
+<li><a href="/Occupancy_of_any_Line">Occupancy of any Line</a></li>
+<li><a href="/Vertical_Flipping">Vertical Flipping</a></li>
+<li><a href="/XOP">XOP VPPERM instruction</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Christopher_Strachey">Christopher Strachey</a> (<strong>1961</strong>). <em>Bitwise operations</em>. <a href="/ACM">Communications of the ACM</a>, Vol. 4, No. 3 <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a></li>
+<li><a href="/Henry_S._Warren,_Jr.">Henry S. Warren, Jr.</a> (<strong>2002, 2012</strong>). <em><a href="/Henry_S._Warren,_Jr.">Hacker's Delight</a></em>. <a href="https://en.wikipedia.org/wiki/Addison%E2%80%93Wesley">Addison-Wesley</a></li>
+<li><a href="/Donald_Knuth">Donald Knuth</a> (<strong>2009</strong>). <em><a href="http://www-cs-faculty.stanford.edu/%7Eknuth/taocp.html">The Art of Computer Programming</a>, Volume 4, Fascicle 1: Bitwise tricks &amp; techniques</em>, as <a href="http://www-cs-faculty.stanford.edu/%7Eknuth/fasc1a.ps.gz">Pre-Fascicle 1a postscript</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59937">Reflection of a bitboard</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, April 22, 2016</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://drpetric.blogspot.com/2013/09/bit-gathering-via-multiplication.html">Bit Gather Via Multiplication</a> by Vlad Petric, <a href="https://drpetric.blogspot.com/">Dr. Petric's Technical Blog</a>, September 17, 2013 <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a></li>
+</ul>
+<h3 id="flipping">Flipping</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Flip">Flip from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Flip_%28mathematics%29">Flip (mathematics) from Wikipedia</a></li>
+<li><a href="http://www.icoachmath.com/SiteMap/Flip.html">Flip</a> from <a href="http://www.icoachmath.com/">iCoachMath</a></li>
+<li><a href="http://www.misterteacher.com/abc.html">Flip, Slide, Turn - Alphabet Geometry</a> from <a href="http://www.misterteacher.com/">misterteacher.com</a></li>
+</ul>
+<h3 id="mirroring">Mirroring</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Mirror">Mirror from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Mirroring_%28psychology%29">Mirroring (psychology) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Reflection_%28mathematics%29">Reflection (mathematics) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Reflection_%28physics%29">Reflection (physics) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Reflection_symmetry">Reflection symmetry from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Venus_effect">Venus effect from Wikipedia</a></li>
+<li><a href="http://math.ucr.edu/home/baez/physics/General/mirrors.html">Why do Mirrors Reverse Left and Right?</a></li>
+</ul>
+<h3 id="rotation">Rotation</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Rotation">Rotation from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Rotation_%28mathematics%29">Rotation (mathematics) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Rotation_matrix">Rotation matrix from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Rotation_formalisms_in_three_dimensions">Rotation formalisms in three dimensions - Wikipedia</a></li>
+<li><a href="http://www.icoachmath.com/SiteMap/Rotation.html">Rotation</a> from <a href="http://www.icoachmath.com/">iCoachMath</a></li>
+<li><a href="/Oliver_Vornberger">Oliver Vornberger's</a> German <a href="http://www-lehre.inf.uos.de/%7Ecg/2006/">lecture</a>on Graphic Rotation:
+<ul>
+<li><a href="http://www-lehre.inf.uos.de/%7Ecg/2006/skript/node41.html">2D Rotation</a></li>
+<li><a href="http://www-lehre.inf.uos.de/%7Ecg/2006/skript/node100.html">3D Rotation</a></li>
+</ul></li>
+</ul>
+<h3 id="reflection">Reflection</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Reflection_%28mathematics%29">Reflection (mathematics) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Reflection_%28physics%29">Reflection (physics) from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Reflection_symmetry">Reflection symmetry from Wikipedia</a></li>
+</ul>
+<h3 id="smoke-n-mirrors">Smoke 'n' Mirrors</h3>
+<ul>
+<li><a href="/Category:Lee_Ritenour">Lee Ritenour</a>, <a href="/Category:Mike_Stern">Mike Stern</a>, <a href="/Category:Simon_Phillips">Simon Phillips</a>, <a href="https://en.wikipedia.org/wiki/John_Beasley_%28musician%29">John Beasley</a>, <a href="http://www.allmusic.com/artist/melvin-davis-mn0000350965">Melvin Davis</a> - Smoke 'n' Mirrors <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>, <a href="https://en.wikipedia.org/wiki/Blue_Note_Tokyo">Blue Note Tokyo</a>, 2011, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a></li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/SFGkvF_rK-A" title="YouTube video SFGkvF_rK-A" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=SFGkvF_rK-A">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Bitboards">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://msdn.microsoft.com/en-us/library/a3140177.aspx">_byteswap_uint64</a> Visual C++ Developer Center - Run-Time Library Reference<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://msdn.microsoft.com/en-us/library/5cc576c4.aspx">_rotl, _rotl64, _rotr_rotr64</a> Visual C++ Developer Center - Run-Time Library Reference<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="/Donald_Knuth">Donald Knuth</a> (<strong>2009</strong>). <em><a href="http://www-cs-faculty.stanford.edu/%7Eknuth/taocp.html">The Art of Computer Programming</a>, Volume 4, Fascicle 1: Bitwise tricks &amp; techniques</em>, as <a href="http://www-cs-faculty.stanford.edu/%7Eknuth/fasc1a.ps.gz">Pre-Fascicle 1a postscript</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.hackersdelight.org/hdcodetxt/reverse.c.txt">reverse.c</a> from <a href="http://www.hackersdelight.org/hdcode.htm">C code for most of the programs that appear in HD</a> by <a href="/Henry_S._Warren,_Jr.">Henry S. Warren, Jr.</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="https://chessprogramming.wikispaces.com/share/view/64439740">Demystifying the Magic Multiplier?</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="https://en.wikipedia.org/wiki/Smoke_and_mirrors_%28disambiguation%29">Smoke and mirrors (disambiguation)</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="https://www.youtube.com/watch?v=vsmlkrBiok0">Shorter front view version with interviews</a><a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Barbara_Mittman">Barbara Mittman</a> · <a href="/Category:Simon_Phillips">Simon Phillips</a> · <a href="/Category:Lee_Ritenour">Lee Ritenour</a> · <a href="/Category:Mike_Stern">Mike Stern</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Flipping_Mirroring_and_Rotating">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

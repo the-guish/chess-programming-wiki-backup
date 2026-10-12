@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Influence Quantity of Pieces - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Influence Quantity of Pieces</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Chess">Chess</a> * <a href="/Pieces">Pieces</a> * Influence Quantity</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="http://chgs.elevator.umn.edu/asset/viewAsset/57f3b6787d58ae5f74bf8ba9#57f3b6d77d58ae5574bf8bd0" target="_blank" rel="noopener noreferrer"><img src="/assets/SamuelBakIntruder.jpg" alt="Samuel Bak - Intruder 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:Samuel_Bak">Samuel Bak</a> - Intruder <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://chgs.elevator.umn.edu/asset/viewAsset/57f3b6787d58ae5f74bf8ba9#57f3b6d77d58ae5574bf8bd0">Chess in the Art of Samuel Bak</a> <a href="http://chgs.elevator.umn.edu/">Center for Holocaust &amp; Genocide Studies</a>, <a href="/University_of_Minnesota">University of Minnesota</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p>The <strong>influence quantity</strong> of pieces is defined by their number of unique <a href="/Moves">moves</a> with respect to their <a href="/Origin_Square">from</a>- and <a href="/Target_Square">to-square</a> coordinates, the <a href="https://en.wikipedia.org/wiki/Cardinality">cardinality</a> of the set of all possible moves, or <a href="/Mobility">potential, global</a> <a href="/Mobility">mobility</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. It might be used to enumerate and <a href="/Encoding_Moves">encode</a> all those moves, i.e. associating each move, per piece and in total, with a unique number for <a href="/Hash_Table">minimal perfect hashing</a> opposed to intermittent <a href="/Butterfly_Boards">Butterfly boards</a>.</p>
+<p>For instance a <a href="/Pawn">pawn</a> (including <a href="/Promotions">promotions</a>) has 48 (8*6) single pushes and 84 (2*7*6) <a href="/Captures">captures</a>, plus 8 possible double pushes on each <a href="/Files">file</a>, which results in a influence quantity of 140 of either white or black pawns.The influence quantities of all pieces are divisible by four times seven (28), excluding pawn and <a href="/King">king</a> even by sixteen times seven (112). While obviously the number of <a href="/Queen">queen</a> quantities is the sum of <a href="/Rook">rook</a>- and <a href="/Bishop">bishop</a> quantities, it is at the first glance somehow surprising that the rook quantity is the sum of bishop- and <a href="/Knight">knight</a> quantities.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#moves-per-origin">Moves per Origin</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#whole-board-diagrams">Whole Board Diagrams</a></li>
+<li><a href="#board-circles">Board Circles</a></li>
+</ol>
+</details></li>
+<li><a href="#quantities-and-point-values">Quantities and Point Values</a></li>
+<li><a href="#divisibility-by-seven">Divisibility by Seven</a></li>
+<li><a href="#fibonacci-spiral">Fibonacci Spiral</a></li>
+<li><a href="#analogy-in-astronomy">Analogy in Astronomy</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="moves-per-origin">Moves per Origin</h2>
+<p>Following table gives the distinct number of moves per piece and <a href="/Origin_Square">origin square</a> and their sums from the lower left quarter of a <a href="/Chessboard">board</a> (a1-d4) and in total for the whole board:</p>
+<pre><code>    Knight          King            Bishop          Rook            Queen
+     4  6  8  8      5  8  8  8      7  9 11 13     14 14 14 14     21 23 25 27
+     4  6  8  8      5  8  8  8      7  9 11 11     14 14 14 14     21 23 25 25
+     3  4  6  6      5  8  8  8      7  9  9  9     14 14 14 14     21 23 23 23
+     2  3  4  4      3  5  5  5      7  7  7  7     14 14 14 14     21 21 21 21
+
+sum 13 19 26 26     18 29 29 29     28 34 38 40     56 56 56 56     84 90 94 96
+    84 = 3 * 4*7   105 = 3 *5*7   140 = 5 * 4*7   224 = 8 * 4*7   364 = 13 * 4*7
+   336             420            560             896            1456</code></pre>
+<h3 id="whole-board-diagrams">Whole Board Diagrams</h3>
+<p>Whole board tables cover pawn, knight, king and sliding pieces, and their <a href="/Files">file</a>-, <a href="/Ranks">rank</a> and total sums:</p>
+<pre><code>White pawn total                      white pawn a2                         white pawn d2
++---+---+---+---+---+---+---+---+     +---+---+---+---+---+---+---+---+     +---+---+---+---+---+---+---+---+
+   |   |   |   |   |   |   |     |   |   |   |   |   |   |   |   |     |   |   |   |   |   |   |   |   |
+ 2 | 3 | 3 | 3 | 3 | 3 | 3 | 2 | 22  | 2 | 3 | 3 | 3 | 3 | 3 |   |   | 17  | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 2 | 22
+ 2 | 3 | 3 | 3 | 3 | 3 | 3 | 2 | 22  | 2 | 3 | 3 | 3 | 3 |   |   |   | 14  | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 2 | 22
+ 2 | 3 | 3 | 3 | 3 | 3 | 3 | 2 | 22  | 2 | 3 | 3 | 3 |   |   |   |   | 11  | 2 | 3 | 3 | 3 | 3 | 3 | 3 |   | 20
+ 2 | 3 | 3 | 3 | 3 | 3 | 3 | 2 | 22  | 2 | 3 | 3 |   |   |   |   |   |  8  |   | 3 | 3 | 3 | 3 | 3 |   |   | 15
+ 2 | 3 | 3 | 3 | 3 | 3 | 3 | 2 | 22  | 2 | 3 |   |   |   |   |   |   |  5  |   |   | 3 | 3 | 3 |   |   |   |  9
+ 3 | 4 | 4 | 4 | 4 | 4 | 4 | 3 | 30  | 3 |   |   |   |   |   |   |   |  3  |   |   |   | 4 |   |   |   |   |  4
+   |   |   |   |   |   |   |     |   |   |   |   |   |   |   |   |     |   |   |   |   |   |   |   |   |
++---+---+---+---+---+---+---+---+     +---+---+---+---+---+---+---+---+     +---+---+---+---+---+---+---+---+
+ 13  19  19  19  19  19  19  13  140   13  15  12   9   6   3           58    6  12  15  19  15  12   9   4   92
+
+Knight                                                                      King
++---+---+---+---+---+---+---+---+                                           +---+---+---+---+---+---+---+---+
+ 2 | 3 | 4 | 4 | 4 | 4 | 3 | 2 | 26                                        | 3 | 5 | 5 | 5 | 5 | 5 | 5 | 3 | 36
+ 3 | 4 | 6 | 6 | 6 | 6 | 4 | 3 | 38                                        | 5 | 8 | 8 | 8 | 8 | 8 | 8 | 5 | 58
+ 4 | 6 | 8 | 8 | 8 | 8 | 6 | 4 | 52                                        | 5 | 8 | 8 | 8 | 8 | 8 | 8 | 5 | 58
+ 4 | 6 | 8 | 8 | 8 | 8 | 6 | 4 | 52                                        | 5 | 8 | 8 | 8 | 8 | 8 | 8 | 5 | 58
+ 4 | 6 | 8 | 8 | 8 | 8 | 6 | 4 | 52                                        | 5 | 8 | 8 | 8 | 8 | 8 | 8 | 5 | 58
+ 4 | 6 | 8 | 8 | 8 | 8 | 6 | 4 | 52                                        | 5 | 8 | 8 | 8 | 8 | 8 | 8 | 5 | 58
+ 3 | 4 | 6 | 6 | 6 | 6 | 4 | 3 | 38                                        | 5 | 8 | 8 | 8 | 8 | 8 | 8 | 5 | 58
+ 2 | 3 | 4 | 4 | 4 | 4 | 3 | 2 | 26                                        | 3 | 5 | 5 | 5 | 5 | 5 | 5 | 3 | 36
++---+---+---+---+---+---+---+---+                                           +---+---+---+---+---+---+---+---+
+ 26  38  52  52  52  52  38  26  336                                         36  58  58  58  58  58  58  36  420
+
+Bishop                                Rook                                  Queen
++---+---+---+---+---+---+---+---+     +---+---+---+---+---+---+---+---+     +---+---+---+---+---+---+---+---+
+ 7 | 7 | 7 | 7 | 7 | 7 | 7 | 7 | 56  |14 |14 |14 |14 |14 |14 |14 |14 |112  |21 |21 |21 |21 |21 |21 |21 |21 |168
+ 7 | 9 | 9 | 9 | 9 | 9 | 9 | 7 | 68  |14 |14 |14 |14 |14 |14 |14 |14 |112  |21 |23 |23 |23 |23 |23 |23 |21 |180
+ 7 | 9 |11 |11 |11 |11 | 9 | 7 | 76  |14 |14 |14 |14 |14 |14 |14 |14 |112  |21 |23 |25 |25 |25 |25 |23 |21 |188
+ 7 | 9 |11 |13 |13 |11 | 9 | 7 | 80  |14 |14 |14 |14 |14 |14 |14 |14 |112  |21 |23 |25 |27 |27 |25 |23 |21 |192
+ 7 | 9 |11 |13 |13 |11 | 9 | 7 | 80  |14 |14 |14 |14 |14 |14 |14 |14 |112  |21 |23 |25 |27 |27 |25 |23 |21 |192
+ 7 | 9 |11 |11 |11 |11 | 9 | 7 | 76  |14 |14 |14 |14 |14 |14 |14 |14 |112  |21 |23 |25 |25 |25 |25 |23 |21 |188
+ 7 | 9 | 9 | 9 | 9 | 9 | 9 | 7 | 68  |14 |14 |14 |14 |14 |14 |14 |14 |112  |21 |23 |23 |23 |23 |23 |23 |21 |180
+ 7 | 7 | 7 | 7 | 7 | 7 | 7 | 7 | 56  |14 |14 |14 |14 |14 |14 |14 |14 |112  |21 |21 |21 |21 |21 |21 |21 |21 |168
++---+---+---+---+---+---+---+---+     +---+---+---+---+---+---+---+---+     +---+---+---+---+---+---+---+---+
+ 56  68  76  80  80  76  68  56  560  112 112 112 112 112 112 112 112  896  168 180 188 192 192 188 180 168 1456</code></pre>
+<h3 id="board-circles">Board Circles</h3>
+<p>The <a href="https://en.wikipedia.org/wiki/Concentric">concentric</a> "circles" around the <a href="/Center">center</a> with their respective influence sums of sliding pieces:</p>
+<pre><code>Bishop Circles                        Rook Circles                          Queen Circles
++---+---+---+---+---+---+---+---+     +---+---+---+---+---+---+---+---+     +---+---+---+---+---+---+---+---+
+              196              |     |              392              |     |              588              |
++   +---+---+---+---+---+---+   +     +   +---+---+---+---+---+---+   +     +   +---+---+---+---+---+---+   +
+          180          |   |     |   |          280          |   |     |   |          460          |   |
++   +   +---+---+---+---+   +   +     +   +   +---+---+---+---+   +   +     +   +   +---+---+---+---+   +   +
+   |      132      |   |   |     |   |   |      168      |   |   |     |   |   |      300      |   |   |
++   +   +   +---+---+   +   +   +     +   +   +   +---+---+   +   +   +     +   +   +   +---+---+   +   +   +
+   |   |   52  |   |   |   |     |   |   |   |   56  |   |   |   |     |   |   |   |  108  |   |   |   |
++   +   +   +       +   +   +   +     +   +   +   +       +   +   +   +     +   +   +   +       +   +   +   +
+   |   | 4*13  |   |   |   |     |   |   |   | 4*14  |   |   |   |     |   |   |   | 4*27  |   |   |   |
++   +   +   +---+---+   +   +   +     +   +   +   +---+---+   +   +   +     +   +   +   +---+---+   +   +   +
+   |    12*11      |   |   |     |   |   |    12*14      |   |   |     |   |   |    12*25      |   |   |
++   +   +---+---+---+---+   +   +     +   +   +---+---+---+---+   +   +     +   +   +---+---+---+---+   +   +
+        20* 9          |   |     |   |        20*14          |   |     |   |        20*23          |   |
++   +---+---+---+---+---+---+   +     +   +---+---+---+---+---+---+   +     +   +---+---+---+---+---+---+   +
+            28* 7              |     |            28*14              |     |            28*21              |
++---+---+---+---+---+---+---+---+     +---+---+---+---+---+---+---+---+     +---+---+---+---+---+---+---+---+</code></pre>
+<p><span id="PointValues"></span></p>
+<h2 id="quantities-and-point-values">Quantities and Point Values</h2>
+<p>The mentioned move quantities of pawns and pieces only roughly correlate with their <a href="/Point_Value">point values</a> since the static enumeration of all moves with distinct coordinates does not take into account the reachability of all origin-squares. Only queen and rook can reach any square in at least two moves on the otherwise empty board. Bishop quantities cover all light and dark colored from-squares. While a single bishop is bounded to one square color, its individual influence quantity is therefor divided by two. Also, pawns can only move forward and can not reach each enumerated origin square, which decreases their individual influence accordantly. King and knights can reach every square on the otherwise empty board, but may take more time with respect to <a href="/Distance">distance</a> and <a href="/Knight-Distance">knight-distance</a>.</p>
+<h2 id="divisibility-by-seven">Divisibility by Seven</h2>
+<p>All influence quantities are divisible by four times seven, thanks to the double pushes. For a rook it is quite obvious, since each of the 64 from squares covers one rank and file each with seven squares left.</p>
+<table>
+<thead>
+<tr>
+<th>Piece</th>
+<th>#</th>
+<th>div 4</th>
+<th>div 7</th>
+<th>div 28</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pawn</td>
+<td>140</td>
+<td>35</td>
+<td>20</td>
+<td>5</td>
+</tr>
+<tr>
+<td>Knight</td>
+<td>336</td>
+<td>84</td>
+<td>48</td>
+<td>12</td>
+</tr>
+<tr>
+<td>King</td>
+<td>420</td>
+<td>105</td>
+<td>60</td>
+<td>15</td>
+</tr>
+<tr>
+<td>Bishops</td>
+<td>560</td>
+<td>140</td>
+<td>80</td>
+<td>20</td>
+</tr>
+<tr>
+<td>Bishop</td>
+<td>280</td>
+<td>70</td>
+<td>40</td>
+<td>10</td>
+</tr>
+<tr>
+<td>Rook</td>
+<td>896</td>
+<td>224</td>
+<td>128</td>
+<td>32</td>
+</tr>
+<tr>
+<td>Queen</td>
+<td>1456</td>
+<td>364</td>
+<td>208</td>
+<td>52</td>
+</tr>
+<tr>
+<td>Q | N</td>
+<td>1792</td>
+<td>448</td>
+<td>256</td>
+<td>64</td>
+</tr>
+</tbody>
+</table>
+<p><span id="FibonacciSpiral"></span></p>
+<h2 id="fibonacci-spiral">Fibonacci Spiral</h2>
+<p>If we only consider pieces with disjoint moves (excluding pawns and king), and the queen as superset of bishop and rook, the influence quantities are even divisible by seven times sixteen, where the remaining quotients from knight to queen are <a href="https://en.wikipedia.org/wiki/Fibonacci_number">Fibonacci numbers</a> as shown by the Fibonacci spiral <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> .</p>
+<table>
+<tbody>
+<tr>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><a href="http://www.127jupiter.com/" target="_blank" rel="noopener noreferrer"><img src="/assets/Chessfibspirale.jpg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></a></span></td>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]" style="--wiki-img-w:270px"><img src="https://upload.wikimedia.org/wikipedia/commons/9/98/Yupana_1.png" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+</tr>
+<tr>
+<td><p>Fibonacci spiral <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p></td>
+<td><p><a href="https://en.wikipedia.org/wiki/Yupana">Yupana</a>, counting tool of the <a href="https://en.wikipedia.org/wiki/Incas">Incas</a></p></td>
+</tr>
+</tbody>
+</table>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://www.127jupiter.com/">Peter Orantek: Encyclopedia of Chess-Prehistory</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<table>
+<thead>
+<tr>
+<th><p>Piece</p></th>
+<th><p>covers other pieces</p></th>
+<th><p>#</p></th>
+<th><p>÷ (7x16)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>Knight</p></td>
+<td style="text-align:center;"><p>-</p></td>
+<td style="text-align:right;"><p>336</p></td>
+<td style="text-align:right;"><p>3</p></td>
+</tr>
+<tr>
+<td><p>Bishop</p></td>
+<td style="text-align:center;"><p>queen, king and pawn captures</p></td>
+<td style="text-align:right;"><p>560</p></td>
+<td style="text-align:right;"><p>5</p></td>
+</tr>
+<tr>
+<td><p>Rook</p></td>
+<td style="text-align:center;"><p>queen, king and pawn pushes</p></td>
+<td style="text-align:right;"><p>896</p></td>
+<td style="text-align:right;"><p>8</p></td>
+</tr>
+<tr>
+<td colspan="2"><p>possible queen move coordinates</p></td>
+<td style="text-align:right;"><p>1456</p></td>
+<td style="text-align:right;"><p>13</p></td>
+</tr>
+<tr>
+<td colspan="2"><p>possible from-to move coordinates</p></td>
+<td><p>1792</p></td>
+<td><p>16</p></td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="analogy-in-astronomy">Analogy in Astronomy</h2>
+<p>In his <a href="https://en.wikipedia.org/wiki/Esotericism">esoteric</a> and <a href="https://en.wikipedia.org/wiki/Pseudoscience">pseudo scientific</a> touched <em>Encyclopedia of Chess-Prehistory</em>, Peter Orantek <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> mentions a possible connection to <a href="https://en.wikipedia.org/wiki/Astronomy">astronomy</a>, related to the <a href="https://en.wikipedia.org/wiki/Orbital_period">orbital period</a> of <a href="https://en.wikipedia.org/wiki/Earth">Earth</a> and <a href="https://en.wikipedia.org/wiki/Venus">Venus</a>. The influence quantity of a queen is equivalent to about 4 years (4 x 364 days), while the influence quantity of a rook is equivalent to 224 days x 4 Venus rotations.</p>
+<table>
+<tbody>
+<tr>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]" style="--wiki-img-w:240px"><a href="https://en.wikipedia.org/wiki/Moon" target="_blank" rel="noopener noreferrer"><img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/FullMoon2010.jpg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></a></span></td>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]" style="--wiki-img-w:240px"><a href="https://en.wikipedia.org/wiki/Venus" target="_blank" rel="noopener noreferrer"><img src="https://upload.wikimedia.org/wikipedia/commons/e/e5/Venus-real_color.jpg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></a></span></td>
+<td><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]" style="--wiki-img-w:240px"><a href="https://en.wikipedia.org/wiki/Earth" target="_blank" rel="noopener noreferrer"><img src="https://upload.wikimedia.org/wikipedia/commons/9/97/The_Earth_seen_from_Apollo_17.jpg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></a></span></td>
+</tr>
+<tr>
+<td><p><a href="https://en.wikipedia.org/wiki/Moon">Moon</a></p></td>
+<td><p><a href="https://en.wikipedia.org/wiki/Venus">Venus</a> 224</p></td>
+<td><p><a href="https://en.wikipedia.org/wiki/Earth">Earth</a> 364</p></td>
+</tr>
+</tbody>
+</table>
+
+<p>In his German text sample <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> , Orantek further elaborates that queen quantities of the four <a href="/Center">center squares</a> (four times 27) represent four <a href="https://en.wikipedia.org/wiki/Moon">earth moon</a> rotations, while the three concentric rings around the center might related to various <a href="https://en.wikipedia.org/wiki/Orbital_period">synodic periods</a> of the four <a href="https://en.wikipedia.org/wiki/Terrestrial_planet">terrestrial planets</a>. He associates following <a href="https://en.wikipedia.org/wiki/Prime_number">prime numbers</a> with <a href="https://en.wikipedia.org/wiki/Planet">planets</a> or objects orbiting the <a href="https://en.wikipedia.org/wiki/Sun">Sun</a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> :</p>
+<table>
+<thead>
+<tr>
+<th><p>Prime<br />
+number</p></th>
+<th><p>Piece</p></th>
+<th><p>Engine</p></th>
+<th><p>Planet<br />
+or Objects</p></th>
+<th><p>Symbol</p></th>
+<th><p>Orbital period<br />
+in days</p></th>
+<th><p>Synodic period<br />
+in days</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;"><p><a href="https://en.wikipedia.org/wiki/3_%28number%29">3</a></p></td>
+<td style="text-align:center;"><p><a href="/Knight">Knight</a></p></td>
+<td style="text-align:center;"><p><a href="/Black_Knight">Black Knight</a><br />
+<a href="/White_Knight">White Knight</a></p></td>
+<td style="text-align:center;"><p><a href="https://en.wikipedia.org/wiki/Mercury_%28planet%29">Mercury</a></p></td>
+<td style="text-align:center;"><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="https://upload.wikimedia.org/wikipedia/commons/2/2e/Mercury_symbol.svg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+<td style="text-align:right;"><p>87.9691</p></td>
+<td style="text-align:right;"><p>115.88</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p><a href="https://en.wikipedia.org/wiki/5_%28number%29">5</a></p></td>
+<td style="text-align:center;"><p><a href="/Bishop">Bishop</a></p></td>
+<td style="text-align:center;"><p><a href="/BlackBishop">BlackBishop</a><br />
+<a href="/The_Crazy_Bishop">The Crazy Bishop</a></p></td>
+<td style="text-align:center;"><p><a href="https://en.wikipedia.org/wiki/Venus">Venus</a></p></td>
+<td style="text-align:center;"><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="https://upload.wikimedia.org/wikipedia/commons/6/66/Venus_symbol.svg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+<td style="text-align:right;"><p><strong>224.70069</strong></p></td>
+<td style="text-align:right;"><p>583.92 (579–589)</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p><a href="https://en.wikipedia.org/wiki/13_%28number%29">13</a></p></td>
+<td style="text-align:center;"><p><a href="/Queen">Queen</a></p></td>
+<td style="text-align:center;"><p><a href="/Queen_%28engine%29">Queen</a><br />
+<a href="/Terra">Terra</a></p></td>
+<td style="text-align:center;"><p><a href="https://en.wikipedia.org/wiki/Earth">Earth</a></p></td>
+<td style="text-align:center;"><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Earth_symbol.svg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+<td style="text-align:right;"><p><strong>365.256366</strong></p></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p><a href="https://en.wikipedia.org/wiki/61_%28number%29">61</a></p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:center;"></td>
+<td style="text-align:center;"><p><a href="https://en.wikipedia.org/wiki/Mars">Mars</a></p></td>
+<td style="text-align:center;"><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b7/Mars_symbol.svg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+<td style="text-align:right;"><p>686.971</p></td>
+<td style="text-align:right;"><p>779.96 (764–811)</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p><a href="https://en.wikipedia.org/wiki/89_%28number%29">89</a></p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:center;"><p><a href="/Anubis">Anubis</a></p></td>
+<td style="text-align:center;"><p><a href="https://en.wikipedia.org/wiki/Asteroid">Asteroids</a></p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p><a href="https://en.wikipedia.org/wiki/127_%28number%29">127</a></p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:center;"><p><a href="/Jupiter">Jupiter</a></p></td>
+<td style="text-align:center;"><p><a href="https://en.wikipedia.org/wiki/Jupiter">Jupiter</a></p></td>
+<td style="text-align:center;"><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="https://upload.wikimedia.org/wikipedia/commons/2/26/Jupiter_symbol.svg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+<td style="text-align:right;"><p>4,331.572</p></td>
+<td style="text-align:right;"><p>398.88</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p><a href="https://en.wikipedia.org/wiki/167_%28number%29">167</a></p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:center;"></td>
+<td style="text-align:center;"><p><a href="https://en.wikipedia.org/wiki/Charon_%28moon%29">Charon</a></p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p><a href="https://en.wikipedia.org/wiki/181_%28number%29">181</a></p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:center;"></td>
+<td style="text-align:center;"><p><a href="https://en.wikipedia.org/wiki/Saturn">Saturn</a></p></td>
+<td style="text-align:center;"><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="https://upload.wikimedia.org/wikipedia/commons/7/74/Saturn_symbol.svg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+<td style="text-align:right;"><p>10,759.220</p></td>
+<td style="text-align:right;"><p>378.09</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>307</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:center;"><p><a href="/Chiron">Chiron</a></p></td>
+<td style="text-align:center;"><p><a href="https://en.wikipedia.org/wiki/2060_Chiron">Chiron</a></p></td>
+<td style="text-align:center;"><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="https://upload.wikimedia.org/wikipedia/commons/3/3e/Chiron_symbol.svg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+<td style="text-align:right;"><p>18,539.000</p></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>487</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:center;"></td>
+<td style="text-align:center;"><p><a href="https://en.wikipedia.org/wiki/Uranus">Uranus</a></p></td>
+<td style="text-align:center;"><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="https://upload.wikimedia.org/wikipedia/commons/f/f1/Uranus_symbol.svg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+<td style="text-align:right;"><p>30,799.095</p></td>
+<td style="text-align:right;"><p>369.66</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>499</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:center;"></td>
+<td style="text-align:center;"><p><a href="https://en.wikipedia.org/wiki/5145_Pholus">Pholus</a></p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:right;"><p>33,547.410</p></td>
+<td style="text-align:right;"></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>547</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:center;"><p><a href="/Neptune">Neptune</a></p></td>
+<td style="text-align:center;"><p><a href="https://en.wikipedia.org/wiki/Neptune">Neptune</a></p></td>
+<td style="text-align:center;"><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="https://upload.wikimedia.org/wikipedia/commons/4/47/Neptune_symbol.svg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+<td style="text-align:right;"><p>60,190.000</p></td>
+<td style="text-align:right;"><p>367.49</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>761</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:center;"></td>
+<td style="text-align:center;"><p><a href="https://en.wikipedia.org/wiki/Pluto">Pluto</a></p></td>
+<td style="text-align:center;"><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)]"><img src="https://upload.wikimedia.org/wikipedia/commons/f/ff/Pluto_symbol.svg" alt="" class="block w-full h-auto border border-black/20 bg-white p-1 shadow-sm" /></span></td>
+<td style="text-align:right;"><p>90,613.305</p></td>
+<td style="text-align:right;"><p>366.73</p></td>
+</tr>
+<tr>
+<td style="text-align:right;"><p>1307</p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:center;"></td>
+<td style="text-align:center;"><p><a href="https://en.wikipedia.org/wiki/Planets_beyond_Neptune#Planet_X">Transpluto</a></p></td>
+<td style="text-align:center;"></td>
+<td style="text-align:right;"></td>
+<td style="text-align:right;"></td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Butterfly_Boards">Butterfly Boards</a></li>
+<li><a href="/Dumb7Fill">Dumb7Fill</a></li>
+<li><a href="/Encoding_Moves">Encoding Moves</a></li>
+</ul>
+<p><a href="/Encoding_Moves">Move Enumeration</a></p>
+<ul>
+<li><a href="/Evaluation_of_Pieces">Evaluation of Pieces</a></li>
+<li><a href="/Material">Material</a></li>
+<li><a href="/Mobility">Mobility</a></li>
+<li><a href="/Point_Value">Point Value</a></li>
+<li><a href="/Table-driven_Move_Generation">Table-driven Move Generation</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li>H. M. Taylor (<strong>1876</strong>). <em><a href="http://www.tandfonline.com/doi/abs/10.1080/14786447608639029#.UfEUGXePZlR">On the Relative Values of the Pieces in Chess</a></em>. <a href="https://en.wikipedia.org/wiki/Philosophical_Magazine">Philosophical Magazine</a>, Series 5, Vol. 1, pp. 221-229</li>
+<li><a href="/Mathematician">H. S. M. Coxeter</a> (<strong>1940</strong>). <em>Mathematical Recreations and Essays</em>. from the <a href="http://www.gutenberg.org/ebooks/26839">original</a> by <a href="/Mathematician">W. W. Rouse Ball</a>, <a href="https://en.wikipedia.org/wiki/Macmillan_Publishers">Macmillan</a></li>
+<li><a href="/Jack_Good">Jack Good</a> (<strong>1968</strong>). <em>A Five-Year Plan for Automatic Chess - Appendix F. The Value of the Pieces and Squares</em>. <a href="http://www.doc.ic.ac.uk/~shm/MI/mi2.html">Machine Intelligence Vol. 2</a></li>
+<li><a href="/Dan_Heisman">Dan Heisman</a> (<strong>1990, 1999, 2010</strong>). <em><a href="https://www.danheisman.com/elements-of-positional-evaluation.html">Elements of Positional Evaluation</a></em>. Russell Enterprises</li>
+<li>Peter Orantek (<strong>2008</strong>). <em><a href="http://www.127jupiter.com/">Encyclopedia of Chess-Prehistory - Programming Language Chess</a></em>.</li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="https://groups.google.com/d/msg/rec.games.chess/efBhsZU3J1g/fC7rxV5yuycJ">Value of the pieces</a> by Joost de Heer, <a href="/Computer_Chess_Forums">rgc</a>, February 01, 1995</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=171">Material/Mobility</a> by <a href="/Franklin_Titus">kingliveson</a>, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, June 17, 2010</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/7_%28number%29">7 from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Seven-day_week">Seven-day week from Wikipedia</a></li>
+<li><a href="/Category:If">If</a> - <a href="https://en.wikipedia.org/wiki/If_3">Fibonacci's Number</a> (1971), <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/GXaefhbtU2k" title="YouTube video GXaefhbtU2k" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=GXaefhbtU2k">Watch on YouTube</a></p>
+<ul>
+<li><a href="/Category:Frank_Zappa">Frank Zappa</a> and <a href="https://en.wikipedia.org/wiki/The_Mothers_of_Invention">The Mothers of Invention</a>, <a href="https://en.wikipedia.org/wiki/Inca_Roads_(song)">Inca Roads</a>, 1974, (<a href="https://en.wikipedia.org/wiki/A_Token_of_His_Extreme_(Soundtrack)">A Token of His Extreme</a>), <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a></li>
+</ul>
+<p><a href="/Category:Frank_Zappa">Frank Zappa</a>, <a href="/Category:George_Duke">George Duke</a>, <a href="https://en.wikipedia.org/wiki/Napoleon_Murphy_Brock">Napoleon Murphy Brock</a>, <a href="/Category:Chester_Thompson">Chester Thompson</a>, <a href="https://en.wikipedia.org/wiki/Tom_Fowler_%28musician%29">Tom Fowler</a>, <a href="https://en.wikipedia.org/wiki/Ruth_Underwood">Ruth Underwood</a>, <a href="https://en.wikipedia.org/wiki/Captain_Beefheart">Captain Beefheart</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/wqp71DOJ3aY" title="YouTube video wqp71DOJ3aY" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=wqp71DOJ3aY">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Pieces">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Dan_Heisman">Dan Heisman</a> (<strong>1990, 1999, 2010</strong>). <em><a href="https://www.danheisman.com/elements-of-positional-evaluation.html">Elements of Positional Evaluation</a></em>. Russell Enterprises<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="http://library.thinkquest.org/27890/theSeries6a.html">The Fibonacci Series - The Series - Fibonacci Spiral In Action</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>The <a href="/Point_Value">relative piece values</a> for {N, B, R, Q} of {3, 5, 8, 15} were mentioned by H. M. Taylor (<strong>1876</strong>). <em><a href="http://www.tandfonline.com/doi/abs/10.1080/14786447608639029#.UfEUGXePZlR">On the Relative Values of the Pieces in Chess</a></em>. <a href="https://en.wikipedia.org/wiki/Philosophical_Magazine">Philosophical Magazine</a>, Series 5, Vol. 1, pp. 221-229 as reported in <a href="/Mathematician">H. S. M. Coxeter</a> (<strong>1940</strong>). <em>Mathematical Recreations and Essays</em>. pp. 162-165, from the <a href="http://www.gutenberg.org/ebooks/26839">original</a> by <a href="/Mathematician">W. W. Rouse Ball</a>, <a href="https://en.wikipedia.org/wiki/Macmillan_Publishers">Macmillan</a>, as reported by <a href="/Jack_Good">Jack Good</a> (<strong>1968</strong>). <em>A Five-Year Plan for Automatic Chess - Appendix F. The Value of the Pieces and Squares</em>. <a href="http://www.doc.ic.ac.uk/~shm/MI/mi2.html">Machine Intelligence Vol. 2</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://www.127jupiter.com/Honors.pdf">Peter Orantek: Encyclopedia of Chess-Prehistory - Programming Language Chess</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://www.127jupiter.com/Example.pdf">Peter 0rantek: Encyclopedia of Chess-Prehistory - Decoded prehistorical books of Chess</a> (pdf text sample)<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="http://www.127jupiter.com/Contents.pdf">Peter 0rantek: Encyclopedia of Chess-Prehistory - Decoded prehistorical books of Chess - Contents</a> (pdf)<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="https://en.wikipedia.org/wiki/Clay_animation">Clay animation</a> by <a href="https://en.wikipedia.org/wiki/Bruce_Bickford_(animator)">Bruce Bickford</a><a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="https://adeucefortheskycap.blogspot.com/2007/10/eulogy-for-kelly-lowe-by-michael-king.html">Kelly Fisher Lowe</a> (<strong>2006</strong>). <em><a href="http://www.afka.net/Books/lowe.htm">The Words and Music of Frank Zappa</a></em>. Praeger Publishers, pp. 119 <em>The lyrics to "Inca Roads" are absurdist in the extreme. They veer wildly from spacey - "Did a vehicle / Come from somewhere out there / Just to land in the Andes?," which both <a href="https://en.wikipedia.org/wiki/Ben_Watson_(music_writer)">Watson</a> and <a href="http://www.beefheart.com/tag/kevin-courrier/">Courrier</a> claim Zappa's satire on the popular-at-the-time book <a href="https://en.wikipedia.org/wiki/Chariots_of_the_Gods%3F">Chariots of the Gods?</a></em> ...<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="https://en.wikipedia.org/wiki/Nazca_lines">Nazca Lines from Wikipedia</a><a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Samuel_Bak">Samuel Bak</a> · <a href="/Category:If">If</a> · <a href="/Category:George_Duke">George Duke</a> · <a href="/Category:Chester_Thompson">Chester Thompson</a> · <a href="/Category:Frank_Zappa">Frank Zappa</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Influence_Quantity_of_Pieces">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

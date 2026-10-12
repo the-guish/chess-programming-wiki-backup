@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hash Table - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Hash Table</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Programming">Programming</a> * <a href="/Data">Data</a> * Hash Table</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/7/7d/Hash_table_3_1_1_0_1_0_0_SP.svg" alt="A small phone book as a hash table 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">A small phone book as a hash table <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://en.wikipedia.org/wiki/Hash_function">Hash function from Wikipedia</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p>A <strong>Hash Table</strong>, or a Hash Map, is a data structure that associates identifiers or keys (names, chess positions) with values (i. e. phone number, score of a position). A <a href="https://en.wikipedia.org/wiki/Hash_function">hash function</a> is used for turning the key into a relatively small integer, the hash, that serves as an index into an <a href="/Array">array</a>.</p>
+<p>In a well-dimensioned hash table, the average cost for each lookup is independent of the number of elements stored in the table. In general programming as well in computer chess, hash tables often serve as <a href="https://en.wikipedia.org/wiki/Cache">cache</a> for once calculated values, to save relative expensive computations over and over again. <span id="PerfectHashing"></span></p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#perfect-hashing">Perfect Hashing</a></li>
+<li><a href="#minimal-perfect-hashing">Minimal Perfect Hashing</a></li>
+<li><a href="#search-tables">Search Tables</a></li>
+<li><a href="#class-libraries">Class Libraries</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#publications">Publications</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1968">1968</a></li>
+<li><a href="#1970-">1970 ...</a></li>
+<li><a href="#1980-">1980 ...</a></li>
+<li><a href="#1990-">1990 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1998-">1998 ...</a></li>
+<li><a href="#2000--1">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010--1">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020--1">2020 ...</a></li>
+</ol>
+</details></li>
+<li><a href="#external-links">External Links</a></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="perfect-hashing">Perfect Hashing</h2>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/7/71/Hash_table_4_1_1_0_0_0_0_LL.svg" alt="A perfect hash function 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">A perfect hash function <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://en.wikipedia.org/wiki/Hash_function">Hash function from Wikipedia</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p>If all of the keys are known at compile or initialization time and their cardinality is reasonable small, a perfect hash table can be created, in which there will be no collisions, since each key has an unique index. Opposed to Minimal Perfect Hashing, the lookup <a href="/Array">array</a> contains either gaps or multiple entries.</p>
+<p>Applications in computer chess are hashing of masked <a href="/Occupancy">occupied bitboards</a>, to map for instance <a href="/Sliding_Piece_Attacks">attack sets of sliding pieces</a> (<a href="/Rook">rooks</a>, <a href="/Bishop">bishops</a>) on a particular <a href="/Squares">square</a>, or <a href="/King_Safety">pawn shield</a> stuff. <a href="/Material_Tables">Another application</a>, despite a reversible hash function, is a precomputed table indexed by some <a href="/Material">material</a> key, likely an <a href="/Incremental_Updates">incremental updated</a> <a href="https://en.wikipedia.org/wiki/Dot_product">dot-product</a> of all piece-type counts in some fixed order, by a vector of cumulated maximum count products of pieces ordered below, usually ignoring unusual material configurations due to <a href="/Promotions">promotions</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> . Persistent, or on the fly generated <a href="/Endgame_Tablebases">Endgame Tablebases</a> and <a href="/Endgame_Bitbases">Bitbases</a> containing <a href="/Knowledge">perfect knowledge</a> by <a href="/Retrograde_Analysis">retrograde analyses</a> of certain <a href="/Material">material</a> constellations with a few pieces in late endings might be considered as a kind of perfect hashing as well.</p>
+<ul>
+<li><a href="/BitScan">Walter Faxon's Magic BitScan</a></li>
+<li><a href="/BitScan">BitScan by Modulo</a></li>
+<li><a href="/Kindergarten_Bitboards">Kindergarten Bitboards</a></li>
+<li><a href="/Magic_Bitboards">Magic Bitboards</a></li>
+<li><a href="/Hashing_Dictionaries">Hashing Dictionaries</a></li>
+<li><a href="/Congruent_Modulo_Bitboards">Congruent Modulo Bitboards</a></li>
+<li><a href="/Material_Tables">Material Tables</a></li>
+<li>Pawn Shield Tables</li>
+<li><a href="/Endgame_Tablebases">Endgame Tablebases</a></li>
+</ul>
+<p><span id="MinimalPerfectHashing"></span></p>
+<h2 id="minimal-perfect-hashing">Minimal Perfect Hashing</h2>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/2/2e/Hash_table_4_1_0_0_0_0_0_LL.svg" alt="Minimal perfect hash function 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">Minimal perfect hash function <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="https://en.wikipedia.org/wiki/Hash_function">Hash function from Wikipedia</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p>If the hash <a href="/Array">array</a> has no gaps and unique, distinct values, so called Minimal Perfect Hashing is applied, like in following <a href="/Bitboards">bitboard</a> hashing for <a href="/BitScan">bitscan</a> purpose or determining pre-calculated <a href="/Move_List">move lists</a> by <a href="/Target_Square">move target</a> sets of <a href="/Knight">knights</a> and <a href="/King">king</a>.</p>
+<ul>
+<li><a href="/BitScan">De Bruijn Multiplication</a></li>
+<li><a href="/BitScan">Matt Taylor's Folding trick</a></li>
+<li><a href="/Bitboard_Serialization">Hashing Multiple Bits</a> for <a href="/Bitboard_Serialization">Bitboard Serialization</a></li>
+</ul>
+<p><span id="SearchTables"></span></p>
+<h2 id="search-tables">Search Tables</h2>
+<p>The classical hash table implementation in computer chess are the <a href="/Transposition_Table">transposition tables</a>, indexed by <a href="/Zobrist_Hashing">Zobrist</a>- or <a href="/BCH_Hashing">BCH keys</a> of the position, modulo number of entries inside the table, to store <a href="/Search">search</a> results, <a href="/Evaluation">evaluation</a>, <a href="/Pawn_Structure">pawn structure</a> related stuff and <a href="/Repetitions">repetitions</a>.</p>
+<ul>
+<li><a href="/Transposition_Table">Transposition Table</a></li>
+<li><a href="/Pawn_Hash_Table">Pawn Hash Table</a></li>
+<li><a href="/Evaluation_Hash_Table">Evaluation Hash Table</a></li>
+<li><a href="/Material_Hash_Table">Material Hash Table</a></li>
+<li><a href="/Persistent_Hash_Table">Persistent Hash Table</a></li>
+<li><a href="/Repetitions">Repetition Hash Table</a></li>
+<li><a href="/Shared_Hash_Table">Shared Hash Table</a></li>
+</ul>
+<h2 id="class-libraries">Class Libraries</h2>
+<ul>
+<li><a href="http://doc.trolltech.com/2.3/qmap.html">QMap Class Reference</a>, <a href="/Cpp">C++</a> from <a href="http://doc.trolltech.com/2.3/index.html">Qt On-line Reference Documentation</a></li>
+<li><a href="http://msdn.microsoft.com/en-us/library/s897094z%28VS.80%29.aspx">CMap Class</a>, <a href="/Cpp">C++</a> from <a href="http://msdn.microsoft.com/en-us/library/d06h2x6e%28VS.80%29.aspx">MFC Library Reference</a></li>
+<li><a href="http://java.sun.com/j2se/1.4.2/docs/api/java/util/Map.html">Interface Map</a> from the <a href="/Java">Java</a> package <a href="http://java.sun.com/j2se/1.4.2/docs/api/java/util/package-summary.html">java.util</a></li>
+<li><a href="https://docs.python.org/lib/module-UserDict.html">UserDict - Class wrapper for dictionary objects</a> from <a href="https://docs.python.org/lib/lib.html">Python Library Reference</a></li>
+<li><a href="https://docs.python.org/lib/defaultdict-objects.html">defaultdict objects</a> from <a href="https://docs.python.org/lib/lib.html">Python Library Reference</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<h3 id="1968">1968</h3>
+<ul>
+<li><a href="/Ward_Douglas_Maurer">Ward Douglas Maurer</a> (<strong>1968</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=357995">An Improved Hash Code for Scatter Storage</a></em>. <a href="/ACM">Communications of the ACM</a>, Vol. 11, No. 1</li>
+<li><a href="/Elwyn_Berlekamp">Elwyn Berlekamp</a> (<strong>1968</strong>). <em>Algebraic Coding Theory</em>, New York: McGraw-Hill. Revised ed., Aegean Park Press, (<strong>1984</strong>), ISBN 0894120638. <a href="https://www.amazon.com/Algebraic-Coding-Theory-Revised-M-6/dp/0894120638">amazon</a></li>
+<li><a href="http://www.bahfrah.org.uk/bio/index.htm">F R A Hopgood</a> (<strong>1968</strong>). <em><a href="http://www.chilton-computing.org.uk/acl/literature/reports/p008.htm">A Solution to the table overflow problem for Hash Tables</a></em>. <a href="http://www.chilton-computing.org.uk/acl/literature/reports/overview.htm">Literature: Reports</a> hosted by <a href="/Atlas_Computer_Laboratory">Atlas Computer Laboratory</a></li>
+</ul>
+<h3 id="1970-">1970 ...</h3>
+<ul>
+<li><a href="/Albert_Zobrist">Albert Zobrist</a> (<strong>1970</strong>). <em>A New Hashing Method with Application for Game Playing</em>. Technical Report #88, Computer Science Department, The University of Wisconsin, Madison, WI, USA. Reprinted (<strong>1990</strong>) in <a href="/ICGA_Journal">ICCA Journal, Vol. 13, No. 2</a>, <a href="http://www.cs.wisc.edu/techreports/1970/TR88.pdf">pdf</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Bloom_filter">Burton H. Bloom</a> (<strong>1970</strong>). <em><a href="http://portal.acm.org/citation.cfm?id=362692">Space/time trade-offs in hash coding with allowable errors</a></em>. Comm. of the ACM, Vol. 13, No. 7, <a href="http://www.lsi.upc.edu/%7Ediaz/p422-bloom.pdf">pdf</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></li>
+<li><a href="http://www.bahfrah.org.uk/bio/index.htm">F R A Hopgood</a>, <a href="http://people.bath.ac.uk/masjhd/">J. Davenport</a> (<strong>1972</strong>). <em><a href="http://www.chilton-computing.org.uk/acl/literature/reports/p012.htm">The quadratic hash method when the table size is a power of 2</a></em>. <a href="http://www.chilton-computing.org.uk/acl/literature/reports/overview.htm">Literature: Reports</a> hosted by <a href="/Atlas_Computer_Laboratory">Atlas Computer Laboratory</a></li>
+<li><a href="http://www.bahfrah.org.uk/bio/index.htm">F R A Hopgood</a> (<strong>1974</strong>). <em><a href="http://www.chilton-computing.org.uk/acl/literature/reports/p007.htm">Computer Animation used as a Tool in Teaching Computer Science</a></em>. <a href="http://www.chilton-computing.org.uk/acl/literature/reports/overview.htm">Literature: Reports</a> hosted by <a href="/Atlas_Computer_Laboratory">Atlas Computer Laboratory</a></li>
+<li><a href="http://www.informatik.uni-trier.de/~ley/pers/hd/a/Amble:Ole.html">Ole Amble</a>, <a href="/Donald_Knuth">Donald Knuth</a> (<strong>1974</strong>). <em>Ordered Hash Tables</em>. <a href="https://en.wikipedia.org/wiki/The_Computer_Journal">The Computer Journal</a>, Vol. 17</li>
+<li><a href="/Ward_Douglas_Maurer">Ward Douglas Maurer</a>, <a href="http://www.informatik.uni-trier.de/~ley/pers/hd/l/Lewis:Ted_G=">Ted G. Lewis</a> (<strong>1975</strong>). <em><a href="http://dl.acm.org/citation.cfm?doid=356643.356645">Hash Table Methods</a></em>. <a href="/ACM">ACM Computing Surveys</a>, Vol. 7, No. 1</li>
+<li><a href="/Mathematician">J. Lawrence Carter</a>, <a href="/Mathematician">Mark N. Wegman</a> (<strong>1977</strong>). <em><a href="http://dl.acm.org/citation.cfm?id=803400">Universal classes of hash functions</a></em>. <a href="http://dl.acm.org/citation.cfm?id=800105">STOC '77</a></li>
+</ul>
+<h3 id="1980-">1980 ...</h3>
+<ul>
+<li><a href="/Harry_Nelson">Harry Nelson</a> (<strong>1985</strong>). <em>Hash Tables in Cray Blitz</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 8, No. 1</a> » <a href="/Cray_Blitz">Cray Blitz</a></li>
+<li><a href="/Tony_Warnock">Tony Warnock</a>, <a href="/Burton_Wendroff">Burton Wendroff</a> (<strong>1988</strong>). <em>Search Tables in Computer Chess</em>. <a href="/ICGA_Journal">ICCA Journal, Vol. 11, No. 1</a></li>
+<li><a href="/Mathematician">Ivan Damgård</a> (<strong>1989</strong>). <em>A Design Principle for Hash Functions</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/crypto/crypto89.html">CRYPTO '89</a></li>
+<li><a href="/Mathematician">Ralph C. Merkle</a> (<strong>1989</strong>). <em>One Way Hash Functions and DES</em>. <a href="http://www.informatik.uni-trier.de/~ley/db/conf/crypto/crypto89.html">CRYPTO '89</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></li>
+</ul>
+<h3 id="1990-">1990 ...</h3>
+<ul>
+<li><a href="http://sun.aei.polsl.pl/~zjc/">Zbigniew J. Czech</a>, <a href="http://itee.uq.edu.au/~havas/">George Havas</a>, <a href="http://www.informatik.uni-trier.de/~ley/db/indices/a-tree/m/Majewski:Bohdan_S=.html">Bohdan S. Majewski</a> (<strong>1992</strong>). <em>An Optimal Algorithm for Generating Minimal Perfect Hash Functions</em>. Information Processing Letters, Vol. 43, pp. 257–264. <a href="http://cmph.sourceforge.net/papers/chm92.pdf">pdf</a></li>
+<li><a href="/Warren_D._Smith">Warren D. Smith</a> (<strong>1992</strong>). <em>Hash functions for Binary and Ternary Words</em>. <a href="https://en.wikipedia.org/wiki/NEC_Corporation_of_America">NEC Research Institute</a>, <a href="http://scorevoting.net/WarrenSmithPages/homepage/gohash.ps">ps</a></li>
+<li><a href="/Mathematician">Martin Dietzfelbinger</a>, <a href="https://en.wikipedia.org/wiki/Anna_Karlin">Anna Karlin</a>, <a href="/Mathematician">Kurt Mehlhorn</a>, <a href="/Mathematician">Friedhelm Meyer auf der Heide</a>, <a href="https://plus.google.com/105803273623353288634/posts">Hans Rohnert</a>, <a href="/Mathematician">Robert E. Tarjan</a> (<strong>1994</strong>). <em><a href="http://epubs.siam.org/doi/abs/10.1137/S0097539791194094">Dynamic Perfect Hashing: Upper and Lower Bounds</a></em>. <a href="https://en.wikipedia.org/wiki/SIAM_Journal_on_Computing">SIAM Journal on Computing</a>, Vol. 23, Nr. 4</li>
+<li><a href="http://sun.aei.polsl.pl/~zjc/">Zbigniew J. Czech</a>, <a href="http://itee.uq.edu.au/~havas/">George Havas</a>, <a href="http://www.informatik.uni-trier.de/~ley/db/indices/a-tree/m/Majewski:Bohdan_S=.html">Bohdan S. Majewski</a> (<strong>1997</strong>). <em>Perfect Hashing</em>. Theoretical Computer Science, Vol. 182, Nos. 1-2, pp. 1-143</li>
+<li><a href="/Bob_Jenkins">Bob Jenkins</a> (<strong>1997</strong>). <em>Hash functions</em>. <a href="https://en.wikipedia.org/wiki/Dr._Dobb%27s_Journal">Dr. Dobb's Journal</a>, September 1997 <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a></li>
+<li><a href="/Donald_Knuth">Donald E. Knuth</a> (<strong>1998</strong>). <em><a href="http://www-cs-faculty.stanford.edu/~knuth/taocp.html">The Art of Computer Programming</a></em>. Volume 3 - Sorting and Searching, 6.4 about universal hashing, (second edition), <a href="https://www.amazon.com/Art-Computer-Programming-Sorting-Searching/dp/0201896850">amazom</a></li>
+<li><a href="/Dennis_Breuker">Dennis Breuker</a> (<strong>1998</strong>). <em><a href="http://www.dennisbreuker.nl/thesis/">Memory versus Search in Games</a></em>. Ph.D. Thesis, <a href="/Maastricht_University">Universiteit Maastricht</a>, The Netherlands. ISBN 90-9012006-8.</li>
+<li><a href="/Charles_Leiserson">Charles E. Leiserson</a>, <a href="/Harald_Prokop">Harald Prokop</a>, <a href="/Keith_H._Randall">Keith H. Randall</a> (<strong>1998</strong>). <em>Using de Bruijn Sequences to Index a 1 in a Computer Word</em>, <a href="http://supertech.csail.mit.edu/papers/debruijn.pdf">pdf</a> » <a href="/BitScan">BitScan</a></li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Tim_Mann">Tim Mann</a> (<strong>2002</strong>). <em><a href="http://www.cis.uab.edu/hyatt/hashing.html">A lock-less transposition table implementation for parallel search chess engines</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 25, No. 1</a> » <a href="/Shared_Hash_Table">Shared Hash Table - Lock-less</a></li>
+<li><a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Anthony_Cozzie">Anthony Cozzie</a> (<strong>2005</strong>). <em><a href="http://www.cis.uab.edu/hyatt/collisions.html">The Effect of Hash Signature Collisions in a Chess Program</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 28, No. 3</a></li>
+<li><a href="/Mathematician">Dimitris Fotakis</a>, <a href="/Mathematician">Rasmus Pagh</a>, <a href="/Peter_Sanders">Peter Sanders</a>, <a href="/Mathematician">Paul Spirakis</a> (<strong>2005</strong>). <em><a href="https://link.springer.com/article/10.1007/s00224-004-1195-x">Space Efficient Hash Tables with Worst Case Constant Access Time</a></em>. <a href="https://en.wikipedia.org/wiki/Theory_of_Computing_Systems">Theory of Computing Systems</a>, Vol. 38, No. 2</li>
+<li><a href="/Sam_Tannous">Sam Tannous</a> (<strong>2007</strong>). <em>Avoiding Rotated Bitboards with Direct Lookup</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 30, No. 2</a>, <a href="http://arxiv.org/PS_cache/arxiv/pdf/0704/0704.3773v2.pdf">pdf</a> » <a href="/Hashing_Dictionaries">Hashing Dictionaries</a></li>
+<li>Kumar Chellapilla, <a href="/Mathematician">Anton Mityagin</a>, <a href="/Mathematician">Denis Xavier Charles</a> (<strong>2007</strong>). <em><a href="http://www2007.org/poster1018.php">GigaHash: scalable minimal perfect hashing for billions of urls</a></em>. <a href="http://www.informatik.uni-trier.de/%7Eley/db/conf/www/www2007.html#ChellapillaMC07">WWW 2007</a></li>
+<li><a href="/Trevor_Fenner">Trevor Fenner</a>, <a href="/Mark_Levene">Mark Levene</a> (<strong>2008</strong>). <em>Move Generation with Perfect Hashing Functions.</em> <a href="/ICGA_Journal">ICGA Journal, Vol. 31, No. 1</a>, <a href="http://www.dcs.bbk.ac.uk/~mark/download/bitboard_sliding_icga_final.pdf">pdf</a> » <a href="/Congruent_Modulo_Bitboards">Congruent Modulo Bitboards</a></li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="/Maurizio_Monge">Maurizio Monge</a> (<strong>2010</strong>). <em>On perfect hashing of numbers with sparse digit representation via multiplication by a constant</em>. <a href="https://arxiv.org/abs/1003.3196">arXiv:1003.3196</a> » <a href="/Magic_Bitboards">Magic Bitboards</a></li>
+<li><a href="/Jiao_Wang">Jiao Wang</a>, Si-Zhong Li, <a href="/Xinhe_Xu">Xin-He Xu</a> (<strong>2010</strong>). <em>A Minors Hash Table in Chinese-Chess Programs</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 33, No. 1</a></li>
+<li><a href="/Mathematician">Mihai Pătrașcu</a>, <a href="/Mathematician">Mikkel Thorup</a> (<strong>2011</strong>). <em>The Power of Simple Tabulation Hashing</em>. <a href="http://arxiv.org/abs/1011.5200">arXiv:1011.5200v2</a></li>
+<li>Dan Anthony Feliciano Alcantara (<strong>2011</strong>). <em>Effcient Hash Tables on the GPU</em>. Ph.D. thesis, <a href="https://en.wikipedia.org/wiki/University_of_California,_Davis">University of California, Davis</a>, <a href="http://idav.ucdavis.edu/~dfalcant//downloads/dissertation.pdf">pdf</a> » <a href="/GPU">GPU</a></li>
+<li><a href="/John_Tromp">John Tromp</a> (<strong>2014</strong>). <em><a href="https://github.com/tromp/cuckoo/blob/master/cuckoo.pdf">Cuckoo Cycle: a memory-hard proof-of-work system</a></em>. <a href="http://www.informatik.uni-trier.de/~ley/db/journals/iacr/iacr2014.html#Tromp14">IACR Cryptology ePrint Archive</a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a></li>
+<li><a href="/David_Eppstein">David Eppstein</a>, <a href="/Mathematician">Michael T. Goodrich</a>, <a href="/Mathematician">Michael Mitzenmacher</a>, <a href="https://dblp.uni-trier.de/pers/hd/p/Pszona:Pawel">Paweł Pszona</a> (<strong>2014</strong>). <em>Wear Minimization for Cuckoo Hashing: How Not to Throw a Lot of Eggs into One Basket</em>. <a href="https://arxiv.org/abs/1404.0286">arXiv:1404.0286</a></li>
+<li><a href="/Thomas_Dybdahl_Ahle">Thomas Dybdahl Ahle</a>, <a href="/Mathematician">Martin Aumüller</a>, <a href="/Mathematician">Rasmus Pagh</a> (<strong>2016</strong>). <em>Parameter-free Locality Sensitive Hashing for Spherical Range Reporting</em>. <a href="https://arxiv.org/abs/1605.02673">arXiv:1605.02673</a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a></li>
+<li><a href="https://dblp.uni-trier.de/pers/hd/m/Maier:Tobias">Tobias Maier</a>, <a href="/Peter_Sanders">Peter Sanders</a>, <a href="https://dblp.uni-trier.de/pers/hd/d/Dementiev:Roman">Roman Dementiev</a> (<strong>2016</strong>). <em>Concurrent Hash Tables: Fast and General?(!)</em>. <a href="https://arxiv.org/abs/1601.04017">arXiv:1601.04017</a></li>
+<li><a href="/Thomas_Dybdahl_Ahle">Thomas Dybdahl Ahle</a> (<strong>2017</strong>). <em>Optimal Set Similarity Data-structures Without False Negatives</em>. Master thesis, <a href="https://en.wikipedia.org/wiki/University_of_Copenhagen">University of Copenhagen</a>, <a href="http://www.itu.dk/people/thdy/papers/minhash.pdf">pdf</a> <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a></li>
+<li><a href="https://dblp.uni-trier.de/pers/hd/m/Maier:Tobias">Tobias Maier</a>, <a href="/Peter_Sanders">Peter Sanders</a> (<strong>2017</strong>). <em>Dynamic Space Efficient Hashing</em>. <a href="https://arxiv.org/abs/1705.00997">arXiv:1705.00997</a></li>
+<li><a href="/Peter_Sanders">Peter Sanders</a> (<strong>2018</strong>). <em>Hashing with Linear Probing and Referential Integrity</em>. <a href="https://arxiv.org/abs/1808.04602">arXiv:1808.04602</a></li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="/Niklas_Fiekas">Niklas Fiekas</a> (<strong>2020</strong>). <em><a href="https://backscattering.de/chess/hashtable-packing/">The Hashtable Packing Problem</a></em>. (Draft)</li>
+<li><a href="/Thomas_Dybdahl_Ahle">Thomas Dybdahl Ahle</a>, <a href="https://dblp.uni-trier.de/pid/236/4491.html">Jakob Tejs Bæk Knudsen</a>, <a href="/Mathematician">Mikkel Thorup</a> (<strong>2020</strong>). <em>The Power of Hashing with Mersenne Primes</em>. <a href="https://arxiv.org/abs/2008.08654">arXiv:2008.08654</a> <a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1998-">1998 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=13810">Fast hash algorithm</a> by John Scalo, <a href="/CCC">CCC</a>, January 08, 1998 » <a href="/Zobrist_Hashing">Zobrist Hashing</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=14053">Fast hash key method - Revisited!</a> by John Scalo, <a href="/CCC">CCC</a>, January 14, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=14226">Hash tables and data-cache, some programmer stuff...</a> by <a href="/Ed_Schroder">Ed Schröder</a>, <a href="/CCC">CCC</a>, January 17, 1998</li>
+</ul>
+<h3 id="2000--1">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=175221">A fast hash -- assuming you are not planning to do incremental updates</a> by <a href="/Dann_Corbit">Dann Corbit</a>, <a href="/CCC">CCC</a>, June 15, 2001</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=214125">Non power of two hash table sizes</a> by <a href="/Alvaro_Cardoso">Alvaro Jose Povoa Cardoso</a>, <a href="/CCC">CCC</a>, February 18, 2002</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=484874">Hash table and O(1)</a> by <a href="/Dann_Corbit">Dann Corbit</a>, <a href="/CCC">CCC</a>, February 06, 2006</li>
+<li><a href="http://www.hiarcs.net/forums/viewtopic.php?p=2921">What is the Difference between Mainhash, Evalhash, Pawnhash?</a> by Thomas Wallendik, <a href="/Computer_Chess_Forums">Hiarcs Forum</a>, October 13, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?topic_view=threads&amp;p=285407">Cache pollution when reading/writing hash table</a> by <a href="/Marco_Costalba">Marco Costalba</a>, <a href="/CCC">CCC</a>, August 09, 2009</li>
+</ul>
+<h3 id="2010--1">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=33561">Cache-friendier material index</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, March 31, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=44082">how to measure frequency of hash collisions</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, June 16, 2012 » <a href="/Transposition_Table">Key Collisions</a>, <a href="/Transposition_Table">Transposition Table</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=48479">Hashing based on move lists</a> by <a href="/Matthew_R._Brades">Matthew R. Brades</a>, <a href="/CCC">CCC</a>, June 30, 2013</li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57924">Hash cache</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, October 12, 2015 » <a href="/Transposition_Table">Transposition Table</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58890">On-the fly hash key generation?</a> by <a href="/Evert_Glebbeek">Evert Glebbeek</a>, <a href="/CCC">CCC</a>, January 12, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=58944">Crafty's four hash tables</a> by <a href="/Louis_Zulli">Louis Zulli</a>, <a href="/CCC">CCC</a>, January 17, 2016 » <a href="/Crafty">Crafty</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61328">Hashed repetition table</a> by J. Wesley Cleveland, <a href="/CCC">CCC</a>, September 04, 2016 » <a href="/Repetitions">Repetition Hash Table</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=62239">Hashing a quadboard from scratch</a> by <a href="/Edoardo_Manino">Edoardo Manino</a>, <a href="/CCC">CCC</a>, November 23, 2016 » <a href="/Quad-Bitboards">Quad-Bitboards</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=65870">Magic end-game material hash?</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, November 30, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=66183">hashing in chess4j</a> by <a href="/James_Swafford">James Swafford</a>, <a href="/CCC">CCC</a>, December 30, 2017 » <a href="/Chess4j">chess4j</a>, <a href="/Transposition_Table">Transposition Table</a></li>
+</ul>
+<h3 id="2020--1">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72932">hash collisions</a> by <a href="/Jon_Dart">Jon Dart</a>, <a href="/CCC">CCC</a>, January 28, 2020 » <a href="/Transposition_Table">Key Collisions</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=72964">Dense board representation as hash code</a> by koedem, <a href="/CCC">CCC</a>, February 01, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73071">Hashtable packing (e.g. to optimize magic bitboards) is strongly NP-complete</a> by <a href="/Niklas_Fiekas">Niklas Fiekas</a>, <a href="/CCC">CCC</a>, February 13, 2020 » <a href="/Magic_Bitboards">Magic Bitboards</a> <a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=73110">Zobrist key independence</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, February 17, 2020 » <a href="/Zobrist_Hashing">Zobrist Hashing</a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Hash_table">Hash Table from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Hash_function">Hash function from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Perfect_hash_function">Perfect hash function from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Cryptographic_hash_function">Cryptographic hash function from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/Secure_Hash_Algorithm">Secure Hash Algorithm from Wikipedia</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Merkle%E2%80%93Damg%C3%A5rd_construction">Merkle–Damgård construction from Wikipedia</a></p>
+<ul>
+<li><a href="http://www.gnu.org/software/gperf/">gperf - GNU Project</a> - <a href="/Free_Software_Foundation">Free Software Foundation</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Transposition_table">Transposition table from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Tabulation_hashing">Tabulation hashing from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Zobrist_hashing">Zobrist hashing from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Cuckoo_hashing">Cuckoo hashing from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Distributed_hash_table">Distributed hash table from Wikipedia</a></li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/Koorde">Koorde</a> based on <a href="https://en.wikipedia.org/wiki/Chord_%28peer-to-peer%29">Chord</a> and <a href="/De_Bruijn_Sequence">De Bruijn Sequence</a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Transposition-driven_scheduling">Transposition-driven scheduling - Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Hashlife">Hashlife from Wikipedia</a> by <a href="/Bill_Gosper">Bill Gosper</a> <a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a></li>
+<li><a href="http://www.concentric.net/~Ttwang/tech/inthash.htm">Integer Hash Function</a> by <a href="http://www.concentric.net/~ttwang/index.html">Thomas Wang</a></li>
+<li><a href="http://www.azillionmonkeys.com/qed/hash.html">Hash functions</a> by <a href="/Paul_Hsieh">Paul Hsieh</a></li>
+<li><a href="http://burtleburtle.net/bob/hash/index.html">Hash Functions and Block Ciphers</a> by <a href="/Bob_Jenkins">Bob Jenkins</a></li>
+<li><a href="http://burtleburtle.net/bob/hash/doobs.html">A Hash Function for Hash Table Lookup</a> by <a href="/Bob_Jenkins">Bob Jenkins</a></li>
+<li><a href="http://burtleburtle.net/bob/hash/perfect.html">Perfect Hashing</a> by <a href="/Bob_Jenkins">Bob Jenkins</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Jenkins_hash_function">Jenkins hash function from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function">Fowler–Noll–Vo hash function from Wikipedia</a></li>
+<li><a href="http://www.partow.net/programming/hashfunctions/index.html">General Purpose Hash Function Algorithms</a> by <a href="http://www.partow.net/about/index.html">Arash Partow</a></li>
+<li><a href="http://www.cse.yorku.ca/~oz/hash.html">Hash Functions</a></li>
+<li><a href="http://www.fantasy-coders.de/projects/gh/html/x435.html">7. Wahl einer geeigneten Hash-Funktion</a> from <a href="http://www.fantasy-coders.de/projects/gh/html/index.html">Guugelhupf - Design und Implementation</a> (German)</li>
+<li><a href="/Category:Association_P.C.">Association P.C.</a> - Soft Time in a Life Machine, <a href="https://en.wikipedia.org/wiki/JazzFest_Berlin">Berliner Jazztage</a>, November 7, 1971, <a href="https://en.wikipedia.org/wiki/Norddeutscher_Rundfunk">NDR</a>-<a href="https://en.wikipedia.org/wiki/Radio_Bremen">RB</a>-<a href="https://en.wikipedia.org/wiki/Sender_Freies_Berlin">SFB</a> 3 Broadcast, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<p><a href="/Category:Pierre_Courbois">Pierre Courbois</a>, Jasper van 't Hof, <a href="/Category:Toto_Blanke">Toto Blanke</a>, <a href="https://de.wikipedia.org/wiki/Sigi_Busch">Sigi Busch</a></p>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/_RvR7oG8Uz4" title="YouTube video _RvR7oG8Uz4" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=_RvR7oG8Uz4">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Data">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=33561">Cache-friendier material index</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/CCC">CCC</a>, March 31, 2010<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://en.wikipedia.org/wiki/Bloom_filter">Bloom filter from Wikipedia</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="https://en.wikipedia.org/wiki/Merkle%E2%80%93Damg%C3%A5rd_construction">Merkle–Damgård construction from Wikipedia</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="http://burtleburtle.net/bob/hash/doobs.html">A Hash Function for Hash Table Lookup</a> by <a href="/Bob_Jenkins">Bob Jenkins</a>, updated <a href="https://en.wikipedia.org/wiki/Dr._Dobb%27s_Journal">Dr. Dobb's</a> article<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="https://bitcointalk.org/index.php?topic=405483.0">Cuckoo Cycle: a new memory-hard proof-of-work system</a> by <a href="/John_Tromp">John Tromp</a>, <a href="https://bitcointalk.org/index.php">Bitcoin Forum</a>, January 08, 2014<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="https://en.wikipedia.org/wiki/Cuckoo_hashing">Cuckoo hashing from Wikipedia</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="https://en.wikipedia.org/wiki/Locality-sensitive_hashing">Locality-sensitive hashing from Wikipedia</a><a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="https://en.wikipedia.org/wiki/MinHash">MinHash from Wikipedia</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p><a href="https://en.wikipedia.org/wiki/Mersenne_prime">Mersenne prime from Wikipedia</a><a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p><a href="https://en.wikipedia.org/wiki/Strong_NP-completeness">Strong NP-completeness from Wikipedia</a><a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p><a href="http://www-users.cs.york.ac.uk/~jowen/hashlife.html">Gosper's Algorithm (Hashlife) explained</a><a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Association_P.C.">Association P.C.</a> · <a href="/Category:Pierre_Courbois">Pierre Courbois</a> · <a href="/Category:Jasper_van_&">Jasper van &amp;</a> · <a href="/Category:Toto_Blanke">Toto Blanke</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Hash_Table">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GridChess - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">GridChess</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Engines">Engines</a> * GridChess</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><img src="https://upload.wikimedia.org/wikipedia/commons/9/9e/Divina_proportione.png" alt="A grid applied within an image 1" class="block w-full h-auto" /><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10">A grid applied within an image <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1">Drawing simplified from a <a href="https://en.wikipedia.org/wiki/Woodcut">woodcut</a> from the <a href="https://en.wikipedia.org/wiki/Divina_proportione">Divina Proportione</a>, <a href="https://en.wikipedia.org/wiki/Luca_Pacioli">Luca Pacioli</a> 1509, <a href="https://en.wikipedia.org/wiki/Venice">Venice</a>, depicting proportions of the <a href="https://en.wikipedia.org/wiki/Face">human face</a>. The <a href="https://en.wikipedia.org/wiki/Golden_ratio">golden ratio</a> does not appear in the drawing. <a href="https://en.wikipedia.org/wiki/Grid_(graphic_design)">Grid (graphic design) from Wikipedia</a>, <a href="https://en.wikipedia.org/wiki/Wikimedia_Commons">Wikimedia Commons</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>GridChess</strong>,<br />
+a prototypical implementation of a twofold <a href="/Parallel_Search">distributed game-tree search</a> approach. <a href="/Young_Brothers_Wait_Concept">Young Brothers Wait Concept</a> (YBWC) parallelized chess programs running on a <a href="https://en.wikipedia.org/wiki/Computer_cluster">cluster</a>, where optimistic <a href="/Pondering">pondering</a> performs a second parallel approach on top of several clusters which can be used to achieve a further speedup.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#cluster-toga">Cluster Toga</a></li>
+<li><a href="#optimistic-pondering">Optimistic Pondering</a></li>
+<li><a href="#phd-project">Ph.D. Project</a></li>
+<li><a href="#description">Description</a></li>
+<li><a href="#tournament-play">Tournament Play</a></li>
+<li><a href="#selected-games">Selected Games</a></li>
+<li><a href="#authors">Authors</a></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><a href="#forum-posts">Forum Posts</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#chess-entity">Chess Entity</a></li>
+<li><a href="#misc">Misc</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="cluster-toga">Cluster Toga</h2>
+<p><em>see main article <a href="/Cluster_Toga">Cluster Toga</a></em>.</p>
+<p>The scheduling per cluster node is implemented based on the <a href="https://en.wikipedia.org/wiki/Message_Passing_Interface">Message Passing Interface (MPI)</a> by a <a href="https://en.wikipedia.org/wiki/Cilk#Work-stealing">work-stealing</a> mechanism to <a href="https://en.wikipedia.org/wiki/Load_balancing_%28computing%29">balance the load</a> dynamically. Each worker at the intra-cluster level is represented by <a href="/Cluster_Toga">Cluster Toga</a>, a YBWC version of <a href="/Toga">Toga</a> by <a href="/Thomas_Gaksch">Thomas Gaksch</a> based on <a href="/Fruit">Fruit</a> by <a href="/Fabien_Letouzey">Fabien Letouzey</a>. All processors on the same cluster node <a href="/Shared_Hash_Table">share</a> their <a href="/Transposition_Table">hash table</a>. New hash table entries are permanently replicated between all cluster nodes in a similar way as described for <a href="/Brutus">Brutus</a> <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. <span id="OptimisticPondering"></span></p>
+<h2 id="optimistic-pondering">Optimistic Pondering</h2>
+<p>The asynchronous optimistic <a href="/Pondering">pondering</a> is applied not only during the opponent’s thinking time but also during the own thinking time, and schedules cluster nodes (workers) with consecutive <a href="/Root">root-nodes</a> along the <a href="/Principal_Variation">principal variation</a> (PV), which is most often available in a stable form at early stages of the search. This is based on the same observation, <a href="/David_Levy">David Levy</a> proposed his <em><a href="/PV_Extensions">Multiple Extensions</a></em> algorithm to treat the often early stable part of a PV as a single <a href="/Ply">ply</a> to achieve higher <a href="/Depth">search depths</a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>. If a change is detected in a PV within the first two plies, the actual searching ahead of the according worker is canceled and a new search for the current PV is started immediately.</p>
+<h2 id="phd-project">Ph.D. Project</h2>
+<p>GridChess with focus on optimistic pondering was Ph.D. project of <a href="/Kai_Himstedt">Kai Himstedt</a> at <a href="/University_of_Hamburg">University of Hamburg</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>. <a href="/Ulf_Lorenz">Ulf Lorenz</a>, then affiliated with the <a href="/Paderborn_University">Paderborn University</a> and the <em>Paderborn Center for Parallel Computing</em>, made contributions concerning the <a href="/Parallel_Search">parallel search</a>.</p>
+<h2 id="description">Description</h2>
+<p>given in 2007 from the <a href="/ICGA">ICGA</a> tournament site <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>:</p>
+<p><code>GridChess is composed of two major components: 1) The proxy chess engine (</code><a href="/Crafty"><code>Crafty</code></a><code> based) performs no tree search itself but has some kind of a master role to control the optimistic pondering with distributed worker clients. As a simplified explanation of optimistic pondering here, one can imagine the worker clients forming a pondering pipeline with expected opponent moves extracting this information from the principal variations provided by the chess engines. 2) Real chess engines (controlled by distributed worker clients), Fruit/Toga based, parallelized with Young Brothers Wait Concept (YBWC). This way a combination of two parallel concepts was realized building the complete GridChess system: The parallel Fruit/Toga base engines using the YBWC may run on high performance clusters, each cluster representing a worker client for the proxy chess engine. Several such clusters are then used for an asynchronous distributed game-tree search with the optimistic pondering method. </code></p>
+<h2 id="tournament-play">Tournament Play</h2>
+<p>GridChess played the <a href="/IPCCC_2006">IPCCC 2006</a>, and shared third place at the <a href="/WCCC_2007">WCCC 2007</a>. The proxy chess engine component of GridChess is based on <a href="/Crafty">Crafty</a> by <a href="/Robert_Hyatt">Robert Hyatt</a> and performs no tree search itself but has some kind of a master role to control the optimistic pondering with distributed workers. However, the participation at the <a href="/WCCC_2008">WCCC 2008</a> was restricted to the use of Cluster Toga as a "stand alone" component, because there was a licensing issue in connection with the use of some parts of Crafty <a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>.</p>
+<h2 id="selected-games">Selected Games</h2>
+<p><a href="/WCCC_2007">WCCC 2007</a>, round 8, <a href="/GridChess">GridChess</a> - <a href="/Shredder">Shredder</a> <a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a></p>
+<pre><code>[Event &quot;WCCC 2007&quot;]
+[Site &quot;Amsterdam, The Netherlands&quot;]
+[Date &quot;2007.06.16&quot;]
+[Round &quot;8&quot;]
+[White &quot;GridChess&quot;]
+[Black &quot;Shredder&quot;]
+[Result &quot;1-0&quot;]
+
+1.e4  c5 2.Nf3 d6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 a6 6.Be2 e6 7.Be3 Qc7 8.Qd2 b5 9.a3 Be7 10.f4 Bb7 
+11.Bf3 Nbd7 12.f5 e5 13.Nb3 Rc8 14.Qf2 h5 15.O-O-O d5 16.exd5 Bxa3 17.Kb1 Bxb2 18.d6 Qxc3 19.Rd3 
+Qc4 20.Bxb7 Rb8 21.Kxb2 Rxb7 22.Ra1 Rb8 23.Rxa6 Rc8 24.Na5 Qe4 25.Nc6 b4 26.Ne7 Ra8 27.Rxa8+ Qxa8 
+28.Qe1 Qb8 29.Qa1 Qb7 30.Qa4 Ne4 31.Rb3 Nc3 32.Qa5 Nd1+ 33.Kb1 Nxe3 34.Rxe3 Qb6 35.Qa8+ Qb8 36.Qd5 
+Kf8 37.Nc6 Qa8 38.Qc4 Qc8 39.Re4 Nb6 40.Qxb4 Nd7 41.Rc4 Qe8 42.Ne7 g6 1-0 </code></pre>
+<h2 id="authors">Authors</h2>
+<ul>
+<li><a href="/Kai_Himstedt">Kai Himstedt</a></li>
+<li><a href="/Ulf_Lorenz">Ulf Lorenz</a></li>
+<li><a href="/Thomas_Gaksch">Thomas Gaksch</a>, <a href="/Toga">Toga</a> parts</li>
+<li><a href="/Fabien_Letouzey">Fabien Letouzey</a>, <a href="/Fruit">Fruit</a> parts</li>
+<li><a href="/Robert_Hyatt">Robert Hyatt</a>, <a href="/Crafty">Crafty</a> parts</li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/Cluster_Toga">Cluster Toga</a></li>
+<li><a href="/Crafty">Crafty</a></li>
+<li><a href="/Fruit">Fruit</a></li>
+<li><a href="/GridGinkgo">GridGinkgo</a></li>
+<li><a href="/GridProtector">GridProtector</a></li>
+<li><a href="/Pondering">Pondering</a></li>
+<li><a href="/Toga">Toga</a></li>
+<li><a href="/Young_Brothers_Wait_Concept">Young Brothers Wait Concept</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Kai_Himstedt">Kai Himstedt</a> (<strong>2005</strong>). <em><a href="https://content.iospress.com/articles/icga-journal/icg28203">An Optimistic Pondering Approach for Asynchronous Distributed Games</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 28, No. 2</a></li>
+<li><a href="/Kai_Himstedt">Kai Himstedt</a>, <a href="/Ulf_Lorenz">Ulf Lorenz</a>, <a href="https://www.informatik.uni-hamburg.de/TIS/index.php/de/mitarbeiter/dietmar-p-f-moeller">Dietmar P. F. Möller</a> (<strong>2008</strong>). <em><a href="https://link.springer.com/chapter/10.1007/978-3-540-85451-7_62">A Twofold Distributed Game-Tree Search Approach Using Interconnected Clusters</a></em>. <a href="https://link.springer.com/book/10.1007/978-3-540-85451-7">Euro-Par 2008</a>, <a href="https://en.wikipedia.org/wiki/Springer_Science%2BBusiness_Media">Springer</a></li>
+<li><a href="/Kai_Himstedt">Kai Himstedt</a> (<strong>2012</strong>). <em><a href="http://www.shaker.de/de/content/catalogue/index.asp?ID=8&amp;ISBN=978-3-8440-0803-6">Optimistische verteilte Spielbaumsuche am Beispiel des Computerschachs</a></em>. Dissertation (German)</li>
+<li><a href="/Kai_Himstedt">Kai Himstedt</a> (<strong>2012</strong>). <em><a href="https://content.iospress.com/articles/icga-journal/icg35202">GridChess: Combining Optimistic Pondering with the Young Brothers Wait Concept</a></em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 35, No. 2</a> » <a href="/Pondering">Pondering</a>, <a href="/Young_Brothers_Wait_Concept">Young Brothers Wait Concept</a></li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=14495">grid chess at the wccc: supercharged toga?</a> by ozziejoe, <a href="/CCC">CCC</a>, June 16, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=34780">Cluster Toga based on Fruit Source Code</a> by <a href="/Kai_Himstedt">Kai Himstedt</a>, <a href="/CCC">CCC</a>, June 07, 2010 <a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a></li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<h3 id="chess-entity">Chess Entity</h3>
+<ul>
+<li><a href="http://www.informatik.uni-hamburg.de/TIS/index.php/de/projekte/phd-projects/79/">PhD Project of Kai Himstedt (Dipl.-Inform.)</a></li>
+<li><a href="https://www.game-ai-forum.org/icga-tournaments/program.php?id=520">GridChess' ICGA Tournaments</a></li>
+<li><a href="http://www.chessgames.com/perl/chessplayer?pid=107843">The chess games of GridChess</a> from <a href="http://www.chessgames.com/index.html">chessgames.com</a></li>
+</ul>
+<h3 id="misc">Misc</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Grid_computing">Grid computing from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Grid_(graphic_design)">Grid (graphic design) from Wikipedia</a></li>
+<li><a href="/Category:The_Grid">The Grid</a> - <a href="https://en.wikipedia.org/wiki/456_(album)">Figure of 8</a> (1992), <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/jtz9Y40IE_k" title="YouTube video jtz9Y40IE_k" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=jtz9Y40IE_k">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Engines">Up one level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="/Chrilly_Donninger">Chrilly Donninger</a>, <a href="/Alex_Kure">Alex Kure</a>, <a href="/Ulf_Lorenz">Ulf Lorenz</a> (<strong>2004</strong>). <em>Parallel Brutus: The First Distributed, FPGA Accelerated Chess Program</em>. <a href="http://dl.acm.org/citation.cfm?id=645610&amp;picked=prox">IPDPS’04</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="/David_Levy">David Levy</a> (<strong>2003</strong>). <em>The State of the Art in Man vs. “Machine” Chess</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 26, No. 1</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://www.informatik.uni-hamburg.de/TIS/index.php/de/projekte/phd-projects/79/">PhD Project of Kai Himstedt (Dipl.-Inform.)</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="/Kai_Himstedt">Kai Himstedt</a> (<strong>2012</strong>). <em><a href="http://www.shaker.de/de/content/catalogue/index.asp?ID=8&amp;ISBN=978-3-8440-0803-6">Optimistische verteilte Spielbaumsuche am Beispiel des Computerschachs</a></em>. Dissertation (German)<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="https://www.game-ai-forum.org/icga-tournaments/program.php?id=520">GridChess' ICGA Tournaments</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="/Kai_Himstedt">Kai Himstedt</a> (<strong>2012</strong>). <em>GridChess: Combining Optimistic Pondering with the Young Brothers Wait Concept</em>. <a href="/ICGA_Journal">ICGA Journal, Vol. 35, No. 2</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="https://www.game-ai-forum.org/icga-tournaments/round.php?tournament=173&amp;round=8&amp;id=6">Amsterdam 2007 - Chess - Round 8 - Game 6 (ICGA Tournaments)</a><a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p><a href="https://www.informatik.uni-hamburg.de/TIS/file-download/email-file.php">Download - Cluster Toga 1.4b5c based on Fruit 2.1 UCI</a><a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:Cluster">Cluster</a> · <a href="/Category:Chess_Suffix">Chess Suffix</a> · <a href="/Category:The_Grid">The Grid</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/GridChess">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

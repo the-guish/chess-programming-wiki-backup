@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Futility Pruning - Chess Programming Wiki</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.base.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.brown.css">
+<link rel="stylesheet" href="/vendor/chessground/chessground.cburnett.css">
+<style>
+.chess-fen-link { display: inline-block; width: min(360px, 100%); text-decoration: none; margin: 0.5rem 0; }
+.chess-fen-board { width: 100%; aspect-ratio: 1 / 1; }
+</style>
+</head>
+<body class="bg-white text-black min-h-screen">
+<div class="bg-slate-100 border-b border-slate-200 text-xs text-slate-600">
+<div class="max-w-5xl mx-auto px-4 py-1.5">
+This is a temporary, read-only recovery of the chessprogrammingwiki while a longer-term plan is worked out.
+Editing is not possible right now, but will be again soon.
+</div>
+</div>
+<header class="border-b border-slate-200">
+<div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+<a href="/" class="flex items-center gap-2 font-bold text-lg no-underline">
+<img src="/logo.png" alt="" width="36" height="36" class="h-9 w-9 object-contain">
+<span>Chess Programming Wiki</span>
+</a>
+<a href="/Special:AllPages" class="text-sm no-underline">All pages</a>
+<a href="/Special:OtherNamespaces" class="text-sm no-underline">Other namespaces</a>
+<div class="ml-auto relative">
+<input id="search-input" type="search" placeholder="Search titles…" autocomplete="off"
+  class="border border-slate-300 rounded px-2 py-1 text-sm w-48">
+<div id="search-results"
+  class="hidden absolute right-0 mt-1 w-72 max-h-96 overflow-auto bg-white border border-slate-200 rounded shadow-lg z-10 text-sm"></div>
+</div>
+</div>
+</header>
+<nav aria-label="Site navigation" class="border-b border-slate-200 bg-slate-50">
+<div class="max-w-5xl mx-auto px-4 py-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+<a href="/">Main page</a>
+<a href="/Special:AllPages" id="random-page-link">Random page</a>
+<a href="/Special:AllPages">All pages</a>
+<a href="/Special:Categories">Categories</a>
+<a href="/Special:Credits">Credits</a>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-6">
+<h1 class="text-3xl font-bold mb-2">Futility Pruning</h1>
+<article class="prose max-w-none">
+<p><strong><a href="/Main_Page">Home</a> * <a href="/Search">Search</a> * <a href="/Selectivity">Selectivity</a> * <a href="/Pruning">Pruning</a> * Futility Pruning</strong></p>
+<p><span class="not-prose block w-full max-w-full mb-4 sm:w-[min(var(--wiki-img-w,100%),100%)] sm:float-right sm:ml-6 border border-black/20 bg-white p-1 shadow-sm" style="--wiki-img-w:220px"><a href="http://www.mcescher.com/Gallery/back-bmp/LW389.jpg" target="_blank" rel="noopener noreferrer"><img src="/assets/EschersRelativity.jpg" alt="M. C. Escher, Relativity, 1953 1" class="block w-full h-auto" /></a><span class="thumbcaption block text-xs text-slate-600 mt-1 pt-1 border-t border-black/10"><a href="/Category:M._C._Escher">M. C. Escher</a>, Relativity, 1953 <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></span></span></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><a href="http://www.mcescher.com/Gallery/gallery-back.htm">Picture gallery "Back in Holland 1941 - 1954"</a> from <a href="http://www.mcescher.com/">The Official M.C. Escher Website</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></li>
+</ol>
+</section>
+
+<p><strong>Futility Pruning</strong>,<br />
+discards moves that have no potential of raising <a href="/Alpha">alpha</a>, which in turn requires some estimate of a potential value of a move. This is calculated by adding a safety margin to the evaluation of the current position. If this does not exceed alpha then the futility pruning is triggered to skip this move. Modern engines also perform futility pruning at non-leaf nodes, and scales margin by <a href="/Depth">depth</a>.</p>
+<details id="toc" class="not-prose mb-8 border border-slate-300 rounded-md bg-slate-50 text-sm" open>
+<summary class="cursor-pointer select-none font-semibold px-4 py-3">Contents</summary>
+<ol class="list-none px-4 pb-4 pt-1 space-y-1.5">
+<li><a href="#conditions">Conditions</a></li>
+<li><a href="#move-count-based-pruning">Move Count Based Pruning</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#historical-implementations">Historical Implementations</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#extended-futility-pruning">Extended Futility Pruning</a></li>
+<li><a href="#deep-futility-pruning">Deep Futility Pruning</a></li>
+</ol>
+</details></li>
+<li><a href="#see-also">See also</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#forum-posts">Forum Posts</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#1995-">1995 ...</a></li>
+<li><a href="#2000-">2000 ...</a></li>
+<li><a href="#2005-">2005 ...</a></li>
+<li><a href="#2010-">2010 ...</a></li>
+<li><a href="#2015-">2015 ...</a></li>
+<li><a href="#2020-">2020 ...</a></li>
+</ol>
+</details></li>
+<li><details class="toc-node">
+<summary class="cursor-pointer select-none py-0.5"><a href="#external-links">External Links</a></summary>
+<ol class="list-none pl-5 mt-1 space-y-1.5 border-l border-slate-200">
+<li><a href="#pruning">Pruning</a></li>
+<li><a href="#misc">Misc</a></li>
+</ol>
+</details></li>
+<li><a href="#references">References</a></li>
+</ol>
+</details><h2 id="conditions">Conditions</h2>
+<p>For <a href="/Tactics">tactical</a> stability, even in such a node we ought to search the following moves:</p>
+<ul>
+<li><a href="/Captures">captures</a> (either all or less typically only those that are capable of raising the score above alpha + margin)</li>
+<li>moves that give <a href="/Check">check</a></li>
+</ul>
+<p>Futility pruning is not used when the <a href="/Side_to_move">side to move</a> is in <a href="/Check">check</a> , or when either <a href="/Alpha">alpha</a> or <a href="/Beta">beta</a> are close to the <a href="/Checkmate">mate value</a>, since it would leave the program blind to certain <a href="/Checkmate">checkmates</a>. <a href="/Tord_Romstad">Tord Romstad</a> reported that in his early program <a href="/Gothmog">Gothmog</a> one more condition was necessary - namely that futility pruning requires checking for the existence of at least one legal move <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> to avoid returning erroneous stalemate scores. As replied by <a href="/Eli_David">Omid David</a>: then simply return alpha (to fail <a href="/Fail-Low">low</a> but <a href="/Fail-Hard">hard</a>).</p>
+<h2 id="move-count-based-pruning">Move Count Based Pruning</h2>
+<p>A further variation of Extended Futility Pruning combining the ideas of <a href="/Fruit">Fruit's</a> <a href="/History_Leaf_Pruning">History Leaf Pruning</a> and <a href="/Late_Move_Reductions">Late Move Reductions</a> is called <strong>Move Count Based Pruning</strong> or <strong>Late Move Pruning</strong> (LMP) as implemented in <a href="/Stockfish">Stockfish</a> <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>.</p>
+<h2 id="historical-implementations">Historical Implementations</h2>
+<p>Historically, futility pruning is implemented at the <a href="/Frontier_Nodes">frontier nodes</a> (depth == 1) with one <a href="/Ply">ply</a> left to the horizon. The following are past ideas related to futility pruning. These ideas are not used to modern engine development, either because they are superseded or failed under strict testing. The ideas are documented below for historical reasons.</p>
+<h3 id="extended-futility-pruning">Extended Futility Pruning</h3>
+<p><a href="/Ernst_A._Heinz">Ernst A. Heinz</a> advocated using so-called <strong>extended futility pruning</strong> <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>. It means employing similar algorithm at <a href="/Pre_Frontier_Node">pre frontier nodes</a> at <span style="background-color: rgb(196, 196, 196);">depth == 2</span>, only with the greater margin. If at depth 1 the margin does not exceed the value of a minor piece, at depth 2 it should be more like the value of a rook.</p>
+<h3 id="deep-futility-pruning">Deep Futility Pruning</h3>
+<p>Deep Futility Pruning was proposed by <a href="/Harm_Geert_Muller">Harm Geert Muller</a> <a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>. It is applied at depths of <span style="background-color: rgb(207, 207, 207);">1&lt;d&lt;=3+<a href="/Depth_Reduction_R">R</a></span>, i.e. with two moves to go:</p>
+<pre><code>if ( CurEval &lt;= Alpha - PVal[FirstPiece(Opponent)] - PVal[SecondPiece(Opponent)] - 2*PosMargin )
+   prune</code></pre>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="/AEL-Pruning">AEL-Pruning</a></li>
+<li><a href="/Delta_Pruning">Delta Pruning</a></li>
+<li><a href="/Frontier_Nodes">Frontier Node</a></li>
+<li><a href="/History_Leaf_Pruning">History Leaf Pruning</a></li>
+<li><a href="/Late_Move_Reductions">Late Move Reductions</a></li>
+<li><a href="/Lazy_Evaluation">Lazy Evaluation</a></li>
+<li><a href="/Ostrich">Ostrich's Gamma-Algorithm</a></li>
+<li><a href="/Pre_Frontier_Node">Pre Frontier Node</a></li>
+<li><a href="/Razoring">Razoring</a></li>
+<li><a href="/Reverse_Futility_Pruning">Reverse Futility Pruning</a></li>
+<li><a href="/Sibling_Prediction_Pruning">Sibling Prediction Pruning</a></li>
+</ul>
+<h2 id="publications">Publications</h2>
+<ul>
+<li><a href="/Jonathan_Schaeffer">Jonathan Schaeffer</a> (<strong>1986</strong>). <em>Experiments in Search and Knowledge</em>. Ph.D. Thesis, <a href="/University_of_Waterloo">University of Waterloo</a>. Reprinted as Technical Report TR 86-12, Department of Computing Science, <a href="/University_of_Alberta">University of Alberta</a></li>
+<li><a href="/Chun_Ye">Chun Ye</a>, <a href="/Tony_Marsland">Tony Marsland</a> (<strong>1992</strong>). <em>Experiments in Forward Pruning with Limited Extensions.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 15, No. 2</a></li>
+<li><a href="/Ernst_A._Heinz">Ernst A. Heinz</a> (<strong>1998</strong>). <em><a href="http://people.csail.mit.edu/heinz/dt/node18.html">Extended Futility Pruning</a>.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 21, No. 2</a></li>
+<li><a href="/Jeroen_Carolus">Jeroen Carolus</a> (<strong>2006</strong>). <em>Alpha-Beta with Sibling Prediction Pruning in Chess</em>. Masters thesis, <a href="http://homepages.cwi.nl/%7Epaulk/theses/Carolus.pdf">pdf</a></li>
+<li><a href="/Kunihito_Hoki">Kunihito Hoki</a>, <a href="/Masakazu_Muramatsu">Masakazu Muramatsu</a> (<strong>2012</strong>). <em><a href="https://www.semanticscholar.org/paper/Efficiency-of-three-forward-pruning-techniques-in-Hoki-Muramatsu/206099961f401c8693e071c2b739f164ae5ffa6c">Efficiency of three Forward-Pruning Techniques in Shogi: Futility Pruning, Null-move Pruning, and Late Move Reduction (LMR)</a></em>. <a href="https://www.journals.elsevier.com/entertainment-computing">Entertainment Computing</a>, Vol. 3, No. 3</li>
+</ul>
+<h2 id="forum-posts">Forum Posts</h2>
+<h3 id="1995-">1995 ...</h3>
+<ul>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/375e65821715995f">futility cut-offs</a> by <a href="/Alessandro_Damiani">Alessandro Damiani</a>, <a href="/Computer_Chess_Forums">rgcc</a>, November 14, 1997</li>
+<li><a href="https://groups.google.com/group/rec.games.chess.computer/browse_frm/thread/9a16d1cfe8d042bc">Extended Futility Pruning - anyone tried it?</a> by <a href="/Tom_King">Tom King</a>, <a href="/Computer_Chess_Forums">rgcc</a>, August 16, 1998</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=50627">Extensions and Futility Pruning</a> by <a href="/James_Robertson">James Robertson</a>, <a href="/CCC">CCC</a>, May 04, 1999 » <a href="/Extensions">Extensions</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=85079">Extended futility pruning and hashtables</a> by <a href="/Gian-Carlo_Pascutto">Gian-Carlo Pascutto</a>, <a href="/CCC">CCC</a>, December 30, 1999 » <a href="/Transposition_Table">Transposition Table</a></li>
+</ul>
+<h3 id="2000-">2000 ...</h3>
+<ul>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=104283">Futility Pruning (I think) Question</a> by <a href="/Brian_Richardson">Brian Richardson</a>, <a href="/CCC">CCC</a>, April 02, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=110681">Caution K v KBN and lazy eval or futility</a> by <a href="/Brian_Richardson">Brian Richardson</a>, <a href="/CCC">CCC</a>, May 14, 2000 » <a href="/KBNK_Endgame">KBNK Endgame</a>, <a href="/Lazy_Evaluation">Lazy Evaluation</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=143040">Something wrong with my futility pruning?</a> by <a href="/Severi_Salminen">Severi Salminen</a>, <a href="/CCC">CCC</a>, December 05, 2000</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=143331">About history heuristics, killers and my futil. pruning code</a> by <a href="/Severi_Salminen">Severi Salminen</a>, <a href="/CCC">CCC</a>, December 06, 2000 » <a href="/History_Heuristic">History Heuristic</a>, <a href="/Killer_Heuristic">Killer Heuristic</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=143506">question about futility pruning and positional evaluation</a> by Bert van den Akker, <a href="/CCC">CCC</a>, December 07, 2000 » <a href="/Evaluation">Evaluation</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=186225">Futility Cutoff futile?</a> by <a href="/Stuart_Cracraft">Stuart Cracraft</a>, <a href="/CCC">CCC</a>, August 29, 2001</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=18&amp;t=34982">Futility + WAC</a> by <a href="/Stefan_Knappe">Stefan Knappe</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, November 07, 2001 » <a href="/Matador">Matador</a>, <a href="/Win_at_Chess">Win at Chess</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=271983">Re: Futility Pruning</a> by <a href="/Vincent_Diepeveen">Vincent Diepeveen</a>, <a href="/CCC">CCC</a>, December 20, 2002</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=18&amp;t=43088">To Stefan Knappe</a> by <a href="/Rahman_Paidar">Rahman Paidar</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, June 21, 2003 » <a href="/Stefan_Knappe">Stefan Knappe</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=326340">futility pruning?</a> by <a href="/Daniel_Shawul">Daniel Shawul</a>, <a href="/CCC">CCC</a>, November 09, 2003</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=339041">Unexpected problem with futility pruning ?</a> by Geoff, <a href="/CCC">CCC</a>, December 29, 2003</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=18&amp;t=46383">Question for Tom Likens</a> by <a href="/Matt_McKnight">Matt McKnight</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, February 07, 2004 » <a href="/Djinn">Djinn</a></li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=380679">Extended futility pruning not working</a> by Cesar Contreras, <a href="/CCC">CCC</a>, August 03, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=391540">Futility</a> by <a href="/Stuart_Cracraft">Stuart Cracraft</a>, <a href="/CCC">CCC</a>, October 14, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=392021">Futility Prune question</a> by <a href="/Stuart_Cracraft">Stuart Cracraft</a>, <a href="/CCC">CCC</a>, October 17, 2004</li>
+<li><a href="https://www.stmintz.com/ccc/index.php?id=392248">Futility @ 1/Extended Futility @ 2/Limited Razoring @ 3 = % node reduce?</a> by <a href="/Stuart_Cracraft">Stuart Cracraft</a>, <a href="/CCC">CCC</a>, October 19, 2004</li>
+</ul>
+<h3 id="2005-">2005 ...</h3>
+<ul>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=2101">Does simple futility prune work</a> by <a href="/Rasjid_Chan">Rasjid Chan</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, March 27, 2005</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=3734">Selective Futlity Condition at Quiescence Nodes</a> by <a href="/Pradu_Kannan">Pradu</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, October 26, 2005</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=5648">Null move, futility and LMR</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, September 26, 2006 » <a href="/Null_Move_Pruning">Null Move Pruning</a>, <a href="/Late_Move_Reductions">LMR</a></li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=5779">Hash Table handling with LMR/Futility pruning</a> by <a href="/Pradu_Kannan">Pradu</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, October 21, 2006</li>
+<li><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=4&amp;t=5890">Extended futility reduction</a> by <a href="/Michael_Sherwin">Michael Sherwin</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, November 18, 2006</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=16290">How much elo from futility?</a> by <a href="/Alessandro_Scotti">Alessandro Scotti</a>, <a href="/CCC">CCC</a>, September 05, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=17442">LMR and futility</a> by <a href="/Pawel_Koziol">Pawel Koziol</a>, <a href="/CCC">CCC</a>, October 28, 2007</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=24371">Draw recognizers, futility... mess</a> by <a href="/Pawel_Koziol">Pawel Koziol</a>, <a href="/CCC">CCC</a>, October 14, 2008</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=29777">futility pruning - razoring</a> by <a href="/Don_Dailey">Don Dailey</a>, <a href="/CCC">CCC</a>, September 16, 2009 » <a href="/Razoring">Razoring</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=30802">Futility pruning, Ext futility pruning and Limited Razoring</a> by Jesper Nielsen, <a href="/CCC">CCC</a>, November 26, 2009</li>
+</ul>
+<h3 id="2010-">2010 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=32407">Futility Idea based on total score</a> by <a href="/Mark_Lefler">Mark Lefler</a>, <a href="/CCC">CCC</a>, February 06, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=33033">Confused by futility pruning</a> by <a href="/Michel_Van_den_Bergh">Michel Van den Bergh</a>, <a href="/CCC">CCC</a>, March 03, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=35955">move count based pruning</a> by <a href="/Tom_King">Tom King</a>, <a href="/CCC">CCC</a>, September 02, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=37360">LMR, Razoring, Futility.... with chess variant with drops?</a> by Justin Madru, <a href="/CCC">CCC</a>, December 30, 2010</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=37731">Futility Methods</a> by kenny stanley, <a href="/CCC">CCC</a>, January 21, 2011</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=39169">futility pruning in stockfish</a> by <a href="/Engin_Üstün">Engin Üstün</a>, <a href="/CCC">CCC</a>, May 25, 2011 » <a href="/Stockfish">Stockfish</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=41302">Reverse Futility Pruning</a> by <a href="/Matthew_R._Brades">Matthew R. Brades</a>, <a href="/CCC">CCC</a>, December 02, 2011 » <a href="/Reverse_Futility_Pruning">Reverse Futility Pruning</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=42749">How to get futility pruning to work?</a> by Robert Purves, <a href="/CCC">CCC</a>, March 05, 2012</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=43165">futility pruning, razoring question</a> by <a href="/Marco_Belli">Marco Belli</a>, <a href="/CCC">CCC</a>, April 04, 2012 » <a href="/Razoring">Razoring</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=43513">A search enhancement?</a> by <a href="/Daniel_Homan">Daniel Homan</a>, <a href="/CCC">CCC</a>, April 30, 2012 » <a href="/Futility_Pruning">Move Count Based Pruning</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=54761">LMP in PV nodes</a> by <a href="/Peter_Österlund">Peter Österlund</a>, <a href="/CCC">CCC</a>, December 27, 2014 » <a href="/Node_Types">PV-Node</a>, <a href="/Texel">Texel</a></li>
+</ul>
+<h3 id="2015-">2015 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=56323">Problem understanding futility pruning</a> by <a href="/Nicu_Ionita">Nicu Ionita</a>, <a href="/CCC">CCC</a>, May 11, 2015</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=57287">Razoring vs Futility pruning</a> by <a href="/Shawn_Chidester">Shawn Chidester</a>, <a href="/CCC">CCC</a>, August 16, 2015 » <a href="/Razoring">Razoring</a></li>
+</ul>
+<p><strong>2016</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59315">futility pruning</a> by <a href="/Folkert_van_Heusden">Folkert van Heusden</a>, <a href="/CCC">CCC</a>, February 20, 2016</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=59661">Futile attempts at futility pruning</a> by <a href="/Martin_Fierz">Martin Fierz</a>, <a href="/CCC">CCC</a>, March 27, 2016 » <a href="/Reverse_Futility_Pruning">Reverse Futility Pruning</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61093">Futility prunning</a> by <a href="/Daniel_Anulliero">Daniel Anulliero</a>, <a href="/CCC">CCC</a>, August 11, 2016 » <a href="/Reverse_Futility_Pruning">Reverse Futility Pruning</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=61682">Futility Pruning</a> by David Cimbalista, <a href="/CCC">CCC</a>, October 11, 2016</li>
+</ul>
+<p><strong>2017 ...</strong></p>
+<ul>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63344">Futility pruning ?</a> by Mahmoud Uthman, <a href="/CCC">CCC</a>, March 04, 2017 » <a href="/Reverse_Futility_Pruning">Reverse Futility Pruning</a></li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63368">futile futility pruning attempt</a> by <a href="/Folkert_van_Heusden">Folkert van Heusden</a>, <a href="/CCC">CCC</a>, March 07, 2017</li>
+<li><a href="http://www.open-chess.org/viewtopic.php?f=5&amp;t=3099">Futility pruning...</a> by thevinenator, <a href="/Computer_Chess_Forums">OpenChess Forum</a>, April 07, 2017</li>
+<li><a href="http://www.talkchess.com/forum/viewtopic.php?t=63852">increasing futility prunning depth</a> by <a href="/Alexandru_Mosoi">Alexandru Mosoi</a>, <a href="/CCC">CCC</a>, April 28, 2017</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=64343">Tuning Futility Margin</a> by <a href="/Tamás_Kuzmics">Tamás Kuzmics</a>, <a href="/CCC">CCC</a>, June 19, 2017</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=68081">A question about futility prunning</a> by <a href="/Vivien_Clauzon">Vivien Clauzon</a>, <a href="/CCC">CCC</a>, July 26, 2018</li>
+</ul>
+<h3 id="2020-">2020 ...</h3>
+<ul>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=74403">Futility Pruning Issues</a> by Cheney, <a href="/CCC">CCC</a>, July 07, 2020</li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77451">Futility Pruning and its Relation to Quiescence Search</a> by Jakob Progsch, <a href="/CCC">CCC</a>, June 06, 2021 » <a href="/Quiescence_Search">Quiescence Search</a></li>
+<li><a href="http://www.talkchess.com/forum3/viewtopic.php?f=7&amp;t=77644">Futility reductions</a> by <a href="/Jost_Triller">Jost Triller</a>, <a href="/CCC">CCC</a>, July 05, 2021</li>
+</ul>
+<h2 id="external-links">External Links</h2>
+<h3 id="pruning">Pruning</h3>
+<ul>
+<li><a href="https://www.madchess.net/2020/02/08/madchess-3-0-beta-4478cb8-late-move-pruning/">MadChess 3.0 Beta 6f3d17a (Late Move Pruning)</a> by <a href="/Erik_Madsen">Erik Madsen</a>, February 8, 2020 » <a href="/Futility_Pruning">LMP</a>, <a href="/MadChess">MadChess</a></li>
+<li><a href="http://home.hccnet.nl/h.g.muller/deepfut.html">Deep Futility Pruning</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a></li>
+</ul>
+<h3 id="misc">Misc</h3>
+<ul>
+<li><a href="https://en.wiktionary.org/wiki/futility">futility - Wiktionary</a></li>
+</ul>
+<p><a href="https://en.wiktionary.org/wiki/futile">futile - Wiktionary</a></p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Futility">Futility from Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/The_Wreck_of_the_Titan:_Or,_Futility">The Wreck of the Titan: Or, Futility - Wikipedia</a></li>
+<li><a href="/Category:Porcupine_Tree">Porcupine Tree</a> - <a href="https://en.wikipedia.org/wiki/Futile_(EP)">Futile</a>, <a href="https://de.wikipedia.org/wiki/Zeche_Bochum">Zeche</a> <a href="https://en.wikipedia.org/wiki/Bochum">Bochum</a>, November 18, 2003, <a href="https://en.wikipedia.org/wiki/YouTube">YouTube</a> Video</li>
+</ul>
+<div class="video-embed" style="position:relative;max-width:560px;aspect-ratio:16/9;margin:0.5em 0;">
+
+<iframe src="https://www.youtube-nocookie.com/embed/C7mL-DNCuJc" title="YouTube video C7mL-DNCuJc" loading="lazy" allowfullscreen width="560" height="315" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"></iframe>
+
+</div>
+
+<p><a href="https://www.youtube.com/watch?v=C7mL-DNCuJc">Watch on YouTube</a></p>
+<h2 id="references">References</h2>
+<references />
+
+<p><strong><a href="/Pruning">Up one Level</a></strong></p>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="http://www.open-aurec.com/wbforum/viewtopic.php?f=18&amp;t=43669&amp;p=166791">Serious bug in Gothmog 0.2.6!</a> by <a href="/Tord_Romstad">Tord Romstad</a>, <a href="/Computer_Chess_Forums">Winboard Forum</a>, August 04, 2003<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p><a href="https://www.stmintz.com/ccc/index.php?id=339076">Re: Unexpected problem with futility pruning?</a> by <a href="/Tord_Romstad">Tord Romstad</a>, <a href="/CCC">CCC</a>, December 29, 2003<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p><a href="http://www.talkchess.com/forum/viewtopic.php?t=35955">move count based pruning</a> by <a href="/Tom_King">Tom King</a>, <a href="/CCC">CCC</a>, September 02, 2010<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="/Ernst_A._Heinz">Ernst A. Heinz</a> (<strong>1998</strong>). <em><a href="http://people.csail.mit.edu/heinz/dt/node18.html">Extended Futility Pruning</a>.</em> <a href="/ICGA_Journal">ICCA Journal, Vol. 21, No. 2</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p><a href="http://home.hccnet.nl/h.g.muller/deepfut.html">Deep Futility Pruning</a> by <a href="/Harm_Geert_Muller">Harm Geert Muller</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+
+</article>
+<div class="clear-both mt-8 border border-slate-300 bg-slate-50 rounded px-3 py-2 text-sm">
+Categories: <a href="/Category:M._C._Escher">M. C. Escher</a> · <a href="/Category:Porcupine_Tree">Porcupine Tree</a>
+</div>
+<p class="mt-2 text-xs text-slate-500">
+<a href="/Special:WhatLinksHere/Futility_Pruning">What links here</a>
+</p>
+<p class="text-sm text-slate-600 mt-8 pt-4 border-t border-slate-200">
+Contributors: GerdIsenberg, ShawnXu.
+</p>
+
+</main>
+<footer class="border-t border-slate-200 text-xs text-slate-500">
+<div class="max-w-5xl mx-auto px-4 py-4">
+<p class="text-sm text-slate-800 pb-3 mb-3 border-b border-slate-200">
+Hosted with <span role="img" aria-label="love">&#10084;&#65039;</span> by
+<a href="https://lichess.org" class="font-medium underline underline-offset-2 hover:text-black">lichess.org</a>.
+If you like this site and what we&rsquo;re doing, please
+<a href="https://lichess.org/patron" class="font-semibold text-black underline underline-offset-2 decoration-2 hover:decoration-4">consider supporting us</a>.
+</p>
+<p>
+Chess boards rendered with <a href="https://github.com/lichess-org/chessground">chessground</a>
+(GPL-3.0-or-later) from <a href="https://lichess.org">lichess.org</a>; piece set
+&ldquo;cburnett&rdquo; by Colin M.L. Burnett (CC BY-SA 3.0). Vendored copy and license:
+<a href="/vendor/chessground/LICENSE">/vendor/chessground/LICENSE</a>.
+</p>
+<p class="mt-1">
+The chessprogrammingwiki is licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+by its <a href="/Special:Credits">contributors</a>.
+</p>
+</div>
+</footer>
+<script src="/search.js" defer></script>
+<script type="module" src="/chess-fen.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"bc2324629ec1487b8a971e20fc204570","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
